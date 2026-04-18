@@ -1,0 +1,146 @@
+/* packages/ui/styles/variables.css — CSS custom properties derived from tokens.
+   Import this once at the app root (apps/web/src/main.tsx or App.tsx). */
+
+:root {
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* Neutral palette */
+  --neutral-0:   #ffffff;
+  --neutral-50:  #fafafa;
+  --neutral-100: #f4f4f5;
+  --neutral-200: #e4e4e7;
+  --neutral-300: #d1d1d6;
+  --neutral-400: #a1a1aa;
+  --neutral-500: #71717a;
+  --neutral-600: #52525b;
+  --neutral-700: #3f3f46;
+  --neutral-800: #27272a;
+  --neutral-900: #18181b;
+  --neutral-950: #09090b;
+
+  /* Accent (violet — one accent only) */
+  --accent-50:  #f5f3ff;
+  --accent-100: #ede9fe;
+  --accent-200: #ddd6fe;
+  --accent-300: #c4b5fd;
+  --accent-400: #a78bfa;
+  --accent-500: #8b5cf6;
+  --accent-600: #7c3aed;
+  --accent-700: #6d28d9;
+  --accent-800: #5b21b6;
+  --accent-900: #4c1d95;
+
+  /* Semantic */
+  --color-success:        #16a34a;
+  --color-success-bg:     #f0fdf4;
+  --color-success-border: #bbf7d0;
+  --color-warning:        #d97706;
+  --color-warning-bg:     #fffbeb;
+  --color-warning-border: #fde68a;
+  --color-error:          #dc2626;
+  --color-error-bg:       #fef2f2;
+  --color-error-border:   #fecaca;
+  --color-info:           #2563eb;
+  --color-info-bg:        #eff6ff;
+  --color-info-border:    #bfdbfe;
+
+  /* Surface roles */
+  --bg-base:     var(--neutral-50);
+  --bg-elevated: var(--neutral-0);
+  --bg-overlay:  var(--neutral-0);
+  --bg-subtle:   var(--neutral-100);
+
+  /* Text roles */
+  --text-primary:   var(--neutral-900);
+  --text-secondary: var(--neutral-500);
+  --text-disabled:  var(--neutral-300);
+  --text-on-accent: #ffffff;
+  --text-danger:    var(--color-error);
+
+  /* Border roles */
+  --border-base:   var(--neutral-200);
+  --border-strong: var(--neutral-300);
+  --border-focus:  var(--accent-500);
+
+  /* Radius */
+  --radius-field:   6px;
+  --radius-button:  6px;
+  --radius-card:    10px;
+  --radius-popover: 8px;
+  --radius-pill:    9999px;
+
+  /* Elevation */
+  --shadow-elevated: 0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.06);
+  --shadow-overlay:  0 10px 24px -4px rgba(0,0,0,0.12), 0 4px 8px -2px rgba(0,0,0,0.06);
+
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 240ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  --ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Typography */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+               'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+               'Liberation Mono', 'Courier New', monospace;
+
+  /* Focus ring */
+  --focus-ring: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--accent-500);
+
+  /* Semantic shorthand aliases (for inline usage convenience) */
+  --success-500: var(--color-success);
+  --warning-500: var(--color-warning);
+  --error-500:   var(--color-error);
+  --error-300:   var(--color-error-border);
+
+  /* Surface aliases (semantic names for bg roles used in screens) */
+  --surface-base:     var(--bg-base);
+  --surface-elevated: var(--bg-elevated);
+
+  /* Border aliases */
+  --border-default: var(--border-base);
+  --border-subtle:  var(--neutral-200);
+
+  /* Text aliases */
+  --text-tertiary: var(--neutral-400);
+
+  /* Accent alias (used for in-progress / info states) */
+  --color-accent: var(--accent-500);
+
+  /* Code / terminal surface */
+  --surface-code: #1a1a2e;
+  --surface-code-light: var(--neutral-100);
+}
+
+/* Dark mode — same structure, swapped values */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-base:     var(--neutral-950);
+    --bg-elevated: var(--neutral-900);
+    --bg-overlay:  var(--neutral-800);
+    --bg-subtle:   var(--neutral-900);
+
+    --text-primary:   var(--neutral-50);
+    --text-secondary: var(--neutral-400);
+    --text-disabled:  var(--neutral-700);
+    --text-tertiary:  var(--neutral-600);
+
+    --border-base:    var(--neutral-800);
+    --border-strong:  var(--neutral-700);
+    --border-default: var(--neutral-800);
+    --border-subtle:  var(--neutral-800);
+
+    --surface-base:     var(--neutral-950);
+    --surface-elevated: var(--neutral-900);
+  }
+}

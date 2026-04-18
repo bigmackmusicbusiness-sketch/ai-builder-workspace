@@ -1,0 +1,24 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node"],
+    "noEmit": true,
+    "paths": {
+      "@abw/agent-core": ["../../packages/agent-core/index.ts"],
+      "@abw/agent-core/*": ["../../packages/agent-core/*"],
+      "@abw/db": ["../../packages/db/index.ts"],
+      "@abw/db/*": ["../../packages/db/*"],
+      "@abw/providers": ["../../packages/providers/index.ts"],
+      "@abw/providers/*": ["../../packages/providers/*"],
+      "@abw/security": ["../../packages/security/index.ts"],
+      "@abw/security/*": ["../../packages/security/*"],
+      "@abw/shared": ["../../packages/shared/index.ts"],
+      "@abw/shared/*": ["../../packages/shared/*"],
+      "@abw/verify": ["../../packages/verify/index.ts"],
+      "@abw/verify/*": ["../../packages/verify/*"]
+    }
+  },
+  "include": ["src"]
+}

@@ -1,0 +1,420 @@
+/* apps/web/src/styles/app.css — shell layout styles.
+   Imports the packages/ui globals, then adds workspace-specific layout. */
+@import '@ui-styles/globals.css';
+@import '@ui-styles/primitives.css';
+@import '@ui-styles/screens.css';
+
+/* ── Shell ───────────────────────────────────────────────────────── */
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+.abw-shell {
+  display: grid;
+  /* left panel width is controlled via a CSS var toggled on collapse */
+  grid-template-columns: var(--left-panel-w, 300px) 1fr;
+  grid-template-rows: 36px 1fr;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+.abw-shell--collapsed {
+  --left-panel-w: 0px;
+}
+
+/* Top bar spans full width */
+.abw-shell__topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-base);
+  z-index: 20;
+}
+
+/* Left panel */
+.abw-shell__left {
+  overflow: hidden;
+  border-right: 1px solid var(--border-base);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elevated);
+  transition: width var(--duration-base) var(--ease-standard);
+  min-width: 0;
+}
+
+/* Main workspace — the dominant surface */
+.abw-shell__main {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-base);
+  min-width: 0;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────── */
+.abw-topbar__collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  border-radius: var(--radius-field);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.abw-topbar__collapse-btn:hover { background: var(--bg-subtle); color: var(--text-primary); }
+
+.abw-topbar__project-switcher {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-2);
+  height: 26px;
+  border-radius: var(--radius-field);
+  border: 1px solid var(--border-base);
+  background: var(--bg-subtle);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.abw-topbar__env-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.abw-topbar__env-badge--dev     { background: var(--color-info-bg);    color: var(--color-info);    border: 1px solid var(--color-info-border); }
+.abw-topbar__env-badge--staging { background: var(--color-warning-bg); color: var(--color-warning); border: 1px solid var(--color-warning-border); }
+.abw-topbar__env-badge--preview { background: var(--accent-50);        color: var(--accent-700);    border: 1px solid var(--accent-200); }
+.abw-topbar__env-badge--production { background: var(--color-error-bg); color: var(--color-error); border: 1px solid var(--color-error-border); }
+
+.abw-topbar__spacer { flex: 1; }
+
+.abw-topbar__search {
+  display: flex; align-items: center; gap: var(--space-2);
+  height: 26px; padding: 0 var(--space-2);
+  border: 1px solid var(--border-base); border-radius: var(--radius-field);
+  background: var(--bg-subtle); font-size: 0.75rem; color: var(--text-secondary);
+  cursor: text; min-width: 180px;
+}
+
+/* ── Left panel ──────────────────────────────────────────────────── */
+.abw-left {
+  display: flex; flex-direction: column; height: 100%; overflow: hidden;
+}
+
+.abw-left__header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--border-base);
+  flex-shrink: 0;
+}
+
+.abw-left__header-title {
+  font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+
+.abw-left__sections {
+  flex: 1; overflow-y: auto; padding: var(--space-2) 0;
+}
+
+.abw-left__section {
+  padding: 0 var(--space-3);
+}
+
+.abw-left__section-label {
+  font-size: 0.6875rem; font-weight: 600;
+  color: var(--text-secondary); text-transform: uppercase;
+  letter-spacing: 0.06em; padding: var(--space-2) 0 var(--space-1) 0;
+}
+
+/* Model selector (always visible in left panel header) */
+.abw-model-selector {
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border-base);
+  background: var(--bg-elevated);
+}
+
+.abw-model-selector__label {
+  font-size: 0.6875rem; font-weight: 600;
+  color: var(--text-secondary); text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: var(--space-1);
+}
+
+.abw-model-selector__trigger {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-2);
+  border: 1px solid var(--border-base); border-radius: var(--radius-field);
+  background: var(--bg-subtle); cursor: pointer; width: 100%;
+  font-size: 0.8125rem; color: var(--text-primary);
+  text-align: left;
+}
+
+.abw-model-selector__dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+.abw-model-selector__dot--ok      { background: var(--color-success); }
+.abw-model-selector__dot--warn    { background: var(--color-warning); }
+.abw-model-selector__dot--unknown { background: var(--neutral-400); }
+
+.abw-model-selector__name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.abw-model-selector__caret { color: var(--text-secondary); font-size: 0.75rem; flex-shrink: 0; }
+
+/* Agent status */
+.abw-agent-status {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.75rem; color: var(--text-secondary);
+  border-top: 1px solid var(--border-base);
+}
+.abw-agent-status__dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.abw-agent-status__dot--idle    { background: var(--neutral-400); }
+.abw-agent-status__dot--running { background: var(--color-success); animation: abw-pulse 1.2s ease infinite; }
+.abw-agent-status__dot--blocked { background: var(--color-warning); }
+.abw-agent-status__dot--error   { background: var(--color-error); }
+@keyframes abw-pulse {
+  0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+}
+@media (prefers-reduced-motion: reduce) { .abw-agent-status__dot--running { animation: none; } }
+
+/* ── Workspace modes ─────────────────────────────────────────────── */
+.abw-workspace {
+  display: flex; flex-direction: column; height: 100%; overflow: hidden;
+}
+
+.abw-workspace__tabs {
+  display: flex; align-items: center;
+  padding: 0 var(--space-2);
+  border-bottom: 1px solid var(--border-base);
+  background: var(--bg-elevated);
+  flex-shrink: 0; gap: 2px; min-height: 36px;
+}
+
+.abw-workspace__tab {
+  display: flex; align-items: center; gap: var(--space-1);
+  padding: 0 var(--space-3); height: 34px;
+  border: none; background: none; cursor: pointer;
+  font-size: 0.8125rem; font-weight: 500;
+  color: var(--text-secondary); border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+.abw-workspace__tab:hover { color: var(--text-primary); }
+.abw-workspace__tab--active {
+  color: var(--accent-600); border-bottom-color: var(--accent-500);
+}
+
+.abw-workspace__content {
+  flex: 1; overflow: hidden; position: relative;
+}
+
+/* Preview mode */
+.abw-preview {
+  display: flex; flex-direction: column; height: 100%; background: var(--bg-subtle);
+}
+
+.abw-preview__toolbar {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-elevated); border-bottom: 1px solid var(--border-base);
+  flex-shrink: 0;
+}
+
+.abw-preview__url-bar {
+  flex: 1; height: 28px; padding: 0 var(--space-2);
+  border: 1px solid var(--border-base); border-radius: var(--radius-field);
+  background: var(--bg-subtle); font-size: 0.8125rem;
+  color: var(--text-primary); font-family: var(--font-mono);
+}
+
+.abw-preview__frame-wrap {
+  flex: 1; display: flex; align-items: flex-start; justify-content: center;
+  padding: var(--space-4); overflow: auto;
+}
+
+.abw-preview__frame {
+  background: white; border-radius: var(--radius-card);
+  box-shadow: var(--shadow-overlay);
+  border: 1px solid var(--border-base);
+  transition: width var(--duration-base) var(--ease-standard);
+}
+
+/* placeholder for each mode that isn't built yet */
+.abw-mode-placeholder {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  height: 100%; gap: var(--space-3);
+  color: var(--text-secondary); font-size: 0.875rem;
+}
+.abw-mode-placeholder__icon { font-size: 2rem; opacity: 0.3; }
+.abw-mode-placeholder__label { font-weight: 500; color: var(--text-primary); }
+.abw-mode-placeholder__sub { font-size: 0.8125rem; }
+
+/* Chat thread */
+.abw-chat {
+  display: flex; flex-direction: column; height: 100%; overflow: hidden;
+}
+.abw-chat__messages {
+  flex: 1; overflow-y: auto; padding: var(--space-3);
+  display: flex; flex-direction: column; gap: var(--space-3);
+}
+.abw-chat__msg { display: flex; flex-direction: column; gap: 4px; }
+.abw-chat__msg--user .abw-chat__bubble {
+  background: var(--accent-500); color: #fff;
+  align-self: flex-end; border-radius: var(--radius-card) var(--radius-card) var(--radius-field) var(--radius-card);
+}
+.abw-chat__msg--assistant .abw-chat__bubble {
+  background: var(--bg-subtle); color: var(--text-primary);
+  align-self: flex-start; border: 1px solid var(--border-base);
+  border-radius: var(--radius-card) var(--radius-card) var(--radius-card) var(--radius-field);
+}
+.abw-chat__bubble { padding: var(--space-2) var(--space-3); font-size: 0.8125rem; line-height: 1.5; max-width: 85%; }
+.abw-chat__input-row {
+  padding: var(--space-2) var(--space-3); border-top: 1px solid var(--border-base);
+  display: flex; gap: var(--space-2); align-items: flex-end;
+  background: var(--bg-elevated); flex-shrink: 0;
+}
+.abw-chat__input {
+  flex: 1; border: 1px solid var(--border-base); border-radius: var(--radius-field);
+  padding: var(--space-2) var(--space-2); font-size: 0.8125rem;
+  font-family: var(--font-sans); background: var(--bg-subtle);
+  color: var(--text-primary); resize: none; min-height: 36px; max-height: 120px;
+}
+.abw-chat__input:focus-visible { outline: none; border-color: var(--accent-500); box-shadow: 0 0 0 2px var(--accent-200); }
+
+/* Approvals badge */
+.abw-approvals-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  background: var(--color-error); color: #fff;
+  border-radius: var(--radius-pill); font-size: 0.625rem; font-weight: 700;
+}
+
+/* ── Top bar nav (needs horizontal scroll on narrow viewports) ───── */
+.abw-topbar__nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-shrink: 1;
+}
+.abw-topbar__nav::-webkit-scrollbar { display: none; }
+
+.abw-topbar__nav-link {
+  display: flex; align-items: center;
+  padding: 0 var(--space-2); height: 26px;
+  border-radius: var(--radius-field);
+  font-size: 0.75rem; font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--duration-fast) var(--ease-standard),
+              background var(--duration-fast) var(--ease-standard);
+}
+.abw-topbar__nav-link:hover { color: var(--text-primary); background: var(--bg-subtle); }
+.abw-topbar__nav-link--active { color: var(--accent-600); font-weight: 600; }
+
+/* ── Responsive: tablet (≤1024px) ───────────────────────────────── */
+@media (max-width: 1024px) {
+  .abw-shell {
+    grid-template-columns: var(--left-panel-w, 260px) 1fr;
+  }
+
+  /* Reduce screen padding */
+  .abw-screen {
+    padding: var(--space-4);
+  }
+
+  /* Workspace tabs: allow horizontal scroll */
+  .abw-workspace__tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .abw-workspace__tabs::-webkit-scrollbar { display: none; }
+
+  /* Search bar shrinks */
+  .abw-topbar__search {
+    min-width: 120px;
+    max-width: 160px;
+  }
+}
+
+/* ── Responsive: mobile (≤768px) ───────────────────────────────── */
+@media (max-width: 768px) {
+  /* Collapse left panel automatically on mobile */
+  .abw-shell {
+    grid-template-columns: 0px 1fr;
+  }
+
+  /* When explicitly opened on mobile, overlay instead of push */
+  .abw-shell:not(.abw-shell--collapsed) {
+    grid-template-columns: 280px 1fr;
+  }
+  .abw-shell:not(.abw-shell--collapsed) .abw-shell__left {
+    position: fixed;
+    top: 36px; /* below topbar */
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    z-index: 100;
+    box-shadow: var(--shadow-overlay);
+  }
+
+  /* Hide some topbar nav items on tiny screens */
+  .abw-topbar__project-switcher {
+    max-width: 120px;
+  }
+
+  /* Workspace tabs — icon only on very small */
+  .abw-workspace__tab {
+    padding: 0 var(--space-2);
+    font-size: 0.6875rem;
+  }
+
+  /* Screen cards go single-column */
+  .abw-provider-list,
+  .abw-screen__card-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Search hidden on mobile (accessible via aria) */
+  .abw-topbar__search {
+    display: none;
+  }
+}
+
+/* ── Print (hide interactive chrome) ───────────────────────────── */
+@media print {
+  .abw-shell__topbar,
+  .abw-shell__left,
+  .abw-workspace__tabs { display: none; }
+  .abw-shell { display: block; }
+  .abw-shell__main { height: auto; overflow: visible; }
+}

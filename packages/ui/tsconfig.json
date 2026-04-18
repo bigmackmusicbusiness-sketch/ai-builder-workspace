@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": ".",
+    "noEmit": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["index.ts", "tokens/**/*.ts", "primitives/**/*.ts", "primitives/**/*.tsx", "patterns/**/*.ts", "patterns/**/*.tsx"]
+}

@@ -1,0 +1,49 @@
+{
+  "name": "ai-builder-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Internal-first full-stack AI builder/operator workspace.",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20.11.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:unit": "turbo run test:unit",
+    "test:integration": "turbo run test:integration",
+    "test:e2e": "turbo run test:e2e",
+    "secret-scan": "node scripts/secret-scan.mjs",
+    "dep-vuln": "pnpm audit --prod --json || true",
+    "deploy": "node scripts/setup-deployment.mjs",
+    "deploy:api": "pnpm --filter @abw/api build",
+    "deploy:web": "pnpm --filter @abw/web build && npx wrangler pages deploy apps/web/dist --project-name=abw-web",
+    "deploy:worker": "npx wrangler deploy --config apps/worker/wrangler.toml",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css,yml,yaml}\"",
+    "prepare": "husky || true"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@typescript-eslint/eslint-plugin": "^7.8.0",
+    "@typescript-eslint/parser": "^7.8.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-jsx-a11y": "^6.8.0",
+    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
+    "prettier": "^3.2.5",
+    "turbo": "^2.0.6",
+    "typescript": "^5.4.5"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": ["eslint --fix"],
+    "*.{ts,tsx,js,jsx,json,md,css,yml,yaml}": ["prettier --write"]
+  }
+}

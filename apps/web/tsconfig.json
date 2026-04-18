@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["vite/client"],
+    "noEmit": true,
+    "paths": {
+      "@abw/ui": ["../../packages/ui/index.ts"],
+      "@abw/ui/*": ["../../packages/ui/*"],
+      "@abw/shared": ["../../packages/shared/index.ts"],
+      "@abw/shared/*": ["../../packages/shared/*"],
+      "@abw/project-types": ["../../packages/project-types/index.ts"],
+      "@abw/project-types/*": ["../../packages/project-types/*"]
+    }
+  },
+  "include": ["src"]
+}

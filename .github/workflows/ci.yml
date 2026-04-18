@@ -1,0 +1,51 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: lint / typecheck / build / unit / secret-scan / dep-vuln
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm -w lint
+
+      - name: Typecheck
+        run: pnpm -w typecheck
+
+      - name: Build
+        run: pnpm -w build
+
+      - name: Unit tests
+        run: pnpm -w test:unit
+
+      - name: Secret scan
+        run: node scripts/secret-scan.mjs
+
+      - name: Dependency vulnerability scan
+        # Do not fail the whole build on advisories yet; record output.
+        run: pnpm -w dep-vuln | tee dep-vuln.json || true

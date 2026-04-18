@@ -1,0 +1,17 @@
+name = "abw-preview-worker"
+main = "src/preview.ts"
+compatibility_date = "2024-10-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+account_id = "34e162b46cf901fcad9075bf83bf1697"
+
+[vars]
+PREVIEW_ROOT_DOMAIN = "preview.local.test"
+
+# KV namespace for per-project bundled assets.
+# Create with: wrangler kv:namespace create PREVIEW_KV
+# Replace id below with the real namespace ID from Cloudflare dashboard.
+[[kv_namespaces]]
+binding = "PREVIEW_KV"
+id = "c6b4a014f1e34740b0934c5dab4cb18f"
+preview_id = "33106548212a4372b2778f22fefc18bc"

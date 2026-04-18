@@ -1,0 +1,22 @@
+# Example wrangler config for the preview worker.
+# Copy to apps/worker/wrangler.toml and fill in account_id.
+name = "abw-preview-worker"
+main = "src/preview.ts"
+compatibility_date = "2024-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+# account_id = "<CF_ACCOUNT_ID>"
+# workers_dev = true
+
+[vars]
+PREVIEW_ROOT_DOMAIN = "preview.local.test"
+
+# KV for virtual FS lookups (files + blobs)
+# [[kv_namespaces]]
+# binding = "VFS"
+# id = "<kv-id>"
+
+# R2 for large blobs (snapshots, assets, screenshots)
+# [[r2_buckets]]
+# binding = "BLOBS"
+# bucket_name = "abw-blobs"
