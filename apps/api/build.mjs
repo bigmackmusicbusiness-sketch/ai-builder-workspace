@@ -12,20 +12,18 @@ await build({
   bundle: true,
   platform: 'node',
   target: 'node20',
-  format: 'esm',
+  // CJS format: avvio/fastify use dynamic require() inside functions which esbuild's
+  // ESM output cannot hoist into static imports → crashes with "Dynamic require of
+  // node:events is not supported". CJS format has native require() and avoids this.
+  format: 'cjs',
   sourcemap: true,
-  // 'packages: bundle' requires esbuild >=0.22 — omit it; bundle:true already inlines everything
   external: [
     // native addons / binaries that can't be bundled
-    // vault.ts now uses Node's built-in crypto (AES-256-GCM) — libsodium-wrappers removed
     'playwright',
     'playwright-core',
     'esbuild',
     'pg-native',
   ],
-  define: {
-    'import.meta.url': 'import.meta.url',
-  },
   banner: {
     js: [
       '// @abw/api — bundled production build',
