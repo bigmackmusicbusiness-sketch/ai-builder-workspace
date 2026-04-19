@@ -29,6 +29,8 @@ export interface PreviewSession {
   logs: LogEntry[];
   startedAt: number;
   error?: string;
+  /** Bundled assets stored in memory for local-dev serving (no Cloudflare KV needed). */
+  assets?: Map<string, Uint8Array>;
 }
 
 export interface LogEntry {
@@ -65,6 +67,20 @@ export function getSession(sessionId: string): PreviewSession | undefined {
 
 export function listSessions(tenantId: string): PreviewSession[] {
   return Array.from(sessions.values()).filter((s) => s.tenantId === tenantId);
+}
+
+export function storeAssets(sessionId: string, assets: Map<string, Uint8Array>): void {
+  const s = sessions.get(sessionId);
+  if (s) s.assets = assets;
+}
+
+export function getAssets(sessionId: string): Map<string, Uint8Array> | undefined {
+  return sessions.get(sessionId)?.assets;
+}
+
+/** Look up session by project slug (for the serve endpoint). */
+export function getSessionBySlug(slug: string): PreviewSession | undefined {
+  return Array.from(sessions.values()).find((s) => s.projectSlug === slug && s.status === 'booted');
 }
 
 export function updateSession(

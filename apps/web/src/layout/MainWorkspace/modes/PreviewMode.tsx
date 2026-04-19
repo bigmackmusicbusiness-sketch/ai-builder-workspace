@@ -52,20 +52,20 @@ export function PreviewMode() {
       setSession({
         sessionId: data.sessionId,
         projectSlug: 'my-project',
-        previewUrl: data.previewUrl,
+        previewUrl: '',   // filled in once polling confirms 'booted'
         status: 'bundling',
         processes: [{ name: 'dev-server', status: 'running', startedAt: Date.now() }],
       });
 
-      // Poll status + logs until booted or error
-      void pollSession(data.sessionId);
+      // Poll until booted, then load the preview URL
+      void pollSession(data.sessionId, data.previewUrl);
     } catch (err) {
       updateSession({ status: 'error', error: err instanceof Error ? err.message : String(err) });
     }
   }, [setSession, updateSession]);
 
-  // Poll the session status every 2s until terminal state
-  const pollSession = useCallback(async (sessionId: string) => {
+  // Poll logs every 2s; once 'booted', set the real previewUrl so the iframe loads.
+  const pollSession = useCallback(async (sessionId: string, previewUrl: string) => {
     let attempts = 0;
     while (attempts < 60) {
       await sleep(2000);
@@ -76,7 +76,12 @@ export function PreviewMode() {
         );
         if (data.logs.length > 0) appendLogs(data.logs);
         updateSession({ status: data.sessionStatus as typeof sessionStatus });
-        if (data.sessionStatus === 'booted' || data.sessionStatus === 'error' || data.sessionStatus === 'stopped') break;
+        if (data.sessionStatus === 'booted') {
+          // Now that bundling is done, point the iframe at the preview URL
+          updateSession({ previewUrl } as Parameters<typeof updateSession>[0]);
+          break;
+        }
+        if (data.sessionStatus === 'error' || data.sessionStatus === 'stopped') break;
       } catch {
         break;
       }

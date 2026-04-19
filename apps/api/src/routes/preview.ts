@@ -3,13 +3,17 @@
 // returns the preview URL. Logs stream through this endpoint.
 import type { FastifyInstance } from 'fastify';
 import { randomUUID } from 'node:crypto';
+import { stat } from 'node:fs/promises';
+import { extname } from 'node:path';
 import { z } from 'zod';
 import { authMiddleware, requireRole, type AuthContext } from '../security/authz';
 import {
   createSession, getSession, listSessions, updateSession,
   appendLog, getLogs, stopSession, deleteSession,
+  storeAssets, getAssets, getSessionBySlug,
 } from '../preview/sessionManager';
 import { bundleProject } from '../preview/bundler';
+import { scaffoldHelloWorld } from '../preview/scaffold';
 
 declare module 'fastify' {
   interface FastifyRequest { authCtx?: AuthContext; }
@@ -43,17 +47,32 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
     const { projectId, projectSlug, rootDir, entryPoint, framework } = parsed.data;
 
     const sessionId = randomUUID();
+
+    // For local dev: serve from the API itself.
+    // For production with CF credentials: serve from the worker subdomain.
+    const hasCF = !!(process.env['CF_ACCOUNT_ID'] && process.env['CF_API_TOKEN'] && process.env['CF_KV_PREVIEW_NAMESPACE_ID']);
     const rootDomain = process.env['PREVIEW_ROOT_DOMAIN'] ?? 'preview.local.test';
-    const previewUrl = `http://${projectSlug}.${rootDomain}`;
+    const apiBase   = process.env['API_URL'] ?? `http://localhost:${process.env['PORT'] ?? 3007}`;
+    const previewUrl = hasCF
+      ? `https://${projectSlug}.${rootDomain}`
+      : `${apiBase}/api/preview/serve/${projectSlug}`;
 
     const session = createSession({ sessionId, projectId, projectSlug, tenantId: ctx.tenantId, previewUrl });
     updateSession(sessionId, { status: 'bundling' });
     appendLog(sessionId, { level: 'info', source: 'bundler', message: `Starting bundle for ${projectSlug}…` });
 
-    // Fire and forget — client polls /api/preview/sessions or uses Realtime
+    // Fire and forget — client polls /api/preview/logs or uses Realtime
     void (async () => {
       try {
-        const result = await bundleProject({ projectId, projectSlug, rootDir, entryPoint, framework });
+        // If rootDir doesn't exist on disk (stub/no project yet), scaffold a Hello World.
+        let resolvedRoot = rootDir;
+        const dirExists = await stat(rootDir).then((s) => s.isDirectory()).catch(() => false);
+        if (!dirExists) {
+          appendLog(sessionId, { level: 'info', source: 'bundler', message: 'No project files found — scaffolding Hello World…' });
+          resolvedRoot = await scaffoldHelloWorld(projectSlug);
+        }
+
+        const result = await bundleProject({ projectId, projectSlug, rootDir: resolvedRoot, entryPoint, framework });
 
         for (const w of result.warnings) {
           appendLog(sessionId, { level: 'warn', source: 'bundler', message: w });
@@ -62,7 +81,7 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
           for (const e of result.errors) {
             appendLog(sessionId, { level: 'error', source: 'bundler', message: e });
           }
-          updateSession(sessionId, { status: 'error', error: result.errors[0] });
+          updateSession(sessionId, { status: 'error', error: result.errors[0] ?? 'Bundle failed' });
           return;
         }
 
@@ -70,11 +89,17 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
           level: 'info', source: 'bundler',
           message: `Bundle complete: ${result.assets.size} assets in ${result.durationMs}ms`,
         });
-        updateSession(sessionId, { status: 'syncing' });
 
-        // Push assets to Cloudflare KV via Workers API
-        // (Requires CF_API_TOKEN + CF_ACCOUNT_ID + KV namespace ID in env)
-        await syncAssetsToKV(projectSlug, result.assets, sessionId);
+        // Always store assets in memory for local-dev serving.
+        storeAssets(sessionId, result.assets);
+
+        if (hasCF) {
+          // Production: push to Cloudflare KV
+          updateSession(sessionId, { status: 'syncing' });
+          await syncAssetsToKV(projectSlug, result.assets, sessionId);
+        } else {
+          appendLog(sessionId, { level: 'info', source: 'bundler', message: 'Local mode — serving from API (no CF KV)' });
+        }
 
         updateSession(sessionId, { status: 'booted' });
         appendLog(sessionId, { level: 'info', source: 'bundler', message: `Preview live: ${previewUrl}` });
@@ -148,6 +173,73 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
     deleteSession(req.params.id);
     return reply.send({ ok: true });
   });
+
+  /**
+   * GET /api/preview/serve/:slug/*
+   * Local-dev asset server — no auth (serves public bundled HTML/JS/CSS).
+   * In production, assets are served from the Cloudflare Worker instead.
+   */
+  app.get<{ Params: { slug: string; '*': string } }>(
+    '/api/preview/serve/:slug/*',
+    { config: { skipAuth: true } },
+    async (req, reply) => {
+      const { slug } = req.params;
+      let assetPath = '/' + (req.params['*'] || '');
+      if (assetPath === '/') assetPath = '/index.html';
+
+      // Find the most recent booted session for this slug
+      const session = getSessionBySlug(slug);
+      if (!session) {
+        return reply.status(404).send('Preview not booted. Click Boot in the workspace.');
+      }
+
+      const assets = getAssets(session.sessionId);
+      const content = assets?.get(assetPath);
+      if (!content) {
+        // Fallback to index.html for SPA client-side routing
+        const index = assets?.get('/index.html');
+        if (index) {
+          return reply.type('text/html').send(Buffer.from(index));
+        }
+        return reply.status(404).send('Asset not found');
+      }
+
+      const mime = mimeType(assetPath);
+      return reply.type(mime).send(Buffer.from(content));
+    },
+  );
+
+  // Also handle the slug root without trailing slash
+  app.get<{ Params: { slug: string } }>(
+    '/api/preview/serve/:slug',
+    { config: { skipAuth: true } },
+    async (req, reply) => {
+      const session = getSessionBySlug(req.params.slug);
+      if (!session) return reply.status(404).send('Preview not booted.');
+      const assets = getAssets(session.sessionId);
+      const index  = assets?.get('/index.html');
+      if (!index)  return reply.status(404).send('index.html not found');
+      return reply.type('text/html').send(Buffer.from(index));
+    },
+  );
+}
+
+function mimeType(path: string): string {
+  const ext = extname(path).toLowerCase();
+  const map: Record<string, string> = {
+    '.html': 'text/html',
+    '.js':   'application/javascript',
+    '.mjs':  'application/javascript',
+    '.css':  'text/css',
+    '.json': 'application/json',
+    '.svg':  'image/svg+xml',
+    '.png':  'image/png',
+    '.jpg':  'image/jpeg',
+    '.ico':  'image/x-icon',
+    '.woff': 'font/woff',
+    '.woff2':'font/woff2',
+  };
+  return map[ext] ?? 'application/octet-stream';
 }
 
 // ── KV sync ──────────────────────────────────────────────────────────────────
