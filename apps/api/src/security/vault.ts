@@ -1,4 +1,4 @@
-// apps/api/src/security/vault.ts — libsodium sealed-box secret vault.
+// apps/api/src/security/vault.ts — AES-256-GCM secret vault (Node built-in crypto).
 // NEVER import this from the browser or a Cloudflare Worker.
 // The secret_values table is readable only by the service role.
 //
@@ -8,9 +8,13 @@
 //   rotate(metadataId, newValue, tenantId) → void
 //   list(tenantId, projectId?) → SecretMetadata[] (no values)
 //   del(metadataId, tenantId) → void
+//
+// NOTE: Replaced libsodium-wrappers with Node's built-in crypto (AES-256-GCM)
+// to avoid pnpm virtual-store ESM resolution issues during esbuild bundling.
+// AES-256-GCM with a random 12-byte IV and authenticated tag is equivalent in
+// security to XSalsa20-Poly1305 for this use case.
 
-import sodium from 'libsodium-wrappers';
-import { createHash, randomBytes } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 import { getDb } from '../db/client';
 import { secretMetadata, secretValues } from '@abw/db';
 import { eq, and } from 'drizzle-orm';
@@ -18,40 +22,47 @@ import type { InferSelectModel } from 'drizzle-orm';
 
 export type SecretMetadataRow = InferSelectModel<typeof secretMetadata>;
 
-let _sodiumReady = false;
-async function getSodium() {
-  if (!_sodiumReady) {
-    await sodium.ready;
-    _sodiumReady = true;
-  }
-  return sodium;
-}
+const ALGO = 'aes-256-gcm' as const;
+const IV_BYTES = 12;   // 96-bit IV — GCM standard
+const TAG_BYTES = 16;  // 128-bit auth tag
 
-function getMasterKey(): Uint8Array {
+function getMasterKey(): Buffer {
   const raw = process.env['VAULT_MASTER_KEY'];
   if (!raw) throw new Error('VAULT_MASTER_KEY is not set');
-  return Buffer.from(raw, 'base64');
+  const key = Buffer.from(raw, 'base64');
+  if (key.length !== 32) throw new Error('VAULT_MASTER_KEY must be 32 bytes (base64-encoded)');
+  return key;
 }
 
-async function encrypt(plaintext: string): Promise<{ ciphertext: string; nonce: string }> {
-  const lib = await getSodium();
+function encrypt(plaintext: string): { ciphertext: string; nonce: string } {
   const key = getMasterKey();
-  const nonce = lib.randombytes_buf(lib.crypto_secretbox_NONCEBYTES);
-  const ct = lib.crypto_secretbox_easy(Buffer.from(plaintext, 'utf8'), nonce, key);
+  const iv = randomBytes(IV_BYTES);
+  const cipher = createCipheriv(ALGO, key, iv);
+  const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  // Store ciphertext + tag concatenated; nonce stored separately
+  const ciphertextWithTag = Buffer.concat([encrypted, tag]);
   return {
-    ciphertext: Buffer.from(ct).toString('base64'),
-    nonce:      Buffer.from(nonce).toString('base64'),
+    ciphertext: ciphertextWithTag.toString('base64'),
+    nonce:      iv.toString('base64'),
   };
 }
 
-async function decrypt(ciphertext: string, nonce: string): Promise<string> {
-  const lib = await getSodium();
+function decrypt(ciphertext: string, nonce: string): string {
   const key = getMasterKey();
-  const ct = Buffer.from(ciphertext, 'base64');
-  const n  = Buffer.from(nonce, 'base64');
-  const pt = lib.crypto_secretbox_open_easy(ct, n, key);
-  if (!pt) throw new Error('vault: decryption failed — bad key or tampered ciphertext');
-  return Buffer.from(pt).toString('utf8');
+  const iv = Buffer.from(nonce, 'base64');
+  const buf = Buffer.from(ciphertext, 'base64');
+  if (buf.length < TAG_BYTES) throw new Error('vault: ciphertext too short');
+  const tag        = buf.subarray(buf.length - TAG_BYTES);
+  const encrypted  = buf.subarray(0, buf.length - TAG_BYTES);
+  const decipher   = createDecipheriv(ALGO, key, iv);
+  decipher.setAuthTag(tag);
+  try {
+    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+    return decrypted.toString('utf8');
+  } catch {
+    throw new Error('vault: decryption failed — bad key or tampered ciphertext');
+  }
 }
 
 /** Store a new secret. Returns the metadata ID. */
@@ -65,7 +76,7 @@ export async function vaultPut(opts: {
   ownerId?: string;
 }): Promise<string> {
   const db = getDb();
-  const { ciphertext, nonce } = await encrypt(opts.value);
+  const { ciphertext, nonce } = encrypt(opts.value);
 
   const [meta] = await db.insert(secretMetadata).values({
     name:      opts.name,
@@ -123,7 +134,7 @@ export async function vaultRotate(opts: {
   tenantId: string;
 }): Promise<void> {
   const db = getDb();
-  const { ciphertext, nonce } = await encrypt(opts.newValue);
+  const { ciphertext, nonce } = encrypt(opts.newValue);
   await db.insert(secretValues).values({ metadataId: opts.metadataId, ciphertext, nonce });
   await db.update(secretMetadata)
     .set({ lastRotatedAt: new Date() })
