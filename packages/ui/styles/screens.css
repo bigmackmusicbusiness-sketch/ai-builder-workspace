@@ -1,6 +1,138 @@
 /* packages/ui/styles/screens.css — screen-level layout and component styles.
    Used by apps/web/src/screens/* and TopBar nav additions. */
 
+/* ── Login screen ────────────────────────────────────────────────── */
+.abw-login {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-base);
+  padding: var(--space-6);
+}
+
+.abw-login__card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-overlay);
+  padding: var(--space-8) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.abw-login__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.abw-login__logo {
+  font-size: 1.5rem;
+  color: var(--accent-500);
+  line-height: 1;
+}
+
+.abw-login__wordmark {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.abw-login__heading {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.abw-login__sub {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin: calc(-1 * var(--space-2)) 0 0;
+}
+
+.abw-login__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
+}
+
+.abw-login__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.abw-login__label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.abw-login__input {
+  height: 36px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-field);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: var(--font-sans);
+  outline: none;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              box-shadow    var(--duration-fast) var(--ease-standard);
+}
+
+.abw-login__input::placeholder { color: var(--text-disabled); }
+
+.abw-login__input:focus {
+  border-color: var(--border-focus);
+  box-shadow: var(--focus-ring);
+}
+
+.abw-login__input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.abw-login__error {
+  font-size: 0.8125rem;
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-field);
+  padding: var(--space-2) var(--space-3);
+  margin: 0;
+}
+
+.abw-login__btn {
+  height: 36px;
+  padding: 0 var(--space-4);
+  background: var(--accent-600);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: var(--radius-button);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard),
+              opacity     var(--duration-fast) var(--ease-standard);
+  margin-top: var(--space-2);
+}
+
+.abw-login__btn:hover:not(:disabled) { background: var(--accent-700); }
+.abw-login__btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.abw-login__btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
 /* ── Screen layout ───────────────────────────────────────────────── */
 .abw-screen {
   flex: 1;
