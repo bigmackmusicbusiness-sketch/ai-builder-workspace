@@ -24,7 +24,36 @@ const ChatBodySchema = z.object({
   projectEnv: z.enum(['dev', 'staging', 'preview', 'production']).default('dev'),
 });
 
+// CORS origins that are allowed to call the chat endpoint.
+// Mirrors the allowlist in server.ts but applied manually because
+// reply.hijack() bypasses Fastify's @fastify/cors plugin lifecycle.
+const ALLOWED_ORIGINS = [
+  /^http:\/\/localhost:\d+$/,
+  /^https:\/\/.*\.pages\.dev$/,
+  /^https:\/\/.*\.railway\.app$/,
+];
+
+function resolveOrigin(origin: string | undefined): string {
+  if (!origin) return '*';
+  return ALLOWED_ORIGINS.some((r) => r.test(origin)) ? origin : '*';
+}
+
 export async function chatRoutes(app: FastifyInstance): Promise<void> {
+  // Handle CORS preflight for the SSE endpoint.
+  // @fastify/cors handles OPTIONS for normal routes, but we need an explicit
+  // handler here so the preflight succeeds before the POST is attempted.
+  app.options('/api/chat', async (req, reply) => {
+    const origin = resolveOrigin(req.headers['origin'] as string | undefined);
+    return reply
+      .header('Access-Control-Allow-Origin',  origin)
+      .header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+      .header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+      .header('Access-Control-Max-Age',       '86400')
+      .header('Vary',                         'Origin')
+      .status(204)
+      .send();
+  });
+
   app.addHook('preHandler', authMiddleware);
 
   /**
@@ -55,12 +84,17 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
 
     // ── SSE stream setup ──────────────────────────────────────────────────────
     // hijack() bypasses Fastify's response lifecycle so we can write raw chunks.
+    // We must set CORS headers manually — @fastify/cors won't run after hijack().
+    const origin = resolveOrigin(req.headers['origin'] as string | undefined);
     reply.hijack();
     const raw = reply.raw;
-    raw.setHeader('Content-Type',  'text/event-stream; charset=utf-8');
-    raw.setHeader('Cache-Control', 'no-cache, no-transform');
-    raw.setHeader('Connection',    'keep-alive');
-    raw.setHeader('X-Accel-Buffering', 'no');  // disable nginx buffering if present
+    raw.setHeader('Access-Control-Allow-Origin',      origin);
+    raw.setHeader('Access-Control-Allow-Credentials', 'true');
+    raw.setHeader('Vary',                             'Origin');
+    raw.setHeader('Content-Type',                     'text/event-stream; charset=utf-8');
+    raw.setHeader('Cache-Control',                    'no-cache, no-transform');
+    raw.setHeader('Connection',                       'keep-alive');
+    raw.setHeader('X-Accel-Buffering',                'no');
     raw.flushHeaders?.();
 
     const controller = new AbortController();
