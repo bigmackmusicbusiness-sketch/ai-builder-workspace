@@ -11,7 +11,11 @@ export function getDb(): ReturnType<typeof drizzle<typeof schema>> {
     const connectionString = process.env['DATABASE_URL'] ?? process.env['SUPABASE_URL'];
     if (!connectionString) throw new Error('DATABASE_URL or SUPABASE_URL is required');
     // Use transaction pooler URL format when available.
-    const sql = postgres(connectionString, { max: 10, idle_timeout: 30 });
+    const sql = postgres(connectionString, {
+      max: 10,
+      idle_timeout: 30,
+      prepare: false,  // Required for Supabase Supavisor transaction pooler (port 6543)
+    });
     _client = drizzle(sql, { schema });
   }
   return _client as ReturnType<typeof drizzle<typeof schema>>;
