@@ -6,21 +6,23 @@ import { useRunStore } from '../../lib/store/runStore';
 // Minimal static model list; real list comes from /api/providers/models once wired.
 const PROVIDERS = [
   {
-    id: 'ollama',
-    label: 'Ollama (local)',
-    models: [
-      { id: 'llama3', label: 'Llama 3 8B' },
-      { id: 'llama3:70b', label: 'Llama 3 70B' },
-      { id: 'mistral', label: 'Mistral 7B' },
-      { id: 'codestral', label: 'Codestral' },
-    ],
-  },
-  {
     id: 'minimax',
     label: 'MiniMax',
     models: [
-      { id: 'minimax-text-01', label: 'MiniMax Text 01' },
-      { id: 'abab6.5s-chat', label: 'ABAB 6.5s' },
+      { id: 'MiniMax-M2.7',           label: 'MiniMax M2.7' },
+      { id: 'MiniMax-M2.7-highspeed', label: 'MiniMax M2.7 (highspeed)' },
+      { id: 'MiniMax-M2.5',           label: 'MiniMax M2.5' },
+      { id: 'MiniMax-M2.5-highspeed', label: 'MiniMax M2.5 (highspeed)' },
+    ],
+  },
+  {
+    id: 'ollama',
+    label: 'Ollama (local)',
+    models: [
+      { id: 'llama3',      label: 'Llama 3 8B' },
+      { id: 'llama3:70b',  label: 'Llama 3 70B' },
+      { id: 'mistral',     label: 'Mistral 7B' },
+      { id: 'codestral',   label: 'Codestral' },
     ],
   },
 ] as const;

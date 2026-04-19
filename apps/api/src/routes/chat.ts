@@ -70,7 +70,13 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
       return reply.status(400).send({ error: 'Invalid body', detail: parsed.error.format() });
     }
 
-    const { messages, provider, model, projectEnv } = parsed.data;
+    const { messages, provider, projectEnv } = parsed.data;
+
+    // Normalise model name — guard against stale persisted values from old UI.
+    const MINIMAX_MODELS = ['MiniMax-M2.7', 'MiniMax-M2.7-highspeed', 'MiniMax-M2.5', 'MiniMax-M2.5-highspeed', 'MiniMax-M2.1'];
+    const model = (provider === 'minimax' && !MINIMAX_MODELS.includes(parsed.data.model))
+      ? 'MiniMax-M2.7'   // default to M2.7 if the stored model name is wrong/stale
+      : parsed.data.model;
 
     // ── Select adapter ────────────────────────────────────────────────────────
     let adapter;

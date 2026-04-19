@@ -44,8 +44,8 @@ async function runControl(runId: string, action: string): Promise<void> {
 export const useRunStore = create<RunState>()(
   persist<RunState>(
     (set, get) => ({
-      selectedProvider: 'ollama',
-      selectedModel: 'llama3',
+      selectedProvider: 'minimax',
+      selectedModel: 'MiniMax-M2.7',
       setProvider: (provider: string) => set({ selectedProvider: provider }),
       setModel: (model: string) => set({ selectedModel: model }),
 
