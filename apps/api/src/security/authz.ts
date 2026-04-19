@@ -1,9 +1,8 @@
 // apps/api/src/security/authz.ts — server-side authorization guards.
-// Verifies Supabase JWTs locally using SUPABASE_JWT_SECRET (HS256) — no outbound
-// HTTP call to Supabase on every request, which avoids latency and auth/anon-key
-// permission issues with supabase.auth.getUser() in server contexts.
-// Never trust client-supplied tenantId, role, or hidden fields.
-import { createHmac } from 'node:crypto';
+// Verifies Supabase JWTs locally using ES256 (ECDSA P-256) via the project's
+// JWKS endpoint — no outbound HTTP call per request after the first key fetch.
+// Keys are cached by kid; re-fetched if an unknown kid appears (key rotation).
+import { webcrypto } from 'node:crypto';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
 export interface AuthContext {
@@ -13,55 +12,92 @@ export interface AuthContext {
   email:    string;
 }
 
-// ── JWT verification (HS256, local) ──────────────────────────────────────────
+// ── JWKS key cache ────────────────────────────────────────────────────────────
 
-interface SupabaseJwtPayload {
-  sub:           string;
-  email?:        string;
-  exp:           number;
-  iat:           number;
-  role?:         string;             // "authenticated" — Supabase DB role, not our app role
+const keyCache = new Map<string, webcrypto.CryptoKey>();
+
+function getJwksUrl(): string {
+  const url = process.env['SUPABASE_URL'];
+  if (!url) throw new Error('SUPABASE_URL is not set');
+  return `${url}/auth/v1/.well-known/jwks.json`;
+}
+
+async function fetchPublicKey(kid: string): Promise<webcrypto.CryptoKey> {
+  if (keyCache.has(kid)) return keyCache.get(kid)!;
+
+  const res  = await fetch(getJwksUrl(), { signal: AbortSignal.timeout(5000) });
+  if (!res.ok) throw Object.assign(new Error('Failed to fetch JWKS'), { statusCode: 500 });
+
+  const { keys } = await res.json() as { keys: (webcrypto.JsonWebKey & { kid?: string; alg?: string })[] };
+  const jwk = keys.find((k) => k.kid === kid) ?? keys[0];
+  if (!jwk) throw Object.assign(new Error('No matching JWK found'), { statusCode: 500 });
+
+  const cryptoKey = await webcrypto.subtle.importKey(
+    'jwk',
+    jwk,
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    false,
+    ['verify'],
+  );
+  keyCache.set(kid, cryptoKey);
+  return cryptoKey;
+}
+
+// ── JWT types ─────────────────────────────────────────────────────────────────
+
+interface JwtHeader  { alg: string; kid?: string }
+interface JwtPayload {
+  sub:   string;
+  email?: string;
+  exp:   number;
+  iat:   number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   user_metadata?: Record<string, any>;
 }
 
-function base64urlDecode(s: string): string {
-  // Convert base64url → base64 → utf8
+// ── ES256 JWT verification ────────────────────────────────────────────────────
+
+function b64urlToBuffer(s: string): Uint8Array {
   const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
-  return Buffer.from(b64, 'base64').toString('utf8');
+  const raw = atob(b64);
+  return Uint8Array.from(raw, (c) => c.charCodeAt(0));
 }
 
-function verifyJwt(token: string): SupabaseJwtPayload {
-  const secret = process.env['SUPABASE_JWT_SECRET'];
-  if (!secret) throw Object.assign(new Error('SUPABASE_JWT_SECRET is not set'), { statusCode: 500 });
+function b64urlDecode(s: string): string {
+  return new TextDecoder().decode(b64urlToBuffer(s));
+}
 
+async function verifyJwt(token: string): Promise<JwtPayload> {
   const parts = token.split('.');
   if (parts.length !== 3) throw Object.assign(new Error('Malformed token'), { statusCode: 401 });
+  const [hB64, pB64, sB64] = parts as [string, string, string];
 
-  const [headerB64, payloadB64, sigB64] = parts as [string, string, string];
+  let header: JwtHeader;
+  try { header = JSON.parse(b64urlDecode(hB64)) as JwtHeader; }
+  catch { throw Object.assign(new Error('Malformed token header'), { statusCode: 401 }); }
 
-  // Verify HMAC-SHA256 signature
-  const data      = `${headerB64}.${payloadB64}`;
-  const expected  = createHmac('sha256', secret).update(data).digest('base64url');
-  if (expected !== sigB64) {
-    throw Object.assign(new Error('Invalid token signature'), { statusCode: 401 });
-  }
+  // Fetch / cache the ECDSA public key by kid
+  const publicKey = await fetchPublicKey(header.kid ?? '');
 
-  // Decode payload
-  let payload: SupabaseJwtPayload;
-  try {
-    payload = JSON.parse(base64urlDecode(payloadB64)) as SupabaseJwtPayload;
-  } catch {
-    throw Object.assign(new Error('Malformed token payload'), { statusCode: 401 });
-  }
+  // Verify ES256 signature
+  const signingInput = new TextEncoder().encode(`${hB64}.${pB64}`);
+  const signature    = b64urlToBuffer(sB64);
+  const valid = await webcrypto.subtle.verify(
+    { name: 'ECDSA', hash: 'SHA-256' },
+    publicKey,
+    signature,
+    signingInput,
+  );
+  if (!valid) throw Object.assign(new Error('Invalid token signature'), { statusCode: 401 });
 
-  // Check expiry
+  // Decode and validate payload
+  let payload: JwtPayload;
+  try { payload = JSON.parse(b64urlDecode(pB64)) as JwtPayload; }
+  catch { throw Object.assign(new Error('Malformed token payload'), { statusCode: 401 }); }
+
+  if (!payload.sub) throw Object.assign(new Error('Token missing subject'), { statusCode: 401 });
   if (!payload.exp || payload.exp < Math.floor(Date.now() / 1000)) {
-    throw Object.assign(new Error('Token expired'), { statusCode: 401 });
-  }
-
-  if (!payload.sub) {
-    throw Object.assign(new Error('Token missing subject'), { statusCode: 401 });
+    throw Object.assign(new Error('Token expired — please sign in again'), { statusCode: 401 });
   }
 
   return payload;
@@ -69,17 +105,13 @@ function verifyJwt(token: string): SupabaseJwtPayload {
 
 // ── Auth context resolution ───────────────────────────────────────────────────
 
-/** Extract and verify the auth context from the Fastify request's Authorization header. */
 export async function getAuthContext(req: FastifyRequest): Promise<AuthContext> {
   const authHeader = req.headers['authorization'];
   if (!authHeader?.startsWith('Bearer ')) {
     throw Object.assign(new Error('Missing or invalid Authorization header'), { statusCode: 401 });
   }
-  const token = authHeader.slice(7);
 
-  const payload = verifyJwt(token);
-
-  // tenant_id and role are stored in user_metadata (set via Admin API on account creation)
+  const payload  = await verifyJwt(authHeader.slice(7));
   const meta     = payload.user_metadata ?? {};
   const tenantId = meta['tenant_id'] as string | undefined;
   const appRole  = (meta['role'] as string | undefined) ?? 'member';
@@ -99,7 +131,6 @@ export async function getAuthContext(req: FastifyRequest): Promise<AuthContext> 
   };
 }
 
-/** Require a minimum role level. Throws 403 if the user does not qualify. */
 export function requireRole(ctx: AuthContext, minRole: 'owner' | 'admin' | 'member'): void {
   const LEVELS: Record<string, number> = { viewer: 0, member: 1, admin: 2, owner: 3 };
   if ((LEVELS[ctx.role] ?? 0) < (LEVELS[minRole] ?? 0)) {
@@ -107,7 +138,6 @@ export function requireRole(ctx: AuthContext, minRole: 'owner' | 'admin' | 'memb
   }
 }
 
-/** Fastify preHandler that attaches authContext to request. */
 export async function authMiddleware(req: FastifyRequest, reply: FastifyReply): Promise<void> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
