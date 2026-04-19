@@ -17,7 +17,9 @@ await build({
   // 'packages: bundle' requires esbuild >=0.22 — omit it; bundle:true already inlines everything
   external: [
     // native addons / binaries that can't be bundled
-    'libsodium-wrappers',
+    // NOTE: libsodium-wrappers is pure JS/WASM — esbuild can bundle it inline.
+    // It was previously external, which caused ERR_MODULE_NOT_FOUND at runtime
+    // because pnpm's node_modules layout hides its internal libsodium.mjs.
     'playwright',
     'playwright-core',
     'esbuild',
