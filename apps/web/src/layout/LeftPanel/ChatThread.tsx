@@ -5,6 +5,9 @@
 import { useRef, useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useChatStore } from '../../lib/store/chatStore';
 import { useRunStore } from '../../lib/store/runStore';
+import { useAuthStore } from '../../lib/store/authStore';
+
+const API_BASE = import.meta.env['VITE_API_URL'] ?? 'http://localhost:3007';
 
 const PROJECT_ID = 'global'; // replaced with real projectId once project routing exists
 
@@ -52,7 +55,7 @@ async function trySubscribeToRun(
 export function ChatThread() {
   const messages = useChatStore((s) => s.messagesByProject[PROJECT_ID] ?? []);
   const { addMessage, appendToLast } = useChatStore();
-  const { activeRun } = useRunStore();
+  const { activeRun, selectedProvider, selectedModel } = useRunStore();
   const [draft, setDraft] = useState('');
   const bottomRef         = useRef<HTMLDivElement>(null);
   const textareaRef       = useRef<HTMLTextAreaElement>(null);
@@ -92,34 +95,98 @@ export function ChatThread() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeRun?.id]);
 
-  function submit() {
+  async function submit() {
     const text = draft.trim();
     if (!text) return;
+
+    // Snapshot conversation history to send as context
+    const history = (messages ?? []).slice(-20).map((m) => ({
+      role:    m.role as 'user' | 'assistant',
+      content: m.content,
+    }));
+
     addMessage(PROJECT_ID, { role: 'user', content: text, runId: activeRun?.id });
     setDraft('');
-    // Real send: POST /api/runs + start run with goal=text.
-    // Stub: confirm intent until run system is wired.
-    setTimeout(() => {
-      addMessage(PROJECT_ID, {
-        role:    'assistant',
-        content: `Got it — I'll start working on: "${text}". (Connect the API to begin a real run.)`,
+
+    // Optimistically add an empty assistant message we'll stream into
+    addMessage(PROJECT_ID, { role: 'assistant', content: '' });
+
+    try {
+      const session = useAuthStore.getState().session;
+      const token   = session?.access_token;
+      if (!token) {
+        appendToLast(PROJECT_ID, '(Not signed in — please refresh and log in again.)');
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/api/chat`, {
+        method:  'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          messages: [
+            ...history,
+            { role: 'user', content: text },
+          ],
+          provider: selectedProvider,
+          model:    selectedModel,
+        }),
       });
-    }, 300);
+
+      if (!res.ok || !res.body) {
+        const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` })) as { error?: string };
+        appendToLast(PROJECT_ID, `Error: ${err.error ?? 'Unknown error'}`);
+        return;
+      }
+
+      // Read SSE stream and append delta tokens to the last message
+      const reader  = res.body.getReader();
+      const decoder = new TextDecoder();
+      let   buf     = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() ?? '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const raw = line.slice(6).trim();
+          if (raw === '[DONE]') break;
+          try {
+            const event = JSON.parse(raw) as { type: string; delta?: string; error?: string };
+            if (event.type === 'delta' && event.delta) {
+              appendToLast(PROJECT_ID, event.delta);
+            } else if (event.type === 'error') {
+              appendToLast(PROJECT_ID, `\n\n⚠ ${event.error}`);
+            }
+          } catch { /* malformed SSE line */ }
+        }
+      }
+    } catch (err) {
+      appendToLast(PROJECT_ID, `\n\nNetwork error: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
+
+  const [sending, setSending] = useState(false);
 
   function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      submit();
+      if (!sending) { setSending(true); void submit().finally(() => setSending(false)); }
     }
   }
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    submit();
+    if (!sending) { setSending(true); void submit().finally(() => setSending(false)); }
   }
 
-  const isRunning = activeRun?.status === 'running' || activeRun?.status === 'planning';
+  const isRunning = sending || activeRun?.status === 'running' || activeRun?.status === 'planning';
 
   return (
     <div className="abw-chat" aria-label="Chat thread">
@@ -156,7 +223,7 @@ export function ChatThread() {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder={isRunning ? 'Run in progress…' : 'Describe what to build… (Enter to send)'}
+          placeholder={sending ? 'Thinking…' : isRunning ? 'Run in progress…' : 'Describe what to build… (Enter to send)'}
           rows={1}
           aria-label="Message input"
           disabled={isRunning}

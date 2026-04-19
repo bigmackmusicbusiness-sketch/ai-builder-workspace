@@ -14,6 +14,7 @@ import { dbRoutes }       from './routes/db';
 import { runsRoutes }     from './routes/runs';
 import { testsRoutes }      from './routes/tests';
 import { approvalsRoutes }  from './routes/approvals';
+import { chatRoutes }       from './routes/chat';
 
 async function main(): Promise<void> {
   // Initialise DB before anything else so getDb() is ready for all route handlers.
@@ -55,6 +56,7 @@ async function main(): Promise<void> {
   await app.register(previewRoutes);
   await app.register(testsRoutes);
   await app.register(approvalsRoutes);
+  await app.register(chatRoutes);
 
   // ── Start ───────────────────────────────────────────────────────────────────
   try {

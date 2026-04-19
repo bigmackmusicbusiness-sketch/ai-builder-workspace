@@ -17,8 +17,18 @@ import { vaultGet } from '../security/vault';
 // International platform endpoint — NOT api.minimax.chat (retired China endpoint).
 const MINIMAX_BASE = 'https://api.minimax.io/v1';
 
+// Try common key names in priority order so users can store the key under any name.
+const KEY_NAMES = ['MINIMAX_API_KEY', 'MINIMAX', 'minimax.api_key', 'MINIMAX_KEY'];
+
 async function getApiKey(tenantId: string, env: string): Promise<string> {
-  return vaultGet({ name: 'minimax.api_key', env, tenantId });
+  for (const name of KEY_NAMES) {
+    try {
+      return await vaultGet({ name, env, tenantId });
+    } catch { /* try next name */ }
+  }
+  throw new Error(
+    `MiniMax API key not found in vault. Store it as MINIMAX_API_KEY in the Env & Secrets screen.`,
+  );
 }
 
 async function* parseSSE(
