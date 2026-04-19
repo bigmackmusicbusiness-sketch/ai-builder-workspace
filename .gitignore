@@ -44,9 +44,14 @@ Thumbs.db
 *.tsbuildinfo
 .drizzle/
 
-# secrets — belt and suspenders
-*secret*
-*SECRET*
+# secrets — only match actual secret files, not source code with "secret" in the name
+*.secret
+*.secret.*
+.secrets
 .vault/
 *.pem
 *.key
+*_secret_key*
+secrets.json
+secrets.yaml
+secrets.yml
