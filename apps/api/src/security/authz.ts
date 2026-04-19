@@ -6,10 +6,11 @@ import { webcrypto } from 'node:crypto';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
 export interface AuthContext {
-  userId:   string;
-  tenantId: string;
-  role:     'owner' | 'admin' | 'member' | 'viewer';
-  email:    string;
+  userId:      string;  // public.users.id (internal UUID) — use for FK references
+  supabaseUid: string;  // auth.users.id  (JWT sub)       — use for Supabase auth calls
+  tenantId:    string;
+  role:        'owner' | 'admin' | 'member' | 'viewer';
+  email:       string;
 }
 
 // ── JWKS key cache ────────────────────────────────────────────────────────────
@@ -123,8 +124,13 @@ export async function getAuthContext(req: FastifyRequest): Promise<AuthContext> 
     );
   }
 
+  // internal_user_id = public.users.id (different from auth UUID).
+  // Stored in user_metadata at account creation so we avoid a DB lookup per request.
+  const internalUserId = meta['internal_user_id'] as string | undefined;
+
   return {
-    userId:   payload.sub,
+    userId:   internalUserId ?? payload.sub,  // prefer internal UUID; fall back to auth UUID
+    supabaseUid: payload.sub,
     tenantId,
     role:     appRole as AuthContext['role'],
     email:    payload.email ?? '',
