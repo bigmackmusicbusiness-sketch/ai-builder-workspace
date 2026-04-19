@@ -2,6 +2,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { env } from './config/env';
+import { initDb }         from './db/client';
 import { filesRoutes }    from './routes/files';
 import { versionsRoutes } from './routes/versions';
 import { previewRoutes }  from './routes/preview';
@@ -15,6 +16,10 @@ import { testsRoutes }      from './routes/tests';
 import { approvalsRoutes }  from './routes/approvals';
 
 async function main(): Promise<void> {
+  // Initialise DB before anything else so getDb() is ready for all route handlers.
+  // This resolves the Supabase hostname to IPv4 (Railway cannot route IPv6 to Supabase).
+  await initDb();
+
   const app = Fastify({ logger: { level: 'info' } });
 
   // ── CORS ────────────────────────────────────────────────────────────────────
