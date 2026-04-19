@@ -14,8 +14,7 @@ await build({
   target: 'node20',
   format: 'esm',
   sourcemap: true,
-  // Inline all workspace packages; only keep native node modules external
-  packages: 'bundle',
+  // 'packages: bundle' requires esbuild >=0.22 — omit it; bundle:true already inlines everything
   external: [
     // native addons / binaries that can't be bundled
     'libsodium-wrappers',
