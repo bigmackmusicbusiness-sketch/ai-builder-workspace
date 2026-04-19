@@ -4,6 +4,7 @@
 import { useRef, useCallback } from 'react';
 import { usePreviewStore } from '../../../lib/store/previewStore';
 import { ProcessManager } from '../../../features/preview/ProcessManager';
+import { apiFetch } from '../../../lib/api';
 
 const VIEWPORT_SIZES: { label: string; w: number }[] = [
   { label: '360', w: 360 },
@@ -13,8 +14,6 @@ const VIEWPORT_SIZES: { label: string; w: number }[] = [
   { label: '1440', w: 1440 },
   { label: 'Full', w: 0 },
 ];
-
-const API_URL = import.meta.env['VITE_API_URL'] ?? 'http://localhost:8787';
 
 export function PreviewMode() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -46,19 +45,10 @@ export function PreviewMode() {
         processes: [],
       });
 
-      const res = await fetch(`${API_URL}/api/preview/boot`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const err = await res.json() as { error?: string };
-        updateSession({ status: 'error', error: err.error ?? 'Boot failed' });
-        return;
-      }
-
-      const data = await res.json() as { sessionId: string; previewUrl: string };
+      const data = await apiFetch<{ sessionId: string; previewUrl: string }>(
+        '/api/preview/boot',
+        { method: 'POST', body: JSON.stringify(body) },
+      );
       setSession({
         sessionId: data.sessionId,
         projectSlug: 'my-project',
@@ -70,7 +60,7 @@ export function PreviewMode() {
       // Poll status + logs until booted or error
       void pollSession(data.sessionId);
     } catch (err) {
-      updateSession({ status: 'error', error: String(err) });
+      updateSession({ status: 'error', error: err instanceof Error ? err.message : String(err) });
     }
   }, [setSession, updateSession]);
 
@@ -81,9 +71,9 @@ export function PreviewMode() {
       await sleep(2000);
       attempts++;
       try {
-        const res = await fetch(`${API_URL}/api/preview/logs?sessionId=${sessionId}`);
-        if (!res.ok) break;
-        const data = await res.json() as { logs: typeof logs; sessionStatus: string };
+        const data = await apiFetch<{ logs: typeof logs; sessionStatus: string }>(
+          `/api/preview/logs?sessionId=${sessionId}`,
+        );
         if (data.logs.length > 0) appendLogs(data.logs);
         updateSession({ status: data.sessionStatus as typeof sessionStatus });
         if (data.sessionStatus === 'booted' || data.sessionStatus === 'error' || data.sessionStatus === 'stopped') break;
@@ -97,15 +87,12 @@ export function PreviewMode() {
   const handleStop = useCallback(async () => {
     if (!session?.sessionId) return;
     try {
-      await fetch(`${API_URL}/api/preview/stop`, {
+      await apiFetch('/api/preview/stop', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId: session.sessionId }),
       });
-      updateSession({ status: 'stopped' });
-    } catch {
-      updateSession({ status: 'stopped' });
-    }
+    } catch { /* ignore stop errors */ }
+    updateSession({ status: 'stopped' });
   }, [session, updateSession]);
 
   // ── Reload ─────────────────────────────────────────────────────────────────
@@ -283,18 +270,9 @@ function EmptyState({
     <div className="abw-mode-placeholder" style={{ height: '100%' }}>
       <span className="abw-mode-placeholder__icon" aria-hidden>🖥</span>
       <span className="abw-mode-placeholder__label">No preview running</span>
-      <span className="abw-mode-placeholder__sub">Boot a project to see the live preview here.</span>
-      <button
-        onClick={onBoot}
-        style={{
-          marginTop: 'var(--space-3)', padding: 'var(--space-2) var(--space-4)',
-          background: 'var(--accent-500)', color: '#fff', border: 'none',
-          borderRadius: 'var(--radius-button)', cursor: 'pointer',
-          fontWeight: 600, fontSize: '0.875rem',
-        }}
-      >
-        Boot preview
-      </button>
+      <span className="abw-mode-placeholder__sub">
+        Open or create a project, then boot the preview server to see it here.
+      </span>
     </div>
   );
 }

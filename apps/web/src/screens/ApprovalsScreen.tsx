@@ -2,6 +2,7 @@
 // Accessible from /approvals route. Shows all approvals with bundle details,
 // inline diff, screenshots, and verification results.
 import { useState, useEffect, useCallback } from 'react';
+import { apiFetch } from '../lib/api';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -233,8 +234,7 @@ export function ApprovalsScreen() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res  = await fetch('/api/approvals');
-      const data = await res.json() as { approvals?: ApprovalRow[] };
+      const data = await apiFetch<{ approvals?: ApprovalRow[] }>('/api/approvals');
       setApprovals(data.approvals ?? []);
     } catch { /* offline */ }
     finally { setLoading(false); }
@@ -249,10 +249,9 @@ export function ApprovalsScreen() {
   ) => {
     setReviewing(id);
     try {
-      await fetch(`/api/approvals/${id}/${action === 'changes' ? 'changes' : action}`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ note }),
+      await apiFetch(`/api/approvals/${id}/${action === 'changes' ? 'changes' : action}`, {
+        method: 'POST',
+        body:   JSON.stringify({ note }),
       });
       await load();
     } finally { setReviewing(null); }

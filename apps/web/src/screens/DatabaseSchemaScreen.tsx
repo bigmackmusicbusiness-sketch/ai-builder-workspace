@@ -3,6 +3,7 @@
 // Staging/prod apply is approval-gated (server enforces; UI surfaces the gate).
 // DB Browser: live table viewer + SQL editor via /api/db routes.
 import { useState, useRef } from 'react';
+import { apiFetch } from '../lib/api';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -314,16 +315,17 @@ function DbBrowser() {
     setRunning(true);
     const t0 = Date.now();
     try {
-      const res = await fetch('/api/db/query', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          projectId: '00000000-0000-0000-0000-000000000000',
-          sql:       sql.trim(),
-          readOnly:  true,
-        }),
-      });
-      const data = await res.json() as { rows?: unknown[][]; columns?: string[]; error?: string };
+      const data = await apiFetch<{ rows?: unknown[][]; columns?: string[]; error?: string }>(
+        '/api/db/query',
+        {
+          method: 'POST',
+          body:   JSON.stringify({
+            projectId: '00000000-0000-0000-0000-000000000000',
+            sql:       sql.trim(),
+            readOnly:  true,
+          }),
+        },
+      );
       if (data.error) {
         setResult({ columns: [], rows: [], rowCount: 0, durationMs: Date.now() - t0, error: data.error });
       } else {

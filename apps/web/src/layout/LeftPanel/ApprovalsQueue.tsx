@@ -1,6 +1,7 @@
 // apps/web/src/layout/LeftPanel/ApprovalsQueue.tsx — compact approvals list in left panel.
 // Shows pending approvals with a badge count. Full screen via link.
 import { useState, useEffect, useCallback } from 'react';
+import { apiFetch } from '../../lib/api';
 
 interface ApprovalRow {
   id:          string;
@@ -48,8 +49,7 @@ export function ApprovalsQueue() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res  = await fetch('/api/approvals');
-      const data = await res.json() as { approvals?: ApprovalRow[] };
+      const data = await apiFetch<{ approvals?: ApprovalRow[] }>('/api/approvals');
       setApprovals(data.approvals ?? []);
     } catch { /* network offline */ }
     finally { setLoading(false); }
@@ -60,10 +60,9 @@ export function ApprovalsQueue() {
   const review = async (id: string, action: 'approve' | 'reject' | 'changes', note?: string) => {
     setReviewing(id);
     try {
-      await fetch(`/api/approvals/${id}/${action === 'changes' ? 'changes' : action}`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ note }),
+      await apiFetch(`/api/approvals/${id}/${action === 'changes' ? 'changes' : action}`, {
+        method: 'POST',
+        body:   JSON.stringify({ note }),
       });
       await load();
     } finally { setReviewing(null); }

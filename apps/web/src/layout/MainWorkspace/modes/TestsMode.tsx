@@ -3,6 +3,7 @@
 // "Run all" and per-row run buttons POST to /api/tests/run.
 import { Fragment, useState, useCallback } from 'react';
 import { useRunStore } from '../../../lib/store/runStore';
+import { apiFetch } from '../../../lib/api';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -121,17 +122,18 @@ export function TestsMode() {
     markRow(adapter, { status: 'running', findings: [], summary: 'Running…' });
 
     try {
-      const res = await fetch('/api/tests/run', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          projectId:   activeRun?.id ?? '00000000-0000-0000-0000-000000000000',
-          projectRoot: '.',
-          adapters:    [adapter],
-        }),
-      });
-      const data = await res.json() as { results?: Array<{ adapter: string; ok: boolean; durationMs: number; summary: string; findings: AdapterFinding[]; skipped: boolean }> };
-      const r    = data.results?.[0];
+      const data = await apiFetch<{ results?: Array<{ adapter: string; ok: boolean; durationMs: number; summary: string; findings: AdapterFinding[]; skipped: boolean }> }>(
+        '/api/tests/run',
+        {
+          method: 'POST',
+          body:   JSON.stringify({
+            projectId:   activeRun?.id ?? '00000000-0000-0000-0000-000000000000',
+            projectRoot: '.',
+            adapters:    [adapter],
+          }),
+        },
+      );
+      const r = data.results?.[0];
       if (r) {
         markRow(adapter, {
           status:     r.skipped ? 'skipped' : r.ok ? 'passed' : 'failed',
@@ -157,15 +159,16 @@ export function TestsMode() {
     setRows((prev) => prev.map((r) => ({ ...r, status: 'running', findings: [], summary: 'Running…' })));
 
     try {
-      const res = await fetch('/api/tests/run', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          projectId:   activeRun?.id ?? '00000000-0000-0000-0000-000000000000',
-          projectRoot: '.',
-        }),
-      });
-      const data = await res.json() as { results?: Array<{ adapter: string; ok: boolean; durationMs: number; summary: string; findings: AdapterFinding[]; skipped: boolean }> };
+      const data = await apiFetch<{ results?: Array<{ adapter: string; ok: boolean; durationMs: number; summary: string; findings: AdapterFinding[]; skipped: boolean }> }>(
+        '/api/tests/run',
+        {
+          method: 'POST',
+          body:   JSON.stringify({
+            projectId:   activeRun?.id ?? '00000000-0000-0000-0000-000000000000',
+            projectRoot: '.',
+          }),
+        },
+      );
       for (const r of data.results ?? []) {
         markRow(r.adapter, {
           status:     r.skipped ? 'skipped' : r.ok ? 'passed' : 'failed',

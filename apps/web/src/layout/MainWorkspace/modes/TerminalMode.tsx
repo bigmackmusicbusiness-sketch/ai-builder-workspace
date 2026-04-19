@@ -3,6 +3,7 @@
 // UI: textarea-based terminal with command history. Real xterm.js integration
 // is a Step 14 polish item; this provides the full UX contract.
 import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
+import { apiFetch } from '../../../lib/api';
 
 interface HistoryEntry {
   type: 'input' | 'output' | 'error';
@@ -17,16 +18,17 @@ Type a command and press Enter. Commands run in the project sandbox.
 
 async function runCommand(cmd: string): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   try {
-    const res = await fetch('/api/shell/exec', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({
-        command:   cmd.trim(),
-        projectId: '00000000-0000-0000-0000-000000000000',
-        cwd:       '/tmp/project',
-      }),
-    });
-    const data = await res.json() as { stdout?: string; stderr?: string; exitCode?: number; error?: string };
+    const data = await apiFetch<{ stdout?: string; stderr?: string; exitCode?: number; error?: string }>(
+      '/api/shell/exec',
+      {
+        method: 'POST',
+        body:   JSON.stringify({
+          command:   cmd.trim(),
+          projectId: '00000000-0000-0000-0000-000000000000',
+          cwd:       '/tmp/project',
+        }),
+      },
+    );
     if (data.error) return { stdout: '', stderr: data.error, exitCode: 1 };
     return { stdout: data.stdout ?? '', stderr: data.stderr ?? '', exitCode: data.exitCode ?? 0 };
   } catch (err: unknown) {

@@ -3,6 +3,7 @@
 // No silent fallback: fallbackEnabled default is false.
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { apiFetch } from '../api';
 
 export type AgentRunStatus =
   | 'idle' | 'planning' | 'building' | 'running'
@@ -37,7 +38,7 @@ interface RunState {
 }
 
 async function runControl(runId: string, action: string): Promise<void> {
-  await fetch(`/api/runs/${runId}/${action}`, { method: 'POST' });
+  await apiFetch(`/api/runs/${runId}/${action}`, { method: 'POST' });
 }
 
 export const useRunStore = create<RunState>()(

@@ -3,6 +3,7 @@
 // Click a cell to see screenshot + diff + console at capture time.
 // Baselines are editable (audit-logged via /api/tests/baseline).
 import { useState, useCallback } from 'react';
+import { apiFetch } from '../../../lib/api';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -204,25 +205,18 @@ export function VisualQAMode() {
   const handleCapture = useCallback(async () => {
     setCapturing(true);
     try {
-      const res = await fetch('/api/tests/run', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          projectId:   '00000000-0000-0000-0000-000000000000',
-          projectRoot: '.',
-          adapters:    ['screenshotDiff'],
-        }),
-      });
-      const data = await res.json() as {
-        results?: Array<{
-          adapter: string;
-          ok: boolean;
-          summary: string;
-        }>;
-      };
-      // In real impl, fetch updated visual_checks from /api/tests/results
-      // and update cells. For now: show a stub update.
-      void data;
+      const data = await apiFetch<{ results?: Array<{ adapter: string; ok: boolean; summary: string }> }>(
+        '/api/tests/run',
+        {
+          method: 'POST',
+          body:   JSON.stringify({
+            projectId:   '00000000-0000-0000-0000-000000000000',
+            projectRoot: '.',
+            adapters:    ['screenshotDiff'],
+          }),
+        },
+      );
+      void data; // In real impl, fetch updated visual_checks from /api/tests/results
     } catch { /* ignore */ } finally {
       setCapturing(false);
     }
@@ -230,10 +224,9 @@ export function VisualQAMode() {
 
   const handleSetBaseline = useCallback(async (cell: VisualCell) => {
     if (!cell.checkId) return;
-    await fetch('/api/tests/baseline', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ projectId: '00000000-0000-0000-0000-000000000000', visualCheckId: cell.checkId }),
+    await apiFetch('/api/tests/baseline', {
+      method: 'POST',
+      body:   JSON.stringify({ projectId: '00000000-0000-0000-0000-000000000000', visualCheckId: cell.checkId }),
     });
     setCells((prev) => prev.map((c) =>
       c.route === cell.route && c.viewport === cell.viewport
