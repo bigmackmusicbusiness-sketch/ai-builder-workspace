@@ -45,6 +45,7 @@ export function ApprovalsQueue() {
   const [approvals, setApprovals] = useState<ApprovalRow[]>([]);
   const [loading, setLoading]     = useState(false);
   const [reviewing, setReviewing] = useState<string | null>(null);
+  const [openId,    setOpenId]    = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -78,7 +79,9 @@ export function ApprovalsQueue() {
         <span className="abw-approvals-queue__title">
           Approvals
           {pending.length > 0 && (
-            <span className="abw-approvals-queue__badge">{pending.length}</span>
+            <span className="abw-approvals-queue__badge abw-approvals-queue__badge--pulse">
+              {pending.length}
+            </span>
           )}
         </span>
         <button
@@ -123,7 +126,37 @@ export function ApprovalsQueue() {
             >
               ✕ Reject
             </button>
+            <button
+              className="abw-btn abw-btn--ghost abw-btn--xs"
+              onClick={() => setOpenId(openId === a.id ? null : a.id)}
+              aria-expanded={openId === a.id}
+              aria-controls={`approval-details-${a.id}`}
+              style={{ marginLeft: 'auto' }}
+            >
+              {openId === a.id ? 'Hide' : 'Details'}
+            </button>
           </div>
+          {openId === a.id && (
+            <div
+              id={`approval-details-${a.id}`}
+              style={{
+                marginTop: 'var(--space-2)',
+                padding: 'var(--space-2)',
+                background: 'var(--bg-subtle)',
+                border: '1px solid var(--border-base)',
+                borderRadius: 'var(--radius-field)',
+                fontSize: '0.6875rem',
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                maxHeight: 200,
+                overflow: 'auto',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                {JSON.stringify(a.bundle, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
       ))}
 

@@ -1,0 +1,83 @@
+# apps/api/Dockerfile.coolify — Fastify API for Coolify deploy.
+#
+# Builds via esbuild → dist/server.js (single-file CJS bundle), then runs Node 20.
+# Includes ffmpeg + yt-dlp + Python (clipper pipeline + Higgsfield video helpers).
+# Built from the monorepo root because pnpm needs the workspace lockfile + sibling
+# packages (db, providers, security, shared, project-types, agent-core, verify).
+#
+# In Coolify: set the "Build Pack" to "Dockerfile" and the "Dockerfile Location"
+# to "apps/api/Dockerfile.coolify". Build context stays at the repo root.
+
+FROM node:20-bookworm-slim AS build
+
+# ── System deps (ffmpeg + python for yt-dlp + Whisper future hook) ────────────
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ffmpeg \
+      python3 \
+      python3-pip \
+      curl \
+      ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# yt-dlp via pip (clipper YouTube ingest path)
+RUN pip3 install --break-system-packages --no-cache-dir yt-dlp
+
+WORKDIR /app
+
+# Enable corepack so pnpm is available
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
+
+# Copy workspace manifests first so the install layer caches well
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY apps/api/package.json              ./apps/api/
+COPY apps/api/build.mjs                 ./apps/api/
+COPY apps/api/tsconfig.json             ./apps/api/
+COPY packages/agent-core/package.json   ./packages/agent-core/
+COPY packages/db/package.json           ./packages/db/
+COPY packages/project-types/package.json ./packages/project-types/
+COPY packages/providers/package.json    ./packages/providers/
+COPY packages/security/package.json     ./packages/security/
+COPY packages/shared/package.json       ./packages/shared/
+COPY packages/verify/package.json       ./packages/verify/
+COPY packages/ui/package.json           ./packages/ui/
+COPY tsconfig.base.json                 ./
+
+RUN pnpm install --frozen-lockfile
+
+# Copy all source after deps are cached
+COPY . .
+
+# Build the API: typecheck + esbuild bundle → apps/api/dist/server.js
+RUN pnpm --filter @abw/api build
+
+# ── Runtime stage — copy only what's needed to run ────────────────────────────
+FROM node:20-bookworm-slim AS runtime
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ffmpeg \
+      python3 \
+      python3-pip \
+      curl \
+      ca-certificates \
+      tini \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --break-system-packages --no-cache-dir yt-dlp
+
+WORKDIR /app
+
+# Bring over the bundled server + node_modules (they contain native deps esbuild
+# left as external — puppeteer-core, fluent-ffmpeg, supabase-js, etc.)
+COPY --from=build /app/apps/api/dist           ./apps/api/dist
+COPY --from=build /app/node_modules            ./node_modules
+COPY --from=build /app/apps/api/package.json   ./apps/api/package.json
+COPY --from=build /app/package.json            ./package.json
+
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=3007
+EXPOSE 3007
+
+# tini handles SIGTERM/SIGINT cleanly so Coolify rolling deploys don't drop traffic
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["node", "apps/api/dist/server.js"]

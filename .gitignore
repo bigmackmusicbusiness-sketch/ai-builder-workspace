@@ -55,3 +55,17 @@ Thumbs.db
 secrets.json
 secrets.yaml
 secrets.yml
+
+# local one-off scripts that may contain hardcoded creds — never commit
+_migrate.mjs
+_migrate.*.mjs
+
+# demo / smoke-test artifacts (large binaries, not source)
+.smoke-out/
+apps/*/.smoke-out/
+
+# personal handoff notes
+HANDOFF_*.md
+
+# CI workflows — needs workflow-scoped PAT to push, omitting
+.github/workflows/

@@ -151,6 +151,69 @@ html, body, #root {
   letter-spacing: 0.06em; padding: var(--space-2) 0 var(--space-1) 0;
 }
 
+/* Collapsible left-panel accordion (Run History, Plan Summary, Approvals) */
+.abw-left__accordion {
+  border-top: 1px solid var(--border-base);
+  padding: 0;
+  margin: 0;
+}
+.abw-left__accordion summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+.abw-left__accordion summary::-webkit-details-marker { display: none; }
+.abw-left__accordion summary:hover { background: var(--bg-subtle); }
+.abw-left__accordion summary:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-field); }
+.abw-left__accordion-caret {
+  width: 10px; height: 10px;
+  flex-shrink: 0;
+  transition: transform var(--duration-fast) var(--ease-standard);
+  color: var(--text-tertiary);
+}
+.abw-left__accordion[open] .abw-left__accordion-caret { transform: rotate(90deg); }
+.abw-left__accordion-icon {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+.abw-left__accordion-label { flex: 1; }
+.abw-left__accordion-count {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  background: var(--accent-100);
+  color: var(--accent-700);
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  text-transform: none;
+  flex-shrink: 0;
+}
+.abw-left__accordion-count--zero {
+  background: var(--bg-subtle);
+  color: var(--text-tertiary);
+}
+.abw-left__accordion-body {
+  padding: 0 var(--space-3) var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+.abw-left__accordion-empty {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  padding: var(--space-1) 0 var(--space-2);
+}
+
 /* Model selector (always visible in left panel header) */
 .abw-model-selector {
   flex-shrink: 0;
@@ -293,7 +356,14 @@ html, body, #root {
   align-self: flex-start; border: 1px solid var(--border-base);
   border-radius: var(--radius-card) var(--radius-card) var(--radius-card) var(--radius-field);
 }
-.abw-chat__bubble { padding: var(--space-2) var(--space-3); font-size: 0.8125rem; line-height: 1.5; max-width: 85%; }
+.abw-chat__bubble {
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.875rem;        /* bumped from 0.8125 → 0.875 for readability */
+  line-height: 1.55;
+  max-width: 90%;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
 .abw-chat__input-row {
   padding: var(--space-2) var(--space-3); border-top: 1px solid var(--border-base);
   display: flex; gap: var(--space-2); align-items: flex-end;
@@ -301,11 +371,218 @@ html, body, #root {
 }
 .abw-chat__input {
   flex: 1; border: 1px solid var(--border-base); border-radius: var(--radius-field);
-  padding: var(--space-2) var(--space-2); font-size: 0.8125rem;
+  padding: var(--space-2) var(--space-2); font-size: 0.875rem;
   font-family: var(--font-sans); background: var(--bg-subtle);
-  color: var(--text-primary); resize: none; min-height: 36px; max-height: 120px;
+  color: var(--text-primary); resize: none;
+  min-height: 36px;
+  /* max-height handled inline via JS auto-grow (capped at min(50vh, 360px)); CSS fallback for older browsers: */
+  max-height: 50vh;
+  line-height: 1.5;
 }
 .abw-chat__input:focus-visible { outline: none; border-color: var(--accent-500); box-shadow: 0 0 0 2px var(--accent-200); }
+
+/* ── Typing indicator (assistant streaming with empty content yet) ── */
+.abw-chat__typing { display: inline-flex; gap: 3px; padding: 3px 0; }
+.abw-chat__typing > span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-tertiary); opacity: 0.6;
+  animation: abw-typing-bounce 1.2s infinite ease-in-out;
+}
+.abw-chat__typing > span:nth-child(2) { animation-delay: 0.15s; }
+.abw-chat__typing > span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes abw-typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30%           { transform: translateY(-4px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .abw-chat__typing > span { animation: none; opacity: 0.6; } }
+
+/* ── Markdown rendering inside chat bubbles ── */
+.abw-md > * { margin: 0; }
+.abw-md > * + * { margin-top: var(--space-2); }
+.abw-md p              { line-height: 1.55; }
+.abw-md h1, .abw-md h2 { font-size: 1rem; font-weight: 700; }
+.abw-md h3, .abw-md h4 { font-size: 0.9375rem; font-weight: 700; }
+.abw-md ul, .abw-md ol { padding-left: 1.25rem; }
+.abw-md li             { margin: 2px 0; }
+.abw-md a              { color: var(--accent-500); text-decoration: underline; text-underline-offset: 2px; }
+.abw-md code           {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+  padding: 1px 5px;
+  background: rgba(127, 127, 127, 0.18);
+  border-radius: 4px;
+}
+.abw-md__codeblock {
+  margin-top: var(--space-2);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-field);
+  overflow: hidden;
+  background: #0f1115;          /* matches highlight.js github-dark */
+}
+.abw-md__codeblock-header {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 4px var(--space-2);
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.6875rem;
+}
+.abw-md__codeblock-lang {
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+.abw-md__codeblock-copy {
+  margin-left: auto;
+  background: none; border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.6875rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: inherit;
+}
+.abw-md__codeblock-copy:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.abw-md__codeblock pre {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  overflow-x: auto;
+  background: transparent;
+}
+.abw-md__codeblock pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+/* User bubble overrides — code blocks should still be readable on accent bg */
+.abw-chat__msg--user .abw-md code {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+/* ── Status pill — combines model + agent status + autonomy in one 32px row ── */
+.abw-status-pill {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 0 var(--space-3);
+  height: 32px;
+  border-top: 1px solid var(--border-base);
+  background: var(--bg-elevated);
+  flex-shrink: 0;
+  position: relative;
+  font-size: 0.75rem;
+}
+.abw-status-pill__dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.abw-status-pill__dot--idle    { background: var(--text-disabled); }
+.abw-status-pill__dot--running { background: var(--accent-500); animation: abw-pulse 1.5s infinite ease-in-out; }
+.abw-status-pill__dot--blocked { background: var(--warning-500); }
+.abw-status-pill__dot--error   { background: var(--error-500); }
+@keyframes abw-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .abw-status-pill__dot--running { animation: none; } }
+
+.abw-status-pill__status {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+.abw-status-pill__sep { color: var(--text-tertiary); }
+.abw-status-pill__model {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: none; border: none; padding: 2px 6px;
+  border-radius: var(--radius-field); cursor: pointer;
+  font-size: inherit; font-family: inherit;
+  color: var(--text-primary);
+  flex: 1; min-width: 0;
+}
+.abw-status-pill__model:hover { background: var(--bg-subtle); }
+.abw-status-pill__model-name {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-weight: 500;
+}
+.abw-status-pill__controls { display: flex; gap: 2px; flex-shrink: 0; }
+.abw-status-pill__ctrl {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px 6px; border-radius: var(--radius-field);
+  font-size: 0.75rem;
+  font-family: inherit;
+}
+.abw-status-pill__ctrl:hover:not(:disabled) { background: var(--bg-subtle); color: var(--text-primary); }
+.abw-status-pill__ctrl:disabled { opacity: 0.35; cursor: default; }
+.abw-status-pill__ctrl--danger:hover:not(:disabled) { color: var(--error-500); }
+
+.abw-status-pill__popover {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: var(--space-3);
+  right: var(--space-3);
+  z-index: 30;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-card);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  padding: var(--space-3);
+}
+.abw-status-pill__popover-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+/* ── Expanded composer overlay — fills MainWorkspace area for long prompts ── */
+.abw-chat__expanded {
+  position: fixed;
+  top: 36px;                                  /* below the TopBar */
+  left: var(--left-panel-w, 300px);
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  background: var(--bg-base);
+  border-left: 1px solid var(--border-base);
+  display: flex; flex-direction: column;
+  animation: abw-fade-in var(--duration-base) var(--ease-decelerate);
+}
+@keyframes abw-fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .abw-chat__expanded { animation: none; } }
+.abw-chat__expanded-header {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border-base);
+  background: var(--bg-elevated);
+  flex-shrink: 0;
+}
+.abw-chat__expanded-textarea {
+  flex: 1;
+  padding: var(--space-4) var(--space-6);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background: var(--bg-base);
+  border: none;
+  outline: none;
+  resize: none;
+}
+.abw-chat__expanded-footer {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-base);
+  background: var(--bg-elevated);
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+.abw-chat__expanded-footer > span:first-child { margin-right: auto; }
 
 /* Approvals badge */
 .abw-approvals-badge {
@@ -418,3 +695,145 @@ html, body, #root {
   .abw-shell { display: block; }
   .abw-shell__main { height: auto; overflow: visible; }
 }
+
+/* ────────────────────────────────────────────────────────────────────
+   Phase D — Visual polish overrides (last-loaded, win on specificity)
+   Goals: tighter density, single accent discipline, restrained borders,
+   stronger focus, motion that respects prefers-reduced-motion.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* Active nav links get a subtle accent pill instead of just a text color
+   change, so the affordance is unmistakable without adding a fourth color. */
+.abw-topbar__nav-link--active {
+  background: var(--accent-50);
+  color: var(--accent-700);
+  font-weight: 600;
+}
+.abw-topbar__nav-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-500);
+}
+
+/* Project switcher matches the height of the env badge for cleaner top bar */
+.abw-topbar__project-switcher {
+  height: 24px;
+  font-size: 0.75rem;
+  padding: 0 var(--space-2);
+  background: var(--bg-subtle);
+  border-color: var(--border-subtle, var(--border-base));
+}
+.abw-topbar__project-switcher:hover { background: var(--bg-base); }
+.abw-topbar__project-switcher:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-500);
+}
+
+/* Topbar search — calmer base, sharper focus */
+.abw-topbar__search {
+  height: 24px;
+  background: var(--bg-subtle);
+  border-color: var(--border-subtle, var(--border-base));
+}
+.abw-topbar__search:hover { background: var(--bg-base); }
+.abw-topbar__search:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-500);
+}
+
+/* LeftPanel header — drop the heavy bottom border since the chat below
+   already has its own visual rhythm. Keeps surfaces calm. */
+.abw-left__header { border-bottom: none; }
+
+/* Accordion: lighter top border + accent on hover */
+.abw-left__accordion {
+  border-top-color: var(--border-subtle, var(--border-base));
+}
+.abw-left__accordion[open] summary { background: var(--bg-subtle); }
+.abw-left__accordion summary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-500) inset;
+}
+
+/* Chat bubbles: more breathing room, calmer assistant background, no border on user */
+.abw-chat__msg--user .abw-chat__bubble {
+  background: var(--accent-500);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+.abw-chat__msg--assistant .abw-chat__bubble {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle, var(--border-base));
+}
+.abw-chat__bubble {
+  padding: var(--space-2) var(--space-3);
+  line-height: 1.55;
+}
+
+/* Chat input row: lighter top border, calmer base */
+.abw-chat__input-row {
+  border-top-color: var(--border-subtle, var(--border-base));
+  background: var(--bg-elevated);
+}
+.abw-chat__input {
+  background: var(--bg-base);
+  border-color: var(--border-subtle, var(--border-base));
+}
+.abw-chat__input:focus-visible {
+  outline: none;
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 2px var(--accent-500);
+}
+
+/* Project card: subtle hover lift + accent border on hover */
+.abw-project-card {
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    transform    var(--duration-fast) var(--ease-standard),
+    box-shadow   var(--duration-fast) var(--ease-standard);
+}
+.abw-project-card:hover {
+  border-color: var(--accent-500);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+@media (prefers-reduced-motion: reduce) {
+  .abw-project-card { transition: none; }
+  .abw-project-card:hover { transform: none; }
+}
+
+/* Workspace tab — keep underline accent but bold the active label more strongly */
+.abw-workspace__tab--active { font-weight: 600; }
+.abw-workspace__tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-500) inset;
+  border-radius: var(--radius-field);
+}
+
+/* Buttons: consistent focus across primary/secondary/ghost */
+.abw-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-500);
+}
+.abw-btn--primary:focus-visible {
+  box-shadow: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--accent-500);
+}
+
+/* Approvals queue — pending row gets a calm accent left edge */
+.abw-approvals-queue__item--pending {
+  border-left: 2px solid var(--warning-500);
+  padding-left: calc(var(--space-2) - 2px);
+}
+
+/* Reduce border noise: when LeftPanel is collapsed the right border can vanish */
+.abw-shell--collapsed .abw-shell__left {
+  border-right: none;
+}
+
+/* Status pill popover: use the same hairline as other elevations */
+.abw-status-pill__popover {
+  border-color: var(--border-subtle, var(--border-base));
+}
+
+/* Code blocks inside markdown: tighten the lang/copy header */
+.abw-md__codeblock-header { padding: 6px 10px; }
+.abw-md__codeblock pre    { padding: 10px 12px; }

@@ -19,8 +19,8 @@ import { Workspace }                  from '../layout/MainWorkspace/Workspace';
 import { EnvSecretsScreen }           from '../screens/EnvSecretsScreen';
 import { JobsQueuesScreen }           from '../screens/JobsQueuesScreen';
 import { DatabaseSchemaScreen }       from '../screens/DatabaseSchemaScreen';
-import { ProviderSettingsScreen }     from '../screens/ProviderSettingsScreen';
 import { AppSettingsScreen }          from '../screens/AppSettingsScreen';
+import { CreateHubScreen }            from '../screens/CreateHubScreen';
 import { ApprovalsScreen }            from '../screens/ApprovalsScreen';
 import { OnboardingAutomationScreen } from '../screens/OnboardingAutomationScreen';
 import { LogsHealthScreen }           from '../screens/LogsHealthScreen';
@@ -31,6 +31,13 @@ import { AgentRunsScreen }            from '../screens/AgentRunsScreen';
 import { VersionsScreen }             from '../screens/VersionsScreen';
 import { AssetsScreen }               from '../screens/AssetsScreen';
 import { TemplatesScreen }            from '../screens/TemplatesScreen';
+import { EbooksScreen }               from '../screens/EbooksScreen';
+import { DocumentsScreen }            from '../screens/DocumentsScreen';
+import { EmailComposerScreen }        from '../screens/EmailComposerScreen';
+import { MusicStudioScreen }          from '../screens/MusicStudioScreen';
+import { VideoStudioScreen }          from '../screens/VideoStudioScreen';
+import { VideoEditorScreen }          from '../screens/VideoEditorScreen';
+import { VisualEditorScreen }         from '../screens/VisualEditorScreen';
 import { useAuthStore }               from '../lib/store/authStore';
 
 // ── Root — bare outlet, no layout ────────────────────────────────────
@@ -51,14 +58,18 @@ const shellRoute = createRoute({
   id: 'shell',
 
   beforeLoad: async ({ location }) => {
-    // Wait for the auth store to finish hydrating (getSession is async)
+    // Wait for auth store to finish hydrating (getSession is async).
+    // 6-second timeout prevents an infinite hang if Supabase is unreachable.
     const store = useAuthStore.getState();
     if (store.loading) {
-      await new Promise<void>((resolve) => {
-        const unsub = useAuthStore.subscribe((s) => {
-          if (!s.loading) { unsub(); resolve(); }
-        });
-      });
+      await Promise.race([
+        new Promise<void>((resolve) => {
+          const unsub = useAuthStore.subscribe((s) => {
+            if (!s.loading) { unsub(); resolve(); }
+          });
+        }),
+        new Promise<void>((resolve) => setTimeout(resolve, 6000)),
+      ]);
     }
 
     if (!useAuthStore.getState().session) {
@@ -143,12 +154,6 @@ const databaseSchemaRoute = createRoute({
   component: DatabaseSchemaScreen,
 });
 
-const providerSettingsRoute = createRoute({
-  getParentRoute: () => shellRoute,
-  path: '/providers',
-  component: ProviderSettingsScreen,
-});
-
 const appSettingsRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: '/settings',
@@ -173,6 +178,54 @@ const logsHealthRoute = createRoute({
   component: LogsHealthScreen,
 });
 
+const ebooksRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: '/ebooks',
+  component: EbooksScreen,
+});
+
+const documentsRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: '/documents',
+  component: DocumentsScreen,
+});
+
+const emailRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: '/email',
+  component: EmailComposerScreen,
+});
+
+const musicRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: '/music',
+  component: MusicStudioScreen,
+});
+
+const videoRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: '/video',
+  component: VideoStudioScreen,
+});
+
+const videoEditorRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: '/edit/video/$id',
+  component: VideoEditorScreen,
+});
+
+const editorRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: '/edit/$sessionId',
+  component: VisualEditorScreen,
+});
+
+const createHubRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: '/create',
+  component: CreateHubScreen,
+});
+
 // ── Route tree ────────────────────────────────────────────────────────
 const routeTree = rootRoute.addChildren([
   loginRoute,
@@ -188,11 +241,18 @@ const routeTree = rootRoute.addChildren([
     envSecretsRoute,
     jobsQueuesRoute,
     databaseSchemaRoute,
-    providerSettingsRoute,
     appSettingsRoute,
     approvalsRoute,
     onboardingRoute,
     logsHealthRoute,
+    ebooksRoute,
+    documentsRoute,
+    emailRoute,
+    musicRoute,
+    videoRoute,
+    videoEditorRoute,
+    editorRoute,
+    createHubRoute,
   ]),
 ]);
 

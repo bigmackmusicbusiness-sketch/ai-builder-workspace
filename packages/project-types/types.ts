@@ -12,6 +12,14 @@ export type ProjectTypeId =
   | 'saas-app'
   | 'api-service'
   | 'full-stack-app'
+  | 'ebook'
+  | 'document'
+  | 'email-composer'
+  | 'music-studio'
+  | 'ai-movie'
+  | 'ai-commercial'
+  | 'ai-short'
+  | 'ai-music-video'
   | 'blank';
 
 /** A flat map of file path → file content to write when scaffolding. */

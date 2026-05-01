@@ -2,6 +2,10 @@
 // Bundles the project with esbuild, writes assets to Cloudflare KV, then
 // returns the preview URL. Logs stream through this endpoint.
 import type { FastifyInstance } from 'fastify';
+
+declare module 'fastify' {
+  interface FastifyContextConfig { skipAuth?: boolean; }
+}
 import { randomUUID } from 'node:crypto';
 import { stat } from 'node:fs/promises';
 import { extname } from 'node:path';
@@ -10,10 +14,12 @@ import { authMiddleware, requireRole, type AuthContext } from '../security/authz
 import {
   createSession, getSession, listSessions, updateSession,
   appendLog, getLogs, stopSession, deleteSession,
-  storeAssets, getAssets, getSessionBySlug,
+  storeAssets, getAssets, getSessionBySlug, evictSessionsBySlug,
 } from '../preview/sessionManager';
 import { bundleProject } from '../preview/bundler';
 import { scaffoldHelloWorld } from '../preview/scaffold';
+import { getWorkspace, workspaceExists } from '../preview/workspace';
+import { subscribe as subscribePreview } from '../preview/eventBus';
 
 declare module 'fastify' {
   interface FastifyRequest { authCtx?: AuthContext; }
@@ -48,14 +54,24 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
 
     const sessionId = randomUUID();
 
+    // Evict all previous sessions for this slug so stale assets don't linger
+    // and getSessionBySlug always returns the freshest build.
+    evictSessionsBySlug(projectSlug, ctx.tenantId);
+
     // For local dev: serve from the API itself.
-    // For production with CF credentials: serve from the worker subdomain.
+    // For production with CF credentials: push assets to KV and serve via the
+    // preview worker using path-based routing: /<slug>/<asset>.
     const hasCF = !!(process.env['CF_ACCOUNT_ID'] && process.env['CF_API_TOKEN'] && process.env['CF_KV_PREVIEW_NAMESPACE_ID']);
-    const rootDomain = process.env['PREVIEW_ROOT_DOMAIN'] ?? 'preview.local.test';
-    const apiBase   = process.env['API_URL'] ?? `http://localhost:${process.env['PORT'] ?? 3007}`;
+    const apiBase    = process.env['API_URL'] ?? `http://localhost:${process.env['PORT'] ?? 3007}`;
+    const workerBase = (process.env['WORKER_URL'] ?? 'https://abw-preview-worker.signalpoint.workers.dev').replace(/\/$/, '');
+
+    // Embed the first 8 chars of sessionId as a cache-buster (?v=…).
+    // This ensures the iframe src changes on every new boot, forcing a reload
+    // even though the base URL path stays the same.
+    const nonce = sessionId.replace(/-/g, '').slice(0, 8);
     const previewUrl = hasCF
-      ? `https://${projectSlug}.${rootDomain}`
-      : `${apiBase}/api/preview/serve/${projectSlug}`;
+      ? `${workerBase}/${projectSlug}/?v=${nonce}`
+      : `${apiBase}/api/preview/serve/${projectSlug}?v=${nonce}`;
 
     const session = createSession({ sessionId, projectId, projectSlug, tenantId: ctx.tenantId, previewUrl });
     updateSession(sessionId, { status: 'bundling' });
@@ -64,15 +80,63 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
     // Fire and forget — client polls /api/preview/logs or uses Realtime
     void (async () => {
       try {
-        // If rootDir doesn't exist on disk (stub/no project yet), scaffold a Hello World.
+        // Resolution order for the files we're about to bundle:
+        //   1. The per-tenant AI workspace at ~/.abw-workspaces/{tenantId}/{slug}/ —
+        //      this is where the AI agent writes via write_file tool calls.
+        //   2. The rootDir the caller supplied (legacy / dev-only).
+        //   3. Scaffolded Hello World.
         let resolvedRoot = rootDir;
-        const dirExists = await stat(rootDir).then((s) => s.isDirectory()).catch(() => false);
-        if (!dirExists) {
-          appendLog(sessionId, { level: 'info', source: 'bundler', message: 'No project files found — scaffolding Hello World…' });
-          resolvedRoot = await scaffoldHelloWorld(projectSlug);
+        let resolvedFramework = framework;
+
+        const ws = await getWorkspace(ctx.tenantId, projectSlug);
+        const hasWorkspaceFiles = await workspaceExists(ws);
+
+        if (hasWorkspaceFiles) {
+          appendLog(sessionId, { level: 'info', source: 'bundler', message: `Bundling from AI workspace: ${ws.rootDir}` });
+          resolvedRoot = ws.rootDir;
+
+          // Framework detection:
+          //   react-vite → src/main.tsx present
+          //   static     → index.html present at root
+          //   unsupported→ neither (e.g. Next.js app/ dir) — fail loudly
+          const hasReactEntry = await stat(`${ws.rootDir}/src/main.tsx`).then((s) => s.isFile()).catch(() => false);
+          const hasIndexHtml  = await stat(`${ws.rootDir}/index.html`).then((s) => s.isFile()).catch(() => false);
+
+          if (hasReactEntry) {
+            resolvedFramework = 'react-vite';
+          } else if (hasIndexHtml) {
+            resolvedFramework = 'static';
+          } else {
+            const hint =
+              'Preview cannot render this workspace. Supported shapes:\n' +
+              '  • Static site: an index.html at the workspace root.\n' +
+              '  • Vite React SPA: index.html + src/main.tsx.\n' +
+              'Frameworks that need a dev server (Next.js, Remix, Astro) are not supported here. ' +
+              'Ask the AI to rebuild as a plain index.html site or a Vite React SPA.';
+            appendLog(sessionId, { level: 'error', source: 'bundler', message: hint });
+            updateSession(sessionId, { status: 'error', error: hint });
+            return;
+          }
+        } else {
+          const dirExists = await stat(rootDir).then((s) => s.isDirectory()).catch(() => false);
+          if (!dirExists) {
+            appendLog(sessionId, { level: 'info', source: 'bundler', message: 'No project files found — scaffolding Hello World…' });
+            const scaffold = await scaffoldHelloWorld(projectSlug);
+            resolvedRoot      = scaffold.dir;
+            resolvedFramework = scaffold.framework; // 'static' — bypasses esbuild
+          }
         }
 
-        const result = await bundleProject({ projectId, projectSlug, rootDir: resolvedRoot, entryPoint, framework });
+        // For static sites served at a sub-path, pass the base so the bundler
+        // can inject a <base> tag and rewrite absolute asset paths.
+        //   CF mode  → path-based:  /<slug>/   (worker serves at workerHost/<slug>/*)
+        //   Local    → API-served:  /api/preview/serve/<slug>/
+        //   React/Vite builds always use '/' (esbuild output is self-contained)
+        const serveBasePath = resolvedFramework === 'static'
+          ? (hasCF ? `/${projectSlug}/` : `/api/preview/serve/${projectSlug}/`)
+          : '/';
+
+        const result = await bundleProject({ projectId, projectSlug, rootDir: resolvedRoot, entryPoint, framework: resolvedFramework, serveBasePath });
 
         for (const w of result.warnings) {
           appendLog(sessionId, { level: 'warn', source: 'bundler', message: w });
@@ -175,6 +239,173 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
   });
 
   /**
+   * GET /api/preview/watch/:slug — SSE channel that emits `file-changed` events
+   * whenever the AI workspace for that slug is written to. The web client uses
+   * this to hot-reload the iframe without polling.
+   */
+  app.get<{ Params: { slug: string } }>(
+    '/api/preview/watch/:slug',
+    async (req, reply) => {
+      const ctx = req.authCtx!;
+      const slug = req.params.slug;
+      if (!/^[a-z0-9-]+$/.test(slug)) {
+        return reply.status(400).send({ error: 'Invalid slug' });
+      }
+
+      // Hijack so we own the raw socket for SSE
+      reply.hijack();
+      const raw = reply.raw;
+
+      // CORS — match what /api/chat does so EventSource works cross-origin
+      const origin = (req.headers['origin'] as string | undefined) ?? '*';
+      raw.setHeader('Access-Control-Allow-Origin',      origin);
+      raw.setHeader('Access-Control-Allow-Credentials', 'true');
+      raw.setHeader('Vary',                             'Origin');
+      raw.setHeader('Content-Type',                     'text/event-stream; charset=utf-8');
+      raw.setHeader('Cache-Control',                    'no-cache, no-transform');
+      raw.setHeader('Connection',                       'keep-alive');
+      raw.setHeader('X-Accel-Buffering',                'no');
+      raw.flushHeaders?.();
+
+      // Initial hello
+      raw.write(`event: open\ndata: {"slug":"${slug}"}\n\n`);
+
+      const unsubscribe = subscribePreview(ctx.tenantId, slug, (ev) => {
+        try {
+          raw.write(`event: ${ev.type}\ndata: ${JSON.stringify(ev)}\n\n`);
+        } catch { /* socket likely closed */ }
+      });
+
+      // Heartbeat every 25s so proxies don't kill the idle connection
+      const heartbeat = setInterval(() => {
+        try { raw.write(`: heartbeat\n\n`); } catch { /* closed */ }
+      }, 25_000);
+
+      const cleanup = () => {
+        clearInterval(heartbeat);
+        unsubscribe();
+        try { raw.end(); } catch { /* already closed */ }
+      };
+
+      req.raw.on('close', cleanup);
+      req.raw.on('error', cleanup);
+    },
+  );
+
+  /**
+   * POST /api/preview/rebundle — re-bundle the workspace into the existing
+   * session's asset map. Cheaper than a full boot (no new sessionId, no evict).
+   * The frontend calls this debounced after a `file-changed` event.
+   */
+  app.post<{ Body: unknown }>('/api/preview/rebundle', async (req, reply) => {
+    const ctx = req.authCtx!;
+    const body = req.body as Record<string, unknown>;
+    const sessionId   = typeof body['sessionId']   === 'string' ? body['sessionId']   : null;
+    const projectSlug = typeof body['projectSlug'] === 'string' ? body['projectSlug'] : null;
+    if (!sessionId || !projectSlug) {
+      return reply.status(400).send({ error: 'sessionId and projectSlug required' });
+    }
+
+    const session = getSession(sessionId);
+    if (!session || session.tenantId !== ctx.tenantId) {
+      return reply.status(404).send({ error: 'Session not found' });
+    }
+
+    try {
+      const ws = await getWorkspace(ctx.tenantId, projectSlug);
+      const hasReact = await stat(`${ws.rootDir}/src/main.tsx`).then((s) => s.isFile()).catch(() => false);
+      const hasIndex = await stat(`${ws.rootDir}/index.html`).then((s) => s.isFile()).catch(() => false);
+      const framework: 'react-vite' | 'static' = hasReact ? 'react-vite' : 'static';
+      if (!hasReact && !hasIndex) {
+        return reply.status(400).send({ error: 'Workspace has no entry (need src/main.tsx or index.html).' });
+      }
+
+      const hasCF = !!(process.env['CF_ACCOUNT_ID'] && process.env['CF_API_TOKEN'] && process.env['CF_KV_PREVIEW_NAMESPACE_ID']);
+      const serveBasePath = framework === 'static'
+        ? (hasCF ? `/${projectSlug}/` : `/api/preview/serve/${projectSlug}/`)
+        : '/';
+
+      const result = await bundleProject({
+        projectId:   session.projectId,
+        projectSlug,
+        rootDir:     ws.rootDir,
+        entryPoint:  'src/main.tsx',
+        framework,
+        serveBasePath,
+      });
+
+      if (result.errors.length > 0) {
+        return reply.status(500).send({ error: result.errors[0] });
+      }
+
+      storeAssets(sessionId, result.assets);
+      return reply.send({ ok: true, assetCount: result.assets.size, durationMs: result.durationMs });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return reply.status(500).send({ error: msg });
+    }
+  });
+
+  /**
+   * POST /api/preview/screenshot — capture the iframe content via Playwright.
+   * Returns an asset id so the screenshot can be referenced from the AssetsScreen.
+   */
+  app.post<{ Body: unknown }>('/api/preview/screenshot', async (req, reply) => {
+    const ctx = req.authCtx!;
+    const body = req.body as Record<string, unknown>;
+    const sessionId = typeof body['sessionId'] === 'string' ? body['sessionId'] : null;
+    if (!sessionId) return reply.status(400).send({ error: 'sessionId required' });
+
+    const session = getSession(sessionId);
+    if (!session || session.tenantId !== ctx.tenantId) {
+      return reply.status(404).send({ error: 'Session not found' });
+    }
+    if (!session.previewUrl) {
+      return reply.status(400).send({ error: 'Session has no preview URL yet — boot it first.' });
+    }
+
+    try {
+      // Dynamically import @playwright/test so esbuild doesn't try to resolve it at
+      // build time and so we can fail gracefully if it isn't installed.
+      const specifier = '@playwright/test';
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const pw = await (Function('s', 'return import(s)')(specifier) as Promise<{ chromium?: unknown }>).catch(() => null);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const chromium: any = pw && (pw as any).chromium;
+      if (!chromium) {
+        return reply.status(503).send({ error: 'Playwright not installed on this server.' });
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+      const browser = await chromium.launch({ headless: true });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const page    = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      await page.goto(session.previewUrl, { waitUntil: 'networkidle', timeout: 15_000 });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+      const buf: Buffer = await page.screenshot({ fullPage: true, type: 'png' });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      await browser.close();
+
+      // Upload to assets
+      const { uploadBufferAsAsset } = await import('../lib/assetUpload');
+      const upload = await uploadBufferAsAsset({
+        tenantId:  ctx.tenantId,
+        projectId: session.projectId,
+        folder:    `previews/${session.projectSlug}/screenshots`,
+        filename:  `screenshot-${Date.now()}.png`,
+        mimeType:  'image/png',
+        buffer:    buf,
+      });
+
+      return reply.send({ assetId: upload.assetId, url: upload.url });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return reply.status(500).send({ error: `Screenshot failed: ${msg}` });
+    }
+  });
+
+  /**
    * GET /api/preview/serve/:slug/*
    * Local-dev asset server — no auth (serves public bundled HTML/JS/CSS).
    * In production, assets are served from the Cloudflare Worker instead.
@@ -199,12 +430,15 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
         // Fallback to index.html for SPA client-side routing
         const index = assets?.get('/index.html');
         if (index) {
-          return reply.type('text/html').send(Buffer.from(index));
+          return reply.type('text/html').send(injectBase(index, slug));
         }
         return reply.status(404).send('Asset not found');
       }
 
       const mime = mimeType(assetPath);
+      if (mime === 'text/html') {
+        return reply.type(mime).send(injectBase(content, slug));
+      }
       return reply.type(mime).send(Buffer.from(content));
     },
   );
@@ -219,9 +453,32 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
       const assets = getAssets(session.sessionId);
       const index  = assets?.get('/index.html');
       if (!index)  return reply.status(404).send('index.html not found');
-      return reply.type('text/html').send(Buffer.from(index));
+      return reply.type('text/html').send(injectBase(index, req.params.slug));
     },
   );
+}
+
+/**
+ * Ensure the HTML has a correct absolute <base href="/api/preview/serve/{slug}/">.
+ * Called on every HTML response so the browser resolves relative asset paths
+ * (images/foo.jpg, ./main.js) against the right API sub-path.
+ *
+ * Strategy: always replace any existing base tag with the authoritative one.
+ * If no base tag exists, inject one right after <head>.
+ */
+function injectBase(html: Uint8Array, slug: string): Buffer {
+  let str = Buffer.from(html).toString('utf8');
+  const basePath = `/api/preview/serve/${slug}/`;
+  const baseTag  = `<base href="${basePath}">`;
+
+  if (str.includes('<base ')) {
+    // Replace whatever base tag is already there (may have a wrong/relative href)
+    str = str.replace(/<base\s[^>]*>/i, baseTag);
+  } else {
+    // No base tag — inject right after <head>
+    str = str.replace(/(<head[^>]*>)/i, `$1\n  ${baseTag}`);
+  }
+  return Buffer.from(str, 'utf8');
 }
 
 function mimeType(path: string): string {

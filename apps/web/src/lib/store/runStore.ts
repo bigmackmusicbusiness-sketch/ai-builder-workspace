@@ -26,6 +26,19 @@ interface RunState {
   fallbackEnabled: boolean;
   setFallbackEnabled: (v: boolean) => void;
 
+  /** Huashu Design skill toggle — when ON, the agent gets the design.run_huashu tool
+   *  and a system prompt prelude that biases it toward producing visual deliverables
+   *  (HTML prototypes, slide decks, infographics, animations). Off by default. */
+  designSkillsEnabled: boolean;
+  setDesignSkillsEnabled: (v: boolean) => void;
+
+  /** Higgsfield premium gen toggle — COST CONTROL. When OFF, the agent has no access
+   *  to Higgsfield image/video tools (which consume the user's paid credits). When ON,
+   *  the agent can call Higgsfield. Off by default. Dedicated screens (/video, music
+   *  studio) bypass this flag — the toggle gates the chat agent surface only. */
+  higgsfieldEnabled: boolean;
+  setHiggsfieldEnabled: (v: boolean) => void;
+
   activeRun: ActiveRun | null;
   setActiveRun: (run: ActiveRun | null) => void;
   updateRunStatus: (status: AgentRunStatus, step?: string) => void;
@@ -51,6 +64,12 @@ export const useRunStore = create<RunState>()(
 
       fallbackEnabled: false,
       setFallbackEnabled: (v: boolean) => set({ fallbackEnabled: v }),
+
+      designSkillsEnabled: false,
+      setDesignSkillsEnabled: (v: boolean) => set({ designSkillsEnabled: v }),
+
+      higgsfieldEnabled: false,
+      setHiggsfieldEnabled: (v: boolean) => set({ higgsfieldEnabled: v }),
 
       activeRun: null,
       setActiveRun: (run: ActiveRun | null) => set({ activeRun: run }),
@@ -93,9 +112,11 @@ export const useRunStore = create<RunState>()(
       name: 'abw-run',
       partialize: (s) =>
         ({
-          selectedProvider: s.selectedProvider,
-          selectedModel: s.selectedModel,
-          fallbackEnabled: s.fallbackEnabled,
+          selectedProvider:    s.selectedProvider,
+          selectedModel:       s.selectedModel,
+          fallbackEnabled:     s.fallbackEnabled,
+          designSkillsEnabled: s.designSkillsEnabled,
+          higgsfieldEnabled:   s.higgsfieldEnabled,
           activeRun: null, // never persist active run across page loads
         } as RunState),
     },

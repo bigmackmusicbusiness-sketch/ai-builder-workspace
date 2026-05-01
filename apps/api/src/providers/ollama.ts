@@ -45,6 +45,32 @@ export function createOllamaAdapter(baseUrl: string): ProviderAdapter {
     },
 
     async *chat(req: ChatRequest, opts: { signal: AbortSignal }): AsyncIterable<ChatChunk> {
+      // Pre-process messages: ContentPart[] → Ollama format.
+      // Ollama vision models accept base64 images in an `images` array.
+      // Text parts are joined; image URLs are fetched and base64-encoded.
+      const ollamaMessages: { role: string; content: string; images?: string[] }[] = [];
+      for (const m of req.messages) {
+        if (!Array.isArray(m.content)) {
+          ollamaMessages.push({ role: m.role, content: (m.content as string) || '' });
+        } else {
+          const textParts = (m.content as { type: string; text?: string; image_url?: { url: string } }[])
+            .filter((p) => p.type === 'text')
+            .map((p) => p.text ?? '')
+            .join('\n');
+          const imageParts = (m.content as { type: string; image_url?: { url: string } }[])
+            .filter((p) => p.type === 'image_url' && p.image_url?.url);
+          const images: string[] = [];
+          for (const ip of imageParts) {
+            try {
+              const imgRes = await fetch(ip.image_url!.url, { signal: AbortSignal.timeout(15_000) });
+              const buf = await imgRes.arrayBuffer();
+              images.push(Buffer.from(buf).toString('base64'));
+            } catch { /* skip failed images */ }
+          }
+          ollamaMessages.push({ role: m.role, content: textParts, ...(images.length ? { images } : {}) });
+        }
+      }
+
       let response: Response;
       try {
         response = await fetch(`${base}/api/chat`, {
@@ -52,7 +78,7 @@ export function createOllamaAdapter(baseUrl: string): ProviderAdapter {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             model:    req.model,
-            messages: req.messages,
+            messages: ollamaMessages,
             stream:   true,
             options: {
               temperature: req.temperature ?? 0.7,

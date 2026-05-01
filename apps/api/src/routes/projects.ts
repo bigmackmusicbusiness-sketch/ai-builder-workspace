@@ -17,7 +17,10 @@ const CreateProjectSchema = z.object({
   slug:        z.string().regex(/^[a-z0-9-]+$/).min(1).max(60),
   type:        z.enum(['website','landing_page','dashboard','internal_tool',
                        'onboarding_flow','automation_panel','saas_app',
-                       'api_service','full_stack_app','blank']).default('blank'),
+                       'api_service','full_stack_app',
+                       'ebook','document','email_composer','music_studio',
+                       'ai_movie','ai_commercial','ai_short','ai_music_video',
+                       'blank']).default('blank'),
   description: z.string().max(500).optional(),
 });
 

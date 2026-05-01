@@ -78,9 +78,24 @@ export function getAssets(sessionId: string): Map<string, Uint8Array> | undefine
   return sessions.get(sessionId)?.assets;
 }
 
-/** Look up session by project slug (for the serve endpoint). */
+/** Look up the MOST RECENT booted session for a project slug (for the serve endpoint).
+ *  Using .find() would return the oldest match; we sort descending by startedAt instead. */
 export function getSessionBySlug(slug: string): PreviewSession | undefined {
-  return Array.from(sessions.values()).find((s) => s.projectSlug === slug && s.status === 'booted');
+  return Array.from(sessions.values())
+    .filter((s) => s.projectSlug === slug && s.status === 'booted')
+    .sort((a, b) => b.startedAt - a.startedAt)[0];
+}
+
+/** Stop and evict all existing sessions for a given slug + tenant.
+ *  Called before creating a new boot session so stale assets don't linger. */
+export function evictSessionsBySlug(slug: string, tenantId: string): void {
+  for (const [id, s] of sessions.entries()) {
+    if (s.projectSlug === slug && s.tenantId === tenantId) {
+      s.status   = 'stopped';
+      s.assets   = undefined; // free memory immediately
+      sessions.delete(id);
+    }
+  }
 }
 
 export function updateSession(

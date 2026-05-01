@@ -1,7 +1,8 @@
 // apps/web/src/screens/AssetsScreen.tsx — Supabase Storage–backed asset manager.
-// List, upload, copy URL, and delete project assets (images, files, fonts).
-// Delete is audited. No direct Storage URL construction in browser — goes through /api/assets.
-import { useState, useRef } from 'react';
+// Upload, copy URL, and delete project assets. All operations go through /api/assets.
+import { useState, useRef, useEffect } from 'react';
+import { useProjectStore } from '../lib/store/projectStore';
+import { apiFetch, apiFetchForm, ApiError } from '../lib/api';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -16,7 +17,15 @@ interface Asset {
   sizeBytes: number;
   url:       string;
   uploadedAt: string;
-  uploadedBy: string;
+}
+
+interface APIAsset {
+  id:         string;
+  name:       string;
+  mimeType:   string;
+  size:       number;
+  url:        string;
+  uploadedAt: string;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -55,6 +64,18 @@ function assetIcon(type: AssetType): string {
   }
 }
 
+function apiToAsset(a: APIAsset): Asset {
+  return {
+    id:         a.id,
+    name:       a.name,
+    type:       typeFromMime(a.mimeType),
+    mimeType:   a.mimeType,
+    sizeBytes:  a.size,
+    url:        a.url,
+    uploadedAt: a.uploadedAt,
+  };
+}
+
 const TYPE_FILTERS: { id: AssetType | 'all'; label: string }[] = [
   { id: 'all',      label: 'All'       },
   { id: 'image',    label: 'Images'    },
@@ -67,13 +88,34 @@ const TYPE_FILTERS: { id: AssetType | 'all'; label: string }[] = [
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function AssetsScreen() {
+  const currentProjectId = useProjectStore((s) => s.currentProjectId);
+  const currentProject   = useProjectStore((s) => s.projects[s.currentProjectId]);
+
   const [assets, setAssets]         = useState<Asset[]>([]);
   const [filter, setFilter]         = useState<AssetType | 'all'>('all');
   const [view, setView]             = useState<ViewMode>('grid');
   const [search, setSearch]         = useState('');
   const [uploading, setUploading]   = useState(false);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState<string | null>(null);
   const [copied, setCopied]         = useState<string | null>(null);
   const fileInputRef                = useRef<HTMLInputElement>(null);
+
+  // ── Fetch assets on mount / project change ─────────────────────────────────
+  useEffect(() => {
+    if (!currentProjectId || currentProjectId === 'global') {
+      setAssets([]);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    apiFetch<{ assets: APIAsset[] }>(`/api/assets?projectId=${currentProjectId}`)
+      .then((res) => { if (!cancelled) setAssets(res.assets.map(apiToAsset)); })
+      .catch((err) => { if (!cancelled) setError(err instanceof ApiError ? err.message : 'Could not load assets.'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [currentProjectId]);
 
   const filtered = assets.filter((a) =>
     (filter === 'all' || a.type === filter) &&
@@ -82,20 +124,28 @@ export function AssetsScreen() {
 
   async function handleFileSelect(files: FileList | null) {
     if (!files || files.length === 0) return;
-    setUploading(true);
-    // TODO: POST /api/assets/upload with FormData
-    await new Promise((r) => setTimeout(r, 800));
+    if (!currentProject) {
+      alert('Select a project before uploading assets.');
+      return;
+    }
 
-    const newAssets: Asset[] = Array.from(files).map((file) => ({
-      id:          crypto.randomUUID(),
-      name:        file.name,
-      type:        typeFromMime(file.type),
-      mimeType:    file.type,
-      sizeBytes:   file.size,
-      url:         URL.createObjectURL(file), // stub — real URL from /api/assets
-      uploadedAt:  new Date().toISOString(),
-      uploadedBy:  'You',
-    }));
+    setUploading(true);
+    const newAssets: Asset[] = [];
+
+    for (const file of Array.from(files)) {
+      try {
+        const form = new FormData();
+        form.append('file', file);
+        const res = await apiFetchForm<{ asset: APIAsset }>(
+          `/api/assets/upload?projectId=${currentProjectId}`,
+          form,
+        );
+        newAssets.push(apiToAsset(res.asset));
+      } catch (err) {
+        setError(`Upload failed for ${file.name}: ${err instanceof ApiError ? err.message : 'Server error'}`);
+      }
+    }
+
     setAssets((prev) => [...newAssets, ...prev]);
     setUploading(false);
   }
@@ -106,20 +156,38 @@ export function AssetsScreen() {
     setTimeout(() => setCopied(null), 2000);
   }
 
-  function handleDelete(id: string) {
-    if (!confirm('Delete this asset? This is permanent and audited.')) return;
-    setAssets((prev) => prev.filter((a) => a.id !== id));
-    // TODO: DELETE /api/assets/:id
+  async function handleDelete(id: string) {
+    if (!confirm('Delete this asset? This is permanent.')) return;
+    try {
+      await apiFetch(`/api/assets/${id}`, { method: 'DELETE' });
+      setAssets((prev) => prev.filter((a) => a.id !== id));
+    } catch (err) {
+      alert(`Delete failed: ${err instanceof ApiError ? err.message : 'Server error'}`);
+    }
   }
+
+  const noProject = !currentProject || currentProjectId === 'global';
 
   return (
     <div className="abw-screen">
+      {/* Error banner */}
+      {error && (
+        <div className="abw-banner abw-banner--warning" style={{ marginBottom: 'var(--space-4)' }}>
+          ⚠ {error}
+          <button className="abw-btn abw-btn--ghost abw-btn--xs" style={{ marginLeft: 'auto' }} onClick={() => setError(null)}>✕</button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="abw-screen__header">
         <div>
           <h1 className="abw-screen__title">Assets</h1>
           <p className="abw-screen__sub">
-            {assets.length === 0
+            {noProject
+              ? 'Select a project to manage its assets.'
+              : loading
+              ? 'Loading…'
+              : assets.length === 0
               ? 'Upload images, fonts, and files for use in your project.'
               : `${assets.length} asset${assets.length !== 1 ? 's' : ''} · ${formatSize(assets.reduce((t, a) => t + a.sizeBytes, 0))} total`}
           </p>
@@ -142,7 +210,7 @@ export function AssetsScreen() {
           </div>
           <button
             className="abw-btn abw-btn--primary"
-            disabled={uploading}
+            disabled={uploading || noProject}
             onClick={() => fileInputRef.current?.click()}
             aria-label="Upload assets"
           >
@@ -160,173 +228,180 @@ export function AssetsScreen() {
         </div>
       </div>
 
-      {/* Filter tabs */}
-      <div className="abw-screen__tabs" role="tablist" aria-label="Asset type filter">
-        {TYPE_FILTERS.map(({ id, label }) => {
-          const count = id === 'all' ? assets.length : assets.filter((a) => a.type === id).length;
-          return (
-            <button
-              key={id}
-              role="tab"
-              aria-selected={filter === id}
-              className={`abw-screen__tab${filter === id ? ' abw-screen__tab--active' : ''}`}
-              onClick={() => setFilter(id)}
-            >
-              {label}{count > 0 && (
-                <span style={{ marginLeft: 4, opacity: 0.6, fontSize: '0.625rem' }}>({count})</span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Search */}
-      {assets.length > 0 && (
-        <input
-          className="abw-input"
-          type="search"
-          placeholder="Search assets…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          aria-label="Search assets"
-          style={{ maxWidth: 280 }}
-        />
-      )}
-
-      {/* Empty state */}
-      {assets.length === 0 ? (
-        <div
-          className="abw-empty-state abw-assets__drop-zone"
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => {
-            e.preventDefault();
-            void handleFileSelect(e.dataTransfer.files);
-          }}
-          aria-label="Drop zone for file upload"
-        >
-          <span className="abw-empty-state__icon" aria-hidden>🖼</span>
-          <p className="abw-empty-state__label">No assets</p>
-          <p className="abw-empty-state__sub">
-            Drop files here, or click Upload to add images, fonts, documents, and videos.
-          </p>
-          <button className="abw-btn abw-btn--primary" onClick={() => fileInputRef.current?.click()}>
-            Upload first asset
-          </button>
-        </div>
-      ) : filtered.length === 0 ? (
+      {/* No project state */}
+      {noProject ? (
         <div className="abw-empty-state">
-          <span className="abw-empty-state__icon" aria-hidden>🔍</span>
-          <p className="abw-empty-state__label">No results</p>
-          <p className="abw-empty-state__sub">Try a different name or category filter.</p>
-        </div>
-      ) : view === 'grid' ? (
-        /* Grid view */
-        <div className="abw-assets__grid">
-          {filtered.map((asset) => (
-            <div key={asset.id} className="abw-asset-card">
-              {asset.type === 'image' ? (
-                <div className="abw-asset-card__preview">
-                  <img
-                    src={asset.url}
-                    alt={asset.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
-                </div>
-              ) : (
-                <div className="abw-asset-card__preview abw-asset-card__preview--icon">
-                  <span style={{ fontSize: '2rem' }} aria-hidden>{assetIcon(asset.type)}</span>
-                </div>
-              )}
-              <div className="abw-asset-card__body">
-                <p className="abw-asset-card__name" title={asset.name}>{asset.name}</p>
-                <p style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', margin: 0 }}>
-                  {formatSize(asset.sizeBytes)} · {relativeTime(asset.uploadedAt)}
-                </p>
-              </div>
-              <div className="abw-asset-card__actions">
-                <button
-                  className="abw-btn abw-btn--ghost abw-btn--xs"
-                  onClick={() => void handleCopy(asset)}
-                  aria-label={`Copy URL for ${asset.name}`}
-                  title="Copy URL"
-                >
-                  {copied === asset.id ? '✓' : '⎘'}
-                </button>
-                <button
-                  className="abw-btn abw-btn--ghost abw-btn--xs"
-                  onClick={() => handleDelete(asset.id)}
-                  aria-label={`Delete ${asset.name}`}
-                  title="Delete"
-                  style={{ color: 'var(--error-500)' }}
-                >
-                  🗑
-                </button>
-              </div>
-            </div>
-          ))}
+          <span className="abw-empty-state__icon" aria-hidden>🖼</span>
+          <p className="abw-empty-state__label">No project selected</p>
+          <p className="abw-empty-state__sub">Open a project from the Projects screen to manage its assets.</p>
         </div>
       ) : (
-        /* List view */
-        <div className="abw-table-wrap">
-          <table className="abw-table" aria-label="Assets">
-            <thead>
-              <tr>
-                <th style={{ width: 32 }} />
-                <th>Name</th>
-                <th style={{ width: 80 }}>Type</th>
-                <th style={{ width: 80 }}>Size</th>
-                <th style={{ width: 100 }}>Uploaded</th>
-                <th style={{ width: 80 }}>By</th>
-                <th style={{ width: 100 }} aria-label="Actions" />
-              </tr>
-            </thead>
-            <tbody>
+        <>
+          {/* Filter tabs */}
+          <div className="abw-screen__tabs" role="tablist" aria-label="Asset type filter">
+            {TYPE_FILTERS.map(({ id, label }) => {
+              const count = id === 'all' ? assets.length : assets.filter((a) => a.type === id).length;
+              return (
+                <button
+                  key={id}
+                  role="tab"
+                  aria-selected={filter === id}
+                  className={`abw-screen__tab${filter === id ? ' abw-screen__tab--active' : ''}`}
+                  onClick={() => setFilter(id)}
+                >
+                  {label}{count > 0 && (
+                    <span style={{ marginLeft: 4, opacity: 0.6, fontSize: '0.625rem' }}>({count})</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Search */}
+          {assets.length > 0 && (
+            <input
+              className="abw-input"
+              type="search"
+              placeholder="Search assets…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search assets"
+              style={{ maxWidth: 280 }}
+            />
+          )}
+
+          {/* Empty / no results */}
+          {assets.length === 0 ? (
+            <div
+              className="abw-empty-state abw-assets__drop-zone"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                void handleFileSelect(e.dataTransfer.files);
+              }}
+              aria-label="Drop zone for file upload"
+            >
+              <span className="abw-empty-state__icon" aria-hidden>🖼</span>
+              <p className="abw-empty-state__label">No assets</p>
+              <p className="abw-empty-state__sub">
+                Drop files here, or click Upload to add images, fonts, documents, and videos.
+              </p>
+              <button className="abw-btn abw-btn--primary" onClick={() => fileInputRef.current?.click()}>
+                Upload first asset
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="abw-empty-state">
+              <span className="abw-empty-state__icon" aria-hidden>🔍</span>
+              <p className="abw-empty-state__label">No results</p>
+              <p className="abw-empty-state__sub">Try a different name or category filter.</p>
+            </div>
+          ) : view === 'grid' ? (
+            <div className="abw-assets__grid">
               {filtered.map((asset) => (
-                <tr key={asset.id}>
-                  <td style={{ textAlign: 'center' }}>
-                    <span aria-hidden>{assetIcon(asset.type)}</span>
-                  </td>
-                  <td>
-                    <span className="abw-table__name" title={asset.name}
-                      style={{ maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', whiteSpace: 'nowrap' }}>
-                      {asset.name}
-                    </span>
-                    <span style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', display: 'block' }}>
-                      {asset.mimeType}
-                    </span>
-                  </td>
-                  <td><span className="abw-badge" style={{ fontSize: '0.625rem' }}>{asset.type}</span></td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                    {formatSize(asset.sizeBytes)}
-                  </td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                    {relativeTime(asset.uploadedAt)}
-                  </td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{asset.uploadedBy}</td>
-                  <td>
-                    <div className="abw-table__actions">
-                      <button
-                        className="abw-btn abw-btn--ghost abw-btn--xs"
-                        onClick={() => void handleCopy(asset)}
-                        aria-label={`Copy URL for ${asset.name}`}
-                      >
-                        {copied === asset.id ? '✓ Copied' : '⎘ Copy URL'}
-                      </button>
-                      <button
-                        className="abw-btn abw-btn--ghost abw-btn--xs abw-btn--destructive"
-                        onClick={() => handleDelete(asset.id)}
-                        aria-label={`Delete ${asset.name}`}
-                      >
-                        Delete
-                      </button>
+                <div key={asset.id} className="abw-asset-card">
+                  {asset.type === 'image' ? (
+                    <div className="abw-asset-card__preview">
+                      <img
+                        src={asset.url}
+                        alt={asset.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
                     </div>
-                  </td>
-                </tr>
+                  ) : (
+                    <div className="abw-asset-card__preview abw-asset-card__preview--icon">
+                      <span style={{ fontSize: '2rem' }} aria-hidden>{assetIcon(asset.type)}</span>
+                    </div>
+                  )}
+                  <div className="abw-asset-card__body">
+                    <p className="abw-asset-card__name" title={asset.name}>{asset.name}</p>
+                    <p style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', margin: 0 }}>
+                      {formatSize(asset.sizeBytes)} · {relativeTime(asset.uploadedAt)}
+                    </p>
+                  </div>
+                  <div className="abw-asset-card__actions">
+                    <button
+                      className="abw-btn abw-btn--ghost abw-btn--xs"
+                      onClick={() => void handleCopy(asset)}
+                      aria-label={`Copy URL for ${asset.name}`}
+                      title="Copy URL"
+                    >
+                      {copied === asset.id ? '✓' : '⎘'}
+                    </button>
+                    <button
+                      className="abw-btn abw-btn--ghost abw-btn--xs"
+                      onClick={() => void handleDelete(asset.id)}
+                      aria-label={`Delete ${asset.name}`}
+                      title="Delete"
+                      style={{ color: 'var(--error-500)' }}
+                    >
+                      🗑
+                    </button>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          ) : (
+            <div className="abw-table-wrap">
+              <table className="abw-table" aria-label="Assets">
+                <thead>
+                  <tr>
+                    <th style={{ width: 32 }} />
+                    <th>Name</th>
+                    <th style={{ width: 80 }}>Type</th>
+                    <th style={{ width: 80 }}>Size</th>
+                    <th style={{ width: 100 }}>Uploaded</th>
+                    <th style={{ width: 100 }} aria-label="Actions" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((asset) => (
+                    <tr key={asset.id}>
+                      <td style={{ textAlign: 'center' }}>
+                        <span aria-hidden>{assetIcon(asset.type)}</span>
+                      </td>
+                      <td>
+                        <span className="abw-table__name" title={asset.name}
+                          style={{ maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', whiteSpace: 'nowrap' }}>
+                          {asset.name}
+                        </span>
+                        <span style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', display: 'block' }}>
+                          {asset.mimeType}
+                        </span>
+                      </td>
+                      <td><span className="abw-badge" style={{ fontSize: '0.625rem' }}>{asset.type}</span></td>
+                      <td style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                        {formatSize(asset.sizeBytes)}
+                      </td>
+                      <td style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                        {relativeTime(asset.uploadedAt)}
+                      </td>
+                      <td>
+                        <div className="abw-table__actions">
+                          <button
+                            className="abw-btn abw-btn--ghost abw-btn--xs"
+                            onClick={() => void handleCopy(asset)}
+                            aria-label={`Copy URL for ${asset.name}`}
+                          >
+                            {copied === asset.id ? '✓ Copied' : '⎘ Copy URL'}
+                          </button>
+                          <button
+                            className="abw-btn abw-btn--ghost abw-btn--xs abw-btn--destructive"
+                            onClick={() => void handleDelete(asset.id)}
+                            aria-label={`Delete ${asset.name}`}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

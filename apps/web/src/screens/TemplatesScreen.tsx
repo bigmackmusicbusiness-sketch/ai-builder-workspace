@@ -7,7 +7,7 @@ import type { ProjectType, ProjectTypeId } from '@abw/project-types';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type CategoryFilter = 'all' | 'web' | 'backend' | 'saas' | 'tool';
+type CategoryFilter = 'all' | 'web' | 'backend' | 'saas' | 'tool' | 'creative' | 'video';
 
 // ── Category mapping ───────────────────────────────────────────────────────────
 
@@ -21,15 +21,25 @@ const TYPE_CATEGORIES: Record<ProjectTypeId, CategoryFilter> = {
   'internal-tool':    'tool',
   'onboarding-flow':  'tool',
   'automation-panel': 'tool',
+  'ebook':            'creative',
+  'document':         'creative',
+  'email-composer':   'creative',
+  'music-studio':     'creative',
+  'ai-movie':         'video',
+  'ai-commercial':    'video',
+  'ai-short':         'video',
+  'ai-music-video':   'video',
   'blank':            'all',
 };
 
 const CATEGORY_FILTERS: { id: CategoryFilter; label: string }[] = [
-  { id: 'all',     label: 'All templates' },
-  { id: 'web',     label: 'Web & Marketing' },
-  { id: 'saas',    label: 'SaaS & Full-Stack' },
-  { id: 'backend', label: 'Backend & API' },
-  { id: 'tool',    label: 'Tools & Automation' },
+  { id: 'all',      label: 'All templates'      },
+  { id: 'web',      label: 'Web & Marketing'     },
+  { id: 'saas',     label: 'SaaS & Full-Stack'   },
+  { id: 'backend',  label: 'Backend & API'       },
+  { id: 'tool',     label: 'Tools & Automation'  },
+  { id: 'creative', label: 'Creative Suite'      },
+  { id: 'video',    label: 'Video Suite'         },
 ];
 
 function slugify(name: string): string {

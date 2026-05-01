@@ -26,6 +26,11 @@ const schema = z.object({
 
   OLLAMA_BASE_URL:        z.string().url().default('http://localhost:11434'),
   PREVIEW_ROOT_DOMAIN:    z.string().default('preview.local.test'),
+
+  /** Public base URL of THIS API server. Used as the Higgsfield OAuth redirect
+   *  target. Must match what the user's browser can reach the API at. Defaults
+   *  to http://localhost:{PORT} which works for local Windows dev. */
+  PUBLIC_API_URL:         z.string().url().optional(),
 });
 
 function parseEnv() {

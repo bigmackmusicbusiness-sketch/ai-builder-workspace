@@ -2,6 +2,10 @@
 // Each webhook gets a URL path + HMAC signing secret (stored in vault).
 // Payloads are stored in webhook_payloads for inspection and replay.
 import type { FastifyInstance } from 'fastify';
+
+declare module 'fastify' {
+  interface FastifyContextConfig { skipAuth?: boolean; }
+}
 import { z } from 'zod';
 import { eq, and, desc } from 'drizzle-orm';
 import { createHmac } from 'node:crypto';

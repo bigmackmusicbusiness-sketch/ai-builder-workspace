@@ -1,10 +1,13 @@
 // apps/worker/src/preview.ts — per-project preview sandbox worker.
 // Serves bundled project assets from KV, scoped strictly per project slug.
-// Each project runs in its own subdomain: <slug>.preview.<rootDomain>
-import { parseProjectSlug, assetKey, type Env } from './sandbox';
+//
+// Routing strategies (tried in order):
+//   1. Subdomain:  <slug>.preview.<rootDomain>/<asset>   (custom domain, production)
+//   2. Path-based: <workerHost>/<slug>/<asset>            (workers.dev, no custom domain needed)
+import { assetKey, type Env } from './sandbox';
 import { applyEdgeHeaders, mimeFromPath } from './edge';
 
-// SPA shell injected when no index.html is found in KV (boot placeholder).
+// Placeholder served when no assets are found in KV for a project.
 const BOOT_PLACEHOLDER = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -48,24 +51,30 @@ export default {
       });
     }
 
-    // Resolve project slug from subdomain or ?project= query param
-    const projectSlug = parseProjectSlug(req, env);
+    // ── Slug + asset path resolution ─────────────────────────────────────────
+    const { projectSlug, assetPath: rawPath } = resolveRequest(req, env);
     if (!projectSlug) {
-      return new Response('No project specified', { status: 400 });
+      return new Response('No project specified. Use /<slug>/ path or <slug>.preview.<domain>.', {
+        status: 400,
+        headers: { 'content-type': 'text/plain' },
+      });
     }
 
-    // Resolve asset path; SPA fallback for extensionless routes
-    let assetPath = url.pathname === '/' ? '/index.html' : url.pathname;
+    // Normalise asset path; default to index.html
+    let assetPath = !rawPath || rawPath === '/' ? '/index.html' : rawPath;
+
+    // KV lookup
     let content = await env.PREVIEW_KV.get(assetKey(projectSlug, assetPath), 'arrayBuffer');
 
+    // SPA fallback: extensionless paths (client-side routes) → serve index.html
     if (!content && !assetPath.includes('.')) {
       content = await env.PREVIEW_KV.get(assetKey(projectSlug, '/index.html'), 'arrayBuffer');
       assetPath = '/index.html';
     }
 
-    // Not yet booted: serve loading placeholder for HTML routes
+    // Nothing in KV → project not yet booted
     if (!content) {
-      if (url.pathname === '/' || !assetPath.includes('.')) {
+      if (!assetPath.includes('.') || assetPath.endsWith('.html')) {
         const res = new Response(BOOT_PLACEHOLDER, {
           headers: { 'content-type': 'text/html; charset=utf-8' },
         });
@@ -80,3 +89,31 @@ export default {
     return applyEdgeHeaders(res, { projectSlug, isHtml });
   },
 };
+
+// ── Routing ──────────────────────────────────────────────────────────────────
+
+function resolveRequest(
+  req: Request,
+  env: Env,
+): { projectSlug: string | null; assetPath: string } {
+  const url = new URL(req.url);
+
+  // Strategy 1 — subdomain: <slug>.preview.<rootDomain>
+  const rootDomain = env.PREVIEW_ROOT_DOMAIN;
+  const hostname   = url.hostname;
+  const suffix     = `.preview.${rootDomain}`;
+  if (hostname.endsWith(suffix)) {
+    const slug = hostname.slice(0, -suffix.length) || null;
+    return { projectSlug: slug, assetPath: url.pathname };
+  }
+
+  // Strategy 2 — path: /<slug>/<asset-path>  (works on workers.dev)
+  const parts = url.pathname.split('/').filter(Boolean);
+  if (parts.length >= 1) {
+    const slug      = parts[0]!;
+    const assetPath = parts.length > 1 ? '/' + parts.slice(1).join('/') : '/';
+    return { projectSlug: slug, assetPath };
+  }
+
+  return { projectSlug: null, assetPath: '/' };
+}

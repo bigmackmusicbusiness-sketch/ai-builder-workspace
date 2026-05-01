@@ -13,6 +13,14 @@ import { automationPanel } from './automation-panel/index';
 import { saasApp }        from './saas-app/index';
 import { apiService }     from './api-service/index';
 import { fullStackApp }   from './full-stack-app/index';
+import { ebook }          from './ebook/index';
+import { document as documentStudio } from './document/index';
+import { emailComposer }  from './email-composer/index';
+import { musicStudio }    from './music-studio/index';
+import { aiMovie }        from './ai-movie/index';
+import { aiCommercial }   from './ai-commercial/index';
+import { aiShort }        from './ai-short/index';
+import { aiMusicVideo }   from './ai-music-video/index';
 
 import type { ProjectType, ProjectTypeId } from './types';
 
@@ -31,11 +39,20 @@ const REGISTRY = new Map<ProjectTypeId, ProjectType>([
   ['saas-app',          saasApp],
   ['api-service',       apiService],
   ['full-stack-app',    fullStackApp],
+  ['ebook',             ebook],
+  ['document',          documentStudio],
+  ['email-composer',    emailComposer],
+  ['music-studio',      musicStudio],
+  ['ai-movie',          aiMovie],
+  ['ai-commercial',     aiCommercial],
+  ['ai-short',          aiShort],
+  ['ai-music-video',    aiMusicVideo],
 ]);
 
 /** Return all registered project types as an ordered array. */
 export function listProjectTypes(): ProjectType[] {
   return [
+    // ── Web & App projects ───────────────────────────
     website,
     landingPage,
     dashboard,
@@ -45,6 +62,17 @@ export function listProjectTypes(): ProjectType[] {
     internalTool,
     onboardingFlow,
     automationPanel,
+    // ── Creative Suite ───────────────────────────────
+    ebook,
+    documentStudio,
+    emailComposer,
+    musicStudio,
+    // ── Video Suite ──────────────────────────────────
+    aiMovie,
+    aiCommercial,
+    aiShort,
+    aiMusicVideo,
+    // ── Blank ────────────────────────────────────────
     blank,
   ];
 }
@@ -72,3 +100,6 @@ export function scaffold(
 // Re-export individual types for direct import convenience
 export { blank, website, landingPage, dashboard, internalTool };
 export { onboardingFlow, automationPanel, saasApp, apiService, fullStackApp };
+export { ebook, emailComposer, musicStudio };
+export { documentStudio as document };
+export { aiMovie, aiCommercial, aiShort, aiMusicVideo };

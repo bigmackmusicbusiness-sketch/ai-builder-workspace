@@ -1,6 +1,7 @@
 // apps/api/src/server.ts — Fastify bootstrap. Registers all route plugins.
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import multipart from '@fastify/multipart';
 import { env } from './config/env';
 import { initDb }         from './db/client';
 import { filesRoutes }    from './routes/files';
@@ -15,6 +16,17 @@ import { runsRoutes }     from './routes/runs';
 import { testsRoutes }      from './routes/tests';
 import { approvalsRoutes }  from './routes/approvals';
 import { chatRoutes }       from './routes/chat';
+import { publishRoutes }    from './routes/publish';
+import { assetsRoutes }     from './routes/assets';
+import { integrationsRoutes } from './routes/integrations';
+import { ebooksRoutes }    from './routes/ebooks';
+import { documentsRoutes } from './routes/documents';
+import { emailRoutes }     from './routes/email';
+import { musicRoutes }     from './routes/music';
+import { editorRoutes }    from './routes/editor';
+import { higgsfieldRoutes } from './routes/higgsfield';
+import { videoRoutes }      from './routes/video';
+import { clipperRoutes }    from './routes/clipper';
 
 async function main(): Promise<void> {
   // Initialise DB before anything else so getDb() is ready for all route handlers.
@@ -22,6 +34,13 @@ async function main(): Promise<void> {
   await initDb();
 
   const app = Fastify({ logger: { level: 'info' } });
+
+  // ── Multipart (file uploads) ────────────────────────────────────────────────
+  // 2 GB cap for video uploads (clipper). Coolify VPS disk is the real limiter
+  // and assets are streamed straight to Supabase Storage anyway.
+  await app.register(multipart, {
+    limits: { fileSize: 2 * 1024 * 1024 * 1024 },
+  });
 
   // ── CORS ────────────────────────────────────────────────────────────────────
   await app.register(cors, {
@@ -57,6 +76,17 @@ async function main(): Promise<void> {
   await app.register(testsRoutes);
   await app.register(approvalsRoutes);
   await app.register(chatRoutes);
+  await app.register(publishRoutes);
+  await app.register(assetsRoutes);
+  await app.register(integrationsRoutes);
+  await app.register(ebooksRoutes);
+  await app.register(documentsRoutes);
+  await app.register(emailRoutes);
+  await app.register(musicRoutes);
+  await app.register(editorRoutes);
+  await app.register(higgsfieldRoutes);
+  await app.register(videoRoutes);
+  await app.register(clipperRoutes);
 
   // ── Start ───────────────────────────────────────────────────────────────────
   try {

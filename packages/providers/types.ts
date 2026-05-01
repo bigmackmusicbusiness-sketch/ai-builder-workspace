@@ -2,9 +2,44 @@
 // Every provider (MiniMax, Ollama, future) must implement this shape.
 // All calls go through /api. The browser never calls providers directly.
 
+/** A single content block in a multipart (vision-capable) message. */
+export type ContentPart =
+  | { type: 'text';      text:      string }
+  | { type: 'image_url'; image_url: { url: string } };
+
 export interface ChatMessage {
-  role:    'system' | 'user' | 'assistant';
-  content: string;
+  role:    'system' | 'user' | 'assistant' | 'tool';
+  /** String for text-only messages; ContentPart[] when images are attached.
+   *  null is allowed on assistant messages that carry tool_calls with no text
+   *  (MiniMax rejects empty-string content in that case — use null instead). */
+  content: string | ContentPart[] | null;
+  /** Only set on role='tool' — echoes the tool_call.id this result belongs to. */
+  tool_call_id?: string;
+  /** Only set on role='assistant' when the model invokes tools. */
+  tool_calls?: ToolCall[];
+  /** Optional name — used on role='tool' to identify which tool ran. */
+  name?: string;
+}
+
+/** OpenAI-compatible JSON-schema tool definition. */
+export interface ToolDefinition {
+  type: 'function';
+  function: {
+    name:        string;
+    description: string;
+    parameters:  Record<string, unknown>; // JSON Schema
+  };
+}
+
+/** A single tool invocation emitted by the model. */
+export interface ToolCall {
+  id:   string;
+  type: 'function';
+  function: {
+    name:      string;
+    /** JSON-encoded arguments (string, as per OpenAI spec). */
+    arguments: string;
+  };
 }
 
 export interface ChatRequest {
@@ -14,14 +49,17 @@ export interface ChatRequest {
   topP?:        number;
   maxTokens?:   number;
   stream?:      boolean;
+  /** Tool definitions the model may call. */
+  tools?:       ToolDefinition[];
+  /** Controls how the model uses tools. 'auto' = model decides. */
+  toolChoice?:  'auto' | 'none' | 'required';
 }
 
-export interface ChatChunk {
-  type:    'delta' | 'done' | 'error';
-  delta?:  string;
-  usage?:  { promptTokens: number; completionTokens: number };
-  error?:  string;
-}
+export type ChatChunk =
+  | { type: 'delta';     delta: string }
+  | { type: 'tool_call'; toolCall: ToolCall }
+  | { type: 'done';      usage?: { promptTokens: number; completionTokens: number } }
+  | { type: 'error';     error: string };
 
 export interface CompleteRequest {
   prompt:       string;
@@ -60,6 +98,20 @@ export interface ModelInfo {
   sizeB?:  number;
 }
 
+export interface ImageGenRequest {
+  prompt: string;
+  /** Square pixel size, e.g. "1024x1024". Default: "1024x1024". */
+  size?: string;
+  signal?: AbortSignal;
+}
+
+export interface ImageGenResponse {
+  /** Raw image bytes ready to write to disk. */
+  buffer: Buffer;
+  /** File extension without leading dot, e.g. "jpg" or "png". */
+  ext: string;
+}
+
 /** The contract every provider adapter must satisfy. */
 export interface ProviderAdapter {
   readonly id: string;
@@ -79,4 +131,7 @@ export interface ProviderAdapter {
 
   /** Optional embedding. */
   embed?(req: EmbedRequest): Promise<EmbedResponse>;
+
+  /** Optional image generation — returns raw image bytes + file extension. */
+  generateImage?(req: ImageGenRequest): Promise<ImageGenResponse>;
 }

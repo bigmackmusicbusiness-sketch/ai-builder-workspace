@@ -1,75 +1,93 @@
 // apps/web/src/layout/LeftPanel/LeftPanel.tsx — collapsible left AI/chat/task panel.
-// Sections: Chat, Run History (stub), Plan Summary (stub), Approvals (live),
-// Agent Status, Model Selector. State survives collapse (Zustand stores are global).
-import { useRunStore } from '../../lib/store/runStore';
+// Sections: Chat (always expanded, fills space), Run History, Plan Summary,
+// Approvals docked under chat. Status pill + chat composer at the bottom.
+//
+// Fixed-header tax was ~96px (header + AgentStatus + ModelSelector). Now ~28px:
+// just a thin "+ New chat" button row at the top. StatusPill (32px) sits
+// between accordions and chat input as a single combined control.
+import type { ReactNode } from 'react';
 import { ChatThread } from './ChatThread';
-import { AgentStatus } from './AgentStatus';
-import { ModelSelector } from './ModelSelector';
 import { ApprovalsQueue } from './ApprovalsQueue';
+import { useChatStore } from '../../lib/store/chatStore';
+import { useProjectStore } from '../../lib/store/projectStore';
 
 export function LeftPanel() {
-  const { activeRun } = useRunStore();
+  const currentProjectId = useProjectStore((s) => s.currentProjectId);
+  const clearProject     = useChatStore((s) => s.clearProject);
 
   return (
     <aside className="abw-shell__left" aria-label="AI panel">
       <div className="abw-left">
-        {/* Panel header */}
-        <div className="abw-left__header">
-          <span className="abw-left__header-title">AI Builder</span>
+        {/* Thin header — single button, ~24px tall */}
+        <div
+          className="abw-left__header"
+          style={{ minHeight: 24, padding: '4px var(--space-3)' }}
+        >
           <button
+            type="button"
+            onClick={() => clearProject(currentProjectId)}
             style={{
               border: 'none', background: 'none', cursor: 'pointer',
-              color: 'var(--text-secondary)', fontSize: '0.75rem',
+              color: 'var(--text-secondary)', fontSize: '0.6875rem', fontWeight: 600,
               padding: '2px var(--space-1)', borderRadius: 'var(--radius-field)',
+              marginLeft: 'auto',
             }}
-            aria-label="New run"
-            title="New run"
+            aria-label="Start a new chat"
+            title="Clear chat for this project"
           >
-            + Run
+            + New chat
           </button>
         </div>
 
         {/* Scrollable sections */}
         <div className="abw-left__sections">
-          {/* Chat section */}
+          {/* Chat — always expanded, fills available space */}
           <div className="abw-left__section" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
             <ChatThread />
           </div>
 
-          {/* Run History — stub (wired in Step 9) */}
-          <SectionPlaceholder icon="⏱" label="Run History" sub="Previous runs appear here" />
-
-          {/* Plan Summary — stub */}
-          <SectionPlaceholder icon="📋" label="Plan Summary" sub="Active plan appears here" />
-
-          {/* Approvals queue — live, calls /api/approvals */}
-          <div className="abw-left__section">
+          {/* Approvals dock — directly below chat */}
+          <Accordion icon="✓" label="Approvals" count={0} defaultOpen>
             <ApprovalsQueue />
-          </div>
-        </div>
+          </Accordion>
 
-        {/* Bottom: Agent status + Model selector — always visible */}
-        <AgentStatus
-          status={activeRun?.status ?? 'idle'}
-          currentStep={activeRun?.currentStep}
-        />
-        <ModelSelector />
+          <Accordion icon="⏱" label="Run history" count={0}>
+            <p className="abw-left__accordion-empty">Previous runs appear here.</p>
+          </Accordion>
+
+          <Accordion icon="📋" label="Plan summary" count={0}>
+            <p className="abw-left__accordion-empty">Active plan appears here.</p>
+          </Accordion>
+        </div>
       </div>
     </aside>
   );
 }
 
-function SectionPlaceholder({ icon, label, sub }: { icon: string; label: string; sub: string }) {
+interface AccordionProps {
+  icon:        string;
+  label:       string;
+  count:       number;
+  defaultOpen?: boolean;
+  children:    ReactNode;
+}
+
+function Accordion({ icon, label, count, defaultOpen = false, children }: AccordionProps) {
   return (
-    <div className="abw-left__section" style={{ marginBottom: 'var(--space-2)' }}>
-      <div className="abw-left__section-label">{label}</div>
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
-        padding: 'var(--space-2) 0', color: 'var(--text-secondary)', fontSize: '0.8125rem',
-      }}>
-        <span aria-hidden style={{ opacity: 0.4 }}>{icon}</span>
-        <span>{sub}</span>
+    <details className="abw-left__accordion" open={defaultOpen || count > 0}>
+      <summary>
+        <svg className="abw-left__accordion-caret" viewBox="0 0 10 10" fill="none" aria-hidden>
+          <path d="M3 2 L7 5 L3 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <span className="abw-left__accordion-icon" aria-hidden>{icon}</span>
+        <span className="abw-left__accordion-label">{label}</span>
+        <span className={`abw-left__accordion-count${count === 0 ? ' abw-left__accordion-count--zero' : ''}`}>
+          {count}
+        </span>
+      </summary>
+      <div className="abw-left__accordion-body">
+        {children}
       </div>
-    </div>
+    </details>
   );
 }

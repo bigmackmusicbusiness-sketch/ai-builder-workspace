@@ -3,8 +3,28 @@
 // Only runs server-side inside /api; never exposed to browser.
 import { build, type BuildResult } from 'esbuild';
 import { readFile, readdir, stat } from 'node:fs/promises';
-import { join, relative, extname } from 'node:path';
+import { join, relative, extname, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { redactString } from '../security/redact';
+
+// ── Module resolution paths ────────────────────────────────────────────────────
+// esbuild resolves imports from the project root, but scaffolded/user projects
+// don't have their own node_modules. Point esbuild at the monorepo node_modules
+// so packages like react, react-dom, etc. are found automatically.
+//
+// CJS-vs-ESM resolution: when esbuild bundles this file to CJS, `__dirname` is
+// a free global and `import.meta.url` is undefined (causing fileURLToPath to
+// crash). When run as ESM source it's the inverse. Detect at runtime so the
+// same code works in both.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _g: any = globalThis as any;
+const _dirname: string = (typeof _g.__dirname === 'string')
+  ? _g.__dirname
+  : dirname(fileURLToPath(import.meta.url));
+// apps/api/src/preview -> apps/api -> apps -> monorepo root
+const MONOREPO_ROOT     = join(_dirname, '..', '..', '..', '..', '..');
+const ROOT_NODE_MODULES = join(MONOREPO_ROOT, 'node_modules');
+const API_NODE_MODULES  = join(_dirname, '..', '..', '..', 'node_modules');
 
 export interface BundleInput {
   projectId: string;
@@ -13,6 +33,15 @@ export interface BundleInput {
   rootDir: string;
   entryPoint: string; // relative to rootDir, e.g. "src/main.tsx"
   framework: 'react-vite' | 'vanilla' | 'static';
+  /**
+   * For static sites: the URL base path from which assets are served.
+   * E.g. "/api/preview/serve/my-project/" in local dev, "/" in production.
+   * A <base href="…"> tag is injected into index.html so that relative asset
+   * paths (images/hero.jpg) resolve correctly even when the page is served
+   * from a sub-path. Absolute paths (/images/…) in the HTML are also rewritten
+   * to relative so they respect the base tag.
+   */
+  serveBasePath?: string;
 }
 
 export interface BundleOutput {
@@ -34,8 +63,32 @@ export async function bundleProject(input: BundleInput): Promise<BundleOutput> {
 
   try {
     if (input.framework === 'static') {
-      // Static projects: walk the rootDir and collect all files as-is
+      // Static projects: walk the rootDir and collect all files as-is (no bundling)
       await collectStaticFiles(input.rootDir, input.rootDir, assets);
+
+      // Patch index.html so assets resolve correctly when served from a sub-path.
+      // Order matters: rewrite absolute paths FIRST, then inject the base tag —
+      // otherwise the rewriter will strip the leading slash from the base href itself.
+      if (input.serveBasePath) {
+        const raw = assets.get('/index.html');
+        if (raw) {
+          let html = new TextDecoder().decode(raw);
+          // Step 1: Rewrite absolute-path src/href="/foo" → "foo" (drop leading slash)
+          // so they resolve relative to the base href instead of the server root.
+          // Skips external URLs (http://, https://, //) and the base tag itself.
+          html = html.replace(
+            /(src|href)="\/(?!\/|http[s]?:\/\/)([^"]*)"/gi,
+            '$1="$2"',
+          );
+          // Step 2: Inject <base href="…"> AFTER rewriting (so the rewriter
+          // cannot strip its leading slash). Skip if already present.
+          if (!html.includes('<base ')) {
+            const baseTag = `<base href="${input.serveBasePath}">`;
+            html = html.replace(/(<head[^>]*>)/i, `$1\n  ${baseTag}`);
+          }
+          assets.set('/index.html', encodeText(html));
+        }
+      }
     } else {
       // React/Vite and vanilla: use esbuild
       const result = await buildWithEsbuild(input);
@@ -70,30 +123,34 @@ async function buildWithEsbuild(input: BundleInput): Promise<BuildResult> {
   return build({
     entryPoints: [join(input.rootDir, input.entryPoint)],
     bundle: true,
-    write: false, // return in-memory
+    write: false,         // return in-memory
     format: 'esm',
     target: 'es2022',
-    minify: false, // keep readable for debugging
+    minify: false,        // keep readable for debugging
     sourcemap: false,
     splitting: false,
     outdir: join(input.rootDir, 'dist'),
     loader: {
       '.tsx': 'tsx',
-      '.ts': 'ts',
+      '.ts':  'ts',
       '.jsx': 'jsx',
-      '.js': 'js',
+      '.js':  'js',
       '.css': 'css',
       '.svg': 'dataurl',
       '.png': 'dataurl',
       '.jpg': 'dataurl',
       '.gif': 'dataurl',
-      '.woff': 'dataurl',
+      '.woff':  'dataurl',
       '.woff2': 'dataurl',
     },
     define: {
       'process.env.NODE_ENV': '"production"',
     },
-    external: [], // bundle everything for worker compatibility
+    // Point esbuild at the monorepo node_modules so imports like 'react',
+    // 'react-dom/client' etc. resolve correctly even in temp/scaffolded dirs.
+    nodePaths: [ROOT_NODE_MODULES, API_NODE_MODULES],
+    // Bundle everything — worker-compatible ESM output
+    external: [],
   });
 }
 
@@ -117,12 +174,14 @@ async function collectStaticFiles(
 }
 
 function buildIndexHtml(input: BundleInput): string {
-  const jsFile = `/${input.projectSlug}.js`;
+  // Normalise the entry point filename to match esbuild's output naming
+  const jsName  = input.entryPoint.replace(/^src\//, '').replace(/\.[^.]+$/, '.js');
+  const jsFile  = `/${jsName}`;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${input.projectSlug}</title>
 </head>
 <body>
@@ -135,3 +194,6 @@ function buildIndexHtml(input: BundleInput): string {
 function encodeText(s: string): Uint8Array {
   return new TextEncoder().encode(s);
 }
+
+// Exported so tests can inspect without full build
+export { buildIndexHtml };

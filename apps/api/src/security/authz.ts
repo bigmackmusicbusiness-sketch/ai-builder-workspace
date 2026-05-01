@@ -145,6 +145,12 @@ export function requireRole(ctx: AuthContext, minRole: 'owner' | 'admin' | 'memb
 }
 
 export async function authMiddleware(req: FastifyRequest, reply: FastifyReply): Promise<void> {
+  // Honour per-route `config: { skipAuth: true }` — used by public iframe-served
+  // preview asset routes (/api/preview/serve/:slug/*), healthchecks, etc.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const routeConfig = (req.routeOptions?.config ?? {}) as { skipAuth?: boolean };
+  if (routeConfig.skipAuth) return;
+
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (req as any).authCtx = await getAuthContext(req);

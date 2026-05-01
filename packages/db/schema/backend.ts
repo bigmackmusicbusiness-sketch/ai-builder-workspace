@@ -77,7 +77,10 @@ export const webhookPayloads = pgTable('webhook_payloads', {
 // ── Assets ─────────────────────────────────────────────────────────
 export const assets = pgTable('assets', {
   id:          uuid('id').primaryKey().defaultRandom(),
-  projectId:   uuid('project_id').notNull().references(() => projects.id),
+  /** Optional: tenant-scoped assets (e.g. AI gen outputs not yet attached
+   *  to a project) live with project_id NULL. Migration 0006 dropped the
+   *  not-null + FK now matches that. */
+  projectId:   uuid('project_id').references(() => projects.id),
   tenantId:    uuid('tenant_id').notNull().references(() => tenants.id),
   name:        text('name').notNull(),
   storagePath: text('storage_path').notNull(),  // Supabase Storage path

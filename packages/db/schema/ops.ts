@@ -1,7 +1,7 @@
 // packages/db/schema/ops.ts — provider_configs, secret_metadata, publish_targets,
-//   preview_sessions, onboarding_flows, audit_events, user_preferences.
+//   deployments, preview_sessions, onboarding_flows, audit_events, user_preferences.
 import {
-  pgTable, text, uuid, jsonb, timestamp, boolean,
+  pgTable, text, uuid, jsonb, timestamp, boolean, integer,
 } from 'drizzle-orm/pg-core';
 import { timestamps, tenants, users } from './core';
 import { projects } from './projects';
@@ -60,6 +60,25 @@ export const publishTargets = pgTable('publish_targets', {
   config:     jsonb('config').notNull().default({}),
   lastDeployAt: timestamp('last_deploy_at', { withTimezone: true }),
   lastDeployUrl: text('last_deploy_url'),
+  ...timestamps,
+});
+
+// ── Deployments ────────────────────────────────────────────────────
+// Written on each publish action. Status: building → success | failed | cancelled.
+export const deployments = pgTable('deployments', {
+  id:          uuid('id').primaryKey().defaultRandom(),
+  targetId:    uuid('target_id').notNull().references(() => publishTargets.id, { onDelete: 'cascade' }),
+  projectId:   uuid('project_id').notNull().references(() => projects.id),
+  tenantId:    uuid('tenant_id').notNull().references(() => tenants.id),
+  /** 'building' | 'success' | 'failed' | 'cancelled' */
+  status:      text('status').notNull().default('building'),
+  env:         text('env').notNull(),
+  /** Live URL returned by Cloudflare Pages (null until success) */
+  url:         text('url'),
+  triggeredBy: text('triggered_by').notNull(),
+  commitMsg:   text('commit_msg'),
+  durationMs:  integer('duration_ms'),
+  error:       text('error'),
   ...timestamps,
 });
 

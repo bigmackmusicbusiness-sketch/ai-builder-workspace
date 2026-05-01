@@ -1,0 +1,58 @@
+# apps/web/Dockerfile.coolify — Vite SPA static-served via nginx.
+#
+# Build args (set in Coolify build environment, NOT runtime env):
+#   VITE_API_URL          — public URL of the API (e.g. https://api.example.com)
+#   VITE_SUPABASE_URL     — Supabase project URL
+#   VITE_SUPABASE_ANON_KEY— Supabase anon key (safe to ship to browser)
+#
+# These are baked into the bundle at `pnpm --filter @abw/web build` time.
+# Nginx serves the built dist/ + does SPA fallback to /index.html.
+
+FROM node:20-bookworm-slim AS build
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
+
+# Workspace manifests for cache-friendly install
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY apps/web/package.json              ./apps/web/
+COPY apps/web/tsconfig.json             ./apps/web/
+COPY apps/web/vite.config.ts            ./apps/web/
+COPY apps/api/package.json              ./apps/api/
+COPY packages/agent-core/package.json   ./packages/agent-core/
+COPY packages/db/package.json           ./packages/db/
+COPY packages/project-types/package.json ./packages/project-types/
+COPY packages/providers/package.json    ./packages/providers/
+COPY packages/security/package.json     ./packages/security/
+COPY packages/shared/package.json       ./packages/shared/
+COPY packages/verify/package.json       ./packages/verify/
+COPY packages/ui/package.json           ./packages/ui/
+COPY tsconfig.base.json                 ./
+
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+
+# Build args become env vars consumed by Vite
+ARG VITE_API_URL
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
+RUN pnpm --filter @abw/web build
+
+# ── Runtime: tiny nginx that serves dist/ ─────────────────────────────────────
+FROM nginx:1.27-alpine AS runtime
+
+# SPA-friendly nginx config (try_files fallback to /index.html)
+COPY apps/web/nginx.coolify.conf /etc/nginx/conf.d/default.conf
+
+# Built static assets
+COPY --from=build /app/apps/web/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+# Default nginx CMD is fine

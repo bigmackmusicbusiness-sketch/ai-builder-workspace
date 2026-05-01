@@ -23,6 +23,14 @@ await build({
     'playwright-core',
     'esbuild',
     'pg-native',
+    // Puppeteer + Chromium binary (Creative Suite: PDF rendering)
+    'puppeteer-core',
+    '@sparticuz/chromium',
+    // ffmpeg static binary (Creative Suite: Music Studio)
+    '@ffmpeg-installer/ffmpeg',
+    'fluent-ffmpeg',
+    // Native archive binding (Creative Suite: Music ZIP packaging)
+    'archiver',
   ],
   banner: {
     js: [

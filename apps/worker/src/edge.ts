@@ -10,19 +10,16 @@ export interface EdgeOptions {
 export function applyEdgeHeaders(res: Response, opts: EdgeOptions): Response {
   const headers = new Headers(res.headers);
 
-  // Security: isolate project preview from the host origin
-  headers.set('X-Frame-Options', 'SAMEORIGIN');
+  // Security: preview iframes are sandboxed by the workspace UI's iframe sandbox
+  // attribute, so we keep CSP permissive here to allow CDN scripts/fonts/images
+  // in user-generated sites (Tailwind CDN, Google Fonts, Unsplash, etc.).
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set(
     'Content-Security-Policy',
     [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // needed for Vite HMR / React dev
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob:",
-      "font-src 'self' data:",
-      "connect-src 'self' ws: wss:",
-      "frame-ancestors 'self' http://localhost:* https://*.preview.*",
+      "default-src *  'unsafe-inline' 'unsafe-eval' data: blob:",
+      // Allow the workspace UI (localhost dev or Pages prod) to embed this in an iframe
+      "frame-ancestors 'self' http://localhost:* https://*.pages.dev https://*.workers.dev",
     ].join('; '),
   );
 

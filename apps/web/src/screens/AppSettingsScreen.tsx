@@ -1,82 +1,264 @@
-// apps/web/src/screens/AppSettingsScreen.tsx — workspace-wide app settings.
-// Theme, default provider, language preferences, danger zone (delete tenant data).
+// apps/web/src/screens/AppSettingsScreen.tsx — workspace-wide settings + provider config.
+// Tabs: General · Models · Danger zone.
+// API keys live in the vault — the Models tab never displays raw values.
+import { useState } from 'react';
+
+type Tab = 'general' | 'models' | 'danger';
+
 export function AppSettingsScreen() {
+  const [tab, setTab] = useState<Tab>('general');
+
   return (
     <div className="abw-screen">
       <div className="abw-screen__header">
         <div>
           <h1 className="abw-screen__title">Settings</h1>
-          <p className="abw-screen__sub">Workspace configuration, defaults, and account settings.</p>
+          <p className="abw-screen__sub">Workspace defaults, AI providers, account.</p>
         </div>
       </div>
 
-      <div style={{ maxWidth: 600, display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+      <div className="abw-screen__tabs" role="tablist" aria-label="Settings sections">
+        <button
+          role="tab"
+          aria-selected={tab === 'general'}
+          className={`abw-screen__tab${tab === 'general' ? ' abw-screen__tab--active' : ''}`}
+          onClick={() => setTab('general')}
+        >
+          General
+        </button>
+        <button
+          role="tab"
+          aria-selected={tab === 'models'}
+          className={`abw-screen__tab${tab === 'models' ? ' abw-screen__tab--active' : ''}`}
+          onClick={() => setTab('models')}
+        >
+          Models
+        </button>
+        <button
+          role="tab"
+          aria-selected={tab === 'danger'}
+          className={`abw-screen__tab${tab === 'danger' ? ' abw-screen__tab--active' : ''}`}
+          onClick={() => setTab('danger')}
+          style={{ marginLeft: 'auto' }}
+        >
+          Danger zone
+        </button>
+      </div>
 
-        {/* General */}
-        <section aria-labelledby="settings-general">
-          <h2 id="settings-general" style={{ fontSize: '0.9375rem', fontWeight: 600, marginBottom: 'var(--space-4)' }}>General</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <div>
-              <label className="abw-field-label" htmlFor="settings-theme">Theme</label>
-              <select id="settings-theme" className="abw-select">
-                <option value="dark">Dark</option>
-                <option value="light">Light</option>
-                <option value="system">System</option>
-              </select>
-            </div>
-            <div>
-              <label className="abw-field-label" htmlFor="settings-default-env">Default environment</label>
-              <select id="settings-default-env" className="abw-select">
-                <option value="dev">Dev</option>
-                <option value="staging">Staging</option>
-                <option value="preview">Preview</option>
-              </select>
-            </div>
-          </div>
-        </section>
+      <div style={{ maxWidth: 720, paddingTop: 'var(--space-4)' }}>
+        {tab === 'general' && <GeneralTab />}
+        {tab === 'models'  && <ModelsTab  />}
+        {tab === 'danger'  && <DangerTab  />}
+      </div>
+    </div>
+  );
+}
 
-        {/* Default provider */}
-        <section aria-labelledby="settings-provider">
-          <h2 id="settings-provider" style={{ fontSize: '0.9375rem', fontWeight: 600, marginBottom: 'var(--space-4)' }}>Default Provider</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <div>
-              <label className="abw-field-label" htmlFor="settings-provider-select">Provider</label>
-              <select id="settings-provider-select" className="abw-select">
-                <option value="ollama">Ollama (local)</option>
-                <option value="minimax">MiniMax 2.7</option>
-              </select>
-            </div>
-            <div>
-              <label className="abw-field-label" htmlFor="settings-model-select">Default model</label>
-              <input id="settings-model-select" className="abw-input" type="text" defaultValue="llama3" />
-            </div>
-            <div className="abw-banner abw-banner--info">
-              The model selector in the left panel overrides this default per run. Fallback is OFF by default — enable it per project in project settings.
-            </div>
-          </div>
-        </section>
+// ── General tab ──────────────────────────────────────────────────────────────
 
-        {/* Danger zone */}
-        <section aria-labelledby="settings-danger">
-          <h2 id="settings-danger" style={{ fontSize: '0.9375rem', fontWeight: 600, marginBottom: 'var(--space-4)', color: 'var(--error-500)' }}>Danger zone</h2>
-          <div className="abw-card" style={{ borderColor: 'var(--error-300)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Delete all workspace data</div>
-                <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: 2 }}>
-                  Permanently deletes all projects, files, secrets, runs, and configurations for this workspace.
-                </div>
-              </div>
-              <button className="abw-btn abw-btn--destructive" aria-label="Delete all workspace data">Delete workspace</button>
-            </div>
-          </div>
-        </section>
+function GeneralTab() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <div>
+        <label className="abw-field-label" htmlFor="settings-theme">Theme</label>
+        <select id="settings-theme" className="abw-select">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+          <option value="system">System</option>
+        </select>
+      </div>
+      <div>
+        <label className="abw-field-label" htmlFor="settings-default-env">Default environment</label>
+        <select id="settings-default-env" className="abw-select">
+          <option value="dev">Dev</option>
+          <option value="staging">Staging</option>
+          <option value="preview">Preview</option>
+        </select>
+      </div>
 
-        {/* Save */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-3)' }}>
-          <button className="abw-btn abw-btn--ghost">Cancel</button>
-          <button className="abw-btn abw-btn--primary">Save settings</button>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-3)', paddingTop: 'var(--space-3)' }}>
+        <button className="abw-btn abw-btn--ghost">Cancel</button>
+        <button className="abw-btn abw-btn--primary">Save settings</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Models tab — absorbed from former ProviderSettingsScreen ──────────────────
+
+type ProviderHealth = 'checking' | 'ok' | 'error' | 'unconfigured';
+
+interface ProviderConfig {
+  id:           string;
+  provider:     'minimax' | 'ollama';
+  name:         string;
+  baseUrl?:     string;
+  defaultModel: string;
+  health:       ProviderHealth;
+  latencyMs?:   number;
+  detail?:      string;
+  models:       { id: string; label: string }[];
+}
+
+const STUB_PROVIDERS: ProviderConfig[] = [
+  {
+    id: '1', provider: 'minimax', name: 'MiniMax 2.7',
+    defaultModel: 'abab6.5s-chat',
+    health: 'unconfigured',
+    detail: 'No API key configured. Add it in Env secrets.',
+    models: [
+      { id: 'abab6.5s-chat', label: 'MiniMax 2.7 (abab6.5s-chat)' },
+      { id: 'abab5.5s-chat', label: 'MiniMax 2.5 (abab5.5s-chat)' },
+    ],
+  },
+  {
+    id: '2', provider: 'ollama', name: 'Ollama (local)',
+    baseUrl: 'http://localhost:11434',
+    defaultModel: 'llama3',
+    health: 'checking',
+    models: [
+      { id: 'llama3',    label: 'LLaMA 3 (8B)' },
+      { id: 'mistral',   label: 'Mistral 7B'   },
+      { id: 'codestral', label: 'Codestral'    },
+    ],
+  },
+];
+
+function ModelsTab() {
+  const [providers, setProviders] = useState<ProviderConfig[]>(STUB_PROVIDERS);
+  const [checkingAll, setCheckingAll] = useState(false);
+
+  async function handleCheckAll() {
+    setCheckingAll(true);
+    setProviders((prev) => prev.map((p) => ({ ...p, health: 'checking' })));
+    // TODO: POST /api/providers/healthcheck-all
+    await new Promise((r) => setTimeout(r, 1200));
+    setProviders((prev) => prev.map((p) => ({
+      ...p,
+      health: p.provider === 'ollama' ? 'ok' : 'unconfigured',
+      latencyMs: p.provider === 'ollama' ? 42 : undefined,
+    })));
+    setCheckingAll(false);
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+          MiniMax + Ollama healthcheck. Keys live in the vault, never this UI.
+        </p>
+        <button
+          className="abw-btn abw-btn--secondary abw-btn--sm"
+          onClick={handleCheckAll}
+          disabled={checkingAll}
+          aria-label="Run healthcheck for all providers"
+        >
+          {checkingAll ? 'Checking…' : '↻ Check all'}
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        {providers.map((p) => (
+          <ProviderCard key={p.id} provider={p} />
+        ))}
+      </div>
+
+      <div className="abw-banner abw-banner--info" role="note">
+        <strong>No silent fallback.</strong> If a provider is unavailable, the run fails with a clear error.
+        Fallback is opt-in per project and always surfaces a banner when used.
+      </div>
+    </div>
+  );
+}
+
+function HealthIndicator({ health, latencyMs, detail }: Pick<ProviderConfig, 'health' | 'latencyMs' | 'detail'>) {
+  const map: Record<ProviderHealth, { dot: string; label: string }> = {
+    checking:    { dot: 'var(--warning-500)',  label: 'Checking…'    },
+    ok:          { dot: 'var(--success-500)',  label: 'Online'       },
+    error:       { dot: 'var(--error-500)',    label: 'Error'        },
+    unconfigured:{ dot: 'var(--text-disabled)', label: 'Unconfigured' },
+  };
+  const { dot, label } = map[health];
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+      <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: dot }} aria-hidden />
+      <span style={{ fontSize: '0.8125rem', color: health === 'ok' ? 'var(--success-500)' : 'var(--text-secondary)' }}>
+        {label}{latencyMs != null ? ` — ${latencyMs}ms` : ''}
+      </span>
+      {detail && health !== 'ok' && (
+        <span style={{ fontSize: '0.75rem', color: 'var(--error-500)' }}>{detail}</span>
+      )}
+    </div>
+  );
+}
+
+function ProviderCard({ provider }: { provider: ProviderConfig }) {
+  return (
+    <div className="abw-card" aria-label={provider.name}>
+      <div className="abw-card__header">
+        <div>
+          <h3 className="abw-card__title">{provider.name}</h3>
+          <HealthIndicator health={provider.health} latencyMs={provider.latencyMs} detail={provider.detail} />
         </div>
+        <button className="abw-btn abw-btn--ghost abw-btn--sm" aria-label={`Configure ${provider.name}`}>
+          Configure
+        </button>
+      </div>
+
+      {provider.provider === 'ollama' && (
+        <div style={{ marginTop: 'var(--space-3)' }}>
+          <label className="abw-field-label" htmlFor={`base-url-${provider.id}`}>Base URL</label>
+          <input
+            id={`base-url-${provider.id}`}
+            className="abw-input"
+            type="url"
+            defaultValue={provider.baseUrl}
+            placeholder="http://localhost:11434"
+          />
+        </div>
+      )}
+
+      {provider.provider === 'minimax' && (
+        <div style={{ marginTop: 'var(--space-3)' }}>
+          <p className="abw-field-label">API key</p>
+          <div className="abw-input" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>
+            <span aria-hidden>🔐</span>
+            Stored in vault. <button className="abw-btn abw-btn--ghost abw-btn--sm" style={{ marginLeft: 'auto' }}>Update key</button>
+          </div>
+        </div>
+      )}
+
+      <div style={{ marginTop: 'var(--space-3)' }}>
+        <p className="abw-field-label">Available models</p>
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
+          {provider.models.map((m) => (
+            <li key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: '0.8125rem' }}>
+              <code style={{ background: 'var(--surface-elevated)', padding: '1px 6px', borderRadius: 'var(--radius-field)', fontSize: '0.75rem' }}>{m.id}</code>
+              <span style={{ color: 'var(--text-secondary)' }}>{m.label}</span>
+              {m.id === provider.defaultModel && (
+                <span className="abw-badge" style={{ marginLeft: 'auto' }}>default</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+// ── Danger zone ───────────────────────────────────────────────────────────────
+
+function DangerTab() {
+  return (
+    <div className="abw-card" style={{ borderColor: 'var(--error-300)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
+        <div>
+          <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Delete all workspace data</div>
+          <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: 2 }}>
+            Permanently deletes all projects, files, secrets, runs, and configurations for this workspace.
+          </div>
+        </div>
+        <button className="abw-btn abw-btn--destructive" aria-label="Delete all workspace data">Delete workspace</button>
       </div>
     </div>
   );

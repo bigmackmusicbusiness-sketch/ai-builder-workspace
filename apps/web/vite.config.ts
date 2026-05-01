@@ -5,7 +5,24 @@ import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
   plugins: [react()],
-  server: { port: 5175, strictPort: false },
+  server: {
+    port: 5175,
+    strictPort: false,
+    // Proxy all /api/* and /health requests to the local API server (port 3007).
+    // This avoids CORS issues in dev and makes apiFetch('/api/…') work without VITE_API_URL.
+    proxy: {
+      '/api': {
+        target:      'http://localhost:3007',
+        changeOrigin: true,
+        secure:      false,
+      },
+      '/health': {
+        target:      'http://localhost:3007',
+        changeOrigin: true,
+        secure:      false,
+      },
+    },
+  },
   preview: { port: 5174 },
   resolve: {
     alias: {

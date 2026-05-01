@@ -6,7 +6,7 @@ workers_dev = true
 account_id = "34e162b46cf901fcad9075bf83bf1697"
 
 [vars]
-PREVIEW_ROOT_DOMAIN = "preview.local.test"
+PREVIEW_ROOT_DOMAIN = "signalpoint.workers.dev"
 
 # KV namespace for per-project bundled assets.
 # Create with: wrangler kv:namespace create PREVIEW_KV

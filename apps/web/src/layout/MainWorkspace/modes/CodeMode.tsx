@@ -1,10 +1,11 @@
 // apps/web/src/layout/MainWorkspace/modes/CodeMode.tsx — Monaco editor + tabs.
-// Ctrl+S saves; Ctrl+P opens file palette; dirty indicator in tab bar.
-import { useCallback } from 'react';
+// Ctrl+S saves to server; 30s autosave when dirty; dirty indicator in tab bar.
+import { useCallback, useEffect } from 'react';
 import { useEditorStore, isTabDirty } from '../../../lib/store/editorStore';
 import { EditorTabs } from '../../../features/editor/EditorTabs';
 import { MonacoEditor } from '../../../features/editor/MonacoEditor';
 import { ProposedChangesTray, type FileDiff } from '../../../features/editor/DiffViewer';
+import { apiFetch } from '../../../lib/api';
 
 // Stub diffs — real diffs from agent steps arrive in Step 9.
 const STUB_DIFFS: FileDiff[] = [];
@@ -25,14 +26,28 @@ export function CodeMode() {
     if (!activeTab || !isTabDirty(activeTab)) return;
     setSaving(activeTab.fileId, true);
     try {
-      // TODO (Step 6 API): POST /api/files/:id with new content; server hashes + blobs.
-      // For now, just mark saved immediately.
-      await new Promise<void>((res) => setTimeout(res, 150)); // stub round-trip
+      await apiFetch(`/api/files/${activeTab.fileId}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          content: activeTab.content,
+          lang:    activeTab.language ?? 'plaintext',
+        }),
+      });
       markSaved(activeTab.fileId, activeTab.content);
+    } catch (err) {
+      // Save failed — leave dirty indicator so user can retry with Ctrl+S
+      console.error('[CodeMode] Save failed:', err);
     } finally {
       setSaving(activeTab.fileId, false);
     }
   }, [activeTab, setSaving, markSaved]);
+
+  // 30-second autosave when content is dirty
+  useEffect(() => {
+    if (!activeTab || !isTabDirty(activeTab)) return;
+    const timer = setTimeout(() => { void handleSave(); }, 30_000);
+    return () => clearTimeout(timer);
+  }, [activeTab?.content, activeTab?.fileId, handleSave]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Empty state when no tabs open
   if (tabs.length === 0) {

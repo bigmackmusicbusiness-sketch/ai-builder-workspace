@@ -1,0 +1,385 @@
+// apps/api/src/routes/publish.ts — publish target CRUD + deploy endpoint.
+// Manages Cloudflare Pages publish targets and records deployment history.
+// Production deploys are approval-gated server-side.
+import type { FastifyInstance } from 'fastify';
+import { z } from 'zod';
+import { eq, and, desc } from 'drizzle-orm';
+import { getDb } from '../db/client';
+import { publishTargets, deployments } from '@abw/db';
+import { authMiddleware, requireRole, type AuthContext } from '../security/authz';
+import { writeAuditEvent } from '../security/audit';
+import { bundleProject } from '../preview/bundler';
+import { deployToCFPages } from '@abw/publish';
+import { getWorkspace, workspaceExists } from '../preview/workspace';
+import { stat } from 'node:fs/promises';
+
+declare module 'fastify' {
+  interface FastifyRequest { authCtx?: AuthContext; }
+}
+
+// ── Zod schemas ────────────────────────────────────────────────────────────────
+
+const CreateTargetSchema = z.object({
+  projectId: z.string().uuid(),
+  name:      z.string().min(1).max(120),
+  /** 'cloudflare-pages' | 'static-export' | 'supabase' */
+  provider:  z.enum(['cloudflare-pages', 'static-export', 'supabase']),
+  env:       z.enum(['preview', 'production']),
+  /** Optional: custom Pages URL or bucket name */
+  url:       z.string().url().optional(),
+  /** CF Account ID — stored in config, not a secret */
+  accountId: z.string().optional(),
+  /** Name of the CF Pages project (defaults to projectSlug) */
+  pagesProject: z.string().optional(),
+});
+
+const DeploySchema = z.object({
+  targetId:    z.string().uuid(),
+  projectId:   z.string().uuid(),
+  projectSlug: z.string().regex(/^[a-z0-9-]+$/),
+  rootDir:     z.string().min(1).default('/tmp/abw-deploy'),
+  entryPoint:  z.string().default('src/main.tsx'),
+  framework:   z.enum(['react-vite', 'vanilla', 'static']).default('react-vite'),
+  commitMsg:   z.string().max(250).optional(),
+});
+
+const ListDeploymentsSchema = z.object({
+  projectId: z.string().uuid(),
+  limit:     z.coerce.number().int().min(1).max(100).default(50),
+});
+
+// ── Route plugin ───────────────────────────────────────────────────────────────
+
+export async function publishRoutes(app: FastifyInstance): Promise<void> {
+  app.addHook('preHandler', authMiddleware);
+
+  // ── GET /api/publish/targets?projectId= ─────────────────────────────────────
+  app.get<{ Querystring: { projectId?: string } }>(
+    '/api/publish/targets',
+    async (req, reply) => {
+      const ctx = req.authCtx!;
+      const projectId = req.query.projectId;
+      if (!projectId) return reply.status(400).send({ error: 'projectId required' });
+
+      const db = getDb();
+      const rows = await db
+        .select()
+        .from(publishTargets)
+        .where(
+          and(
+            eq(publishTargets.projectId, projectId),
+            eq(publishTargets.tenantId, ctx.tenantId),
+          ),
+        )
+        .orderBy(publishTargets.createdAt);
+
+      // Map DB field 'adapter' → UI field 'provider'; add connected flag
+      const targets = rows.map((r) => ({
+        id:         r.id,
+        name:       r.name,
+        provider:   r.adapter,          // adapter == provider in UI terms
+        env:        r.env,
+        connected:  true,               // if it's in the DB it's connected
+        url:        r.lastDeployUrl ?? undefined,
+        lastDeploy: r.lastDeployAt?.toISOString() ?? undefined,
+        config:     r.config,
+      }));
+
+      return { targets };
+    },
+  );
+
+  // ── POST /api/publish/targets ────────────────────────────────────────────────
+  app.post<{ Body: unknown }>('/api/publish/targets', async (req, reply) => {
+    const ctx = req.authCtx!;
+    requireRole(ctx, 'member');
+
+    const parsed = CreateTargetSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Invalid body', detail: parsed.error.format() });
+    }
+    const { projectId, name, provider, env, url, accountId, pagesProject } = parsed.data;
+
+    const db = getDb();
+    const [row] = await db.insert(publishTargets).values({
+      projectId,
+      tenantId:  ctx.tenantId,
+      name,
+      adapter:   provider,       // DB stores as 'adapter'
+      env,
+      config: {
+        url:          url          ?? null,
+        accountId:    accountId   ?? null,
+        pagesProject: pagesProject ?? null,
+      },
+    }).returning();
+
+    await writeAuditEvent({
+      actor: ctx.userId, tenantId: ctx.tenantId,
+      action: 'publish.target.create', target: 'publish_targets', targetId: row?.id,
+      after: { name, provider, env }, env,
+      ip: req.ip, ua: req.headers['user-agent'] ?? '',
+    });
+
+    return reply.status(201).send({
+      target: {
+        id:        row!.id,
+        name:      row!.name,
+        provider,
+        env:       row!.env,
+        connected: true,
+        config:    row!.config,
+      },
+    });
+  });
+
+  // ── DELETE /api/publish/targets/:id ─────────────────────────────────────────
+  app.delete<{ Params: { id: string } }>(
+    '/api/publish/targets/:id',
+    async (req, reply) => {
+      const ctx = req.authCtx!;
+      requireRole(ctx, 'member');
+
+      const db = getDb();
+      const [existing] = await db
+        .select()
+        .from(publishTargets)
+        .where(
+          and(
+            eq(publishTargets.id, req.params.id),
+            eq(publishTargets.tenantId, ctx.tenantId),
+          ),
+        )
+        .limit(1);
+
+      if (!existing) return reply.status(404).send({ error: 'Target not found' });
+
+      await db.delete(publishTargets).where(eq(publishTargets.id, req.params.id));
+
+      await writeAuditEvent({
+        actor: ctx.userId, tenantId: ctx.tenantId,
+        action: 'publish.target.delete', target: 'publish_targets', targetId: req.params.id,
+        env: existing.env, ip: req.ip, ua: req.headers['user-agent'] ?? '',
+      });
+
+      return reply.send({ ok: true });
+    },
+  );
+
+  // ── POST /api/publish/deploy ─────────────────────────────────────────────────
+  app.post<{ Body: unknown }>('/api/publish/deploy', async (req, reply) => {
+    const ctx = req.authCtx!;
+    requireRole(ctx, 'member');
+
+    const parsed = DeploySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Invalid body', detail: parsed.error.format() });
+    }
+    const { targetId, projectId, projectSlug, rootDir, entryPoint, framework, commitMsg } = parsed.data;
+
+    const db = getDb();
+
+    // Verify the target belongs to this tenant
+    const [target] = await db
+      .select()
+      .from(publishTargets)
+      .where(
+        and(
+          eq(publishTargets.id, targetId),
+          eq(publishTargets.tenantId, ctx.tenantId),
+          eq(publishTargets.projectId, projectId),
+        ),
+      )
+      .limit(1);
+
+    if (!target) return reply.status(404).send({ error: 'Publish target not found' });
+
+    // Production deploys require approval
+    if (target.env === 'production') {
+      return reply.status(202).send({
+        requiresApproval: true,
+        reason: 'Deployments to production require an approval from an admin or owner.',
+        bundleSpec: { targetId, projectId, projectSlug, framework },
+      });
+    }
+
+    // Only Cloudflare Pages is supported for live deploy; others are stubs
+    if (target.adapter !== 'cloudflare-pages') {
+      return reply.status(400).send({
+        error: `Adapter '${target.adapter}' is not yet supported for automated deploys.`,
+      });
+    }
+
+    // Cloudflare credentials — required for real deploys
+    const accountId = process.env['CF_ACCOUNT_ID'] ?? (target.config as Record<string, string>)?.['accountId'];
+    const apiToken  = process.env['CF_API_TOKEN'];
+
+    if (!accountId || !apiToken) {
+      return reply.status(422).send({
+        error: 'Cloudflare credentials not configured. Set CF_ACCOUNT_ID and CF_API_TOKEN on the server.',
+      });
+    }
+
+    // ── Create deployment record (status=building) ────────────────────────────
+    const [deployRow] = await db.insert(deployments).values({
+      targetId,
+      projectId,
+      tenantId:    ctx.tenantId,
+      status:      'building',
+      env:         target.env,
+      triggeredBy: ctx.userId,
+      commitMsg:   commitMsg ?? null,
+    }).returning();
+
+    const deployId = deployRow!.id;
+
+    // ── Bundle + deploy (async — respond immediately, update row when done) ────
+    // We run this synchronously here (not fire-and-forget) so the response
+    // carries the result. For long builds a job queue would be better,
+    // but for typical static sites this completes in < 10s.
+    try {
+      // Resolve workspace files (same logic as preview boot)
+      let resolvedRoot      = rootDir;
+      let resolvedFramework = framework;
+
+      const ws = await getWorkspace(ctx.tenantId, projectSlug);
+      const hasWorkspaceFiles = await workspaceExists(ws);
+
+      if (hasWorkspaceFiles) {
+        resolvedRoot = ws.rootDir;
+        const hasReact  = await stat(`${ws.rootDir}/src/main.tsx`).then((s) => s.isFile()).catch(() => false);
+        const hasHtml   = await stat(`${ws.rootDir}/index.html`).then((s) => s.isFile()).catch(() => false);
+        if (hasReact)       resolvedFramework = 'react-vite';
+        else if (hasHtml)   resolvedFramework = 'static';
+        else throw new Error('Workspace has no supported entry point (need index.html or src/main.tsx).');
+      }
+
+      // Bundle — use '/' as base path for production (CF Pages handles routing)
+      const bundleResult = await bundleProject({
+        projectId,
+        projectSlug,
+        rootDir:      resolvedRoot,
+        entryPoint,
+        framework:    resolvedFramework,
+        serveBasePath: '/',
+      });
+
+      if (bundleResult.errors.length > 0) {
+        const errMsg = bundleResult.errors.join('\n');
+        await db.update(deployments)
+          .set({ status: 'failed', error: errMsg.slice(0, 1000), updatedAt: new Date() })
+          .where(eq(deployments.id, deployId));
+        return reply.status(422).send({ error: errMsg });
+      }
+
+      // Deploy to Cloudflare Pages
+      const deployResult = await deployToCFPages(
+        projectSlug,
+        bundleResult.assets,
+        accountId,
+        apiToken,
+      );
+
+      // Update deployment row: success
+      await db.update(deployments)
+        .set({
+          status:     'success',
+          url:        deployResult.url,
+          durationMs: deployResult.durationMs,
+          updatedAt:  new Date(),
+        })
+        .where(eq(deployments.id, deployId));
+
+      // Update target's last-deploy fields
+      await db.update(publishTargets)
+        .set({
+          lastDeployAt:  new Date(),
+          lastDeployUrl: deployResult.url,
+          updatedAt:     new Date(),
+        })
+        .where(eq(publishTargets.id, targetId));
+
+      await writeAuditEvent({
+        actor: ctx.userId, tenantId: ctx.tenantId,
+        action: 'publish.deploy.success', target: 'deployments', targetId: deployId,
+        after: { url: deployResult.url, durationMs: deployResult.durationMs },
+        env: target.env, ip: req.ip, ua: req.headers['user-agent'] ?? '',
+      });
+
+      return reply.send({
+        deploymentId: deployId,
+        status:       'success',
+        url:          deployResult.url,
+        durationMs:   deployResult.durationMs,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+
+      await db.update(deployments)
+        .set({ status: 'failed', error: msg.slice(0, 1000), updatedAt: new Date() })
+        .where(eq(deployments.id, deployId));
+
+      await writeAuditEvent({
+        actor: ctx.userId, tenantId: ctx.tenantId,
+        action: 'publish.deploy.failed', target: 'deployments', targetId: deployId,
+        after: { error: msg }, env: target.env,
+        ip: req.ip, ua: req.headers['user-agent'] ?? '',
+      });
+
+      return reply.status(500).send({ error: msg });
+    }
+  });
+
+  // ── GET /api/publish/deployments?projectId= ──────────────────────────────────
+  app.get<{ Querystring: { projectId?: string; limit?: string } }>(
+    '/api/publish/deployments',
+    async (req, reply) => {
+      const ctx = req.authCtx!;
+      const parsed = ListDeploymentsSchema.safeParse(req.query);
+      if (!parsed.success) return reply.status(400).send({ error: 'projectId required' });
+
+      const db = getDb();
+      const rows = await db
+        .select({
+          id:          deployments.id,
+          targetId:    deployments.targetId,
+          status:      deployments.status,
+          env:         deployments.env,
+          url:         deployments.url,
+          triggeredBy: deployments.triggeredBy,
+          commitMsg:   deployments.commitMsg,
+          durationMs:  deployments.durationMs,
+          error:       deployments.error,
+          createdAt:   deployments.createdAt,
+          // include target name via join
+          targetName:  publishTargets.name,
+        })
+        .from(deployments)
+        .innerJoin(publishTargets, eq(deployments.targetId, publishTargets.id))
+        .where(
+          and(
+            eq(deployments.projectId, parsed.data.projectId),
+            eq(deployments.tenantId, ctx.tenantId),
+          ),
+        )
+        .orderBy(desc(deployments.createdAt))
+        .limit(parsed.data.limit);
+
+      return {
+        deployments: rows.map((r) => ({
+          id:          r.id,
+          targetId:    r.targetId,
+          targetName:  r.targetName,
+          status:      r.status,
+          env:         r.env,
+          url:         r.url ?? undefined,
+          triggeredBy: r.triggeredBy,
+          commitMsg:   r.commitMsg ?? undefined,
+          durationMs:  r.durationMs ?? undefined,
+          error:       r.error ?? undefined,
+          startedAt:   r.createdAt.toISOString(),
+        })),
+      };
+    },
+  );
+}

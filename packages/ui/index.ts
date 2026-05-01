@@ -55,6 +55,12 @@ export type { ChipProps } from './primitives/Chip';
 export { Kbd } from './primitives/Kbd';
 export type { KbdProps } from './primitives/Kbd';
 
+export { Toggle } from './primitives/Toggle';
+export type { ToggleProps, ToggleSize } from './primitives/Toggle';
+
+export { Slider } from './primitives/Slider';
+export type { SliderProps } from './primitives/Slider';
+
 // ── Patterns ──────────────────────────────────────────────────────
 export { PageHeader } from './patterns/PageHeader';
 export type { PageHeaderProps } from './patterns/PageHeader';

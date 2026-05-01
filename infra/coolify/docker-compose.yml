@@ -1,0 +1,98 @@
+# infra/coolify/docker-compose.yml — multi-service deploy for Coolify.
+#
+# Brings up:
+#   * api    — Fastify API (apps/api/Dockerfile.coolify)
+#   * web    — Vite SPA served via nginx (apps/web/Dockerfile.coolify)
+#   * redis  — for future job-queue / SSE fan-out / preview-bundle cache
+#
+# In Coolify v4: add this as a "Docker Compose" resource. Coolify auto-injects
+# Traefik routing if you set domains via labels OR the Coolify UI per service.
+#
+# Labels with `coolify.managed=true` opt into Coolify's domain manager — set
+# the public domain per service in the Coolify UI → Service → Domains tab,
+# and Coolify generates the Traefik labels for you.
+
+services:
+
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile.coolify
+    container_name: abw-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3007
+      # ── Crown-jewel: REQUIRED, set per-service in Coolify UI ──────────────
+      # SUPABASE_URL:               (set in Coolify)
+      # SUPABASE_ANON_KEY:          (set in Coolify)
+      # SUPABASE_SERVICE_ROLE_KEY:  (set in Coolify)
+      # SUPABASE_JWT_SECRET:        (set in Coolify)
+      # VAULT_MASTER_KEY:           (set in Coolify — 32+ byte base64)
+      # ── Optional (commented = inherit defaults from env.ts) ───────────────
+      # PUBLIC_API_URL:    https://api.<your-domain>
+      # CF_ACCOUNT_ID, CF_API_TOKEN, CF_PAGES_PROJECT
+      # OLLAMA_BASE_URL:   (default http://localhost:11434)
+      REDIS_URL: redis://redis:6379
+    expose:
+      - "3007"
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3007/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    labels:
+      coolify.managed: "true"
+      coolify.type: "application"
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile.coolify
+      args:
+        # Set these in Coolify → Service → Build → Build Variables.
+        # They bake into the Vite bundle at build time.
+        VITE_API_URL:           ${VITE_API_URL}
+        VITE_SUPABASE_URL:      ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+    container_name: abw-web
+    restart: unless-stopped
+    expose:
+      - "80"
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    labels:
+      coolify.managed: "true"
+      coolify.type: "application"
+
+  redis:
+    image: redis:7-alpine
+    container_name: abw-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    volumes:
+      - abw-redis-data:/data
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    labels:
+      coolify.managed: "true"
+      coolify.type: "database"
+
+volumes:
+  abw-redis-data:
+    name: abw-redis-data
