@@ -42,7 +42,8 @@ services:
     depends_on:
       - redis
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3007/healthz"]
+      # Use explicit IPv4 to avoid IPv6 resolution surprises (cf. web service note).
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3007/healthz"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -69,7 +70,10 @@ services:
     depends_on:
       - api
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost/healthz"]
+      # Use explicit IPv4 — Alpine's wget resolves `localhost` to ::1 first
+      # and nginx isn't bound on IPv6, which marks the container unhealthy
+      # and makes Traefik return 503 to clients.
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
       interval: 30s
       timeout: 5s
       retries: 3
