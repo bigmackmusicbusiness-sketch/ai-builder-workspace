@@ -24,6 +24,12 @@ RUN pip3 install --break-system-packages --no-cache-dir yt-dlp
 
 WORKDIR /app
 
+# Force devDependencies to install regardless of NODE_ENV. Coolify injects
+# NODE_ENV=production at build time, which makes pnpm skip devDeps and breaks
+# the typecheck + esbuild bundle step that depends on typescript + esbuild.
+# This stage is for BUILDING only — runtime stage below sets NODE_ENV=production.
+ENV NODE_ENV=development
+
 # Enable corepack so pnpm is available
 RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
 
