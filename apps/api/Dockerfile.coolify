@@ -72,12 +72,13 @@ RUN pip3 install --break-system-packages --no-cache-dir yt-dlp
 
 WORKDIR /app
 
-# Bring over the bundled server + node_modules (they contain native deps esbuild
-# left as external — puppeteer-core, fluent-ffmpeg, supabase-js, etc.)
-COPY --from=build /app/apps/api/dist           ./apps/api/dist
-COPY --from=build /app/node_modules            ./node_modules
-COPY --from=build /app/apps/api/package.json   ./apps/api/package.json
-COPY --from=build /app/package.json            ./package.json
+# Copy the entire build tree. We need both the root node_modules AND the
+# workspace-nested node_modules (apps/api/node_modules, packages/*/node_modules)
+# because pnpm symlinks workspace packages into per-workspace node_modules
+# rather than hoisting everything to the root. The bundled dist/server.js
+# imports several packages declared as `external` in build.mjs (esbuild,
+# puppeteer-core, supabase-js, fluent-ffmpeg, …) that resolve via apps/api/node_modules.
+COPY --from=build /app /app
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
