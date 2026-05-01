@@ -16,7 +16,9 @@ services:
 
   api:
     build:
-      context: ../..
+      # `context: .` resolves to Coolify's --project-directory (the repo root),
+      # NOT the compose-file directory. Don't use ../.. here.
+      context: .
       dockerfile: apps/api/Dockerfile.coolify
     container_name: abw-api
     restart: unless-stopped
@@ -51,7 +53,8 @@ services:
 
   web:
     build:
-      context: ../..
+      # See note on `api.build.context` above — same reasoning.
+      context: .
       dockerfile: apps/web/Dockerfile.coolify
       args:
         # Set these in Coolify → Service → Build → Build Variables.
