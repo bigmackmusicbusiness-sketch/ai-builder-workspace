@@ -13,13 +13,13 @@ import { redactString } from '../security/redact';
 // so packages like react, react-dom, etc. are found automatically.
 //
 // CJS-vs-ESM resolution: when esbuild bundles this file to CJS, `__dirname` is
-// a free global and `import.meta.url` is undefined (causing fileURLToPath to
-// crash). When run as ESM source it's the inverse. Detect at runtime so the
-// same code works in both.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const _g: any = globalThis as any;
-const _dirname: string = (typeof _g.__dirname === 'string')
-  ? _g.__dirname
+// a module-local free variable (not on globalThis) and `import.meta.url` is
+// undefined (causing fileURLToPath to crash). When run as ESM source it's the
+// inverse. `typeof __dirname` returns 'string' in CJS and 'undefined' in ESM
+// without throwing — safe to use as the runtime probe.
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+const _dirname: string = (typeof __dirname === 'string')
+  ? __dirname
   : dirname(fileURLToPath(import.meta.url));
 // apps/api/src/preview -> apps/api -> apps -> monorepo root
 const MONOREPO_ROOT     = join(_dirname, '..', '..', '..', '..', '..');
