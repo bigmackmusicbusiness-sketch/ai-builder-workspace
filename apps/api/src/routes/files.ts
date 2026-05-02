@@ -2,8 +2,12 @@
 // All routes require auth; tenant is derived from JWT (never from client).
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import { eq, and } from 'drizzle-orm';
+import { getDb } from '../db/client';
+import { projects } from '@abw/db';
 import { authMiddleware, requireRole, type AuthContext } from '../security/authz';
 import { writeAuditEvent } from '../security/audit';
+import * as previewBus from '../preview/eventBus';
 import {
   listFiles, getFileContent, saveFile, searchFiles,
 } from '../db/repositories/filesRepo';
@@ -69,6 +73,25 @@ export async function filesRoutes(app: FastifyInstance): Promise<void> {
       content,
       lang,
     });
+
+    // Notify any open preview SSE listeners so the iframe can hot-reload.
+    // Best-effort; never block the save response on this. We resolve slug from
+    // projectId because the SSE channel is keyed by tenantId+slug, not id.
+    void (async () => {
+      try {
+        const db = getDb();
+        const [proj] = await db
+          .select({ slug: projects.slug })
+          .from(projects)
+          .where(and(eq(projects.id, projectId), eq(projects.tenantId, ctx.tenantId)))
+          .limit(1);
+        if (proj?.slug) {
+          previewBus.emit(ctx.tenantId, proj.slug, { type: 'file-changed', path: req.params.id });
+        }
+      } catch {
+        // Don't fail the save if preview-bus emit fails (no listeners is also fine)
+      }
+    })();
 
     await writeAuditEvent({
       actor: ctx.userId,

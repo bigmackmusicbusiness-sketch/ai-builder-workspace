@@ -464,6 +464,57 @@ html, body, #root {
   color: #fff;
 }
 
+/* ── Reasoning-model <think> blocks: collapsible, muted, low-emphasis ──
+   Default-closed when complete; open + pulse while still streaming. */
+.abw-md__think {
+  margin-top: var(--space-2);
+  border: 1px dashed rgba(127, 127, 127, 0.35);
+  border-radius: var(--radius-field);
+  background: rgba(127, 127, 127, 0.06);
+  font-size: 0.8125rem;
+}
+.abw-md__think > summary {
+  cursor: pointer;
+  padding: 4px var(--space-2);
+  color: var(--text-muted);
+  font-weight: 500;
+  list-style: none;
+  user-select: none;
+}
+.abw-md__think > summary::-webkit-details-marker { display: none; }
+.abw-md__think > summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 6px;
+  transition: transform 120ms ease;
+}
+.abw-md__think[open] > summary::before { transform: rotate(90deg); }
+.abw-md__think-body {
+  padding: 0 var(--space-2) var(--space-2);
+  color: var(--text-muted);
+  line-height: 1.5;
+  border-top: 1px dashed rgba(127, 127, 127, 0.25);
+  padding-top: var(--space-2);
+}
+.abw-md__think-pulse {
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.abw-md__think-pulse::after {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent-base, #8b5cf6);
+  animation: abw-think-pulse 900ms ease-in-out infinite;
+}
+@keyframes abw-think-pulse {
+  0%, 100% { opacity: 0.3; }
+  50%      { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .abw-md__think-pulse::after { animation: none; opacity: 0.7; }
+  .abw-md__think > summary::before { transition: none; }
+}
+
 /* ── Status pill — combines model + agent status + autonomy in one 32px row ── */
 .abw-status-pill {
   display: flex; align-items: center; gap: var(--space-2);

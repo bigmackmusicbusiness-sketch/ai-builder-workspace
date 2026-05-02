@@ -1,6 +1,11 @@
 // apps/web/src/layout/LeftPanel/MarkdownContent.tsx
 // Renders chat message content as GitHub-flavored markdown with syntax-highlighted
 // code blocks and a copy button. Plain-text fallback when content has no markdown.
+//
+// Also splits out reasoning-model `<think>...</think>` blocks into collapsible
+// "Thinking…" details elements so they don't dominate the chat UI as raw text.
+// (react-markdown escapes raw HTML by default, so we do the split in JS and feed
+// only the prose segments to ReactMarkdown — no rehype-raw needed.)
 import { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -21,32 +26,101 @@ function looksLikeMarkdown(s: string): boolean {
   return /(```|`[^`]|^#{1,6}\s|\*\*|__|^\s*[-*+]\s|^\s*\d+\.\s|\[[^\]]+\]\([^)]+\))/m.test(s);
 }
 
-export function MarkdownContent({ content, streaming = false }: MarkdownContentProps) {
-  const isMd = useMemo(() => looksLikeMarkdown(content), [content]);
+/** A run of message content — either prose to feed to ReactMarkdown, or a
+ *  reasoning block to render as a collapsible details element. */
+type Segment =
+  | { type: 'text';  body: string }
+  | { type: 'think'; body: string; streaming: boolean };
 
-  if (!isMd) {
-    return <span style={{ whiteSpace: 'pre-wrap' }}>{content}</span>;
+/**
+ * Walk `content` and split out any <think>…</think> blocks. Streaming SSE deltas
+ * may yield an opening tag with no closing tag yet — in that case mark the tail
+ * `streaming: true` so we render a "Thinking…" placeholder without dumping the
+ * raw chain-of-thought into the UI.
+ */
+function splitThinkBlocks(content: string): Segment[] {
+  const out: Segment[] = [];
+  let i = 0;
+  while (i < content.length) {
+    const open = content.indexOf('<think>', i);
+    if (open === -1) {
+      if (i < content.length) out.push({ type: 'text', body: content.slice(i) });
+      break;
+    }
+    if (open > i) out.push({ type: 'text', body: content.slice(i, open) });
+    const bodyStart = open + '<think>'.length;
+    const close = content.indexOf('</think>', bodyStart);
+    if (close === -1) {
+      // Unclosed — still streaming. Capture body but mark partial.
+      out.push({ type: 'think', body: content.slice(bodyStart), streaming: true });
+      break;
+    }
+    out.push({ type: 'think', body: content.slice(bodyStart, close), streaming: false });
+    i = close + '</think>'.length;
+  }
+  return out;
+}
+
+export function MarkdownContent({ content, streaming = false }: MarkdownContentProps) {
+  const segments = useMemo(() => splitThinkBlocks(content), [content]);
+
+  // Fast path: zero think blocks AND no markdown → return original plain-text span
+  // unchanged (preserves whitespace; no React element churn).
+  if (segments.length === 1 && segments[0]!.type === 'text' && !looksLikeMarkdown(segments[0]!.body)) {
+    return <span style={{ whiteSpace: 'pre-wrap' }}>{segments[0]!.body}</span>;
   }
 
   return (
     <div className="abw-md">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight]}
-        components={{
-          // Code blocks get a header with language + copy. Inline code is just styled.
-          pre: ({ children }) => <CodeBlock streaming={streaming}>{children}</CodeBlock>,
-          code: ({ className, children, ...rest }) => (
-            <code className={className} {...rest}>{children}</code>
-          ),
-          a: ({ href, children }) => (
-            <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
-          ),
-        }}
-      >
-        {content}
-      </ReactMarkdown>
+      {segments.map((seg, idx) =>
+        seg.type === 'think' ? (
+          <ThinkBlock key={idx} body={seg.body} streaming={seg.streaming} />
+        ) : (
+          <TextSegment key={idx} body={seg.body} streaming={streaming} />
+        ),
+      )}
     </div>
+  );
+}
+
+/** Prose segment: markdown if it looks markdown-y, plain text otherwise. */
+function TextSegment({ body, streaming }: { body: string; streaming: boolean }) {
+  if (!body) return null;
+  if (!looksLikeMarkdown(body)) {
+    return <span style={{ whiteSpace: 'pre-wrap' }}>{body}</span>;
+  }
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeHighlight]}
+      components={{
+        // Code blocks get a header with language + copy. Inline code is just styled.
+        pre: ({ children }) => <CodeBlock streaming={streaming}>{children}</CodeBlock>,
+        code: ({ className, children, ...rest }) => (
+          <code className={className} {...rest}>{children}</code>
+        ),
+        a: ({ href, children }) => (
+          <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
+        ),
+      }}
+    >
+      {body}
+    </ReactMarkdown>
+  );
+}
+
+/** Collapsible reasoning block. Default-closed when complete, open with a pulse
+ *  while still streaming so the user sees progress. */
+function ThinkBlock({ body, streaming }: { body: string; streaming: boolean }) {
+  return (
+    <details className="abw-md__think" open={streaming}>
+      <summary>
+        {streaming ? <span className="abw-md__think-pulse">Thinking…</span> : 'Thinking'}
+      </summary>
+      <div className="abw-md__think-body">
+        <span style={{ whiteSpace: 'pre-wrap' }}>{body}</span>
+      </div>
+    </details>
   );
 }
 
