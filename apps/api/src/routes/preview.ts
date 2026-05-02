@@ -62,7 +62,12 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
     // For production with CF credentials: push assets to KV and serve via the
     // preview worker using path-based routing: /<slug>/<asset>.
     const hasCF = !!(process.env['CF_ACCOUNT_ID'] && process.env['CF_API_TOKEN'] && process.env['CF_KV_PREVIEW_NAMESPACE_ID']);
-    const apiBase    = process.env['API_URL'] ?? `http://localhost:${process.env['PORT'] ?? 3007}`;
+    // Public-facing API origin used to construct iframe-loadable preview URLs.
+    // PUBLIC_API_URL is the canonical env name (matches env.ts schema). Older
+    // deploys may have set API_URL — fall back to that for back-compat. The
+    // localhost default is for local dev; in prod one of the env vars MUST be
+    // set or the iframe won't be reachable from the browser.
+    const apiBase    = process.env['PUBLIC_API_URL'] ?? process.env['API_URL'] ?? `http://localhost:${process.env['PORT'] ?? 3007}`;
     const workerBase = (process.env['WORKER_URL'] ?? 'https://abw-preview-worker.signalpoint.workers.dev').replace(/\/$/, '');
 
     // Embed the first 8 chars of sessionId as a cache-buster (?v=…).
