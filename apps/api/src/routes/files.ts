@@ -10,11 +10,24 @@ import { writeAuditEvent } from '../security/audit';
 import * as previewBus from '../preview/eventBus';
 import {
   listFiles, getFileContent, saveFile, searchFiles,
+  saveFileByPath, getFileContentByPath,
 } from '../db/repositories/filesRepo';
 
 const SaveBodySchema = z.object({
   content: z.string().max(10_000_000), // 10 MB max per file
   lang: z.string().default('plaintext'),
+});
+
+const SaveByPathSchema = z.object({
+  projectId: z.string().uuid(),
+  path:      z.string().min(1).max(2048),
+  content:   z.string().max(10_000_000),
+  lang:      z.string().default('plaintext'),
+});
+
+const ContentByPathQuerySchema = z.object({
+  projectId: z.string().uuid(),
+  path:      z.string().min(1).max(2048),
 });
 
 const SearchQuerySchema = z.object({
@@ -107,6 +120,72 @@ export async function filesRoutes(app: FastifyInstance): Promise<void> {
 
     return reply.status(200).send({ hash: newHash });
   });
+
+  /** POST /api/files — path-keyed upsert. Body: { projectId, path, content, lang }.
+   *  Use this from the editor: file rows are seeded lazily on first save so a
+   *  brand-new project's scaffold paths don't 404 when the user hits Ctrl+S. */
+  app.post('/api/files', async (req, reply) => {
+    const ctx = req.authCtx!;
+    requireRole(ctx, 'member');
+
+    const parsed = SaveByPathSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Invalid body', detail: parsed.error.format() });
+    }
+    const { projectId, path, content, lang } = parsed.data;
+
+    const result = await saveFileByPath({
+      projectId, tenantId: ctx.tenantId, path, content, lang,
+    });
+
+    // Best-effort preview reload notification (slug → emit). Same pattern as
+    // the legacy POST /:id route; failures don't block the save response.
+    void (async () => {
+      try {
+        const db = getDb();
+        const [proj] = await db
+          .select({ slug: projects.slug })
+          .from(projects)
+          .where(and(eq(projects.id, projectId), eq(projects.tenantId, ctx.tenantId)))
+          .limit(1);
+        if (proj?.slug) {
+          previewBus.emit(ctx.tenantId, proj.slug, { type: 'file-changed', path });
+        }
+      } catch { /* listener-less is fine */ }
+    })();
+
+    await writeAuditEvent({
+      actor: ctx.userId,
+      tenantId: ctx.tenantId,
+      action: 'file.save',
+      target: 'file',
+      targetId: result.id,
+      after: { hash: result.hash, path },
+      env: 'dev',
+      ip: req.ip,
+      ua: req.headers['user-agent'] ?? '',
+    });
+
+    return reply.status(200).send(result);
+  });
+
+  /** GET /api/files/content?projectId=…&path=… — fetch file content by path */
+  app.get<{ Querystring: { projectId?: string; path?: string } }>(
+    '/api/files/content',
+    async (req, reply) => {
+      const ctx = req.authCtx!;
+      const parsed = ContentByPathQuerySchema.safeParse({
+        projectId: req.query.projectId,
+        path:      req.query.path,
+      });
+      if (!parsed.success) {
+        return reply.status(400).send({ error: 'Invalid query', detail: parsed.error.format() });
+      }
+      const result = await getFileContentByPath(parsed.data.projectId, ctx.tenantId, parsed.data.path);
+      if (!result) return reply.status(404).send({ error: 'File not found' });
+      return result;
+    },
+  );
 
   /** GET /api/files/search?projectId=…&q=… — search file paths/content */
   app.get<{ Querystring: { projectId?: string; q?: string } }>('/api/files/search', async (req, reply) => {

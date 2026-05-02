@@ -68,7 +68,7 @@ export async function getFileContent(fileId: string, tenantId: string): Promise<
   return blob[0]?.content ?? null;
 }
 
-/** Save file content: hash → upsert blob → update file record. Returns new content hash. */
+/** Save file content by UUID: hash → upsert blob → update file record. Returns new content hash. */
 export async function saveFile(input: FileSaveInput): Promise<string> {
   const db = getDb();
   const hash = sha256(input.content);
@@ -87,6 +87,111 @@ export async function saveFile(input: FileSaveInput): Promise<string> {
     .where(and(eq(files.id, input.fileId), eq(files.tenantId, input.tenantId)));
 
   return hash;
+}
+
+export interface FileSaveByPathInput {
+  projectId: string;
+  tenantId:  string;
+  path:      string;
+  content:   string;
+  lang:      string;
+}
+
+export interface FileSaveByPathResult {
+  id:   string;
+  hash: string;
+}
+
+/**
+ * Path-keyed save: SELECT-then-INSERT/UPDATE for (projectId, tenantId, path).
+ * Created because the editor identifies files by their relative path (the file
+ * tree's stable identifier across project loads), and a brand-new project has
+ * no `files` rows in the DB until something writes — so an UPDATE-only path
+ * silently no-ops while the route returns 404 from Fastify path-matching.
+ *
+ * No unique constraint exists on (projectId, tenantId, path) yet, so we don't
+ * use ON CONFLICT — the SELECT-then-{INSERT|UPDATE} is racy against itself
+ * but each tenant only has one editor open per file at a time, so collisions
+ * are rare and the worst case is a duplicate row that the next save will
+ * still find.
+ */
+export async function saveFileByPath(
+  input: FileSaveByPathInput,
+): Promise<FileSaveByPathResult> {
+  const db = getDb();
+  const hash = sha256(input.content);
+  const size = Buffer.byteLength(input.content, 'utf8');
+
+  // Upsert blob (content-addressed)
+  await db
+    .insert(fileBlobs)
+    .values({ hash, content: input.content, size })
+    .onConflictDoNothing();
+
+  // Find existing row by path
+  const [existing] = await db
+    .select({ id: files.id })
+    .from(files)
+    .where(and(
+      eq(files.projectId, input.projectId),
+      eq(files.tenantId,  input.tenantId),
+      eq(files.path,      input.path),
+    ))
+    .limit(1);
+
+  if (existing) {
+    await db
+      .update(files)
+      .set({ contentHash: hash, size, lang: input.lang, dirty: false })
+      .where(eq(files.id, existing.id));
+    return { id: existing.id, hash };
+  }
+
+  // Insert new file row pointing at the blob
+  const [inserted] = await db
+    .insert(files)
+    .values({
+      projectId:   input.projectId,
+      tenantId:    input.tenantId,
+      path:        input.path,
+      lang:        input.lang,
+      contentHash: hash,
+      size,
+      dirty:       false,
+    })
+    .returning({ id: files.id });
+
+  if (!inserted) throw new Error('Failed to insert file row');
+  return { id: inserted.id, hash };
+}
+
+/** Get file content by (projectId, tenantId, path). Returns null if no row. */
+export async function getFileContentByPath(
+  projectId: string,
+  tenantId:  string,
+  path:      string,
+): Promise<{ id: string; content: string; lang: string | null } | null> {
+  const db = getDb();
+  const [row] = await db
+    .select({ id: files.id, contentHash: files.contentHash, lang: files.lang })
+    .from(files)
+    .where(and(
+      eq(files.projectId, projectId),
+      eq(files.tenantId,  tenantId),
+      eq(files.path,      path),
+    ))
+    .limit(1);
+
+  if (!row) return null;
+  if (!row.contentHash) return { id: row.id, content: '', lang: row.lang };
+
+  const [blob] = await db
+    .select({ content: fileBlobs.content })
+    .from(fileBlobs)
+    .where(eq(fileBlobs.hash, row.contentHash))
+    .limit(1);
+
+  return { id: row.id, content: blob?.content ?? '', lang: row.lang };
 }
 
 /** Search file paths and content for a query string (server-side grep). */

@@ -2,6 +2,8 @@
 // Nodes are sorted: directories first, then files, both alphabetically.
 import { useState, useMemo, type KeyboardEvent } from 'react';
 import { useEditorStore } from '../../lib/store/editorStore';
+import { useProjectStore } from '../../lib/store/projectStore';
+import { apiFetch } from '../../lib/api';
 import { languageFromPath } from '../editor/languageFromPath';
 
 export interface FileNode {
@@ -35,20 +37,36 @@ export function FileTree({ nodes, searchQuery }: FileTreeProps) {
     });
   }
 
-  function openFile(node: FileNode) {
+  async function openFile(node: FileNode) {
     if (node.type !== 'file') return;
     const existingTab = tabs.find((t) => t.fileId === node.id);
     if (existingTab) {
       openTab(existingTab);
       return;
     }
-    // Open with empty content stub — real content fetched from API in Step 6 API wiring
+
+    // Fetch real content via the path-keyed endpoint. New scaffold files
+    // that haven't been written yet 404 — open them empty so the user can
+    // type and save (which lazily creates the row).
+    const projectId = useProjectStore.getState().currentProjectId;
+    let content = '';
+    if (projectId && projectId !== 'global') {
+      try {
+        const res = await apiFetch<{ content: string }>(
+          `/api/files/content?projectId=${encodeURIComponent(projectId)}&path=${encodeURIComponent(node.path)}`,
+        );
+        content = res.content;
+      } catch {
+        // 404 = file not yet saved. Empty buffer is fine.
+      }
+    }
+
     openTab({
       fileId: node.id,
       path: node.path,
       language: languageFromPath(node.path),
-      content: `// ${node.path}\n// File content loaded from API.\n`,
-      savedContent: `// ${node.path}\n// File content loaded from API.\n`,
+      content,
+      savedContent: content,
     });
   }
 

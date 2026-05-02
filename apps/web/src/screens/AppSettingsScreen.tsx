@@ -1,7 +1,8 @@
 // apps/web/src/screens/AppSettingsScreen.tsx — workspace-wide settings + provider config.
 // Tabs: General · Models · Danger zone.
 // API keys live in the vault — the Models tab never displays raw values.
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { apiFetch } from '../lib/api';
 
 type Tab = 'general' | 'models' | 'danger';
 
@@ -124,21 +125,62 @@ const STUB_PROVIDERS: ProviderConfig[] = [
   },
 ];
 
+interface ApiProviderHealth {
+  provider:   'minimax' | 'ollama';
+  configured: boolean;
+  ok:         boolean;
+  latencyMs?: number;
+  detail?:    string;
+}
+
+function applyHealth(prev: ProviderConfig[], rows: ApiProviderHealth[]): ProviderConfig[] {
+  return prev.map((p) => {
+    const row = rows.find((r) => r.provider === p.provider);
+    if (!row) return p;
+    let health: ProviderHealth;
+    if (!row.configured) health = 'unconfigured';
+    else if (row.ok)     health = 'ok';
+    else                 health = 'error';
+    return { ...p, health, latencyMs: row.latencyMs, detail: row.detail };
+  });
+}
+
 function ModelsTab() {
-  const [providers, setProviders] = useState<ProviderConfig[]>(STUB_PROVIDERS);
+  // Start in "checking" until the real /api/providers/health response lands.
+  // Avoids the Phase 2.6 contradiction: card said "Unconfigured" while the
+  // key was clearly in the vault and chat was working.
+  const [providers, setProviders] = useState<ProviderConfig[]>(() =>
+    STUB_PROVIDERS.map((p) => ({ ...p, health: 'checking', detail: undefined })),
+  );
   const [checkingAll, setCheckingAll] = useState(false);
 
-  async function handleCheckAll() {
+  const refreshHealth = useCallback(async () => {
     setCheckingAll(true);
-    setProviders((prev) => prev.map((p) => ({ ...p, health: 'checking' })));
-    // TODO: POST /api/providers/healthcheck-all
-    await new Promise((r) => setTimeout(r, 1200));
-    setProviders((prev) => prev.map((p) => ({
-      ...p,
-      health: p.provider === 'ollama' ? 'ok' : 'unconfigured',
-      latencyMs: p.provider === 'ollama' ? 42 : undefined,
-    })));
-    setCheckingAll(false);
+    setProviders((prev) => prev.map((p) => ({ ...p, health: 'checking', detail: undefined })));
+    try {
+      const res = await apiFetch<{ providers: ApiProviderHealth[] }>(
+        '/api/providers/health',
+      );
+      setProviders((prev) => applyHealth(prev, res.providers));
+    } catch (err) {
+      // Fail open with "error" rather than the misleading "Unconfigured"
+      setProviders((prev) =>
+        prev.map((p) => ({
+          ...p,
+          health: 'error',
+          detail: err instanceof Error ? err.message : 'Healthcheck request failed',
+        })),
+      );
+    } finally {
+      setCheckingAll(false);
+    }
+  }, []);
+
+  // Run once on mount so the page reflects real state immediately.
+  useEffect(() => { void refreshHealth(); }, [refreshHealth]);
+
+  async function handleCheckAll() {
+    await refreshHealth();
   }
 
   return (

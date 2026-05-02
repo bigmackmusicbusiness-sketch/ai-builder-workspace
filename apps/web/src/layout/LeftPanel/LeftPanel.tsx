@@ -5,15 +5,30 @@
 // Fixed-header tax was ~96px (header + AgentStatus + ModelSelector). Now ~28px:
 // just a thin "+ New chat" button row at the top. StatusPill (32px) sits
 // between accordions and chat input as a single combined control.
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { ChatThread } from './ChatThread';
 import { ApprovalsQueue } from './ApprovalsQueue';
 import { useChatStore } from '../../lib/store/chatStore';
+import { useEditorStore } from '../../lib/store/editorStore';
 import { useProjectStore } from '../../lib/store/projectStore';
 
 export function LeftPanel() {
   const currentProjectId = useProjectStore((s) => s.currentProjectId);
   const clearProject     = useChatStore((s) => s.clearProject);
+  const clearEditorTabs  = useEditorStore((s) => s.clearTabs);
+
+  // F.2: When the user switches projects, drop any open editor tabs from the
+  // previous project. Without this, switching would still show the old
+  // project's main.tsx (and let the user accidentally save it under the new
+  // project). Skip-first-run via ref so reopening the same project on page
+  // load doesn't blow away tabs the user might have legitimately persisted.
+  const prevProjectIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (prevProjectIdRef.current !== null && prevProjectIdRef.current !== currentProjectId) {
+      clearEditorTabs();
+    }
+    prevProjectIdRef.current = currentProjectId;
+  }, [currentProjectId, clearEditorTabs]);
 
   return (
     <aside className="abw-shell__left" aria-label="AI panel">

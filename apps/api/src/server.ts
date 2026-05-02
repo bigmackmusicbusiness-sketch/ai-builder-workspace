@@ -27,6 +27,7 @@ import { editorRoutes }    from './routes/editor';
 import { higgsfieldRoutes } from './routes/higgsfield';
 import { videoRoutes }      from './routes/video';
 import { clipperRoutes }    from './routes/clipper';
+import { providersRoutes }  from './routes/providers';
 
 async function main(): Promise<void> {
   // Initialise DB before anything else so getDb() is ready for all route handlers.
@@ -97,6 +98,7 @@ async function main(): Promise<void> {
   await app.register(higgsfieldRoutes);
   await app.register(videoRoutes);
   await app.register(clipperRoutes);
+  await app.register(providersRoutes);
 
   // ── Start ───────────────────────────────────────────────────────────────────
   try {

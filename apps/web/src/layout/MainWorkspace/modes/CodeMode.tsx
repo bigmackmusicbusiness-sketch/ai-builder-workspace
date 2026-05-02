@@ -1,7 +1,13 @@
 // apps/web/src/layout/MainWorkspace/modes/CodeMode.tsx — Monaco editor + tabs.
 // Ctrl+S saves to server; 30s autosave when dirty; dirty indicator in tab bar.
+//
+// Save calls go through POST /api/files (path-keyed upsert). The legacy
+// POST /api/files/:id route required the file to already exist in the DB —
+// brand-new project scaffolds had no rows so every first save 404'd. The
+// new endpoint creates the row on first save and updates it after.
 import { useCallback, useEffect } from 'react';
 import { useEditorStore, isTabDirty } from '../../../lib/store/editorStore';
+import { useProjectStore } from '../../../lib/store/projectStore';
 import { EditorTabs } from '../../../features/editor/EditorTabs';
 import { MonacoEditor } from '../../../features/editor/MonacoEditor';
 import { ProposedChangesTray, type FileDiff } from '../../../features/editor/DiffViewer';
@@ -12,6 +18,10 @@ const STUB_DIFFS: FileDiff[] = [];
 
 export function CodeMode() {
   const { tabs, activeTabId, setContent, markSaved, setSaving } = useEditorStore();
+  const currentProjectId = useProjectStore((s) => s.currentProjectId);
+  // currentProjectId === 'global' means no project selected → can't save.
+  // Otherwise it IS the DB UUID (kept in sync via syncFromDB).
+  const activeProjectDbId = currentProjectId !== 'global' ? currentProjectId : null;
 
   const activeTab = tabs.find((t) => t.fileId === activeTabId) ?? null;
 
@@ -24,13 +34,19 @@ export function CodeMode() {
 
   const handleSave = useCallback(async () => {
     if (!activeTab || !isTabDirty(activeTab)) return;
+    if (!activeProjectDbId) {
+      console.warn('[CodeMode] Cannot save — no active project');
+      return;
+    }
     setSaving(activeTab.fileId, true);
     try {
-      await apiFetch(`/api/files/${activeTab.fileId}`, {
+      await apiFetch(`/api/files`, {
         method: 'POST',
         body: JSON.stringify({
-          content: activeTab.content,
-          lang:    activeTab.language ?? 'plaintext',
+          projectId: activeProjectDbId,
+          path:      activeTab.path,
+          content:   activeTab.content,
+          lang:      activeTab.language ?? 'plaintext',
         }),
       });
       markSaved(activeTab.fileId, activeTab.content);
@@ -40,7 +56,7 @@ export function CodeMode() {
     } finally {
       setSaving(activeTab.fileId, false);
     }
-  }, [activeTab, setSaving, markSaved]);
+  }, [activeTab, activeProjectDbId, setSaving, markSaved]);
 
   // 30-second autosave when content is dirty
   useEffect(() => {

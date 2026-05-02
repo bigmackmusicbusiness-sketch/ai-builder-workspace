@@ -21,6 +21,10 @@ interface EditorState {
   setContent: (fileId: string, content: string) => void;
   markSaved: (fileId: string, savedContent: string) => void;
   setSaving: (fileId: string, saving: boolean) => void;
+  /** Drop all tabs. Used on project switch so the editor doesn't show another
+   *  project's open files (and the user can't accidentally save them under
+   *  the wrong project). */
+  clearTabs: () => void;
 }
 
 export const useEditorStore = create<EditorState>()((set, get) => ({
@@ -67,6 +71,8 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
     set((s) => ({
       tabs: s.tabs.map((t) => (t.fileId === fileId ? { ...t, saving } : t)),
     })),
+
+  clearTabs: () => set({ tabs: [], activeTabId: null }),
 }));
 
 /** True if the tab has unsaved changes. */
