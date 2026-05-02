@@ -1,4 +1,5 @@
 # apps/web/Dockerfile.coolify — Vite SPA static-served via nginx.
+# Cache-bust: 2026-05-01-supabase-key-rotation
 #
 # Build args (set in Coolify build environment, NOT runtime env):
 #   VITE_API_URL          — public URL of the API (e.g. https://api.example.com)
