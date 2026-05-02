@@ -14,6 +14,13 @@ import { approvals } from '@abw/db';
 import { eq, and, desc } from 'drizzle-orm';
 import { checkApproval, type ApprovalAction, type ApprovalEnvironment } from '../security/approvalMatrix';
 import { writeAuditEvent } from '../security/audit';
+import { authMiddleware, type AuthContext } from '../security/authz';
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    authCtx?: AuthContext;
+  }
+}
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -41,10 +48,13 @@ const ReviewSchema = z.object({
 // ── Route plugin ──────────────────────────────────────────────────────────────
 
 export async function approvalsRoutes(app: FastifyInstance): Promise<void> {
+  // All approvals routes require auth — this is a sensitive surface.
+  app.addHook('preHandler', authMiddleware);
 
   // ── POST /api/approvals/check ─────────────────────────────────────────────
   // Pure decision — no DB write. Used by UI before kicking off actions.
   app.post('/api/approvals/check', async (req, reply) => {
+    const ctx = req.authCtx!;
     const body = req.body as { action?: string; env?: string; scale?: Record<string, number> };
     if (!body.action || !body.env) {
       return reply.status(400).send({ error: 'action and env are required' });
@@ -53,9 +63,9 @@ export async function approvalsRoutes(app: FastifyInstance): Promise<void> {
     const decision = checkApproval({
       action:      body.action as ApprovalAction,
       env:         body.env as ApprovalEnvironment,
-      tenantId:    'dev-tenant',
+      tenantId:    ctx.tenantId,
       projectId:   (body as Record<string, string>)['projectId'] ?? '',
-      requestedBy: 'user',
+      requestedBy: ctx.userId,
       scale:       body.scale,
     });
 
@@ -64,14 +74,15 @@ export async function approvalsRoutes(app: FastifyInstance): Promise<void> {
 
   // ── POST /api/approvals ───────────────────────────────────────────────────
   app.post('/api/approvals', async (req, reply) => {
+    const ctx = req.authCtx!;
     const parsed = CreateApprovalSchema.safeParse(req.body);
     if (!parsed.success) {
       return reply.status(400).send({ error: 'Invalid request', details: parsed.error.issues });
     }
 
     const { projectId, runId, action, env, scope, bundle, scale, expiresAt } = parsed.data;
-    const tenantId    = 'dev-tenant';
-    const requestedBy = 'user';
+    const tenantId    = ctx.tenantId;
+    const requestedBy = ctx.userId;
 
     // Check whether approval is even required
     const decision = checkApproval({
@@ -97,7 +108,7 @@ export async function approvalsRoutes(app: FastifyInstance): Promise<void> {
       tenantId,
       projectId,
       runId:       runId ?? null,
-      requestedBy: null,  // TODO: from auth session
+      requestedBy: ctx.userId,
       action,
       bundle:      { ...bundle, scope, scale, decision: decision.bundleSpec },
       status:      'pending',
@@ -126,8 +137,9 @@ export async function approvalsRoutes(app: FastifyInstance): Promise<void> {
 
   // ── GET /api/approvals?projectId= ─────────────────────────────────────────
   app.get('/api/approvals', async (req, reply) => {
+    const ctx = req.authCtx!;
     const { projectId } = req.query as { projectId?: string };
-    const tenantId = 'dev-tenant';
+    const tenantId = ctx.tenantId;
 
     const db = getDb();
     const query = db.select()
@@ -149,8 +161,9 @@ export async function approvalsRoutes(app: FastifyInstance): Promise<void> {
 
   // ── GET /api/approvals/:id ────────────────────────────────────────────────
   app.get('/api/approvals/:id', async (req, reply) => {
+    const ctx = req.authCtx!;
     const { id } = req.params as { id: string };
-    const tenantId = 'dev-tenant';
+    const tenantId = ctx.tenantId;
     const db = getDb();
 
     const [row] = await db.select()
@@ -164,10 +177,11 @@ export async function approvalsRoutes(app: FastifyInstance): Promise<void> {
 
   // ── POST /api/approvals/:id/approve ───────────────────────────────────────
   app.post('/api/approvals/:id/approve', async (req, reply) => {
+    const ctx = req.authCtx!;
     const { id }   = req.params as { id: string };
     const parsed   = ReviewSchema.safeParse(req.body);
-    const tenantId = 'dev-tenant';
-    const reviewer = 'user';
+    const tenantId = ctx.tenantId;
+    const reviewer = ctx.userId;
 
     const db = getDb();
     const [existing] = await db.select()
@@ -186,7 +200,7 @@ export async function approvalsRoutes(app: FastifyInstance): Promise<void> {
     await db.update(approvals)
       .set({
         status:     'approved',
-        reviewedBy: null,  // TODO: from auth session
+        reviewedBy: ctx.userId,
         reviewNote: parsed.success ? parsed.data.note : undefined,
         reviewedAt: new Date(),
       })
@@ -207,10 +221,11 @@ export async function approvalsRoutes(app: FastifyInstance): Promise<void> {
 
   // ── POST /api/approvals/:id/reject ────────────────────────────────────────
   app.post('/api/approvals/:id/reject', async (req, reply) => {
+    const ctx = req.authCtx!;
     const { id }   = req.params as { id: string };
     const parsed   = ReviewSchema.safeParse(req.body);
-    const tenantId = 'dev-tenant';
-    const reviewer = 'user';
+    const tenantId = ctx.tenantId;
+    const reviewer = ctx.userId;
 
     const db = getDb();
     const [existing] = await db.select()
@@ -226,7 +241,7 @@ export async function approvalsRoutes(app: FastifyInstance): Promise<void> {
     await db.update(approvals)
       .set({
         status:     'rejected',
-        reviewedBy: null,
+        reviewedBy: ctx.userId,
         reviewNote: parsed.success ? parsed.data.note : undefined,
         reviewedAt: new Date(),
       })
@@ -247,9 +262,10 @@ export async function approvalsRoutes(app: FastifyInstance): Promise<void> {
 
   // ── POST /api/approvals/:id/changes ───────────────────────────────────────
   app.post('/api/approvals/:id/changes', async (req, reply) => {
+    const ctx = req.authCtx!;
     const { id }   = req.params as { id: string };
     const parsed   = ReviewSchema.safeParse(req.body);
-    const tenantId = 'dev-tenant';
+    const tenantId = ctx.tenantId;
 
     const db = getDb();
     const [existing] = await db.select()
@@ -262,13 +278,14 @@ export async function approvalsRoutes(app: FastifyInstance): Promise<void> {
     await db.update(approvals)
       .set({
         status:     'changes_requested',
+        reviewedBy: ctx.userId,
         reviewNote: parsed.success ? parsed.data.note : undefined,
         reviewedAt: new Date(),
       })
       .where(eq(approvals.id, id));
 
     await writeAuditEvent({
-      actor:    'user',
+      actor:    ctx.userId,
       tenantId,
       action:   'approval.changes_requested',
       target:   'approvals',

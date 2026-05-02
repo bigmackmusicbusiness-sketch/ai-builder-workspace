@@ -5,7 +5,81 @@ import { build, type BuildResult } from 'esbuild';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { join, relative, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import { redactString } from '../security/redact';
+
+// ── Hot bundle cache (Phase C.4) ───────────────────────────────────────────────
+// Cold rebuild on every preview boot was the dominant latency cost; for a
+// scaffolded project the same source produces the same bundle every time.
+// Cache the assets map keyed by a hash of the file tree so a cold-restart of
+// the same project hits the cache instead of re-running esbuild.
+//
+// In-memory LRU; capped at MAX_ENTRIES so memory stays bounded. Coolify
+// migration to Redis can swap this with the same interface intact.
+interface CachedBundle {
+  assets:    Map<string, Uint8Array>;
+  warnings:  string[];
+  errors:    string[];
+  durationMs: number;
+  lastUsed:  number;
+}
+const BUNDLE_CACHE = new Map<string, CachedBundle>();
+const MAX_CACHE_ENTRIES = 32;          // ~tens of MB at scaffold size
+const MAX_TREE_BYTES_FOR_CACHE = 50_000_000; // skip caching projects > 50MB
+
+/** Walk the project root and produce a content-stable digest of every file
+ *  path + size + mtime + framework + entrypoint. mtime is sufficient because
+ *  saveFile() always rewrites the file (path or contentHash changes), and
+ *  esbuild's resolution is deterministic from these inputs. */
+async function computeTreeHash(input: BundleInput): Promise<{ hash: string; totalBytes: number } | null> {
+  const entries: Array<{ path: string; size: number; mtimeMs: number }> = [];
+  let totalBytes = 0;
+
+  async function walk(dir: string): Promise<void> {
+    let names: string[];
+    try { names = await readdir(dir); } catch { return; }
+    for (const name of names) {
+      if (name === 'node_modules' || name === '.git' || name === 'dist') continue;
+      const full = join(dir, name);
+      let st;
+      try { st = await stat(full); } catch { continue; }
+      if (st.isDirectory()) {
+        await walk(full);
+      } else {
+        const rel = relative(input.rootDir, full).replace(/\\/g, '/');
+        entries.push({ path: rel, size: st.size, mtimeMs: st.mtimeMs });
+        totalBytes += st.size;
+        if (totalBytes > MAX_TREE_BYTES_FOR_CACHE) return; // bail; don't cache giant trees
+      }
+    }
+  }
+  await walk(input.rootDir);
+  if (totalBytes > MAX_TREE_BYTES_FOR_CACHE) return null;
+
+  entries.sort((a, b) => a.path.localeCompare(b.path));
+  const payload = JSON.stringify({
+    framework:  input.framework,
+    entry:      input.entryPoint,
+    base:       input.serveBasePath ?? '',
+    files:      entries,
+  });
+  const hash = createHash('sha256').update(payload).digest('hex');
+  return { hash, totalBytes };
+}
+
+function cacheKey(slug: string, treeHash: string): string {
+  return `${slug}:${treeHash}`;
+}
+
+function evictLRUIfFull(): void {
+  if (BUNDLE_CACHE.size <= MAX_CACHE_ENTRIES) return;
+  let oldestKey: string | null = null;
+  let oldestUsed = Infinity;
+  for (const [k, v] of BUNDLE_CACHE) {
+    if (v.lastUsed < oldestUsed) { oldestUsed = v.lastUsed; oldestKey = k; }
+  }
+  if (oldestKey) BUNDLE_CACHE.delete(oldestKey);
+}
 
 // ── Module resolution paths ────────────────────────────────────────────────────
 // esbuild resolves imports from the project root, but scaffolded/user projects
@@ -54,9 +128,35 @@ export interface BundleOutput {
 
 /** Bundle a React/Vite project with esbuild.
  *  Output: assets map ready to push to Cloudflare KV.
+ *
+ *  Phase C.4: cache by tree hash so identical source maps to a cache HIT
+ *  on subsequent boots. esbuild on a tiny scaffold runs ~200-500ms; the
+ *  cache turns that into <5ms. Cache invalidates automatically when any
+ *  file's mtime/size changes (so saveFile() naturally busts it).
  */
 export async function bundleProject(input: BundleInput): Promise<BundleOutput> {
   const t0 = Date.now();
+
+  // Cache lookup
+  const tree = await computeTreeHash(input);
+  if (tree) {
+    const key = cacheKey(input.projectSlug, tree.hash);
+    const hit = BUNDLE_CACHE.get(key);
+    if (hit) {
+      hit.lastUsed = Date.now();
+      console.log(`[bundler] cache HIT ${input.projectSlug} (${tree.hash.slice(0, 8)}, served in ${Date.now() - t0}ms)`);
+      return {
+        // Defensive copy of the assets map so callers can mutate without
+        // poisoning the cached entry.
+        assets:     new Map(hit.assets),
+        warnings:   [...hit.warnings],
+        errors:     [...hit.errors],
+        durationMs: Date.now() - t0,
+      };
+    }
+    console.log(`[bundler] cache MISS ${input.projectSlug} (${tree.hash.slice(0, 8)}, ${tree.totalBytes}B)`);
+  }
+
   const assets = new Map<string, Uint8Array>();
   const warnings: string[] = [];
   const errors: string[] = [];
@@ -114,7 +214,24 @@ export async function bundleProject(input: BundleInput): Promise<BundleOutput> {
     errors.push(redactString(String(err instanceof Error ? err.message : err)));
   }
 
-  return { assets, warnings, errors, durationMs: Date.now() - t0 };
+  const durationMs = Date.now() - t0;
+
+  // Cache the result if we computed a tree hash and the bundle had no errors.
+  // (Caching errored bundles would just replay the failure on every retry.)
+  if (tree && errors.length === 0) {
+    evictLRUIfFull();
+    BUNDLE_CACHE.set(cacheKey(input.projectSlug, tree.hash), {
+      // Cache copies of the assets so the caller can freely mutate the
+      // returned map without poisoning the cache.
+      assets:    new Map(assets),
+      warnings:  [...warnings],
+      errors:    [...errors],
+      durationMs,
+      lastUsed:  Date.now(),
+    });
+  }
+
+  return { assets, warnings, errors, durationMs };
 }
 
 // ── Internal helpers ─────────────────────────────────────────────────────────

@@ -10,6 +10,13 @@ import { visualChecks } from '@abw/db';
 import { eq, and, desc } from 'drizzle-orm';
 import { runPipeline, FULL_ADAPTERS, type AdapterName } from '../verify/pipeline';
 import { writeAuditEvent } from '../security/audit';
+import { authMiddleware, type AuthContext } from '../security/authz';
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    authCtx?: AuthContext;
+  }
+}
 
 const RunTestsSchema = z.object({
   projectId:   z.string().uuid(),
@@ -24,16 +31,18 @@ const BaselineSchema = z.object({
 });
 
 export async function testsRoutes(app: FastifyInstance): Promise<void> {
+  app.addHook('preHandler', authMiddleware);
 
   // ── POST /api/tests/run ────────────────────────────────────────────────────
   app.post('/api/tests/run', async (req, reply) => {
+    const ctx = req.authCtx!;
     const parsed = RunTestsSchema.safeParse(req.body);
     if (!parsed.success) {
       return reply.status(400).send({ error: 'Invalid request', details: parsed.error.issues });
     }
 
     const { projectId, projectRoot, adapters, previewUrl } = parsed.data;
-    const tenantId = 'dev-tenant';  // TODO: derive from session
+    const tenantId = ctx.tenantId;
 
     const selectedAdapters = (adapters ?? FULL_ADAPTERS) as AdapterName[];
     const results = await runPipeline({
@@ -81,8 +90,9 @@ export async function testsRoutes(app: FastifyInstance): Promise<void> {
       return reply.status(400).send({ error: 'Invalid request', details: parsed.error.issues });
     }
 
+    const ctx = req.authCtx!;
     const { projectId, visualCheckId } = parsed.data;
-    const tenantId = 'dev-tenant';
+    const tenantId = ctx.tenantId;
 
     const db = getDb();
     const [check] = await db.select()
@@ -105,7 +115,7 @@ export async function testsRoutes(app: FastifyInstance): Promise<void> {
       ));
 
     await writeAuditEvent({
-      actor:    'user',
+      actor:    ctx.userId,
       tenantId,
       action:   'visual_check.baseline_updated',
       target:   'visual_checks',
