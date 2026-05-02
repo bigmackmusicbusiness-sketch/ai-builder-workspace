@@ -31,6 +31,11 @@ const schema = z.object({
    *  target. Must match what the user's browser can reach the API at. Defaults
    *  to http://localhost:{PORT} which works for local Windows dev. */
   PUBLIC_API_URL:         z.string().url().optional(),
+
+  /** Public origin of the WEB SPA. Used as the canonical CORS allowlist entry
+   *  so browsers can call the API. Set in Coolify per deploy
+   *  (e.g. https://app.40-160-3-10.sslip.io or https://app.<your-domain>). */
+  APP_URL:                z.string().url().optional(),
 });
 
 function parseEnv() {

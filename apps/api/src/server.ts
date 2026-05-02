@@ -43,14 +43,24 @@ async function main(): Promise<void> {
   });
 
   // ── CORS ────────────────────────────────────────────────────────────────────
+  // Allowlist: localhost dev, Cloudflare Pages, Railway, sslip.io (Coolify
+  // demo domains), and whatever APP_URL is configured to in env. APP_URL is
+  // the canonical entry — set it in Coolify so swapping to a real domain
+  // later is a one-line env change without code touchups.
   await app.register(cors, {
-    // Allow the Vite dev server + Cloudflare Pages deployments
     origin: (origin, cb) => {
-      const allowed = [
+      const allowed: RegExp[] = [
         /^http:\/\/localhost:\d+$/,
         /^https:\/\/.*\.pages\.dev$/,
         /^https:\/\/.*\.railway\.app$/,
+        /^https:\/\/.*\.sslip\.io$/,
       ];
+      if (env.APP_URL) {
+        // Anchor the literal APP_URL origin (escape regex metachars) so we
+        // match exact-host, not a substring.
+        const escaped = env.APP_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        allowed.push(new RegExp(`^${escaped}$`));
+      }
       if (!origin || allowed.some(r => r.test(origin))) {
         cb(null, true);
       } else {
