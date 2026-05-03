@@ -294,9 +294,40 @@ export async function executeToolCall(
   try {
     switch (name) {
       case 'write_file': {
-        const path    = String(args['path'] ?? '');
-        const content = String(args['content'] ?? '');
-        if (!path) throw new Error('"path" is required');
+        // Be lenient on arg names — MiniMax sometimes emits the call with
+        // alias keys (filename / file / name / filePath / relPath) instead
+        // of the schema-declared "path", and the resulting "path is required"
+        // failure burns an iteration without telling the agent what to fix.
+        // Accept any reasonable alias; only fail if NONE of them carry a value.
+        const pathRaw =
+          (args['path'] as string | undefined) ??
+          (args['filename'] as string | undefined) ??
+          (args['filePath'] as string | undefined) ??
+          (args['file'] as string | undefined) ??
+          (args['relPath'] as string | undefined) ??
+          (args['name'] as string | undefined) ??
+          '';
+        const path    = String(pathRaw).trim();
+        const content = String(args['content'] ?? args['body'] ?? args['text'] ?? '');
+        if (!path) {
+          return {
+            ok: false,
+            summary: 'write_file refused — path missing',
+            result:
+              'Error: "path" is required. The call had no path / filename / file / filePath / name. ' +
+              'Retry with: write_file(path: "index.html", content: "<full HTML here>"). ' +
+              'Use the EXACT key "path" — that is the schema name.',
+          };
+        }
+        if (!content && content !== '') {
+          return {
+            ok: false,
+            summary: `write_file refused — content missing for ${path}`,
+            result:
+              `Error: "content" is required. The call had no content / body / text. ` +
+              `Retry with: write_file(path: "${path}", content: "<full file content here>").`,
+          };
+        }
 
         // Hard-gate planning-document writes when no index.html exists yet.
         // The model has been observed writing SPEC.md / README.md / plan.md
