@@ -931,6 +931,10 @@ html, body, #root {
    ════════════════════════════════════════════════════════════════════ */
 
 /* ── Login — two-column premium layout ──────────────────────────────── */
+/* IMPORTANT: this overrides packages/ui/styles/screens.css:.abw-login which
+   was the old single-card design (display:flex, align-items:center,
+   padding: var(--space-6)). We need to undo all three so the grid panels can
+   actually fill the viewport edge-to-edge. */
 .abw-login {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -938,6 +942,9 @@ html, body, #root {
      the auto-row would size to content (~393px) and both panels would float
      in a sea of canvas bg. */
   grid-template-rows: minmax(100vh, 1fr);
+  align-items: stretch;          /* override screens.css :center */
+  justify-content: stretch;
+  padding: 0;                    /* override screens.css :var(--space-6) */
   min-height: 100vh;
   background: var(--bg-canvas);
   color: var(--text-primary);
