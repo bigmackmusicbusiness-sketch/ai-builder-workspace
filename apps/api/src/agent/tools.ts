@@ -294,38 +294,83 @@ export async function executeToolCall(
   try {
     switch (name) {
       case 'write_file': {
-        // Be lenient on arg names — MiniMax sometimes emits the call with
-        // alias keys (filename / file / name / filePath / relPath) instead
-        // of the schema-declared "path", and the resulting "path is required"
-        // failure burns an iteration without telling the agent what to fix.
-        // Accept any reasonable alias; only fail if NONE of them carry a value.
-        const pathRaw =
-          (args['path'] as string | undefined) ??
-          (args['filename'] as string | undefined) ??
-          (args['filePath'] as string | undefined) ??
-          (args['file'] as string | undefined) ??
-          (args['relPath'] as string | undefined) ??
-          (args['name'] as string | undefined) ??
-          '';
-        const path    = String(pathRaw).trim();
-        const content = String(args['content'] ?? args['body'] ?? args['text'] ?? '');
+        // Heroic argument recovery for MiniMax M2.7 — observed failure modes:
+        //   1. Right schema:               { path: "x", content: "y" }
+        //   2. Alias keys:                 { filename: "x", body: "y" }
+        //   3. Path AS the key:            { "index.html": "<!DOCTYPE...>" }
+        //   4. Array-wrapped:              [{ path: "x", content: "y" }]
+        //   5. Empty / no args:            {} — model just emits the call name
+        // Try them all in order. Log the raw args when nothing works so the
+        // next test can be debugged from container logs.
+        let path    = '';
+        let content = '';
+
+        const aliasKeys     = ['path', 'filename', 'filePath', 'file', 'relPath', 'name', 'fileName', 'file_path', 'file_name'];
+        const contentKeys   = ['content', 'body', 'text', 'html', 'data', 'source', 'fileContent', 'file_content'];
+        const pathExtRegex  = /\.(html?|css|jsx?|tsx?|mjs|cjs|json|md|txt|svg|xml|yml|yaml|toml|env)$/i;
+
+        // Mode 1+2: known keys (case-insensitive, lenient on dashes/underscores)
+        for (const k of aliasKeys) {
+          const v = args[k];
+          if (typeof v === 'string' && v.trim()) { path = v.trim(); break; }
+        }
+        for (const k of contentKeys) {
+          const v = args[k];
+          if (typeof v === 'string') { content = v; break; }
+        }
+
+        // Mode 3: object key IS a filename, value IS the content
         if (!path) {
+          for (const [k, v] of Object.entries(args)) {
+            if (typeof v === 'string' && pathExtRegex.test(k)) {
+              path    = k;
+              content = v;
+              break;
+            }
+          }
+        }
+
+        // Heuristic: any string value that LOOKS like a filename → use as path
+        if (!path) {
+          for (const v of Object.values(args)) {
+            if (typeof v === 'string' && v.length < 200 && pathExtRegex.test(v.trim())) {
+              path = v.trim();
+              break;
+            }
+          }
+        }
+
+        // Heuristic: any LONG string value → treat as content if we still need one
+        if (!content) {
+          for (const v of Object.values(args)) {
+            if (typeof v === 'string' && v.length >= 50) { content = v; break; }
+          }
+        }
+
+        if (!path) {
+          // Log so we can fix targeted next round.
+          // eslint-disable-next-line no-console
+          console.error('[write_file] no path found in args. Raw args keys:', Object.keys(args), 'sample values:',
+            Object.fromEntries(Object.entries(args).slice(0, 5).map(([k, v]) =>
+              [k, typeof v === 'string' ? v.slice(0, 80) : typeof v])));
           return {
             ok: false,
-            summary: 'write_file refused — path missing',
+            summary: 'write_file refused — could not find a path in the args',
             result:
-              'Error: "path" is required. The call had no path / filename / file / filePath / name. ' +
-              'Retry with: write_file(path: "index.html", content: "<full HTML here>"). ' +
-              'Use the EXACT key "path" — that is the schema name.',
+              `Error: write_file needs a path argument but none of these keys carried one: ` +
+              `${aliasKeys.join(', ')}. The args object had keys: [${Object.keys(args).join(', ') || '(empty)'}]. ` +
+              `RETRY using THIS EXACT format:\n` +
+              `{"path": "index.html", "content": "<!DOCTYPE html>...full content..."}\n` +
+              `The first arg is the relative file path. The second is the full file content as a string.`,
           };
         }
-        if (!content && content !== '') {
+        if (!content) {
           return {
             ok: false,
             summary: `write_file refused — content missing for ${path}`,
             result:
-              `Error: "content" is required. The call had no content / body / text. ` +
-              `Retry with: write_file(path: "${path}", content: "<full file content here>").`,
+              `Error: write_file got path="${path}" but no content. ` +
+              `Retry with: {"path": "${path}", "content": "<full file content as a string>"}`,
           };
         }
 
