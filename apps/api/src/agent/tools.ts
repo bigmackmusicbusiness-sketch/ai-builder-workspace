@@ -297,6 +297,34 @@ export async function executeToolCall(
         const path    = String(args['path'] ?? '');
         const content = String(args['content'] ?? '');
         if (!path) throw new Error('"path" is required');
+
+        // Hard-gate planning-document writes when no index.html exists yet.
+        // The model has been observed writing SPEC.md / README.md / plan.md
+        // first and exhausting iteration budget before getting to actual
+        // code, leaving the user with a project that won't render. Reject
+        // those writes early so the agent's next tool call has to be the
+        // site itself. Once index.html exists, planning docs are fine.
+        const isPlanningDoc = /^(spec|readme|plan|todo|roadmap|notes?)\.md$/i.test(
+          path.split(/[\\/]/).pop() ?? '',
+        );
+        if (isPlanningDoc) {
+          const existing = await listWorkspaceFiles(ws);
+          const hasEntry = existing.some((p) =>
+            /\/(index\.html?|main\.tsx|main\.jsx)$/i.test(p),
+          );
+          if (!hasEntry) {
+            return {
+              ok: false,
+              summary: `Refused to write ${path} — no index.html yet`,
+              result:
+                `Refused: ${path} is a planning doc but the workspace has no ` +
+                `index.html or src/main.tsx yet. Per the agent rules, the FIRST ` +
+                `file you write must be index.html (or src/main.tsx for a Vite SPA). ` +
+                `Write that now, then come back to ${path} if you still need it.`,
+            };
+          }
+        }
+
         const { bytes } = await writeWorkspaceFile(ws, path, content);
         // Fire-and-forget backup to Supabase Storage — survives server restarts
         backupFileToStorage(ws, path, content).catch(() => {});

@@ -57,7 +57,7 @@ const ChatBodySchema = z.object({
 
 // How many times we're willing to round-trip tool_calls → exec → back to model.
 // 12 is plenty for scaffolding a small app; keeps a runaway loop bounded.
-const MAX_ITERATIONS = 12;
+const MAX_ITERATIONS = 30;
 
 // System hint appended when tools are active. Nudges the model to actually
 // call write_file instead of emitting code as markdown in the chat.
@@ -67,8 +67,8 @@ function toolHint(slug: string, hasImageGen: boolean): string {
     ``,
     `## CRITICAL RULES — read before every response`,
     `1. When the user asks you to build, create, scaffold, or modify ANYTHING — immediately call write_file. Do NOT ask clarifying questions. Do NOT write a plan. Do NOT write a spec. Do NOT paste code in chat. WRITE THE FILES.`,
-    `2. NEVER write planning documents (SPEC.md, README.md, plan.md, TODO.md). If you want to plan, do it silently in your head, then write the actual code files.`,
-    `3. The FIRST file you write must always be "index.html". Everything else is optional.`,
+    `2. NEVER write SPEC.md, README.md, plan.md, TODO.md, or ANY markdown planning document. The user will SEE these orphan files in the IDE and the preview will fail to render. If you find yourself reaching for write_file with a .md filename, STOP — the next file you write MUST be index.html instead. Plans live in your head.`,
+    `3. ALWAYS write "index.html" BEFORE generating any images. The site must render even if image gen fails or runs out of credits.`,
     `4. If files already exist in the workspace (call list_files to check), build on them. Do not re-plan.`,
     ``,
     `## SUPPORTED PROJECT SHAPES — pick one:`,
@@ -81,18 +81,19 @@ function toolHint(slug: string, hasImageGen: boolean): string {
       ? [
           `## IMAGES`,
           `  • gen_image saves to /images/filename.jpg — reference as <img src="/images/filename.jpg" alt="...">`,
-          `  • Generate images BEFORE writing HTML so you know the exact paths.`,
+          `  • Decide image filenames UP FRONT (e.g. /images/hero.jpg, /images/about.jpg) and bake them into index.html.`,
+          `  • Generate images AFTER index.html exists. The site renders even if image gen fails or hits credit limits.`,
           `  • Write detailed prompts: style, subject, lighting, colors.`,
         ].join('\n')
       : `IMAGE GENERATION: not available. Use Unsplash URLs or CSS gradients instead.`,
     ``,
-    `## EXECUTION ORDER`,
-    `1. list_files (see what exists)`,
-    `2. ${hasImageGen ? 'gen_image for each needed image' : 'Skip image gen'}`,
-    `3. write_file "index.html" (complete, working HTML — do not truncate)`,
-    `4. write_file "styles.css" if needed`,
-    `5. write_file any other files`,
-    `6. One-sentence summary in chat`,
+    `## EXECUTION ORDER (in this order, no exceptions)`,
+    `1. list_files — see what exists.`,
+    `2. write_file "index.html" — COMPLETE working HTML referencing planned /images/*.jpg paths. Do not truncate.`,
+    `3. write_file "styles.css" if your HTML uses one.`,
+    `4. ${hasImageGen ? 'gen_image for each /images/*.jpg you referenced. If any fails, the site still renders with a broken-image icon — that\'s acceptable, the user can re-run.' : 'Skip image gen'}`,
+    `5. write_file any other files (script.js, components, etc.).`,
+    `6. One-sentence summary in chat.`,
     ``,
     `Keep each file under 100 KB. Escape JSON correctly: newlines=\\n, quotes=\\", backslashes=\\\\.`,
     `Project slug: "${slug}".`,
