@@ -84,6 +84,9 @@ importers:
       '@abw/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@abw/project-types':
+        specifier: workspace:*
+        version: link:../../packages/project-types
       '@abw/providers':
         specifier: workspace:*
         version: link:../../packages/providers

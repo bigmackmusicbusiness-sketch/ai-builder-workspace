@@ -265,12 +265,24 @@ export interface ToolExecutionResult {
 /**
  * Execute a single tool call against the workspace.
  * `argsJson` is the raw JSON string from the model.
+ *
+ * MiniMax raw-arg logging (Step 1 foundations): when MINIMAX_DEBUG !== '0', log
+ * the raw args JSON for every tool call. This gives postmortem visibility into
+ * tool-call drift without requiring a debug toggle on every test. Default ON
+ * for the next 30 days (per the logic-update plan).
  */
 export async function executeToolCall(
   ctx:      ToolContext,
   name:     string,
   argsJson: string,
 ): Promise<ToolExecutionResult> {
+  // Permanent raw-arg logging — diagnose MiniMax tool-call drift in real time.
+  if (process.env.MINIMAX_DEBUG !== '0') {
+    const preview = argsJson.length > 400 ? argsJson.slice(0, 400) + `…(+${argsJson.length - 400}c)` : argsJson;
+    // eslint-disable-next-line no-console
+    console.log(`[tool-call] ${name} raw_args=${preview}`);
+  }
+
   let args: Record<string, unknown>;
   try {
     args = argsJson.trim() ? JSON.parse(argsJson) as Record<string, unknown> : {};

@@ -83,6 +83,51 @@ export type WorkspaceScreen =
   | 'approvals'
   | 'onboarding';
 
+/** Default page entry for multi-page types (website, saas-app). */
+export interface DefaultPageEntry {
+  /** URL slug (e.g. "index", "about", "services"). */
+  slug:     string;
+  /** Page role hint for the planner (e.g. "hero+overview", "service-list"). */
+  role:     string;
+  /** If true, the planner must include this page even if the prompt doesn't mention it. */
+  required: boolean;
+}
+
+/** Multi-page strategy for the planner subagent. */
+export interface MultiPageStrategy {
+  /** Default sitemap if no niche matches. */
+  defaultPages?:        DefaultPageEntry[];
+  /** Path to JSON manifest listing niches + keyword triggers (Tier 1 types). */
+  nicheManifestPath?:   string;
+  /** Whether to detect niche from the user's prompt vs. always use defaults. */
+  detectFromPrompt?:    boolean;
+}
+
+/** Vetted color palette for niche-driven design choices. */
+export interface ColorPalette {
+  name:  string;
+  /** Hex codes in role order: primary, surface, surface-tint, ink. */
+  hexes: [string, string, string, string] | string[];
+}
+
+/** Per-type agent SOPs. Loaded into subagent system prompts at request time. */
+export interface AgentInstructions {
+  /** Path to type SOP markdown (relative to apps/api/src/agent/skills/types/). */
+  systemPromptPrelude?: string;
+  /** Inline copy guidance: tone, voice, SEO targets, length. */
+  copyGuidance?:        string;
+  /** Hard security rules enforced at write time + audited in polish phase. */
+  securitySOPs?:        string[];
+  /** How the planner should handle multi-page expansion. */
+  multiPageStrategy?:   MultiPageStrategy;
+  /** Niche → starter voice profile. */
+  voiceTemplates?:      Record<string, string>;
+  /** Niche → vetted palettes. */
+  palettes?:            Record<string, ColorPalette[]>;
+  /** Asset budget cap (images, icons) for the planner. Default: { images: 6, icons: 12 }. */
+  assetBudget?:         { images?: number; icons?: number };
+}
+
 /** Full project type definition. */
 export interface ProjectType {
   id:          ProjectTypeId;
@@ -97,4 +142,6 @@ export interface ProjectType {
   defaultApprovalPolicy: ApprovalPolicy;
   /** Which workspace screens / modes are relevant. */
   screens: WorkspaceScreen[];
+  /** Per-type agent SOPs. Optional — types without instructions use the default planner. */
+  agentInstructions?: AgentInstructions;
 }

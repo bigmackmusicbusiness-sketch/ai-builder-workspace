@@ -15,6 +15,7 @@
   "dependencies": {
     "@abw/agent-core": "workspace:*",
     "@abw/db": "workspace:*",
+    "@abw/project-types": "workspace:*",
     "@abw/providers": "workspace:*",
     "@abw/publish": "workspace:*",
     "@abw/security": "workspace:*",
