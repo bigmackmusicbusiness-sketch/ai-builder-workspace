@@ -11,7 +11,7 @@ import { authMiddleware, type AuthContext } from '../security/authz';
 import { createMinimaxAdapter } from '../providers/minimax';
 import { createOllamaAdapter } from '../providers/ollama';
 import { env } from '../config/env';
-import { getWorkspace, writeWorkspaceFileBuffer, workspaceExists, restoreWorkspaceFromStorage } from '../preview/workspace';
+import { getWorkspace, writeWorkspaceFile, writeWorkspaceFileBuffer, listWorkspaceFiles, workspaceExists, restoreWorkspaceFromStorage } from '../preview/workspace';
 import { AGENT_TOOLS, executeToolCall, getAgentTools, type ToolContext } from '../agent/tools';
 import type { ChatMessage, ContentPart, ToolCall } from '@abw/providers';
 import { readFile } from 'node:fs/promises';
@@ -88,8 +88,8 @@ function toolHint(slug: string, hasImageGen: boolean): string {
       : `IMAGE GENERATION: not available. Use Unsplash URLs or CSS gradients instead.`,
     ``,
     `## EXECUTION ORDER (in this order, no exceptions)`,
-    `1. list_files — see what exists.`,
-    `2. write_file "index.html" — COMPLETE working HTML referencing planned /images/*.jpg paths. Do not truncate.`,
+    `1. list_files — see what exists. Note: a "Building…" stub index.html may already exist; treat it as a placeholder you'll OVERWRITE in step 2.`,
+    `2. write_file "index.html" — COMPLETE working HTML referencing planned /images/*.jpg paths. This OVERWRITES the stub. Do not truncate.`,
     `3. write_file "styles.css" if your HTML uses one.`,
     `4. ${hasImageGen ? 'gen_image for each /images/*.jpg you referenced. If any fails, the site still renders with a broken-image icon — that\'s acceptable, the user can re-run.' : 'Skip image gen'}`,
     `5. write_file any other files (script.js, components, etc.).`,
@@ -191,6 +191,42 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     // Restore from Supabase Storage if workspace is empty (e.g. after server restart)
     if (ws && !(await workspaceExists(ws))) {
       await restoreWorkspaceFromStorage(ws).catch(() => {}); // non-fatal
+    }
+
+    // Auto-scaffold a stub index.html if the workspace is genuinely empty.
+    // This bypasses the entire "model fails to call write_file with proper
+    // schema on the first try" rabbit hole — the gate is already cleared
+    // when the agent starts, so it can immediately gen images / overwrite
+    // index.html with real content via subsequent calls. Without this,
+    // MiniMax M2.7 has been observed to emit malformed write_file calls
+    // (empty path, alias keys, JSON-in-content) for 5+ iterations before
+    // finally getting it right — burning the iteration budget.
+    if (ws) {
+      const existing = await listWorkspaceFiles(ws);
+      const hasEntry = existing.some((p) =>
+        /\/(index\.html?|main\.tsx|main\.jsx)$/i.test(p),
+      );
+      if (!hasEntry) {
+        const stubHtml = [
+          `<!DOCTYPE html>`,
+          `<html lang="en">`,
+          `<head>`,
+          `  <meta charset="UTF-8" />`,
+          `  <meta name="viewport" content="width=device-width, initial-scale=1.0" />`,
+          `  <title>${projectSlug ?? 'Project'}</title>`,
+          `  <script src="https://cdn.tailwindcss.com"></script>`,
+          `</head>`,
+          `<body class="bg-slate-50 text-slate-900">`,
+          `  <main class="max-w-3xl mx-auto p-12 text-center">`,
+          `    <h1 class="text-4xl font-bold mb-4">Building…</h1>`,
+          `    <p class="text-slate-600">The agent is generating this site. This stub will be replaced with real content shortly.</p>`,
+          `  </main>`,
+          `</body>`,
+          `</html>`,
+          ``,
+        ].join('\n');
+        await writeWorkspaceFile(ws, 'index.html', stubHtml).catch(() => { /* best-effort */ });
+      }
     }
     const hasImageGen = toolsActive && typeof adapter.generateImage === 'function';
 
