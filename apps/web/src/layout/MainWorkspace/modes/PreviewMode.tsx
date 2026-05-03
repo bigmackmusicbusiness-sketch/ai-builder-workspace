@@ -136,24 +136,36 @@ export function PreviewMode() {
 
   // ── Auto-reboot on project switch / first load ───────────────────────────
   // Stop any running session for the previous project, then auto-boot for
-  // the new one. This is the "feels like a real IDE" behavior the user
-  // expects — opening a project should immediately try to render it,
-  // surface any bundling errors via the existing logs/empty-state UI, and
-  // never serve Project A's bundle to Project B.
-  const lastBootedSlugRef = useRef<string | null>(null);
+  // the new one. This is the "feels like a real IDE" behavior — opening a
+  // project should immediately try to render it.
+  //
+  // Critical: only auto-boot ONCE per slug. If the bundler errors, the
+  // session goes to status=error with session=null, which would otherwise
+  // re-trigger this effect forever (a refresh loop the user reported).
+  // The user can manually re-boot via the Boot button after fixing files.
+  const lastBootedSlugRef    = useRef<string | null>(null);
+  const attemptedBootSlugRef = useRef<string | null>(null);
   useEffect(() => {
     const newSlug = currentProject?.slug ?? null;
     const prev    = lastBootedSlugRef.current;
-    if (prev !== null && newSlug !== prev && session) {
-      // Project changed — stop the old session
-      void handleStop();
+
+    if (prev !== null && newSlug !== prev) {
+      // Project changed — stop the old session and reset the boot attempt
+      // flag so the new project gets one (and only one) auto-boot try.
+      if (session) void handleStop();
+      attemptedBootSlugRef.current = null;
     }
     lastBootedSlugRef.current = newSlug;
 
-    // Auto-boot when we have a project and no live session. The PreviewMode
-    // empty-state replaces this for "no project selected" — so as soon as a
-    // project is picked, the preview attempts to render automatically.
-    if (newSlug && !session && sessionStatus !== 'bundling' && sessionStatus !== 'booted') {
+    // Auto-boot exactly once per slug, when no session and no in-flight bundle.
+    if (
+      newSlug &&
+      !session &&
+      sessionStatus !== 'bundling' &&
+      sessionStatus !== 'booted' &&
+      attemptedBootSlugRef.current !== newSlug
+    ) {
+      attemptedBootSlugRef.current = newSlug;
       void handleBoot();
     }
   }, [currentProject?.slug, session, sessionStatus, handleStop, handleBoot]);

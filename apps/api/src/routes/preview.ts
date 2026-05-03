@@ -129,15 +129,19 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
             resolvedFramework = detected.kind;
             resolvedRoot      = detected.rootDir;
           } else {
-            const hint =
-              'Preview cannot render this workspace. No index.html or src/main.tsx found in the project tree.\n' +
-              '  • Static site: drop an index.html anywhere reasonable.\n' +
-              '  • Vite React SPA: src/main.tsx + index.html at the workspace root.\n' +
-              '  • Next.js / Remix / Astro need a dev server and are not supported here. ' +
-              'Ask the AI to emit a plain HTML or Vite SPA shape.';
-            appendLog(sessionId, { level: 'error', source: 'bundler', message: hint });
-            updateSession(sessionId, { status: 'error', error: hint });
-            return;
+            // Last resort: synthesize an index.html that surfaces whatever
+            // the agent did write. Prefer rendering the first .html-ish file
+            // we find (.html / .htm); otherwise emit a minimal "browse the
+            // workspace" listing so the preview always shows *something*
+            // and the user has a clear next-action instead of a hard error.
+            const synth = await synthesizeIndexHtml(ws.rootDir);
+            await writeFile(join(ws.rootDir, 'index.html'), synth, 'utf8');
+            appendLog(sessionId, {
+              level: 'info', source: 'bundler',
+              message: 'No index.html or main.tsx found — synthesized one so the preview can render.',
+            });
+            resolvedFramework = 'static';
+            resolvedRoot      = ws.rootDir;
           }
         } else {
           const dirExists = await stat(rootDir).then((s) => s.isDirectory()).catch(() => false);
@@ -550,6 +554,80 @@ async function findEntrypoints(
   });
 
   return out.map(({ kind, rootDir }) => ({ kind, rootDir }));
+}
+
+/** Last-ditch fallback when the agent emitted files but no recognizable
+ *  entrypoint. Prefers rendering an existing .html / .htm via iframe; if
+ *  there is none, generates a minimal "workspace contents" listing page
+ *  with relative links. The point: the preview always shows *something*
+ *  so the user can see what the agent actually wrote and ask follow-ups,
+ *  rather than hitting a hard "rebuild as a static site" wall. */
+async function synthesizeIndexHtml(rootDir: string): Promise<string> {
+  const all: string[] = [];
+  async function walk(dir: string, depth: number): Promise<void> {
+    if (depth > 4) return;
+    let entries;
+    try { entries = await readdir(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) {
+      const full = join(dir, e.name);
+      if (e.isDirectory()) {
+        if (e.name === 'node_modules' || e.name === '.git' || e.name === '.next' || e.name === 'dist') continue;
+        await walk(full, depth + 1);
+      } else {
+        all.push(relative(rootDir, full).replace(/\\/g, '/'));
+      }
+    }
+  }
+  await walk(rootDir, 0);
+
+  // Prefer rendering an existing HTML file as the fallback view
+  const htmlFile = all.find((p) => /\.html?$/i.test(p));
+  const escape = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
+
+  if (htmlFile) {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Preview</title>
+<style>html,body,iframe{margin:0;padding:0;width:100%;height:100%;border:0}</style>
+</head>
+<body>
+  <iframe src="${escape(htmlFile)}" allowfullscreen></iframe>
+</body>
+</html>`;
+  }
+
+  // No HTML at all — render a minimal listing so the user can click into files
+  const items = all
+    .sort()
+    .map((p) => `      <li><a href="${escape(p)}">${escape(p)}</a></li>`)
+    .join('\n');
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Workspace</title>
+<style>
+  body{font-family:system-ui,-apple-system,sans-serif;max-width:680px;margin:40px auto;padding:0 24px;color:#1f2937;line-height:1.55}
+  h1{font-size:1.25rem;margin:0 0 .5rem}
+  p{color:#6b7280;font-size:.875rem;margin:.25rem 0 1.5rem}
+  ul{padding-left:1.25rem}
+  a{color:#7c3aed;text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{background:#f3f4f6;padding:1px 5px;border-radius:4px;font-size:.8125rem}
+</style>
+</head>
+<body>
+  <h1>Workspace contents</h1>
+  <p>The agent wrote ${all.length} file${all.length === 1 ? '' : 's'} but didn't emit an <code>index.html</code> or a Vite React SPA entry. Click a file to view it raw, or ask the agent to "rebuild as a plain index.html site".</p>
+  <ul>
+${items}
+  </ul>
+</body>
+</html>`;
 }
 
 function injectBase(html: Uint8Array, slug: string): Buffer {
