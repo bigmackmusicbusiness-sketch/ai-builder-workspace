@@ -26,6 +26,15 @@ html, body, #root {
   --left-panel-w: 0px;
 }
 
+/* Browse mode: no LeftPanel — main fills the full width below the topbar */
+.abw-shell--browse {
+  grid-template-columns: 1fr;
+}
+.abw-shell--browse .abw-shell__main {
+  /* Allow scrolling inside browse routes (dashboard, templates, settings) */
+  overflow-y: auto;
+}
+
 /* Top bar spans full width */
 .abw-shell__topbar {
   grid-column: 1 / -1;
