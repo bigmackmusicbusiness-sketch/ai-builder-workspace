@@ -45,19 +45,35 @@ export function FileTree({ nodes, searchQuery }: FileTreeProps) {
       return;
     }
 
-    // Fetch real content via the path-keyed endpoint. New scaffold files
-    // that haven't been written yet 404 — open them empty so the user can
-    // type and save (which lazily creates the row).
-    const projectId = useProjectStore.getState().currentProjectId;
+    // Try the workspace (agent-written FS files) first, then fall back to
+    // the DB-keyed editor save path for files the user typed and saved
+    // through the editor. New scaffold paths that exist in neither resolve
+    // to empty so the user can type and save.
+    const state = useProjectStore.getState();
+    const slug      = state.currentProjectId !== 'global'
+      ? state.projects[state.currentProjectId]?.slug
+      : undefined;
+    const projectId = state.currentProjectId !== 'global' ? state.currentProjectId : null;
+
     let content = '';
-    if (projectId && projectId !== 'global') {
+    if (slug) {
       try {
         const res = await apiFetch<{ content: string }>(
-          `/api/files/content?projectId=${encodeURIComponent(projectId)}&path=${encodeURIComponent(node.path)}`,
+          `/api/files/workspace/content?slug=${encodeURIComponent(slug)}&path=${encodeURIComponent(node.path)}`,
         );
         content = res.content;
       } catch {
-        // 404 = file not yet saved. Empty buffer is fine.
+        // Not in workspace; try DB-keyed editor saves.
+        if (projectId) {
+          try {
+            const res = await apiFetch<{ content: string }>(
+              `/api/files/content?projectId=${encodeURIComponent(projectId)}&path=${encodeURIComponent(node.path)}`,
+            );
+            content = res.content;
+          } catch {
+            // Empty buffer is fine — user can type fresh.
+          }
+        }
       }
     }
 

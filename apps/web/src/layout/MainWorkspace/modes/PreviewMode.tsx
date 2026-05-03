@@ -134,24 +134,29 @@ export function PreviewMode() {
     setAutoReloadAt(Date.now());
   }, [session?.previewUrl, currentRoute]);
 
-  // ── Auto-reboot on project switch ─────────────────────────────────────────
-  // When the active project changes, stop the old session (if any). We don't
-  // auto-boot; the user clicks Boot for the new project. This guarantees we
-  // never serve Project A's bundle to Project B's preview.
+  // ── Auto-reboot on project switch / first load ───────────────────────────
+  // Stop any running session for the previous project, then auto-boot for
+  // the new one. This is the "feels like a real IDE" behavior the user
+  // expects — opening a project should immediately try to render it,
+  // surface any bundling errors via the existing logs/empty-state UI, and
+  // never serve Project A's bundle to Project B.
   const lastBootedSlugRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!session) {
-      lastBootedSlugRef.current = currentProject?.slug ?? null;
-      return;
-    }
     const newSlug = currentProject?.slug ?? null;
     const prev    = lastBootedSlugRef.current;
-    if (prev && newSlug !== prev) {
+    if (prev !== null && newSlug !== prev && session) {
       // Project changed — stop the old session
       void handleStop();
     }
     lastBootedSlugRef.current = newSlug;
-  }, [currentProject?.slug, session, handleStop]);
+
+    // Auto-boot when we have a project and no live session. The PreviewMode
+    // empty-state replaces this for "no project selected" — so as soon as a
+    // project is picked, the preview attempts to render automatically.
+    if (newSlug && !session && sessionStatus !== 'bundling' && sessionStatus !== 'booted') {
+      void handleBoot();
+    }
+  }, [currentProject?.slug, session, sessionStatus, handleStop, handleBoot]);
 
   // ── SSE auto-reload ─ subscribe once we have a booted session ─────────────
   useEffect(() => {

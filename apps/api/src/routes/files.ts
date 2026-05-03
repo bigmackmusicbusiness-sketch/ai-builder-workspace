@@ -8,6 +8,7 @@ import { projects } from '@abw/db';
 import { authMiddleware, requireRole, type AuthContext } from '../security/authz';
 import { writeAuditEvent } from '../security/audit';
 import * as previewBus from '../preview/eventBus';
+import { getWorkspace, listWorkspaceFiles, readWorkspaceFile } from '../preview/workspace';
 import {
   listFiles, getFileContent, saveFile, searchFiles,
   saveFileByPath, getFileContentByPath,
@@ -184,6 +185,49 @@ export async function filesRoutes(app: FastifyInstance): Promise<void> {
       const result = await getFileContentByPath(parsed.data.projectId, ctx.tenantId, parsed.data.path);
       if (!result) return reply.status(404).send({ error: 'File not found' });
       return result;
+    },
+  );
+
+  /** GET /api/files/workspace?slug=… — list every file the AI agent has
+   *  written into the per-tenant workspace directory. The Files panel uses
+   *  this so the IDE shows what the agent actually built (the legacy DB
+   *  -listing only knows about files saved through the editor). Returns
+   *  flat relative paths; the frontend builds the dir tree client-side. */
+  app.get<{ Querystring: { slug?: string } }>('/api/files/workspace', async (req, reply) => {
+    const ctx = req.authCtx!;
+    const { slug } = req.query;
+    if (!slug || !/^[a-z0-9-]+$/.test(slug)) {
+      return reply.status(400).send({ error: 'slug required (lowercase alphanumeric + dash)' });
+    }
+    try {
+      const ws    = await getWorkspace(ctx.tenantId, slug);
+      const files = await listWorkspaceFiles(ws);
+      return { files };
+    } catch (err) {
+      return reply.status(400).send({ error: (err as Error).message });
+    }
+  });
+
+  /** GET /api/files/workspace/content?slug=…&path=… — read one file from
+   *  the workspace by relative path. Used when the user clicks a file in the
+   *  IDE Files panel to open it. Returns 404 when the file doesn't exist
+   *  (newly-listed but unread, race conditions, etc.). */
+  app.get<{ Querystring: { slug?: string; path?: string } }>(
+    '/api/files/workspace/content',
+    async (req, reply) => {
+      const ctx = req.authCtx!;
+      const { slug, path } = req.query;
+      if (!slug || !path) {
+        return reply.status(400).send({ error: 'slug and path required' });
+      }
+      try {
+        const ws      = await getWorkspace(ctx.tenantId, slug);
+        const content = await readWorkspaceFile(ws, path);
+        if (content === null) return reply.status(404).send({ error: 'File not found in workspace' });
+        return { content, path };
+      } catch (err) {
+        return reply.status(400).send({ error: (err as Error).message });
+      }
     },
   );
 

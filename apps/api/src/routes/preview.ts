@@ -7,8 +7,8 @@ declare module 'fastify' {
   interface FastifyContextConfig { skipAuth?: boolean; }
 }
 import { randomUUID } from 'node:crypto';
-import { stat } from 'node:fs/promises';
-import { extname } from 'node:path';
+import { stat, readdir, readFile, writeFile, copyFile, mkdir } from 'node:fs/promises';
+import { extname, join, relative } from 'node:path';
 import { z } from 'zod';
 import { authMiddleware, requireRole, type AuthContext } from '../security/authz';
 import {
@@ -100,24 +100,41 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
           appendLog(sessionId, { level: 'info', source: 'bundler', message: `Bundling from AI workspace: ${ws.rootDir}` });
           resolvedRoot = ws.rootDir;
 
-          // Framework detection:
-          //   react-vite → src/main.tsx present
-          //   static     → index.html present at root
-          //   unsupported→ neither (e.g. Next.js app/ dir) — fail loudly
-          const hasReactEntry = await stat(`${ws.rootDir}/src/main.tsx`).then((s) => s.isFile()).catch(() => false);
-          const hasIndexHtml  = await stat(`${ws.rootDir}/index.html`).then((s) => s.isFile()).catch(() => false);
+          // Framework detection — try strict shapes first, then walk for a
+          // nested index.html / main.tsx. The agent commonly drops files into
+          // dist/, public/, build/, or even just a flat tree without a top
+          // -level entrypoint. Be forgiving: if we find an index.html anywhere
+          // reasonable, treat that subdirectory as the static root.
+          let detected: { kind: 'react-vite' | 'static'; rootDir: string } | null = null;
 
-          if (hasReactEntry) {
-            resolvedFramework = 'react-vite';
-          } else if (hasIndexHtml) {
-            resolvedFramework = 'static';
+          if (await stat(`${ws.rootDir}/src/main.tsx`).then((s) => s.isFile()).catch(() => false)) {
+            detected = { kind: 'react-vite', rootDir: ws.rootDir };
+          } else if (await stat(`${ws.rootDir}/index.html`).then((s) => s.isFile()).catch(() => false)) {
+            detected = { kind: 'static', rootDir: ws.rootDir };
+          } else {
+            // Walk up to 3 dirs deep for an index.html or src/main.tsx.
+            // Prefer dist/build/public over deeper ad-hoc dirs.
+            const candidates = await findEntrypoints(ws.rootDir, 3);
+            if (candidates.length > 0) {
+              const first = candidates[0]!;
+              detected = first;
+              appendLog(sessionId, {
+                level: 'info', source: 'bundler',
+                message: `Entry detected via scan: ${first.kind} at ${relative(ws.rootDir, first.rootDir) || '.'}`,
+              });
+            }
+          }
+
+          if (detected) {
+            resolvedFramework = detected.kind;
+            resolvedRoot      = detected.rootDir;
           } else {
             const hint =
-              'Preview cannot render this workspace. Supported shapes:\n' +
-              '  • Static site: an index.html at the workspace root.\n' +
-              '  • Vite React SPA: index.html + src/main.tsx.\n' +
-              'Frameworks that need a dev server (Next.js, Remix, Astro) are not supported here. ' +
-              'Ask the AI to rebuild as a plain index.html site or a Vite React SPA.';
+              'Preview cannot render this workspace. No index.html or src/main.tsx found in the project tree.\n' +
+              '  • Static site: drop an index.html anywhere reasonable.\n' +
+              '  • Vite React SPA: src/main.tsx + index.html at the workspace root.\n' +
+              '  • Next.js / Remix / Astro need a dev server and are not supported here. ' +
+              'Ask the AI to emit a plain HTML or Vite SPA shape.';
             appendLog(sessionId, { level: 'error', source: 'bundler', message: hint });
             updateSession(sessionId, { status: 'error', error: hint });
             return;
@@ -471,6 +488,70 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
  * Strategy: always replace any existing base tag with the authoritative one.
  * If no base tag exists, inject one right after <head>.
  */
+/** Walk a workspace tree (BFS, max 3 levels deep) looking for either a Vite
+ *  React SPA entrypoint (`src/main.tsx`) or a plain `index.html`. Returns
+ *  candidates ranked by likely-correctness: dist/build/public first, then
+ *  shallowest, then alphabetical. The agent often emits files into a
+ *  subdirectory rather than the workspace root — this lets us recover. */
+async function findEntrypoints(
+  rootDir: string,
+  maxDepth: number,
+): Promise<Array<{ kind: 'react-vite' | 'static'; rootDir: string }>> {
+  const out: Array<{ kind: 'react-vite' | 'static'; rootDir: string; depth: number; rank: number }> = [];
+
+  const PRIORITY_DIRS = ['dist', 'build', 'public', 'out', 'www', 'site', 'app', 'web', 'src'];
+  const SKIP_DIRS     = new Set(['node_modules', '.git', '.next', '.cache', '.parcel-cache', '.turbo']);
+
+  async function walk(dir: string, depth: number): Promise<void> {
+    if (depth > maxDepth) return;
+    let entries;
+    try { entries = await readdir(dir, { withFileTypes: true }); }
+    catch { return; }
+
+    // Check for Vite SPA entry (src/main.tsx in this dir)
+    const hasMainTsx = entries.some((e) => e.isDirectory() && e.name === 'src') &&
+      await stat(join(dir, 'src/main.tsx')).then((s) => s.isFile()).catch(() => false);
+    if (hasMainTsx) {
+      out.push({ kind: 'react-vite', rootDir: dir, depth, rank: rankFor(dir, rootDir) });
+    }
+
+    // Check for static index.html in this dir
+    const hasIndex = entries.some((e) => e.isFile() && e.name === 'index.html');
+    if (hasIndex) {
+      out.push({ kind: 'static', rootDir: dir, depth, rank: rankFor(dir, rootDir) });
+    }
+
+    // Recurse into subdirectories
+    for (const e of entries) {
+      if (!e.isDirectory()) continue;
+      if (SKIP_DIRS.has(e.name)) continue;
+      await walk(join(dir, e.name), depth + 1);
+    }
+  }
+
+  function rankFor(dir: string, root: string): number {
+    const rel = relative(root, dir);
+    const head = rel.split(/[\\/]/)[0] ?? '';
+    const idx = PRIORITY_DIRS.indexOf(head);
+    return idx === -1 ? 999 : idx;
+  }
+
+  await walk(rootDir, 0);
+
+  // Prefer Vite SPA over static when both at the same dir;
+  // then by priority dir (dist > build > public > ...);
+  // then by depth (shallow > deep);
+  // then by directory name.
+  out.sort((a, b) => {
+    if (a.kind !== b.kind) return a.kind === 'react-vite' ? -1 : 1;
+    if (a.rank !== b.rank) return a.rank - b.rank;
+    if (a.depth !== b.depth) return a.depth - b.depth;
+    return a.rootDir.localeCompare(b.rootDir);
+  });
+
+  return out.map(({ kind, rootDir }) => ({ kind, rootDir }));
+}
+
 function injectBase(html: Uint8Array, slug: string): Buffer {
   let str = Buffer.from(html).toString('utf8');
   const basePath = `/api/preview/serve/${slug}/`;

@@ -205,7 +205,12 @@ export async function execHiggsfieldImage(
       assetUrl: upload.url,
     };
   } catch (err) {
-    return { ok: false, summary: 'Higgsfield image gen failed', result: `Error: ${(err as Error).message}` };
+    const msg = (err as Error).message ?? String(err);
+    console.error('[higgsfield_image] failed', { tenantId: ctx.tenantId, prompt: prompt.slice(0, 120), error: msg });
+    const friendly = /not connected|UnauthorizedError|401/i.test(msg)
+      ? 'Higgsfield is not connected. Open Settings → Integrations → Higgsfield → Connect, then try again.'
+      : msg;
+    return { ok: false, summary: 'Higgsfield image gen failed', result: `Error: ${friendly}` };
   }
 }
 
@@ -248,7 +253,12 @@ export async function execHiggsfieldVideo(
       assetUrl: upload.url,
     };
   } catch (err) {
-    return { ok: false, summary: 'Higgsfield video gen failed', result: `Error: ${(err as Error).message}` };
+    const msg = (err as Error).message ?? String(err);
+    console.error('[higgsfield_video] failed', { tenantId: ctx.tenantId, prompt: prompt.slice(0, 120), error: msg });
+    const friendly = /not connected|UnauthorizedError|401/i.test(msg)
+      ? 'Higgsfield is not connected. Open Settings → Integrations → Higgsfield → Connect, then try again.'
+      : msg;
+    return { ok: false, summary: 'Higgsfield video gen failed', result: `Error: ${friendly}` };
   }
 }
 
@@ -284,7 +294,12 @@ export async function execHiggsfieldHistory(
       result: JSON.stringify(r).slice(0, 4000), // cap context
     };
   } catch (err) {
-    return { ok: false, summary: 'Higgsfield history failed', result: `Error: ${(err as Error).message}` };
+    const msg = (err as Error).message ?? String(err);
+    console.error('[higgsfield_history] failed', { tenantId: ctx.tenantId, error: msg });
+    const friendly = /not connected|UnauthorizedError|401/i.test(msg)
+      ? 'Higgsfield is not connected. Open Settings → Integrations → Higgsfield → Connect, then try again.'
+      : msg;
+    return { ok: false, summary: 'Higgsfield history failed', result: `Error: ${friendly}` };
   } finally {
     await c.close();
   }
