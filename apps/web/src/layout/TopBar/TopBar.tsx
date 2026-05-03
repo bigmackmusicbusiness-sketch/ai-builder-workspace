@@ -19,6 +19,28 @@ const NAV_ITEMS = [
   { to: '/approvals', label: 'Approvals'  },
 ] as const;
 
+/** Routes that always render the BROWSE topbar shape, even if a project is
+ *  currently selected. Visiting these screens means the user is browsing —
+ *  the project context lives in the store and gets re-applied when they go
+ *  back to /. */
+const BROWSE_ROUTE_PREFIXES = [
+  '/projects',
+  '/templates',
+  '/create',
+  '/publish',
+  '/approvals',
+  '/integrations',
+  '/env-secrets',
+  '/database',
+  '/assets',
+  '/versions',
+  '/runs',
+  '/logs',
+  '/jobs',
+  '/onboarding',
+  '/settings',
+] as const;
+
 /** Operational + admin surfaces — reachable via the gear menu, not primary nav. */
 const SETTINGS_ITEMS = [
   { to: '/integrations', label: 'Integrations' },
@@ -40,9 +62,13 @@ export function TopBar() {
   const router      = useRouter();
   const activePath  = routerState.location.pathname;
 
-  const activeProject = currentProjectId !== 'global' ? projects[currentProjectId] : null;
-  const isBuilderMode = Boolean(activeProject);
-  const activeEnv     = activeProject?.env ?? 'dev';
+  const activeProject  = currentProjectId !== 'global' ? projects[currentProjectId] : null;
+  const isBrowseRoute  = BROWSE_ROUTE_PREFIXES.some((p) => activePath.startsWith(p));
+  // Builder mode = a project is selected AND we're NOT on a browse-mode route.
+  // /projects, /templates, settings screens etc. always show browse-mode topbar
+  // even if a project is in the store.
+  const isBuilderMode  = Boolean(activeProject) && !isBrowseRoute;
+  const activeEnv      = activeProject?.env ?? 'dev';
 
   function handleLogoClick() {
     if (isBuilderMode) {
