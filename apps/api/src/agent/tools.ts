@@ -415,6 +415,29 @@ export async function executeToolCall(
         const filename = String(args['filename'] ?? 'image.jpg');
         if (!prompt) throw new Error('"prompt" is required');
 
+        // Hard-gate: refuse image gen until index.html (or src/main.tsx)
+        // exists. The model has been observed burning iteration budget on
+        // 10+ image gens and never getting around to writing the actual
+        // HTML — leaving the user with a folder of orphan JPGs and no
+        // site. Force the order: HTML first, images second.
+        {
+          const existing = await listWorkspaceFiles(ws);
+          const hasEntry = existing.some((p) =>
+            /\/(index\.html?|main\.tsx|main\.jsx)$/i.test(p),
+          );
+          if (!hasEntry) {
+            return {
+              ok: false,
+              summary: 'gen_image refused — no index.html yet',
+              result:
+                `Refused: write index.html FIRST (referencing /images/${filename}), ` +
+                `then call gen_image. Order matters: the site must render ` +
+                `even if image gen fails or hits credit limits. Once ` +
+                `index.html exists this gate releases.`,
+            };
+          }
+        }
+
         // Sanitize filename
         const safeName  = filename.toLowerCase().replace(/[^a-z0-9._-]/g, '-');
         const hasExt    = /\.(jpg|jpeg|png)$/.test(safeName);
@@ -742,6 +765,28 @@ export async function executeToolCall(
       case 'higgsfield_history': {
         if (!ctx.tenantId) {
           return { ok: false, summary: `${name} needs tenant context`, result: 'Error: missing tenantId.' };
+        }
+
+        // Same hard-gate as gen_image: refuse until index.html exists, so
+        // the agent can't burn paid credits on assets for a site that
+        // never gets written. History calls are a read-only catalogue
+        // browse and don't need gating.
+        if (name !== 'higgsfield_history') {
+          const existing = await listWorkspaceFiles(ws);
+          const hasEntry = existing.some((p) =>
+            /\/(index\.html?|main\.tsx|main\.jsx)$/i.test(p),
+          );
+          if (!hasEntry) {
+            return {
+              ok: false,
+              summary: `${name} refused — no index.html yet`,
+              result:
+                `Refused: write index.html FIRST (referencing the asset paths ` +
+                `you plan to generate), then call ${name}. The site must ` +
+                `render even if asset gen hits credit limits or model errors. ` +
+                `Once index.html exists this gate releases.`,
+            };
+          }
         }
         const hf = await import('./tools/higgsfield');
         const hfCtx = { tenantId: ctx.tenantId, projectId: ctx.projectId, env: 'dev' };
