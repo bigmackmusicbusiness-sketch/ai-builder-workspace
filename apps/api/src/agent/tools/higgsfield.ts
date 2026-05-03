@@ -43,8 +43,9 @@ export const higgsfieldVideoToolDefinition: ToolDefinition = {
   function: {
     name: 'higgsfield_video',
     description:
-      'Generate a short video clip via Higgsfield (Hailuo 02 by default; Sora 2 / Veo 3.1 if quality:"premium"). ' +
-      'EXPENSIVE — use sparingly. Each call typically costs 20-50 credits.',
+      'Generate a short video clip via Higgsfield. Default model: Seedance 2.0 Fast / Hailuo 02. ' +
+      'quality:"premium" picks the best model the account can run (Kling 3.0 on Starter, Veo 3.1 / Sora 2 on Plus+). ' +
+      'EXPENSIVE — use sparingly. Each call typically costs 5-30 credits depending on resolution and duration.',
     parameters: {
       type: 'object',
       required: ['prompt'],
@@ -209,6 +210,10 @@ export async function execHiggsfieldImage(
     console.error('[higgsfield_image] failed', { tenantId: ctx.tenantId, prompt: prompt.slice(0, 120), error: msg });
     const friendly = /not connected|UnauthorizedError|401/i.test(msg)
       ? 'Higgsfield is not connected. Open Settings → Integrations → Higgsfield → Connect, then try again.'
+      : /tier|plan|subscription|upgrade|not available|forbidden|403|insufficient/i.test(msg)
+      ? `Higgsfield rejected the model — likely a higher tier is required (current: ${process.env['HIGGSFIELD_TIER'] ?? 'starter'}). Try without quality:"premium" to pick a model your tier covers.`
+      : /credit|balance|quota/i.test(msg)
+      ? 'Out of Higgsfield credits this cycle. Wait for next refresh or upgrade tier.'
       : msg;
     return { ok: false, summary: 'Higgsfield image gen failed', result: `Error: ${friendly}` };
   }
@@ -257,6 +262,10 @@ export async function execHiggsfieldVideo(
     console.error('[higgsfield_video] failed', { tenantId: ctx.tenantId, prompt: prompt.slice(0, 120), error: msg });
     const friendly = /not connected|UnauthorizedError|401/i.test(msg)
       ? 'Higgsfield is not connected. Open Settings → Integrations → Higgsfield → Connect, then try again.'
+      : /tier|plan|subscription|upgrade|not available|forbidden|403|insufficient/i.test(msg)
+      ? `Higgsfield rejected the model — likely a higher tier is required (current: ${process.env['HIGGSFIELD_TIER'] ?? 'starter'}). Try without quality:"premium" to pick a model your tier covers.`
+      : /credit|balance|quota/i.test(msg)
+      ? 'Out of Higgsfield credits this cycle. Wait for next refresh or upgrade tier.'
       : msg;
     return { ok: false, summary: 'Higgsfield video gen failed', result: `Error: ${friendly}` };
   }
@@ -298,6 +307,10 @@ export async function execHiggsfieldHistory(
     console.error('[higgsfield_history] failed', { tenantId: ctx.tenantId, error: msg });
     const friendly = /not connected|UnauthorizedError|401/i.test(msg)
       ? 'Higgsfield is not connected. Open Settings → Integrations → Higgsfield → Connect, then try again.'
+      : /tier|plan|subscription|upgrade|not available|forbidden|403|insufficient/i.test(msg)
+      ? `Higgsfield rejected the model — likely a higher tier is required (current: ${process.env['HIGGSFIELD_TIER'] ?? 'starter'}). Try without quality:"premium" to pick a model your tier covers.`
+      : /credit|balance|quota/i.test(msg)
+      ? 'Out of Higgsfield credits this cycle. Wait for next refresh or upgrade tier.'
       : msg;
     return { ok: false, summary: 'Higgsfield history failed', result: `Error: ${friendly}` };
   } finally {

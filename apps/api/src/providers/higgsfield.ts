@@ -375,15 +375,70 @@ export async function listHiggsfieldModels(tenantId: string, env: string = 'dev'
 
 export type Quality = 'draft' | 'standard' | 'premium';
 
-/** Pick a model id given a kind + quality preference. */
+/** Higgsfield subscription tiers (cheapest → most expensive). Set via env
+ *  `HIGGSFIELD_TIER` so the model picker doesn't hand the agent something
+ *  the user can't actually run. Defaults to `starter` because that's the
+ *  most restrictive paid tier and matches "fail safe": if we don't know
+ *  what the user has, assume the lowest tier and only escalate when told. */
+export type HiggsfieldTier = 'free' | 'starter' | 'plus' | 'ultra' | 'business';
+
+/** Models GATED above each tier (i.e. NOT available at this tier). Verified
+ *  against higgsfield.ai/pricing on 2026-05-03. The picker skips any id whose
+ *  prefix matches one of these substrings when the tier is `starter`. */
+const STARTER_GATED_MODEL_PREFIXES = [
+  'sora_2',           // Sora 2 / 2 Pro / 2 Max — Plus+
+  'sora2',
+  'veo3',             // Google Veo 3 + Veo 3.1 — Plus+
+  'veo_3',
+  'higgsfield_dop_turbo', // DoP Turbo — Plus+
+  'speak_2',          // Higgsfield Speak 2.0 — Plus+
+  'kling_speak',      // Kling Speak/Lipsync — Plus+
+  'kling_lipsync',
+  'infinite_talk',    // Infinite Talk — Plus+
+  'sync_lipsync',     // Sync Lipsync 2 Pro — Plus+
+];
+
+const PLUS_GATED_MODEL_PREFIXES: string[] = [
+  // Plus has all Starter models + Sora/Veo. No Plus-specific gates known.
+];
+
+function getCurrentTier(): HiggsfieldTier {
+  const raw = (process.env['HIGGSFIELD_TIER'] ?? 'starter').toLowerCase();
+  if (raw === 'free' || raw === 'starter' || raw === 'plus' || raw === 'ultra' || raw === 'business') {
+    return raw;
+  }
+  return 'starter';
+}
+
+function isModelAllowedForTier(modelId: string, tier: HiggsfieldTier): boolean {
+  const id = modelId.toLowerCase();
+  if (tier === 'free' || tier === 'starter') {
+    if (STARTER_GATED_MODEL_PREFIXES.some((p) => id.includes(p))) return false;
+  }
+  if (tier === 'plus') {
+    if (PLUS_GATED_MODEL_PREFIXES.some((p) => id.includes(p))) return false;
+  }
+  // Ultra + Business have access to everything.
+  return true;
+}
+
+/** Pick a model id given a kind + quality preference, restricted to what
+ *  the configured `HIGGSFIELD_TIER` actually has access to. */
 export function pickHiggsfieldModel(
   models:  HiggsfieldModel[],
   kind:    'image' | 'video',
   quality: Quality = 'standard',
 ): string | undefined {
-  const matching = models.filter((m) => m.output_type === kind);
+  const tier = getCurrentTier();
+  const matching = models
+    .filter((m) => m.output_type === kind)
+    .filter((m) => isModelAllowedForTier(m.id, tier));
   if (matching.length === 0) return undefined;
-  // Preference order per quality (matches actual ids in Higgsfield catalogue)
+
+  // Preference order per quality. The premium tier here picks the BEST
+  // model the user's account can run, not the most expensive Higgsfield
+  // offers — so quality:premium on a Starter account picks Kling 3.0
+  // (Starter's best video) rather than Veo 3.1 (gated to Plus+).
   const prefs: Record<Quality, string[]> = kind === 'image'
     ? {
         draft:    ['flux_2', 'seedream_v5_lite', 'image_auto', 'nano_banana_flash'],
@@ -391,9 +446,12 @@ export function pickHiggsfieldModel(
         premium:  ['soul_2', 'cinematic_studio_2_5', 'gpt_image_2'],
       }
     : {
-        draft:    ['seedance_1_5', 'video_standard'],
-        standard: ['seedance_2_0', 'kling2_6', 'seedance_1_5', 'cinematic_studio_video_v2'],
-        premium:  ['veo3_1', 'veo3', 'kling3_0', 'cinematic_studio_3_0'],
+        draft:    ['seedance_1_5', 'video_standard', 'hailuo_02_fast'],
+        standard: ['seedance_2_0_fast', 'kling2_6', 'seedance_1_5', 'hailuo_02', 'cinematic_studio_video_v2'],
+        // Premium = best available at the configured tier. Tier filter above
+        // already drops Veo/Sora when on Starter, so the fallback chain finds
+        // the next-best (Kling 3.0 or Seedance 2.0 Fast for Starter).
+        premium:  ['veo3_1', 'sora_2_pro', 'veo3', 'kling3_0', 'seedance_2_0_fast', 'kling2_6'],
       };
   for (const want of prefs[quality]) {
     const hit = matching.find((m) => m.id === want);
