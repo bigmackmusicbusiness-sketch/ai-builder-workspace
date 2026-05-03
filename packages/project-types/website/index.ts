@@ -268,4 +268,31 @@ export const website: ProjectType = {
   },
 
   screens: ['preview', 'code', 'files', 'tests', 'visualqa', 'split'],
+
+  agentInstructions: {
+    systemPromptPrelude: 'types/website.md',
+    copyGuidance:
+      'Multi-page marketing site. Voice and tone are extracted from the brief; the planner ' +
+      'detects niche (cafe, dental, restaurant, etc.) and pulls niche-specific section ' +
+      'patterns, palettes, and compliance blocks. Copy gets humanized post-write to strip ' +
+      'AI-tells.',
+    securitySOPs: [
+      'No hardcoded API keys (sk-, AKIA, pk_live_, ghp_, ya29., JWT-shaped) — auto-strip + warn',
+      'rel="noopener noreferrer" required on target="_blank" outbound links — auto-fix',
+      '<iframe> only from allowlisted domains (youtube, vimeo, google maps, spotify, soundcloud)',
+      'Form fields must have <label> — auto-fix in polish',
+      '<html lang="en"> required — auto-fix',
+    ],
+    multiPageStrategy: {
+      defaultPages: [
+        { slug: 'index',   role: 'hero+overview',           required: true  },
+        { slug: 'about',   role: 'story+team',              required: false },
+        { slug: 'services',role: 'service-list',            required: false },
+        { slug: 'contact', role: 'location+hours+phone',    required: true  },
+      ],
+      nicheManifestPath: 'types/website/niches/',
+      detectFromPrompt:  true,
+    },
+    assetBudget: { images: 6, icons: 12 },
+  },
 };

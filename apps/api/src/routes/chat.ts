@@ -13,7 +13,10 @@ import { createOllamaAdapter } from '../providers/ollama';
 import { env } from '../config/env';
 import { getWorkspace, writeWorkspaceFile, writeWorkspaceFileBuffer, listWorkspaceFiles, workspaceExists, restoreWorkspaceFromStorage } from '../preview/workspace';
 import { AGENT_TOOLS, executeToolCall, getAgentTools, type ToolContext } from '../agent/tools';
+import { runPrePhase, runPostPhase, type PhaseEvent } from '../agent/phases/runPhases';
 import type { ChatMessage, ContentPart, ToolCall } from '@abw/providers';
+import { listProjectTypes } from '@abw/project-types';
+import type { ProjectTypeId } from '@abw/project-types';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
@@ -43,6 +46,10 @@ const ChatBodySchema = z.object({
   model:       z.string().default('MiniMax-M2.7'),
   projectEnv:  z.enum(['dev', 'staging', 'preview', 'production']).default('dev'),
   projectSlug: z.string().optional(),
+  /** Project type ID (e.g. "website", "landing-page"). Optional — when provided
+   *  AND the type has agentInstructions defined, the phase orchestrator runs
+   *  the planner subagent first to produce a niche-aware build plan. */
+  projectTypeId: z.string().optional(),
   enableTools: z.boolean().default(true),
   /** Huashu Design skill toggle. When true, agent gets the design.run_huashu tool
    *  and a system prompt prelude that biases toward visual deliverables. */
@@ -148,7 +155,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     }
 
     const {
-      provider, projectEnv, projectSlug, enableTools, attachments,
+      provider, projectEnv, projectSlug, projectTypeId, enableTools, attachments,
       designSkillsEnabled, higgsfieldEnabled,
     } = parsed.data;
 
@@ -311,6 +318,44 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
       history.unshift({ role: 'system', content: toolHint(projectSlug!, hasImageGen) });
     }
 
+    // ── Phase A: Planner subagent (when projectType has agentInstructions) ──
+    // Runs BEFORE the iteration loop. Produces a niche-aware build plan that
+    // gets injected as a system message + plan.json file. Falls back silently
+    // to the unenhanced loop if the type has no agentInstructions or planner fails.
+    let planAvailable = false;
+    if (toolsActive && projectTypeId) {
+      const projectType = listProjectTypes().find((pt) => pt.id === (projectTypeId as ProjectTypeId));
+      if (projectType?.agentInstructions) {
+        // Find the user's most recent message as the brief
+        const lastUserMsg = [...parsed.data.messages].reverse().find((m) => m.role === 'user');
+        const brief = typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : '';
+
+        if (brief) {
+          const emit = (event: PhaseEvent) => send(event);
+          const preResult = await runPrePhase({
+            brief,
+            projectType,
+            projectSlug: projectSlug!,
+            adapter,
+            model,
+            signal: controller.signal,
+            emit,
+          });
+
+          if (preResult.planAvailable && preResult.enhancedSystemMessage && preResult.plan) {
+            planAvailable = true;
+            // Inject the build directive AFTER the tool hint but BEFORE user messages.
+            // The model sees: tool rules → build plan → user prompt.
+            history.splice(1, 0, { role: 'system', content: preResult.enhancedSystemMessage });
+            // Persist the plan to the workspace for transparency + iterations.
+            if (ws) {
+              await writeWorkspaceFile(ws, '_plan.json', JSON.stringify(preResult.plan, null, 2)).catch(() => { /* non-fatal */ });
+            }
+          }
+        }
+      }
+    }
+
     // ── Capability preludes (toggled by the chat composer) ───────────────────
     // Huashu: load the skill prelude file so the model knows when/how to call it.
     if (designSkillsEnabled) {
@@ -462,6 +507,17 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     } catch (err) {
       send({ type: 'error', error: err instanceof Error ? err.message : String(err) });
     } finally {
+      // ── Phase B' + C: Inline post-process humanizer + polish ──────────────
+      // Runs after the iteration loop completes (success or partial). Inline,
+      // regex-based, no extra MiniMax calls. Surfaces audit findings as SSE.
+      if (toolsActive && ws && planAvailable) {
+        try {
+          await runPostPhase({
+            ws,
+            emit: (event) => send(event),
+          });
+        } catch { /* non-fatal */ }
+      }
       raw.end();
     }
 

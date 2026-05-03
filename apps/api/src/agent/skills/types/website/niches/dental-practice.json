@@ -1,0 +1,28 @@
+{
+  "niche": "dental-practice",
+  "label": "Dental Practice",
+  "triggers": ["dental", "dentist", "dds", "dmd", "orthodont", "tooth", "teeth", "smile", "oral", "hygiene"],
+  "default_sitemap": [
+    { "slug": "index",        "role": "hero+services-preview" },
+    { "slug": "services",     "role": "service-list" },
+    { "slug": "new-patient",  "role": "intake-instructions" },
+    { "slug": "insurance",    "role": "providers-list" },
+    { "slug": "team",         "role": "doctor-bios" },
+    { "slug": "contact",      "role": "location+hours+phone" }
+  ],
+  "compliance_blocks": ["hipaa-privacy-link-footer", "ada-accessibility-statement"],
+  "schema_org_primary": "Dentist",
+  "voice_template": "warm-clinical, professional but approachable, family-friendly tone",
+  "palettes": [
+    { "name": "fresh-mint",    "hexes": ["#0EA5A4", "#FFFFFF", "#F0FDFA", "#0F172A"] },
+    { "name": "clinical-blue", "hexes": ["#2563EB", "#FFFFFF", "#EFF6FF", "#1E293B"] },
+    { "name": "soft-teal",     "hexes": ["#14B8A6", "#FAFAF9", "#CCFBF1", "#134E4A"] },
+    { "name": "warm-sand",     "hexes": ["#A78F6E", "#FFFCF5", "#F5EFE0", "#2A2418"] },
+    { "name": "sky-clean",     "hexes": ["#0284C7", "#FFFFFF", "#E0F2FE", "#0C4A6E"] },
+    { "name": "sage-medical",  "hexes": ["#84A98C", "#FFFFFF", "#E8EFE8", "#1F2D1F"] }
+  ],
+  "section_library": ["hero", "page-hero", "services-strip", "service-grid", "doctor-card", "doctor-intro", "staff-strip", "insurance-strip", "providers-grid", "patient-testimonial", "before-after-gallery", "appointment-cta", "phone-cta", "address-card", "hours-strip", "map", "what-to-bring", "first-visit-walkthrough", "intake-form-link", "billing-notes", "footer-hipaa", "footer"],
+  "image_directives": "warm professional photography of clean dental offices. Smiling diverse staff, modern equipment, plants for warmth. Mint/blue/white palettes. No close-ups of dental procedures. No stock smiles. Family-friendly imagery — parents with kids welcome. Avoid clinical-sterile look; aim for welcoming clinical.",
+  "voice_pet_words": ["smile", "comfort", "care", "family", "trusted", "experienced"],
+  "primary_keywords": ["dental", "dentist", "dental care", "smile"]
+}

@@ -1,0 +1,27 @@
+{
+  "niche": "specialty-cafe",
+  "label": "Specialty Cafe",
+  "triggers": ["coffee", "café", "cafe", "espresso", "roast", "barista", "pour-over", "single-origin", "specialty coffee"],
+  "default_sitemap": [
+    { "slug": "index",   "role": "hero+overview" },
+    { "slug": "menu",    "role": "menu-detail" },
+    { "slug": "beans",   "role": "product-list" },
+    { "slug": "visit",   "role": "location+hours" }
+  ],
+  "compliance_blocks": ["allergen-disclaimer-footer"],
+  "schema_org_primary": "CafeOrCoffeeShop",
+  "voice_template": "warm, knowledgeable, slightly nerdy about beans, conversational",
+  "palettes": [
+    { "name": "warm-earthy",   "hexes": ["#8B5A3C", "#FAF7F2", "#F0E8D9", "#2D1F12"] },
+    { "name": "espresso-cream","hexes": ["#3E2723", "#FFFEF7", "#F5E6D3", "#1B1B1B"] },
+    { "name": "amber-roast",   "hexes": ["#C77B30", "#FFFCF5", "#FFE7C2", "#2A1A0E"] },
+    { "name": "moss-bean",     "hexes": ["#5A6B4A", "#FAFAF5", "#E8EAD8", "#1F2418"] },
+    { "name": "terracotta",    "hexes": ["#B8553F", "#FFF6F0", "#FFE0D2", "#2B1610"] },
+    { "name": "deep-cocoa",    "hexes": ["#4A2E1F", "#F5EDE0", "#E8D5BC", "#1A0F08"] },
+    { "name": "caramel-latte", "hexes": ["#A0673D", "#FDFAF4", "#F2DDC2", "#2C1A0D"] }
+  ],
+  "section_library": ["hero", "page-hero", "feature-strip", "menu-preview", "menu-grid", "today-pourover", "origin-grid", "roast-notes", "story-strip", "address-card", "hours-strip", "transit-note", "appointment-cta", "footer"],
+  "image_directives": "warm specialty coffee photography. Espresso machines, ceramic cups, single-origin beans, cafe interiors with natural light. Avoid stock-photo overuse. No generic 'business stock' aesthetics. Candid > posed. Shallow depth of field. Golden hour or soft natural light preferred.",
+  "voice_pet_words": ["roast", "origin", "varietal", "extraction", "crema", "tasting notes", "honest", "small-batch"],
+  "primary_keywords": ["coffee", "specialty", "espresso", "roast"]
+}

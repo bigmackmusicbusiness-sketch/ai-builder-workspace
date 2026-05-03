@@ -377,6 +377,7 @@ export function ChatThread() {
           provider:           selectedProvider,
           model:               selectedModel,
           projectSlug:         currentProject?.slug,
+          projectTypeId:       currentProject?.typeId,
           enableTools:         !!currentProject,
           projectEnv:          currentProject?.env ?? 'dev',
           designSkillsEnabled,
