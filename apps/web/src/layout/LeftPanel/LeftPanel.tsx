@@ -1,13 +1,13 @@
-// apps/web/src/layout/LeftPanel/LeftPanel.tsx — collapsible left AI/chat/task panel.
-// Sections: Chat (always expanded, fills space), Run History, Plan Summary,
-// Approvals docked under chat. Status pill + chat composer at the bottom.
+// apps/web/src/layout/LeftPanel/LeftPanel.tsx — left AI/chat panel.
 //
-// Fixed-header tax was ~96px (header + AgentStatus + ModelSelector). Now ~28px:
-// just a thin "+ New chat" button row at the top. StatusPill (32px) sits
-// between accordions and chat input as a single combined control.
-import { useEffect, useRef, type ReactNode } from 'react';
+// The chat is the entire panel — no docked accordions for Approvals,
+// Run history, or Plan summary anymore (they made the panel feel
+// claustrophobic when there was nothing pending). Approvals now surface
+// inline inside the chat thread when something needs review; Run history
+// + Plan summary live behind the Settings → operational submenu in the
+// top bar (their full-screen routes are still wired).
+import { useEffect, useRef } from 'react';
 import { ChatThread } from './ChatThread';
-import { ApprovalsQueue } from './ApprovalsQueue';
 import { useChatStore } from '../../lib/store/chatStore';
 import { useEditorStore } from '../../lib/store/editorStore';
 import { useProjectStore } from '../../lib/store/projectStore';
@@ -54,55 +54,11 @@ export function LeftPanel() {
           </button>
         </div>
 
-        {/* Scrollable sections */}
-        <div className="abw-left__sections">
-          {/* Chat — always expanded, fills available space */}
-          <div className="abw-left__section" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <ChatThread />
-          </div>
-
-          {/* Approvals dock — directly below chat */}
-          <Accordion icon="✓" label="Approvals" count={0} defaultOpen>
-            <ApprovalsQueue />
-          </Accordion>
-
-          <Accordion icon="⏱" label="Run history" count={0}>
-            <p className="abw-left__accordion-empty">Previous runs appear here.</p>
-          </Accordion>
-
-          <Accordion icon="📋" label="Plan summary" count={0}>
-            <p className="abw-left__accordion-empty">Active plan appears here.</p>
-          </Accordion>
+        {/* Chat fills the remaining space — no other docked sections. */}
+        <div className="abw-left__sections" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <ChatThread />
         </div>
       </div>
     </aside>
-  );
-}
-
-interface AccordionProps {
-  icon:        string;
-  label:       string;
-  count:       number;
-  defaultOpen?: boolean;
-  children:    ReactNode;
-}
-
-function Accordion({ icon, label, count, defaultOpen = false, children }: AccordionProps) {
-  return (
-    <details className="abw-left__accordion" open={defaultOpen || count > 0}>
-      <summary>
-        <svg className="abw-left__accordion-caret" viewBox="0 0 10 10" fill="none" aria-hidden>
-          <path d="M3 2 L7 5 L3 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <span className="abw-left__accordion-icon" aria-hidden>{icon}</span>
-        <span className="abw-left__accordion-label">{label}</span>
-        <span className={`abw-left__accordion-count${count === 0 ? ' abw-left__accordion-count--zero' : ''}`}>
-          {count}
-        </span>
-      </summary>
-      <div className="abw-left__accordion-body">
-        {children}
-      </div>
-    </details>
   );
 }

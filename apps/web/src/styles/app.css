@@ -875,6 +875,31 @@ html, body, #root {
   padding-left: calc(var(--space-2) - 2px);
 }
 
+/* Inline approvals dock — appears between chat messages and composer.
+   Only renders when there's something to review, so styling is just for
+   the active state — no idle padding bleeding into the chat. */
+.abw-approvals-queue--inline {
+  margin: 0 var(--space-3) var(--space-2);
+  padding: var(--space-2);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-field);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+.abw-approvals-queue--inline .abw-approvals-queue__inline-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-primary);
+}
+.abw-approvals-queue--inline .abw-approvals-queue__item {
+  margin: 0;
+}
+
 /* Reduce border noise: when LeftPanel is collapsed the right border can vanish */
 .abw-shell--collapsed .abw-shell__left {
   border-right: none;

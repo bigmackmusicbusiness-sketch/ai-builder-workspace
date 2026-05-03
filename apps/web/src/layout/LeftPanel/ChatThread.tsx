@@ -20,6 +20,7 @@ import { useProjectStore, buildSystemPrompt } from '../../lib/store/projectStore
 import { apiFetchForm } from '../../lib/api';
 import { Toggle } from '@abw/ui';
 import { MarkdownContent } from './MarkdownContent';
+import { ApprovalsQueue } from './ApprovalsQueue';
 import { StatusPill } from './StatusPill';
 
 const API_BASE = import.meta.env['VITE_API_URL'] ?? 'http://localhost:3007';
@@ -525,6 +526,11 @@ export function ChatThread() {
         })}
         <div ref={bottomRef} aria-hidden />
       </div>
+
+      {/* Inline approvals dock — auto-renders only when something is pending
+          (or just decided in the last 30s). Sits between message list and
+          composer so review actions feel like part of the conversation. */}
+      <ApprovalsQueue />
 
       {/* ── Attachment preview row ── */}
       {attachments.length > 0 && (

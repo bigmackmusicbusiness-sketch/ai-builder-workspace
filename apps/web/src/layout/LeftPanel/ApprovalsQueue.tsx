@@ -1,5 +1,10 @@
-// apps/web/src/layout/LeftPanel/ApprovalsQueue.tsx — compact approvals list in left panel.
-// Shows pending approvals with a badge count. Full screen via link.
+// apps/web/src/layout/LeftPanel/ApprovalsQueue.tsx — inline approvals dock.
+//
+// Renders inside the chat thread (above the composer) only when there is
+// something to show — pending approvals or very recent decisions. Returns
+// null otherwise so the chat panel doesn't carry an empty section all the
+// time. Full-screen Approvals route at /approvals still has the complete
+// history; this component is the in-chat fast path.
 import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../../lib/api';
 
@@ -70,34 +75,37 @@ export function ApprovalsQueue() {
   };
 
   const pending = approvals.filter((a) => a.status === 'pending');
-  const recent  = approvals.filter((a) => a.status !== 'pending').slice(0, 3);
+  // Only show recent decisions transiently if they decided in the last 30s,
+  // so the chat panel doesn't carry stale history under the composer.
+  const recentCutoff = Date.now() - 30_000;
+  const recent  = approvals
+    .filter((a) => a.status !== 'pending' && new Date(a.createdAt).getTime() > recentCutoff)
+    .slice(0, 2);
+
+  // Silent when nothing pending and no fresh decisions — caller renders nothing.
+  if (pending.length === 0 && recent.length === 0) return null;
 
   return (
-    <div className="abw-approvals-queue">
-      {/* Header */}
-      <div className="abw-approvals-queue__header">
-        <span className="abw-approvals-queue__title">
-          Approvals
-          {pending.length > 0 && (
-            <span className="abw-approvals-queue__badge abw-approvals-queue__badge--pulse">
-              {pending.length}
-            </span>
-          )}
-        </span>
-        <button
-          className="abw-btn abw-btn--ghost abw-btn--xs"
-          onClick={() => void load()}
-          disabled={loading}
-          aria-label="Refresh approvals"
-          title="Refresh"
-        >
-          ↺
-        </button>
-      </div>
-
-      {/* Pending */}
-      {pending.length === 0 && !loading && (
-        <p className="abw-approvals-queue__empty">No pending approvals</p>
+    <div className="abw-approvals-queue abw-approvals-queue--inline">
+      {pending.length > 0 && (
+        <div className="abw-approvals-queue__inline-header">
+          <span className="abw-approvals-queue__badge abw-approvals-queue__badge--pulse">
+            {pending.length}
+          </span>
+          <span style={{ fontWeight: 500 }}>
+            {pending.length === 1 ? 'Approval needed' : `${pending.length} approvals needed`}
+          </span>
+          <button
+            className="abw-btn abw-btn--ghost abw-btn--xs"
+            onClick={() => void load()}
+            disabled={loading}
+            aria-label="Refresh approvals"
+            title="Refresh"
+            style={{ marginLeft: 'auto' }}
+          >
+            ↺
+          </button>
+        </div>
       )}
 
       {pending.map((a) => (
@@ -160,10 +168,9 @@ export function ApprovalsQueue() {
         </div>
       ))}
 
-      {/* Recent decisions */}
+      {/* Recent decisions — only the last 30s so the dock doesn't accumulate stale rows. */}
       {recent.length > 0 && (
         <>
-          <p className="abw-approvals-queue__section-label">Recent</p>
           {recent.map((a) => (
             <div key={a.id} className="abw-approvals-queue__item">
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
