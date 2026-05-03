@@ -339,8 +339,35 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
 
         if (hadError) break;
 
-        // No tool calls → model is done talking. Emit done and exit.
+        // No tool calls → either the model is genuinely done, OR it just
+        // narrated intent without acting. If the last assistant turn was
+        // refused by a hard-gate (e.g. gen_image without index.html), the
+        // model often responds with text like "I'll start building the
+        // website" but skips the actual write_file call — exiting the
+        // loop here would leave the workspace half-built. Detect that
+        // case and force one more iteration with an explicit nudge.
         if (toolCalls.length === 0 || !toolsActive || !ws) {
+          const lastToolMsg = [...history].reverse().find((m) => m.role === 'tool');
+          const lastWasRefusal = !!lastToolMsg
+            && typeof lastToolMsg.content === 'string'
+            && /^Refused:|^Refused —/m.test(lastToolMsg.content);
+          if (lastWasRefusal && iter < MAX_ITERATIONS - 1) {
+            // Push the assistant's narration into history so the next turn
+            // sees it (avoid duplicate-narration loop), then add a system
+            // nudge that forces tool action.
+            if (assistantText) {
+              history.push({ role: 'assistant', content: assistantText });
+            }
+            history.push({
+              role:    'system',
+              content:
+                'STOP NARRATING. Your previous tool call was refused with a clear ' +
+                'corrective instruction. You MUST now call the tool the refusal ' +
+                'told you to call (almost certainly write_file with path="index.html" ' +
+                'and complete HTML content). Do not respond with text. Call the tool.',
+            });
+            continue; // skip the done/break, go back to top of for-loop
+          }
           send({ type: 'done', ...(finalUsage ? { usage: finalUsage } : {}) });
           break;
         }
