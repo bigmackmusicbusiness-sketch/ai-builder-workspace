@@ -1,5 +1,7 @@
 /* packages/ui/styles/variables.css — CSS custom properties derived from tokens.
-   Import this once at the app root (apps/web/src/main.tsx or App.tsx). */
+   Import this once at the app root (apps/web/src/main.tsx or App.tsx).
+   Dark-first: :root carries the dark palette. A light-mode override lives in
+   @media (prefers-color-scheme: light). Most users will see dark. */
 
 :root {
   /* Spacing */
@@ -7,9 +9,12 @@
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
+  --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
   --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
 
   /* Neutral palette */
   --neutral-0:   #ffffff;
@@ -39,34 +44,38 @@
 
   /* Semantic */
   --color-success:        #16a34a;
-  --color-success-bg:     #f0fdf4;
-  --color-success-border: #bbf7d0;
+  --color-success-bg:     rgba(22, 163, 74, 0.12);
+  --color-success-border: rgba(22, 163, 74, 0.30);
   --color-warning:        #d97706;
-  --color-warning-bg:     #fffbeb;
-  --color-warning-border: #fde68a;
+  --color-warning-bg:     rgba(217, 119, 6, 0.12);
+  --color-warning-border: rgba(217, 119, 6, 0.30);
   --color-error:          #dc2626;
-  --color-error-bg:       #fef2f2;
-  --color-error-border:   #fecaca;
-  --color-info:           #2563eb;
-  --color-info-bg:        #eff6ff;
-  --color-info-border:    #bfdbfe;
+  --color-error-bg:       rgba(220, 38, 38, 0.12);
+  --color-error-border:   rgba(220, 38, 38, 0.30);
+  --color-info:           #60a5fa;
+  --color-info-bg:        rgba(96, 165, 250, 0.12);
+  --color-info-border:    rgba(96, 165, 250, 0.30);
 
-  /* Surface roles */
-  --bg-base:     var(--neutral-50);
-  --bg-elevated: var(--neutral-0);
-  --bg-overlay:  var(--neutral-0);
-  --bg-subtle:   var(--neutral-100);
+  /* Surface roles — dark-first */
+  --bg-canvas:   #08080b;                     /* deepest app bg */
+  --bg-base:     #0e0e12;                     /* default app bg */
+  --bg-elevated: #15151b;                     /* topbar, panels, cards */
+  --bg-overlay:  #1c1c24;                     /* dialogs, popovers */
+  --bg-subtle:   rgba(255, 255, 255, 0.03);   /* hover, soft fill */
 
   /* Text roles */
-  --text-primary:   var(--neutral-900);
-  --text-secondary: var(--neutral-500);
-  --text-disabled:  var(--neutral-300);
+  --text-primary:   #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-tertiary:  #71717a;
+  --text-disabled:  #52525b;
   --text-on-accent: #ffffff;
   --text-danger:    var(--color-error);
+  --text-muted:     var(--text-tertiary);
 
   /* Border roles */
-  --border-base:   var(--neutral-200);
-  --border-strong: var(--neutral-300);
+  --border-base:   rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --border-subtle: rgba(255, 255, 255, 0.05);
   --border-focus:  var(--accent-500);
 
   /* Radius */
@@ -76,9 +85,13 @@
   --radius-popover: 8px;
   --radius-pill:    9999px;
 
-  /* Elevation */
-  --shadow-elevated: 0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.06);
-  --shadow-overlay:  0 10px 24px -4px rgba(0,0,0,0.12), 0 4px 8px -2px rgba(0,0,0,0.06);
+  /* Elevation — soft, dark-friendly shadows */
+  --shadow-elevated: 0 1px 2px rgba(0, 0, 0, 0.40),
+                     0 1px 1px rgba(0, 0, 0, 0.20);
+  --shadow-overlay:  0 12px 40px -8px rgba(0, 0, 0, 0.55),
+                     0 4px 12px -4px rgba(0, 0, 0, 0.35);
+  --shadow-glow:     0 0 0 1px rgba(139, 92, 246, 0.35),
+                     0 4px 16px -4px rgba(139, 92, 246, 0.25);
 
   /* Motion */
   --duration-fast: 120ms;
@@ -88,10 +101,10 @@
   --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
   --ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
 
-  /* Typography */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+  /* Typography — Linear-style stack */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
                'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
                'Liberation Mono', 'Courier New', monospace;
 
   /* Focus ring */
@@ -106,41 +119,46 @@
   /* Surface aliases (semantic names for bg roles used in screens) */
   --surface-base:     var(--bg-base);
   --surface-elevated: var(--bg-elevated);
+  --surface-overlay:  var(--bg-overlay);
 
   /* Border aliases */
   --border-default: var(--border-base);
-  --border-subtle:  var(--neutral-200);
-
-  /* Text aliases */
-  --text-tertiary: var(--neutral-400);
 
   /* Accent alias (used for in-progress / info states) */
   --color-accent: var(--accent-500);
 
   /* Code / terminal surface */
-  --surface-code: #1a1a2e;
+  --surface-code:       #0a0a0f;
   --surface-code-light: var(--neutral-100);
+
+  /* Brand gradient (for brand panel on login + hero accents) */
+  --brand-glow: radial-gradient(
+    1200px circle at 0% 0%,
+    rgba(139, 92, 246, 0.18),
+    rgba(139, 92, 246, 0.06) 35%,
+    transparent 65%
+  );
 }
 
-/* Dark mode — same structure, swapped values */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-base:     var(--neutral-950);
-    --bg-elevated: var(--neutral-900);
-    --bg-overlay:  var(--neutral-800);
-    --bg-subtle:   var(--neutral-900);
+/* Light mode — kept as an opt-in override (will activate when user OS is light
+   AND we add an explicit toggle in the future). For now dark-first wins. */
+@media (prefers-color-scheme: light) {
+  :root[data-theme='light'] {
+    --bg-canvas:   #fafafa;
+    --bg-base:     #ffffff;
+    --bg-elevated: #fafafa;
+    --bg-overlay:  #ffffff;
+    --bg-subtle:   rgba(0, 0, 0, 0.04);
 
-    --text-primary:   var(--neutral-50);
-    --text-secondary: var(--neutral-400);
-    --text-disabled:  var(--neutral-700);
-    --text-tertiary:  var(--neutral-600);
+    --text-primary:   var(--neutral-900);
+    --text-secondary: var(--neutral-500);
+    --text-tertiary:  var(--neutral-400);
+    --text-disabled:  var(--neutral-300);
 
-    --border-base:    var(--neutral-800);
-    --border-strong:  var(--neutral-700);
-    --border-default: var(--neutral-800);
-    --border-subtle:  var(--neutral-800);
+    --border-base:   var(--neutral-200);
+    --border-strong: var(--neutral-300);
+    --border-subtle: var(--neutral-100);
 
-    --surface-base:     var(--neutral-950);
-    --surface-elevated: var(--neutral-900);
+    --surface-code: #f4f4f5;
   }
 }

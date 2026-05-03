@@ -1,14 +1,18 @@
-// apps/web/src/screens/ProjectsScreen.tsx — project list + creation.
+// apps/web/src/screens/ProjectsScreen.tsx — projects-as-dashboard.
 // Database is the source of truth; localStorage caches agent memory only.
 // On mount: syncs from GET /api/projects. Create/delete are persisted to DB first.
+//
+// Dashboard treatments (post-Phase 3): welcome hero + recents row + full grid
+// + templates strip. Empty state expands the create form inline.
 //
 // Card UX (post-streamline): one primary "Open" button + an overflow ⋯ menu.
 // Creative tools live in the /create hub, not on every project card.
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, Link } from '@tanstack/react-router';
 import { listProjectTypes } from '@abw/project-types';
 import type { ProjectType, ProjectTypeId } from '@abw/project-types';
 import { useProjectStore, type ProjectRecord, type ProjectEnv, type DBProjectRow } from '../lib/store/projectStore';
+import { useAuthStore } from '../lib/store/authStore';
 import { apiFetch, ApiError } from '../lib/api';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -38,11 +42,21 @@ function slugify(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 }
 
+function firstName(email?: string | null): string {
+  if (!email) return 'there';
+  const local = email.split('@')[0] ?? 'there';
+  return local.charAt(0).toUpperCase() + local.slice(1);
+}
+
+// Curated featured templates for the strip — pulled from project-types
+const FEATURED_TEMPLATE_IDS: ProjectTypeId[] = ['website', 'landing-page', 'saas-app', 'api-service'];
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function ProjectsScreen() {
   const { projects, createProject, deleteProject, syncFromDB, setCurrentProject } = useProjectStore();
   const navigate = useNavigate();
+  const userEmail = useAuthStore((s) => s.user?.email ?? null);
   const [showNew,  setShowNew]  = useState(false);
   const [search,   setSearch]   = useState('');
   const [syncing,  setSyncing]  = useState(true);
@@ -69,6 +83,10 @@ export function ProjectsScreen() {
     p.slug.toLowerCase().includes(search.toLowerCase()),
   );
 
+  // Recents = the 3 most recently active. The rest go into the main grid.
+  const recents = !search ? projectList.slice(0, 3) : [];
+  const rest    = !search ? projectList.slice(3) : filtered;
+
   async function handleCreate(data: {
     name: string; slug: string; typeId: ProjectTypeId; description: string;
   }) {
@@ -88,12 +106,14 @@ export function ProjectsScreen() {
         env:         'dev',
         description: data.description || undefined,
       });
+      setShowNew(false);
+      // After creating, jump straight into the new project (sets currentProject + opens builder)
+      setCurrentProject(res.project.id);
+      void navigate({ to: '/' });
     } catch (err) {
       alert(`Failed to create project: ${err instanceof ApiError ? err.message : 'Server error'}`);
       return;
     }
-    setShowNew(false);
-    void navigate({ to: '/' });
   }
 
   function handleOpen(project: ProjectRecord) {
@@ -125,8 +145,10 @@ export function ProjectsScreen() {
     deleteProject(id);
   }
 
+  const hasProjects = projectList.length > 0;
+
   return (
-    <div className="abw-screen">
+    <div className="abw-screen abw-dashboard">
       {/* Offline/sync warning — non-blocking */}
       {syncErr && (
         <div className="abw-banner abw-banner--warning" style={{ marginBottom: 'var(--space-4)' }}>
@@ -135,70 +157,123 @@ export function ProjectsScreen() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="abw-screen__header">
-        <div>
-          <h1 className="abw-screen__title">Projects</h1>
-          <p className="abw-screen__sub">
+      {/* Welcome hero */}
+      <header className="abw-dashboard__hero">
+        <div className="abw-dashboard__hero-text">
+          <p className="abw-dashboard__eyebrow">Workspace</p>
+          <h1 className="abw-dashboard__greeting">
+            {syncing ? 'Loading your workspace…' : `Welcome back, ${firstName(userEmail)}`}
+          </h1>
+          <p className="abw-dashboard__sub">
             {syncing
-              ? 'Loading…'
-              : projectList.length === 0
-              ? 'No projects yet — create your first to get started.'
-              : `${projectList.length} project${projectList.length !== 1 ? 's' : ''}`}
+              ? ' '
+              : hasProjects
+              ? 'Pick up where you left off — or start something new.'
+              : 'Start by creating your first project. Each gets its own files, preview, agent memory and verification matrix.'}
           </p>
         </div>
+
         <button
-          className="abw-btn abw-btn--primary"
+          className="abw-dashboard__new-cta"
           onClick={() => setShowNew(true)}
           aria-label="Create new project"
         >
-          + New project
+          <span className="abw-dashboard__new-cta-plus" aria-hidden>+</span>
+          <span className="abw-dashboard__new-cta-stack">
+            <span className="abw-dashboard__new-cta-title">New project</span>
+            <span className="abw-dashboard__new-cta-sub">Pick a type · scaffold · build</span>
+          </span>
         </button>
-      </div>
+      </header>
 
       {/* Search (only shown when there are projects) */}
-      {projectList.length > 0 && (
-        <input
-          className="abw-input"
-          type="search"
-          placeholder="Search projects…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          aria-label="Search projects"
-          style={{ maxWidth: 320 }}
-        />
+      {hasProjects && (
+        <div className="abw-dashboard__searchbar">
+          <input
+            className="abw-input"
+            type="search"
+            placeholder="Search projects…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search projects"
+          />
+          <span className="abw-dashboard__count">
+            {projectList.length} project{projectList.length !== 1 ? 's' : ''}
+          </span>
+        </div>
       )}
 
       {/* Empty state */}
-      {projectList.length === 0 ? (
-        <div className="abw-empty-state">
-          <span className="abw-empty-state__icon" aria-hidden>🗂</span>
-          <p className="abw-empty-state__label">No projects</p>
-          <p className="abw-empty-state__sub">
-            Start by choosing a project type. Each project gets its own file system,
-            preview sandbox, agent memory bank, and verification matrix.
-          </p>
-          <button className="abw-btn abw-btn--primary" onClick={() => setShowNew(true)}>
-            Create first project
-          </button>
+      {!hasProjects && !syncing && (
+        <div className="abw-dashboard__empty">
+          <div className="abw-dashboard__empty-card">
+            <span className="abw-dashboard__empty-icon" aria-hidden>🗂</span>
+            <h2 className="abw-dashboard__empty-title">No projects yet</h2>
+            <p className="abw-dashboard__empty-sub">
+              Create your first to get an isolated file system, preview sandbox,
+              agent memory bank and verification matrix.
+            </p>
+            <button className="abw-btn abw-btn--primary" onClick={() => setShowNew(true)}>
+              Create first project
+            </button>
+          </div>
+          <FeaturedTemplatesStrip />
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="abw-empty-state">
-          <span className="abw-empty-state__icon" aria-hidden>🔍</span>
-          <p className="abw-empty-state__label">No results for &ldquo;{search}&rdquo;</p>
-          <p className="abw-empty-state__sub">Try a different name or slug.</p>
-        </div>
-      ) : (
-        <div className="abw-projects__grid">
-          {filtered.map((p) => (
-            <ProjectCard
-              key={p.id}
-              project={p}
-              onOpen={handleOpen}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
+      )}
+
+      {/* Recents row — only when not searching and there are projects */}
+      {hasProjects && !search && recents.length > 0 && (
+        <section className="abw-dashboard__section">
+          <div className="abw-dashboard__section-header">
+            <h2 className="abw-dashboard__section-title">Recent</h2>
+            <span className="abw-dashboard__section-meta">Last touched</span>
+          </div>
+          <div className="abw-dashboard__recents-grid">
+            {recents.map((p) => (
+              <RecentCard key={p.id} project={p} onOpen={handleOpen} onDelete={handleDelete} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* All projects grid (or filtered search results) */}
+      {hasProjects && (rest.length > 0 || search) && (
+        <section className="abw-dashboard__section">
+          <div className="abw-dashboard__section-header">
+            <h2 className="abw-dashboard__section-title">{search ? 'Results' : 'All projects'}</h2>
+          </div>
+          {rest.length === 0 ? (
+            <div className="abw-empty-state">
+              <span className="abw-empty-state__icon" aria-hidden>🔍</span>
+              <p className="abw-empty-state__label">No results for &ldquo;{search}&rdquo;</p>
+              <p className="abw-empty-state__sub">Try a different name or slug.</p>
+            </div>
+          ) : (
+            <div className="abw-projects__grid">
+              {rest.map((p) => (
+                <ProjectCard
+                  key={p.id}
+                  project={p}
+                  onOpen={handleOpen}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Templates strip — only when there are projects (empty state has its own) */}
+      {hasProjects && !search && (
+        <section className="abw-dashboard__section">
+          <div className="abw-dashboard__section-header">
+            <h2 className="abw-dashboard__section-title">Start from a template</h2>
+            <Link to="/templates" className="abw-dashboard__section-link">
+              Browse all →
+            </Link>
+          </div>
+          <FeaturedTemplatesStrip />
+        </section>
       )}
 
       {/* New project dialog */}
@@ -209,6 +284,83 @@ export function ProjectsScreen() {
         />
       )}
     </div>
+  );
+}
+
+// ── FeaturedTemplatesStrip — 4 horizontally-scrolling template tiles ──────────
+
+function FeaturedTemplatesStrip() {
+  const navigate = useNavigate();
+  const types    = listProjectTypes();
+  const featured = FEATURED_TEMPLATE_IDS
+    .map((id) => types.find((t) => t.id === id))
+    .filter((t): t is ProjectType => Boolean(t));
+
+  return (
+    <div className="abw-dashboard__templates-strip" role="list">
+      {featured.map((t) => (
+        <button
+          key={t.id}
+          role="listitem"
+          className="abw-dashboard__template-tile"
+          onClick={() => void navigate({ to: '/templates' })}
+          aria-label={`Use ${t.label} template`}
+        >
+          <span className="abw-dashboard__template-icon" aria-hidden>{t.icon}</span>
+          <span className="abw-dashboard__template-label">{t.label}</span>
+          <span className="abw-dashboard__template-desc">{t.description}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── RecentCard — bigger, hero-ish treatment for top-3 ─────────────────────────
+
+function RecentCard({
+  project, onOpen, onDelete,
+}: {
+  project:  ProjectRecord;
+  onOpen:   (p: ProjectRecord) => void;
+  onDelete: (id: string) => void;
+}) {
+  const types = listProjectTypes();
+  const pt    = types.find((t) => t.id === project.typeId);
+
+  return (
+    <button
+      className="abw-recent-card"
+      aria-label={`Open ${project.name}`}
+      onClick={() => onOpen(project)}
+    >
+      <div className="abw-recent-card__icon" aria-hidden>
+        {pt?.icon ?? '📦'}
+      </div>
+      <div className="abw-recent-card__body">
+        <div className="abw-recent-card__title-row">
+          <span className="abw-recent-card__name">{project.name}</span>
+          <span className="abw-recent-card__env" style={{ color: envColor(project.env) }}>
+            {project.env.toUpperCase()}
+          </span>
+        </div>
+        <div className="abw-recent-card__meta">
+          <span className="abw-recent-card__type">{pt?.label ?? project.typeId}</span>
+          <span className="abw-recent-card__sep" aria-hidden>·</span>
+          <span className="abw-recent-card__time">{relativeTime(project.lastActiveAt)}</span>
+        </div>
+      </div>
+      {/* Inline delete (small, low-emphasis — full menu on the smaller cards) */}
+      <span
+        role="button"
+        tabIndex={0}
+        className="abw-recent-card__more"
+        aria-label={`Delete ${project.name}`}
+        onClick={(e) => { e.stopPropagation(); void onDelete(project.id); }}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); void onDelete(project.id); } }}
+      >
+        🗑
+      </span>
+    </button>
   );
 }
 
@@ -306,10 +458,10 @@ function ProjectCard({
               right:        0,
               zIndex:       30,
               minWidth:     160,
-              background:   'var(--surface-elevated)',
+              background:   'var(--surface-overlay)',
               border:       '1px solid var(--border-base)',
               borderRadius: 'var(--radius-card)',
-              boxShadow:    '0 4px 16px rgba(0,0,0,0.18)',
+              boxShadow:    'var(--shadow-overlay)',
               padding:      'var(--space-1)',
               display:      'flex',
               flexDirection:'column',

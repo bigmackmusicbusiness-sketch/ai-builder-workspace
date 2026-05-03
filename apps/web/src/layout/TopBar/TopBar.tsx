@@ -1,14 +1,17 @@
-// apps/web/src/layout/TopBar/TopBar.tsx — single-row top bar.
-// 7-item primary nav · project switcher · env badge · search · settings menu · profile.
+// apps/web/src/layout/TopBar/TopBar.tsx — mode-aware top bar.
+// Browse mode (no project open) → 6-item primary nav + project switcher.
+// Builder mode (a project is open) → logo (exits) + project name + env pill + ⚙ + profile only.
+// The settings gear and profile are reachable in BOTH modes.
 import { useEffect, useRef, useState } from 'react';
-import { Link, useRouterState } from '@tanstack/react-router';
+import { Link, useRouter, useRouterState } from '@tanstack/react-router';
 import { useShellStore } from '../../lib/store/shellStore';
 import { useProjectStore } from '../../lib/store/projectStore';
+import { useAuthStore } from '../../lib/store/authStore';
 
-/** The 7 primary nav items kept in the top bar — daily-driver surfaces only. */
+/** Primary nav items shown in BROWSE mode. The Workspace tab is gone — it's
+ *  implicit when you click into a project. */
 const NAV_ITEMS = [
   { to: '/projects',  label: 'Projects'   },
-  { to: '/',          label: 'Workspace'  },
   { to: '/templates', label: 'Templates'  },
   { to: '/create',    label: 'Create'     },
   { to: '/video',     label: 'Video'      },
@@ -32,60 +35,101 @@ const SETTINGS_ITEMS = [
 
 export function TopBar() {
   const { collapsed, toggleCollapsed } = useShellStore();
-  const { currentProjectId, projects } = useProjectStore();
+  const { currentProjectId, projects, setCurrentProject } = useProjectStore();
   const routerState = useRouterState();
+  const router      = useRouter();
   const activePath  = routerState.location.pathname;
 
   const activeProject = currentProjectId !== 'global' ? projects[currentProjectId] : null;
+  const isBuilderMode = Boolean(activeProject);
   const activeEnv     = activeProject?.env ?? 'dev';
 
+  function handleLogoClick() {
+    if (isBuilderMode) {
+      // Exit builder: clear current project + navigate back to projects dashboard.
+      setCurrentProject('global');
+      void router.navigate({ to: '/projects' });
+    } else {
+      void router.navigate({ to: '/projects' });
+    }
+  }
+
   return (
-    <header className="abw-shell__topbar" role="banner">
-      {/* Collapse toggle — also triggered by Cmd/Ctrl+\ */}
+    <header
+      className={`abw-shell__topbar${isBuilderMode ? ' abw-shell__topbar--builder' : ''}`}
+      role="banner"
+    >
+      {/* Collapse toggle (only useful in builder mode where the chat panel exists) */}
+      {isBuilderMode && (
+        <button
+          className="abw-topbar__collapse-btn"
+          onClick={toggleCollapsed}
+          aria-label={collapsed ? 'Expand left panel' : 'Collapse left panel'}
+          aria-expanded={!collapsed}
+          title={(collapsed ? 'Expand' : 'Collapse') + ' (Ctrl+\\)'}
+        >
+          {collapsed ? '›' : '‹'}
+        </button>
+      )}
+
+      {/* Logo / wordmark — clicking exits builder mode if active */}
       <button
-        className="abw-topbar__collapse-btn"
-        onClick={toggleCollapsed}
-        aria-label={collapsed ? 'Expand left panel' : 'Collapse left panel'}
-        aria-expanded={!collapsed}
-        title={(collapsed ? 'Expand' : 'Collapse') + ' (Ctrl+\\)'}
+        className="abw-topbar__logo"
+        onClick={handleLogoClick}
+        aria-label={isBuilderMode ? 'Exit project — back to projects' : 'Projects'}
+        title={isBuilderMode ? 'Back to projects' : 'Projects'}
       >
-        {collapsed ? '›' : '‹'}
+        <span className="abw-topbar__logo-mark" aria-hidden>⬡</span>
+        {!isBuilderMode && <span className="abw-topbar__logo-word">AI Builder</span>}
       </button>
 
-      {/* Project switcher — real data from store */}
-      <ProjectSwitcher />
+      {isBuilderMode ? (
+        <>
+          {/* Builder mode: project name + env pill */}
+          <div className="abw-topbar__crumb" aria-label="Active project">
+            <span className="abw-topbar__crumb-sep" aria-hidden>/</span>
+            <span className="abw-topbar__crumb-name">{activeProject!.name}</span>
+            <EnvBadge env={activeEnv} />
+          </div>
 
-      {/* Env badge — derived from active project */}
-      <EnvBadge env={activeEnv} />
+          {/* Spacer pushes settings + profile to the right */}
+          <div className="abw-topbar__spacer" aria-hidden />
+        </>
+      ) : (
+        <>
+          {/* Browse mode: project switcher (jump-into) + nav */}
+          <ProjectSwitcher />
 
-      {/* Screen navigation — 7 primary items only */}
-      <nav className="abw-topbar__nav" aria-label="Section navigation">
-        {NAV_ITEMS.map(({ to, label }) => {
-          const isActive = to === '/' ? activePath === '/' : activePath.startsWith(to);
-          return (
-            <Link
-              key={to}
-              to={to}
-              className={`abw-topbar__nav-link${isActive ? ' abw-topbar__nav-link--active' : ''}`}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
+          {/* Screen navigation — 6 primary items */}
+          <nav className="abw-topbar__nav" aria-label="Section navigation">
+            {NAV_ITEMS.map(({ to, label }) => {
+              const isActive = activePath.startsWith(to);
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  className={`abw-topbar__nav-link${isActive ? ' abw-topbar__nav-link--active' : ''}`}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </nav>
 
-      {/* Spacer pushes search + profile to the right */}
-      <div className="abw-topbar__spacer" aria-hidden />
+          {/* Spacer pushes search + profile to the right */}
+          <div className="abw-topbar__spacer" aria-hidden />
 
-      {/* Global search trigger */}
-      <button className="abw-topbar__search" aria-label="Search (Cmd+K)">
-        <span aria-hidden style={{ fontSize: '0.75rem' }}>⌘</span>
-        <span>Search…</span>
-        <span aria-hidden style={{ marginLeft: 'auto', fontSize: '0.6875rem', color: 'var(--text-secondary)', flexShrink: 0 }}>⌘K</span>
-      </button>
+          {/* Global search trigger — browse mode only (builder uses Cmd+P inline) */}
+          <button className="abw-topbar__search" aria-label="Search (Cmd+K)">
+            <span aria-hidden style={{ fontSize: '0.75rem' }}>⌘</span>
+            <span>Search…</span>
+            <span aria-hidden style={{ marginLeft: 'auto', fontSize: '0.6875rem', color: 'var(--text-secondary)', flexShrink: 0 }}>⌘K</span>
+          </button>
+        </>
+      )}
 
-      {/* Settings gear — opens a menu of operational + admin surfaces */}
+      {/* Settings gear — opens a menu of operational + admin surfaces (both modes) */}
       <SettingsMenu activePath={activePath} />
       <ProfileAvatar />
     </header>
@@ -96,6 +140,7 @@ export function TopBar() {
 
 function ProjectSwitcher() {
   const { currentProjectId, projects, setCurrentProject, loadProjectsFromServer } = useProjectStore();
+  const router                = useRouter();
   const [open, setOpen]       = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const btnRef                = useRef<HTMLButtonElement>(null);
@@ -131,6 +176,15 @@ function ProjectSwitcher() {
     return () => window.removeEventListener('resize', calcPos);
   }, [open]);
 
+  function handlePick(id: string) {
+    setCurrentProject(id);
+    setOpen(false);
+    if (id !== 'global') {
+      // Jump straight into builder mode for the picked project.
+      void router.navigate({ to: '/' });
+    }
+  }
+
   return (
     <>
       <button
@@ -160,10 +214,10 @@ function ProjectSwitcher() {
             minWidth:     220,
             maxHeight:    320,
             overflowY:    'auto',
-            background:   'var(--surface-elevated)',
+            background:   'var(--surface-overlay)',
             border:       '1px solid var(--border-base)',
             borderRadius: 'var(--radius-card)',
-            boxShadow:    '0 4px 16px rgba(0,0,0,0.18)',
+            boxShadow:    'var(--shadow-overlay)',
             padding:      'var(--space-1)',
             display:      'flex',
             flexDirection:'column',
@@ -189,7 +243,7 @@ function ProjectSwitcher() {
                   display: 'flex', flexDirection: 'column', gap: 1, padding: '5px 10px',
                   width: '100%',
                 }}
-                onClick={() => { setCurrentProject('global'); setOpen(false); }}
+                onClick={() => handlePick('global')}
               >
                 <span style={{ fontWeight: 500, color: 'var(--text-secondary)', fontStyle: 'italic' }}>No project</span>
               </button>
@@ -207,7 +261,7 @@ function ProjectSwitcher() {
                     display: 'flex', flexDirection: 'column', gap: 1, padding: '5px 10px',
                     width: '100%',
                   }}
-                  onClick={() => { setCurrentProject(p.id); setOpen(false); }}
+                  onClick={() => handlePick(p.id)}
                 >
                   <span style={{ fontWeight: 600, fontSize: '0.8125rem' }}>{p.name}</span>
                   <span style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)' }}>
@@ -270,15 +324,9 @@ function SettingsMenu({ activePath }: { activePath: string }) {
         aria-haspopup="menu"
         aria-expanded={open}
         title="Settings & operations"
+        className="abw-topbar__settings-btn"
         style={{
-          fontSize:        '0.875rem',
-          color:           isAnyActive ? 'var(--accent-500)' : 'var(--text-secondary)',
-          background:      'none',
-          border:          'none',
-          cursor:          'pointer',
-          padding:         '0 var(--space-1)',
-          opacity:         isAnyActive ? 1 : 0.75,
-          flexShrink:      0,
+          color: isAnyActive ? 'var(--accent-400)' : undefined,
         }}
       >
         ⚙
@@ -294,10 +342,10 @@ function SettingsMenu({ activePath }: { activePath: string }) {
             right:        menuPos.right,
             zIndex:       9999,
             minWidth:     200,
-            background:   'var(--surface-elevated)',
+            background:   'var(--surface-overlay)',
             border:       '1px solid var(--border-base)',
             borderRadius: 'var(--radius-card)',
-            boxShadow:    '0 4px 16px rgba(0,0,0,0.18)',
+            boxShadow:    'var(--shadow-overlay)',
             padding:      'var(--space-1)',
             display:      'flex',
             flexDirection:'column',
@@ -337,18 +385,16 @@ function EnvBadge({ env }: { env: string }) {
 // ── Profile avatar ─────────────────────────────────────────────────────────────
 
 function ProfileAvatar() {
+  const userEmail = useAuthStore((s) => s.user?.email ?? null);
+  const initial   = (userEmail?.[0] ?? 'U').toUpperCase();
   return (
     <button
-      style={{
-        width: 28, height: 28, borderRadius: '50%', border: 'none',
-        background: 'var(--accent-500)', color: '#fff', cursor: 'pointer',
-        fontSize: '0.75rem', fontWeight: 700, display: 'flex',
-        alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-      }}
+      className="abw-topbar__avatar"
       aria-label="Profile menu"
       aria-haspopup="menu"
+      title={userEmail ?? 'Profile'}
     >
-      U
+      {initial}
     </button>
   );
 }
