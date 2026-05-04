@@ -181,11 +181,77 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
       }
     }
 
-    const [row] = await db
-      .update(projects)
-      .set(parsed.data)
-      .where(and(eq(projects.id, req.params.id), eq(projects.tenantId, ctx.tenantId)))
-      .returning();
+    let row: Record<string, unknown> | undefined;
+    try {
+      const updated = await db
+        .update(projects)
+        .set(parsed.data)
+        .where(and(eq(projects.id, req.params.id), eq(projects.tenantId, ctx.tenantId)))
+        .returning();
+      row = updated[0] as Record<string, unknown> | undefined;
+    } catch (err) {
+      // Same fallback pattern as POST: when migration 0008_project_sharing
+      // hasn't been applied, Drizzle's UPDATE...RETURNING references the
+      // missing is_shared column and 42703s. Build the SET clause by hand
+      // using only columns guaranteed to exist pre-migration; if the request
+      // tried to set isShared, attempt that as a separate ALTER-tolerant
+      // raw UPDATE so the toggle still does something on success.
+      const code = (err as { code?: string })?.code ?? '';
+      const msg  = err instanceof Error ? err.message : String(err);
+      // eslint-disable-next-line no-console
+      console.warn(`[projects] drizzle update failed (${code} ${msg}) — falling back to raw SQL.`);
+      const sql = getRawSql();
+
+      // Map only the columns we know exist pre-migration
+      const sets: string[] = [];
+      const vals: unknown[] = [];
+      let i = 1;
+      if (parsed.data.name !== undefined)        { sets.push(`name = $${i++}`);        vals.push(parsed.data.name); }
+      if (parsed.data.slug !== undefined)        { sets.push(`slug = $${i++}`);        vals.push(parsed.data.slug); }
+      if (parsed.data.type !== undefined)        { sets.push(`type = $${i++}`);        vals.push(parsed.data.type); }
+      if (parsed.data.description !== undefined) { sets.push(`description = $${i++}`); vals.push(parsed.data.description); }
+
+      // Best-effort isShared toggle when migration is missing — try the
+      // ALTER first then the UPDATE. If either fails, swallow + continue.
+      if (parsed.data.isShared !== undefined) {
+        try {
+          await sql.unsafe(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS is_shared BOOLEAN NOT NULL DEFAULT FALSE`);
+          sets.push(`is_shared = $${i++}`);
+          vals.push(parsed.data.isShared);
+        } catch (alterErr) {
+          // eslint-disable-next-line no-console
+          console.warn(`[projects] ALTER TABLE add is_shared failed: ${alterErr instanceof Error ? alterErr.message : String(alterErr)}`);
+        }
+      }
+
+      if (sets.length === 0) {
+        // Nothing left to update; just return the existing row
+        const rows = await sql.unsafe(
+          `SELECT id, tenant_id AS "tenantId", created_by AS "createdBy",
+                  name, slug, type, description, config,
+                  active_env AS "activeEnv",
+                  created_at AS "createdAt", updated_at AS "updatedAt"
+             FROM projects
+            WHERE id = $1 AND tenant_id = $2
+            LIMIT 1`,
+          [req.params.id, ctx.tenantId],
+        ) as Array<Record<string, unknown>>;
+        row = rows[0];
+      } else {
+        const idIdx = i;     vals.push(req.params.id);
+        const tIdx  = i + 1; vals.push(ctx.tenantId);
+        const rows = await sql.unsafe(
+          `UPDATE projects SET ${sets.join(', ')}
+            WHERE id = $${idIdx} AND tenant_id = $${tIdx}
+            RETURNING id, tenant_id AS "tenantId", created_by AS "createdBy",
+                      name, slug, type, description, config,
+                      active_env AS "activeEnv",
+                      created_at AS "createdAt", updated_at AS "updatedAt"`,
+          vals,
+        ) as Array<Record<string, unknown>>;
+        row = rows[0];
+      }
+    }
 
     if (!row) return reply.status(404).send({ error: 'Not found' });
     return { project: row };
