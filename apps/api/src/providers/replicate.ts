@@ -1,4 +1,14 @@
-// apps/api/src/providers/replicate.ts — Replicate client for Demucs stem separation.
+// apps/api/src/providers/replicate.ts — Replicate client.
+//
+// Two surfaces in this file:
+//   1. separateStems() — Demucs stem separation (Music Studio feature)
+//   2. generateReplicateVideo() — curated video model catalogue exposed
+//      through the agent's `replicate_video` tool
+//
+// Both use the same Replicate REST API (https://api.replicate.com/v1).
+// Auth: vault[REPLICATE_API_TOKEN] (or REPLICATE_KEY / replicate.api_token).
+
+import { vaultGet } from '../security/vault';
 
 const REPLICATE_BASE = 'https://api.replicate.com/v1';
 const POLL_INTERVAL_MS = 5_000;
@@ -103,4 +113,266 @@ async function fetchStem(url: string, _authHeader: string): Promise<Buffer> {
   if (!res.ok) throw new Error(`Failed to fetch stem from ${url}: HTTP ${res.status}`);
   const ab = await res.arrayBuffer();
   return Buffer.from(ab);
+}
+
+// ── Video generation surface ─────────────────────────────────────────────────
+//
+// Curated catalogue of cost-effective text-to-video models on Replicate.
+// Each entry is the "owner/name" path Replicate expects in /v1/predictions.
+// Pinning to specific versions is OPTIONAL — Replicate auto-resolves the
+// latest version of a model when no `:hash` is given. We accept that
+// trade-off for the catalogue's convenience; user upgrades a model by
+// editing one map entry below.
+
+export const REPLICATE_VIDEO_MODELS = {
+  /** Cheapest. Good for previews. ~$0.06/run, 5s @ 768x512. */
+  'ltx-fast':      'lightricks/ltx-video',
+  /** Fast + cheap. Decent quality. ~$0.10/run, 5s @ 480p. */
+  'wan-2-1-fast':  'wavespeedai/wan-2.1-t2v-480p',
+  /** Strong subject motion + camera moves. ~$0.50/run, 6-10s @ 720p. */
+  'hailuo-02':     'minimax/hailuo-02',
+  /** Excellent prompt following, open-source weights. ~$0.45/run, ~5s @ 720p. */
+  'hunyuan':       'tencent/hunyuan-video',
+  /** Solid all-rounder. ~$0.30/run, 5s @ 720p. */
+  'kling-1-6-std': 'kwaivgi/kling-v1.6-standard',
+  /** Premium cinematic quality. ~$0.95/run, 5s @ 1080p. */
+  'kling-1-6-pro': 'kwaivgi/kling-v1.6-pro',
+} as const;
+
+export type ReplicateVideoModelKey = keyof typeof REPLICATE_VIDEO_MODELS;
+
+const VIDEO_KEY_NAMES = ['REPLICATE_API_TOKEN', 'REPLICATE_KEY', 'REPLICATE', 'replicate.api_token'];
+
+async function getReplicateKey(tenantId: string, env: string): Promise<string | null> {
+  for (const name of VIDEO_KEY_NAMES) {
+    try { return await vaultGet({ name, env, tenantId }); } catch { /* try next */ }
+  }
+  return null;
+}
+
+export async function replicateAvailable(tenantId: string, env: string): Promise<boolean> {
+  return !!(await getReplicateKey(tenantId, env));
+}
+
+export interface ReplicateVideoInput {
+  prompt:           string;
+  model:            ReplicateVideoModelKey;
+  durationSeconds?: number;                          // default 5
+  aspectRatio?:     '16:9' | '9:16' | '1:1';         // default 16:9
+  tenantId:         string;
+  env:              string;
+  signal?:          AbortSignal;
+}
+
+export interface ReplicateVideoResult {
+  ok:        boolean;
+  /** Public URL of the rendered video. */
+  url?:      string;
+  /** Replicate prediction id, useful for diagnostics. */
+  predictionId?: string;
+  /** Which model was used (full owner/name path). */
+  model?:    string;
+  error?:    string;
+}
+
+/**
+ * Each Replicate video model has its own input shape. This normalises ours
+ * into theirs (prompt, duration, aspect ratio) per model.
+ */
+function buildVideoInput(
+  modelKey: ReplicateVideoModelKey,
+  prompt: string,
+  durationSeconds: number,
+  aspectRatio: string,
+): Record<string, unknown> {
+  switch (modelKey) {
+    case 'ltx-fast':
+      return {
+        prompt,
+        num_frames:   Math.min(Math.max(Math.round(durationSeconds * 25), 25), 257),
+        aspect_ratio: aspectRatio,
+      };
+    case 'wan-2-1-fast':
+      return {
+        prompt,
+        aspect_ratio: aspectRatio,
+        num_frames:   Math.min(Math.round(durationSeconds * 16), 81),
+      };
+    case 'hailuo-02':
+      return {
+        prompt,
+        duration:         Math.min(Math.max(Math.round(durationSeconds), 6), 10),
+        prompt_optimizer: true,
+      };
+    case 'hunyuan':
+      return {
+        prompt,
+        video_length: Math.min(Math.round(durationSeconds * 24), 129),
+        aspect_ratio: aspectRatio,
+      };
+    case 'kling-1-6-std':
+    case 'kling-1-6-pro':
+      return {
+        prompt,
+        duration:     Math.min(Math.max(Math.round(durationSeconds), 5), 10),
+        aspect_ratio: aspectRatio,
+        cfg_scale:    0.5,
+      };
+    default:
+      return { prompt };
+  }
+}
+
+/**
+ * Generate a video via Replicate. Polls until the prediction completes.
+ * Returns the public URL of the rendered video.
+ */
+export async function generateReplicateVideo(input: ReplicateVideoInput): Promise<ReplicateVideoResult> {
+  const apiKey = await getReplicateKey(input.tenantId, input.env);
+  if (!apiKey) {
+    return {
+      ok:    false,
+      error: 'REPLICATE_API_TOKEN not in vault — add it via Env & Secrets to enable Replicate',
+    };
+  }
+
+  const modelPath = REPLICATE_VIDEO_MODELS[input.model];
+  if (!modelPath) {
+    return { ok: false, error: `Unknown Replicate model: ${input.model}` };
+  }
+
+  const authHeader = `Token ${apiKey}`;
+  const prepared = buildVideoInput(
+    input.model,
+    input.prompt,
+    input.durationSeconds ?? 5,
+    input.aspectRatio     ?? '16:9',
+  );
+
+  // Create the prediction via the model-namespaced endpoint so we don't have
+  // to look up version hashes manually — Replicate uses the latest version.
+  let predictionId: string | undefined;
+  try {
+    const createRes = await fetch(
+      `${REPLICATE_BASE}/models/${modelPath}/predictions`,
+      {
+        method:  'POST',
+        headers: {
+          Authorization:  authHeader,
+          'Content-Type': 'application/json',
+          // Wait header signals Replicate to hold the connection open up to
+          // 60 s, so quick predictions return immediately without polling.
+          Prefer:         'wait=60',
+        },
+        body:   JSON.stringify({ input: prepared }),
+        signal: input.signal,
+      },
+    );
+
+    const text = await createRes.text();
+    if (!createRes.ok) {
+      return {
+        ok:    false,
+        model: modelPath,
+        error: `Replicate create failed (HTTP ${createRes.status}): ${text.slice(0, 240)}`,
+      };
+    }
+    let prediction: Record<string, unknown>;
+    try { prediction = JSON.parse(text) as Record<string, unknown>; }
+    catch { return { ok: false, model: modelPath, error: 'Replicate response not JSON' }; }
+
+    predictionId = prediction['id'] as string | undefined;
+    const status = prediction['status'] as string | undefined;
+
+    // Fast path: succeeded inside the 60s wait window
+    if (status === 'succeeded') {
+      const url = extractFirstUrl(prediction['output']);
+      if (url) return { ok: true, url, predictionId, model: modelPath };
+    }
+    if (status === 'failed' || status === 'canceled') {
+      return {
+        ok:    false,
+        model: modelPath,
+        predictionId,
+        error: `Replicate prediction ${status}: ${(prediction['error'] as string) ?? 'unknown'}`,
+      };
+    }
+  } catch (err) {
+    return {
+      ok:    false,
+      model: modelPath,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+
+  if (!predictionId) {
+    return { ok: false, model: modelPath, error: 'Replicate did not return a prediction id' };
+  }
+
+  // Slow path: poll until done
+  const deadline = Date.now() + MAX_POLL_MS;
+  while (Date.now() < deadline) {
+    if (input.signal?.aborted) {
+      return { ok: false, model: modelPath, predictionId, error: 'aborted' };
+    }
+    await new Promise<void>((r) => setTimeout(r, POLL_INTERVAL_MS));
+
+    let pollRes: Response;
+    try {
+      pollRes = await fetch(`${REPLICATE_BASE}/predictions/${predictionId}`, {
+        headers: { Authorization: authHeader },
+        signal:  input.signal,
+      });
+    } catch (err) {
+      return {
+        ok: false, model: modelPath, predictionId,
+        error: err instanceof Error ? err.message : String(err),
+      };
+    }
+    if (!pollRes.ok) continue;
+
+    const poll = await pollRes.json() as Record<string, unknown>;
+    const status = poll['status'] as string | undefined;
+    if (status === 'failed' || status === 'canceled') {
+      return {
+        ok: false, model: modelPath, predictionId,
+        error: `Replicate prediction ${status}: ${(poll['error'] as string) ?? 'unknown'}`,
+      };
+    }
+    if (status === 'succeeded') {
+      const url = extractFirstUrl(poll['output']);
+      if (url) return { ok: true, url, predictionId, model: modelPath };
+      return {
+        ok: false, model: modelPath, predictionId,
+        error: `Replicate succeeded but no URL in output: ${JSON.stringify(poll['output']).slice(0, 240)}`,
+      };
+    }
+    // status === 'starting' | 'processing' — keep polling
+  }
+
+  return {
+    ok: false, model: modelPath, predictionId,
+    error: 'Replicate prediction timed out after 5 minutes',
+  };
+}
+
+/** Pluck the first http URL from various Replicate output shapes. */
+function extractFirstUrl(output: unknown): string | undefined {
+  if (typeof output === 'string' && output.startsWith('http')) return output;
+  if (Array.isArray(output)) {
+    for (const item of output) {
+      const u = extractFirstUrl(item);
+      if (u) return u;
+    }
+  }
+  if (output && typeof output === 'object') {
+    const o = output as Record<string, unknown>;
+    if (typeof o['url'] === 'string' && (o['url'] as string).startsWith('http')) {
+      return o['url'] as string;
+    }
+    if (typeof o['video'] === 'string' && (o['video'] as string).startsWith('http')) {
+      return o['video'] as string;
+    }
+  }
+  return undefined;
 }

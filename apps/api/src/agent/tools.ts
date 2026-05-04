@@ -886,9 +886,9 @@ export async function executeToolCall(
         return { ok: out.ok, summary: out.summary, result: out.result };
       }
 
-      case 'sora_video': {
+      case 'replicate_video': {
         if (!ctx.tenantId) {
-          return { ok: false, summary: 'sora_video needs tenant context', result: 'Error: missing tenantId.' };
+          return { ok: false, summary: 'replicate_video needs tenant context', result: 'Error: missing tenantId.' };
         }
         // Same hard-gate as Higgsfield video: index.html must exist first
         const existing = await listWorkspaceFiles(ws);
@@ -898,14 +898,14 @@ export async function executeToolCall(
         if (!hasEntry) {
           return {
             ok: false,
-            summary: 'sora_video refused — no index.html yet',
+            summary: 'replicate_video refused — no index.html yet',
             result:
               'Refused: write index.html FIRST (referencing the planned video paths), ' +
-              'then call sora_video. The site must render even if Sora errors or hits ' +
-              'credit limits. Once index.html exists this gate releases.',
+              'then call replicate_video. The site must render even if Replicate errors ' +
+              'or hits credit limits. Once index.html exists this gate releases.',
           };
         }
-        const out = await executeSoraVideo(args, {
+        const out = await executeReplicateVideo(args, {
           tenantId:  ctx.tenantId,
           env:       ctx.env ?? 'dev',
           projectId: ctx.projectId,
@@ -956,15 +956,15 @@ export async function executeToolCall(
 import { designRunHuashuToolDefinition } from './tools/design';
 import { HIGGSFIELD_TOOL_DEFINITIONS } from './tools/higgsfield';
 import { VIDEO_EDIT_TOOL_DEFINITIONS } from './tools/video-edit';
-import { SORA_TOOL_DEFINITIONS, executeSoraVideo } from './tools/sora';
+import { REPLICATE_TOOL_DEFINITIONS, executeReplicateVideo } from './tools/replicate';
 
 export interface GetToolsOpts {
   designSkillsEnabled?: boolean;
   higgsfieldEnabled?:   boolean;
   /** When the user is on the video editor screen, expose timeline ops. */
   videoEditEnabled?:    boolean;
-  /** Sora 2 video generation (OpenAI direct). Gated by SORA_ENABLED env + key in vault. */
-  soraEnabled?:         boolean;
+  /** Replicate video generation. Gated by REPLICATE_API_TOKEN in vault. */
+  replicateEnabled?:    boolean;
 }
 
 export function getAgentTools(opts: GetToolsOpts = {}): ToolDefinition[] {
@@ -972,6 +972,6 @@ export function getAgentTools(opts: GetToolsOpts = {}): ToolDefinition[] {
   if (opts.designSkillsEnabled) tools.push(designRunHuashuToolDefinition as ToolDefinition);
   if (opts.higgsfieldEnabled)   tools.push(...HIGGSFIELD_TOOL_DEFINITIONS);
   if (opts.videoEditEnabled)    tools.push(...VIDEO_EDIT_TOOL_DEFINITIONS);
-  if (opts.soraEnabled)         tools.push(...SORA_TOOL_DEFINITIONS);
+  if (opts.replicateEnabled)    tools.push(...REPLICATE_TOOL_DEFINITIONS);
   return tools;
 }

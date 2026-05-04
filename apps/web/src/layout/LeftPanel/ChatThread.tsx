@@ -184,7 +184,7 @@ export function ChatThread() {
     selectedProvider, selectedModel,
     designSkillsEnabled, setDesignSkillsEnabled,
     higgsfieldEnabled,   setHiggsfieldEnabled,
-    soraEnabled,         setSoraEnabled,
+    replicateEnabled,    setReplicateEnabled,
   } = useRunStore();
   const [draft, setDraft]             = useState('');
   const [sending, setSending]         = useState(false);
@@ -383,7 +383,7 @@ export function ChatThread() {
           projectEnv:          currentProject?.env ?? 'dev',
           designSkillsEnabled,
           higgsfieldEnabled,
-          soraEnabled,
+          replicateEnabled,
           ...(chatAttachments.length > 0 ? { attachments: chatAttachments } : {}),
         }),
       });
@@ -671,24 +671,24 @@ export function ChatThread() {
         />
         <Toggle
           size="sm"
-          checked={soraEnabled}
-          onChange={setSoraEnabled}
-          ariaLabel="Toggle Sora 2 video generation (OpenAI)"
+          checked={replicateEnabled}
+          onChange={setReplicateEnabled}
+          ariaLabel="Toggle Replicate video generation"
           label={
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              <span aria-hidden style={{ fontSize: '0.75rem', opacity: soraEnabled ? 1 : 0.55 }}>🎥</span>
-              <span style={{ fontSize: '0.75rem', color: soraEnabled ? 'var(--accent-600)' : 'var(--text-secondary)' }}>
-                Sora
+              <span aria-hidden style={{ fontSize: '0.75rem', opacity: replicateEnabled ? 1 : 0.55 }}>🎥</span>
+              <span style={{ fontSize: '0.75rem', color: replicateEnabled ? 'var(--accent-600)' : 'var(--text-secondary)' }}>
+                Replicate
               </span>
             </span>
           }
         />
-        {(designSkillsEnabled || higgsfieldEnabled || soraEnabled) && (
+        {(designSkillsEnabled || higgsfieldEnabled || replicateEnabled) && (
           <span
             style={{ fontSize: '0.625rem', color: 'var(--text-tertiary)', marginLeft: 'auto' }}
             title="Enabled capabilities consume credits or run extra tooling"
           >
-            {(higgsfieldEnabled || soraEnabled) ? '⚡ uses credits' : ''}
+            {(higgsfieldEnabled || replicateEnabled) ? '⚡ uses credits' : ''}
           </span>
         )}
       </div>

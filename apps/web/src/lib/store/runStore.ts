@@ -39,9 +39,10 @@ interface RunState {
   higgsfieldEnabled: boolean;
   setHiggsfieldEnabled: (v: boolean) => void;
 
-  /** Sora 2 (OpenAI) video gen toggle. Off by default. Same gating model as Higgsfield. */
-  soraEnabled: boolean;
-  setSoraEnabled: (v: boolean) => void;
+  /** Replicate video gen toggle (curated cost-effective models). Off by default.
+   *  Same gating model as Higgsfield. Requires REPLICATE_API_TOKEN in vault. */
+  replicateEnabled: boolean;
+  setReplicateEnabled: (v: boolean) => void;
 
   activeRun: ActiveRun | null;
   setActiveRun: (run: ActiveRun | null) => void;
@@ -75,8 +76,8 @@ export const useRunStore = create<RunState>()(
       higgsfieldEnabled: false,
       setHiggsfieldEnabled: (v: boolean) => set({ higgsfieldEnabled: v }),
 
-      soraEnabled: false,
-      setSoraEnabled: (v: boolean) => set({ soraEnabled: v }),
+      replicateEnabled: false,
+      setReplicateEnabled: (v: boolean) => set({ replicateEnabled: v }),
 
       activeRun: null,
       setActiveRun: (run: ActiveRun | null) => set({ activeRun: run }),
