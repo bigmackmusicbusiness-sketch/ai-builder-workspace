@@ -552,7 +552,10 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
       // ── Phase B' + C: Inline post-process humanizer + polish ──────────────
       // Runs after the iteration loop completes (success or partial). Inline,
       // regex-based, no extra MiniMax calls. Surfaces audit findings as SSE.
-      if (toolsActive && ws && planAvailable) {
+      // Runs whenever tools were active and the workspace exists — even on
+      // iteration prompts where the planner subagent didn't fire, we still
+      // want to audit the agent's changes (humanize + polish flags).
+      if (toolsActive && ws) {
         try {
           await runPostPhase({
             ws,
