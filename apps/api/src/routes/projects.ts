@@ -85,14 +85,36 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
   /** GET /api/projects/:id */
   app.get<{ Params: { id: string } }>('/api/projects/:id', async (req, reply) => {
     const ctx = req.authCtx!;
-    const db = getDb();
-    const [row] = await db
-      .select()
-      .from(projects)
-      .where(and(eq(projects.id, req.params.id), eq(projects.tenantId, ctx.tenantId)))
-      .limit(1);
-    if (!row) return reply.status(404).send({ error: 'Not found' });
-    return { project: row };
+    const db  = getDb();
+    try {
+      const [row] = await db
+        .select()
+        .from(projects)
+        .where(and(eq(projects.id, req.params.id), eq(projects.tenantId, ctx.tenantId)))
+        .limit(1);
+      if (!row) return reply.status(404).send({ error: 'Not found' });
+      return { project: row };
+    } catch (err) {
+      // Same defensive fallback as GET /api/projects: when migration 0008 hasn't
+      // applied to the prod DB, Drizzle's SELECT * includes is_shared and 42703s.
+      const msg  = err instanceof Error ? err.message : String(err);
+      const code = (err as { code?: string })?.code ?? '';
+      // eslint-disable-next-line no-console
+      console.warn(`[projects/:id] drizzle select failed (${code} ${msg}) — falling back to raw SQL.`);
+      const sql = getRawSql();
+      const rows = await sql.unsafe(
+        `SELECT id, tenant_id AS "tenantId", created_by AS "createdBy",
+                name, slug, type, description, config,
+                active_env AS "activeEnv",
+                created_at AS "createdAt", updated_at AS "updatedAt"
+           FROM projects
+          WHERE id = $1 AND tenant_id = $2
+          LIMIT 1`,
+        [req.params.id, ctx.tenantId],
+      ) as Array<Record<string, unknown>>;
+      if (!rows[0]) return reply.status(404).send({ error: 'Not found' });
+      return { project: rows[0] };
+    }
   });
 
   /** POST /api/projects — create project */
