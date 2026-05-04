@@ -23,10 +23,10 @@ export const REPLICATE_TOOL_DEFINITIONS: ToolDefinition[] = [
     function: {
       name: 'replicate_video',
       description:
-        'Generate a video using a curated Replicate model. Pick `ltx-fast` or ' +
-        '`wan-2-1-fast` for cheap previews ($0.06–0.10/run). Step up to ' +
-        '`hailuo-02` (~$0.50/run, strong subject motion), `hunyuan` (~$0.45/run, ' +
-        'good prompt following), `kling-1-6-std` (~$0.30/run, solid all-rounder), ' +
+        'Generate a video using a curated Replicate model. Default `wan-2-1-fast` ' +
+        '(~$0.10/run, 5s @ 480p) for cheap exploration. Step up to ' +
+        '`kling-1-6-std` (~$0.30/run, solid all-rounder), `hunyuan` (~$0.45/run, ' +
+        'good prompt following), `hailuo-02` (~$0.50/run, strong subject motion), ' +
         'or `kling-1-6-pro` (~$0.95/run, premium 1080p) when quality matters. ' +
         'Output is uploaded to the project\'s video library automatically.',
       parameters: {
@@ -35,8 +35,8 @@ export const REPLICATE_TOOL_DEFINITIONS: ToolDefinition[] = [
           prompt:           { type: 'string',  description: 'Detailed video prompt: subject, motion, style, lighting, camera move.' },
           model:            {
             type: 'string',
-            description: 'Which Replicate model to use. Default to a cheap option for first-pass exploration.',
-            enum: ['ltx-fast', 'wan-2-1-fast', 'hailuo-02', 'hunyuan', 'kling-1-6-std', 'kling-1-6-pro'],
+            description: 'Which Replicate model to use. Default to wan-2-1-fast for first-pass exploration.',
+            enum: ['wan-2-1-fast', 'hailuo-02', 'hunyuan', 'kling-1-6-std', 'kling-1-6-pro'],
           },
           duration_seconds: { type: 'integer', description: 'Length in seconds (3-10). Default 5.', minimum: 3, maximum: 10 },
           aspect_ratio:     { type: 'string',  description: 'Aspect ratio.', enum: ['16:9', '9:16', '1:1'] },
@@ -48,7 +48,7 @@ export const REPLICATE_TOOL_DEFINITIONS: ToolDefinition[] = [
 ];
 
 const VALID_MODELS: ReplicateVideoModelKey[] = [
-  'ltx-fast', 'wan-2-1-fast', 'hailuo-02', 'hunyuan',
+  'wan-2-1-fast', 'hailuo-02', 'hunyuan',
   'kling-1-6-std', 'kling-1-6-pro',
 ];
 
@@ -70,7 +70,7 @@ export async function executeReplicateVideo(
   ctx:  ReplicateExecuteContext,
 ): Promise<ReplicateExecuteResult> {
   const prompt          = typeof args['prompt']           === 'string' ? args['prompt']           : '';
-  const requestedModel  = typeof args['model']            === 'string' ? args['model']            : 'ltx-fast';
+  const requestedModel  = typeof args['model']            === 'string' ? args['model']            : 'wan-2-1-fast';
   const durationSeconds = typeof args['duration_seconds'] === 'number' ? args['duration_seconds'] : 5;
   const aspectRatio     = (args['aspect_ratio'] as '16:9' | '9:16' | '1:1' | undefined) ?? '16:9';
 
@@ -83,7 +83,7 @@ export async function executeReplicateVideo(
   }
   const model = VALID_MODELS.includes(requestedModel as ReplicateVideoModelKey)
     ? (requestedModel as ReplicateVideoModelKey)
-    : 'ltx-fast';
+    : 'wan-2-1-fast';
 
   const gen = await generateReplicateVideo({
     prompt,
@@ -161,7 +161,6 @@ export async function executeReplicateVideo(
 /** Rough cost estimate in USD cents per model (for the video_projects row). */
 function estimateCostCents(model: ReplicateVideoModelKey): number {
   switch (model) {
-    case 'ltx-fast':      return 6;
     case 'wan-2-1-fast':  return 10;
     case 'kling-1-6-std': return 30;
     case 'hunyuan':       return 45;

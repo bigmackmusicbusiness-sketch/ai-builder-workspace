@@ -129,9 +129,8 @@ async function fetchStem(url: string, _authHeader: string): Promise<Buffer> {
 // editing one map entry below.
 
 export const REPLICATE_VIDEO_MODELS = {
-  /** Cheapest. Good for previews. ~$0.06/run, 5s @ 768x512. */
-  'ltx-fast':      'lightricks/ltx-video',
-  /** Fast + cheap. Decent quality. ~$0.10/run, 5s @ 480p. */
+  /** Cheapest verified. Decent for previews. ~$0.10/run, 5s @ 480p.
+   *  Confirmed working in production smoke tests. */
   'wan-2-1-fast':  'wavespeedai/wan-2.1-t2v-480p',
   /** Strong subject motion + camera moves. ~$0.50/run, 6-10s @ 720p. */
   'hailuo-02':     'minimax/hailuo-02',
@@ -190,12 +189,6 @@ function buildVideoInput(
   aspectRatio: string,
 ): Record<string, unknown> {
   switch (modelKey) {
-    case 'ltx-fast':
-      return {
-        prompt,
-        num_frames:   Math.min(Math.max(Math.round(durationSeconds * 25), 25), 257),
-        aspect_ratio: aspectRatio,
-      };
     case 'wan-2-1-fast':
       return {
         prompt,

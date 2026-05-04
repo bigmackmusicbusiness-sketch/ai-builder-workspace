@@ -202,6 +202,24 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
       await restoreWorkspaceFromStorage(ws).catch(() => {}); // non-fatal
     }
 
+    // Look up the project's UUID from its slug so per-project asset writes
+    // (e.g., replicate_video saving into video_projects) can associate
+    // outputs with the right project. Falls back to null on lookup miss.
+    let resolvedProjectId: string | null = null;
+    if (toolsActive && projectSlug) {
+      try {
+        const { getDb } = await import('../db/client');
+        const { projects } = await import('@abw/db');
+        const { eq, and } = await import('drizzle-orm');
+        const [row] = await getDb()
+          .select({ id: projects.id })
+          .from(projects)
+          .where(and(eq(projects.tenantId, ctx.tenantId), eq(projects.slug, projectSlug)))
+          .limit(1);
+        if (row) resolvedProjectId = row.id;
+      } catch { /* non-fatal — tools that need projectId fall back to null */ }
+    }
+
     // Auto-scaffold a stub index.html if the workspace is genuinely empty.
     // This bypasses the entire "model fails to call write_file with proper
     // schema on the first try" rabbit hole — the gate is already cleared
@@ -249,7 +267,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
         : undefined,
       tenantId:  ctx.tenantId,
       env:       projectEnv,
-      projectId: null,   // creative tools create tenant-scoped content; no project association from chat
+      projectId: resolvedProjectId,   // resolved from slug above; tools that save assets associate with this project
       adapter,
     };
 
