@@ -53,21 +53,28 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
         .orderBy(projects.createdAt);
       return { projects: rows };
     } catch (err) {
-      // If the is_shared column doesn't exist yet (Postgres 42703), fall back
-      // to the legacy tenant-only filter. Run migration 0008_project_sharing.sql
-      // in Supabase to enable the per-user filter.
-      const code = (err as { code?: string })?.code;
-      if (code === '42703') {
-        // eslint-disable-next-line no-console
-        console.warn('[projects] is_shared column missing — falling back to tenant-only filter. Run migration 0008_project_sharing.sql.');
+      // The new sharing filter introduced two columns (is_shared, created_by)
+      // that may not exist in older deployments AND may have NULL values for
+      // pre-existing rows. Fall back to the legacy tenant-only filter on ANY
+      // error from the visibility-aware query so the dashboard keeps working.
+      // Once migration 0008_project_sharing.sql is applied AND created_by is
+      // backfilled, this fallback path stops triggering.
+      const msg  = err instanceof Error ? err.message : String(err);
+      const code = (err as { code?: string })?.code ?? '';
+      // eslint-disable-next-line no-console
+      console.warn(`[projects] visibility-aware query failed (${code} ${msg}) — falling back to tenant-only.`);
+      try {
         const rows = await db
           .select()
           .from(projects)
           .where(eq(projects.tenantId, ctx.tenantId))
           .orderBy(projects.createdAt);
         return { projects: rows };
+      } catch (fallbackErr) {
+        // eslint-disable-next-line no-console
+        console.error(`[projects] fallback query also failed: ${fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr)}`);
+        throw fallbackErr;
       }
-      throw err;
     }
   });
 
