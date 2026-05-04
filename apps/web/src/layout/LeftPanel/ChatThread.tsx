@@ -184,6 +184,7 @@ export function ChatThread() {
     selectedProvider, selectedModel,
     designSkillsEnabled, setDesignSkillsEnabled,
     higgsfieldEnabled,   setHiggsfieldEnabled,
+    soraEnabled,         setSoraEnabled,
   } = useRunStore();
   const [draft, setDraft]             = useState('');
   const [sending, setSending]         = useState(false);
@@ -382,6 +383,7 @@ export function ChatThread() {
           projectEnv:          currentProject?.env ?? 'dev',
           designSkillsEnabled,
           higgsfieldEnabled,
+          soraEnabled,
           ...(chatAttachments.length > 0 ? { attachments: chatAttachments } : {}),
         }),
       });
@@ -632,17 +634,31 @@ export function ChatThread() {
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               <span aria-hidden style={{ fontSize: '0.75rem', opacity: higgsfieldEnabled ? 1 : 0.55 }}>🎬</span>
               <span style={{ fontSize: '0.75rem', color: higgsfieldEnabled ? 'var(--accent-600)' : 'var(--text-secondary)' }}>
-                Premium
+                Higgsfield
               </span>
             </span>
           }
         />
-        {(designSkillsEnabled || higgsfieldEnabled) && (
+        <Toggle
+          size="sm"
+          checked={soraEnabled}
+          onChange={setSoraEnabled}
+          ariaLabel="Toggle Sora 2 video generation (OpenAI)"
+          label={
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <span aria-hidden style={{ fontSize: '0.75rem', opacity: soraEnabled ? 1 : 0.55 }}>🎥</span>
+              <span style={{ fontSize: '0.75rem', color: soraEnabled ? 'var(--accent-600)' : 'var(--text-secondary)' }}>
+                Sora
+              </span>
+            </span>
+          }
+        />
+        {(designSkillsEnabled || higgsfieldEnabled || soraEnabled) && (
           <span
             style={{ fontSize: '0.625rem', color: 'var(--text-tertiary)', marginLeft: 'auto' }}
             title="Enabled capabilities consume credits or run extra tooling"
           >
-            {higgsfieldEnabled ? '⚡ uses credits' : ''}
+            {(higgsfieldEnabled || soraEnabled) ? '⚡ uses credits' : ''}
           </span>
         )}
       </div>

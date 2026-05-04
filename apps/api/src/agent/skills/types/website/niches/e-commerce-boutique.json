@@ -1,0 +1,28 @@
+{
+  "niche": "e-commerce-boutique",
+  "label": "E-commerce Boutique",
+  "triggers": ["boutique", "shop", "store", "ecommerce", "fashion", "apparel", "products", "collection", "online shop", "dtc"],
+  "default_sitemap": [
+    { "slug": "index",      "role": "hero+featured-collection" },
+    { "slug": "shop",       "role": "product-grid" },
+    { "slug": "collections","role": "collection-list" },
+    { "slug": "about",      "role": "brand-story" },
+    { "slug": "journal",    "role": "blog-archive" },
+    { "slug": "contact",    "role": "support+faq" }
+  ],
+  "compliance_blocks": ["shipping-returns-policy", "privacy-policy-link", "terms-of-service-link", "sales-tax-disclosure", "ada-accessibility-statement"],
+  "schema_org_primary": "Store",
+  "voice_template": "editorial, taste-forward, intimate-yet-aspirational, conversational with brand confidence",
+  "palettes": [
+    { "name": "minimal-bone",   "hexes": ["#1A1A1A", "#F5F1E8", "#E8DFCE", "#FFFFFF"] },
+    { "name": "rose-cream",     "hexes": ["#C68B8B", "#FFF8F4", "#F5E1DD", "#2A1A1A"] },
+    { "name": "muted-sage",     "hexes": ["#9CAF88", "#F8F8F2", "#DEE2D5", "#1F2418"] },
+    { "name": "ink-blush",      "hexes": ["#0F0F0F", "#FBE7E1", "#F5F5F4", "#FAFAFA"] },
+    { "name": "ochre-linen",    "hexes": ["#B8843E", "#FAF6EE", "#EFE2C8", "#2B1F0F"] },
+    { "name": "midnight-pearl", "hexes": ["#1C1F33", "#F5F5F0", "#E8E4DA", "#0A0A0F"] }
+  ],
+  "section_library": ["hero", "page-hero", "featured-collection", "product-card", "product-grid", "lookbook-strip", "brand-story", "testimonial-quote", "ugc-strip", "newsletter-signup", "shipping-strip", "support-faq", "footer"],
+  "image_directives": "editorial-grade product and lifestyle photography. Soft daylight, considered styling, on-model and flat-lay. Real textures, real spaces. Avoid catalog mannequin shots and harsh white-cyc commercial look. Consistent grain, color story per collection.",
+  "voice_pet_words": ["curated", "considered", "made", "story", "small-batch", "wear", "love"],
+  "primary_keywords": ["boutique", "online store", "shop", "collection"]
+}

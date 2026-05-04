@@ -30,6 +30,9 @@ export const projects = pgTable('projects', {
   config:      jsonb('config').notNull().default({}),
   /** Active target env for this session */
   activeEnv:   envEnum('active_env').notNull().default('dev'),
+  /** When true, project is visible to all users in the same tenant.
+   *  When false (default), only `createdBy` sees it. Toggleable by owner only. */
+  isShared:    boolean('is_shared').notNull().default(false),
   ...timestamps,
 });
 

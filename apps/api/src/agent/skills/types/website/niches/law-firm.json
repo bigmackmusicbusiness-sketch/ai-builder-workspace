@@ -1,0 +1,28 @@
+{
+  "niche": "law-firm",
+  "label": "Law Firm",
+  "triggers": ["law", "lawyer", "attorney", "legal", "litigation", "counsel", "esquire", "law firm", "paralegal", "barrister"],
+  "default_sitemap": [
+    { "slug": "index",          "role": "hero+practice-preview" },
+    { "slug": "practice-areas", "role": "service-list" },
+    { "slug": "attorneys",      "role": "attorney-bios" },
+    { "slug": "case-results",   "role": "results-list" },
+    { "slug": "insights",       "role": "blog-archive" },
+    { "slug": "contact",        "role": "consultation-form+offices" }
+  ],
+  "compliance_blocks": ["bar-association-disclaimer", "attorney-advertising-notice", "no-legal-advice-disclaimer", "prior-results-disclaimer", "ada-accessibility-statement"],
+  "schema_org_primary": "LegalService",
+  "voice_template": "authoritative, measured, trust-building, plain-English where possible without diluting precision",
+  "palettes": [
+    { "name": "navy-gold",     "hexes": ["#0B1F3A", "#C9A961", "#F8F5EE", "#1A1A1A"] },
+    { "name": "burgundy-ivory","hexes": ["#7B1E2E", "#F8F4EC", "#E8DFCE", "#1F1212"] },
+    { "name": "charcoal-brass","hexes": ["#1F2937", "#B08D57", "#F5F5F4", "#0A0A0A"] },
+    { "name": "deep-forest",   "hexes": ["#14532D", "#F5F5DC", "#E5E7EB", "#0F172A"] },
+    { "name": "slate-cream",   "hexes": ["#334155", "#FAF5EC", "#CBD5E1", "#0F172A"] },
+    { "name": "oxford-blue",   "hexes": ["#002147", "#FFFFFF", "#E5E7EB", "#0A0A0A"] }
+  ],
+  "section_library": ["hero", "page-hero", "practice-area-grid", "attorney-card", "credentials-strip", "case-results-list", "client-testimonial", "consultation-cta", "office-locations", "insights-feed", "disclaimer-block", "footer"],
+  "image_directives": "polished editorial photography. Attorneys in tailored attire, law library backdrops, courthouse exteriors, conference rooms with natural light. Confident posture, direct eye contact. Avoid gavel cliches and stock-photo handshakes. Dark, rich tones. Architectural detail.",
+  "voice_pet_words": ["counsel", "advocate", "experience", "results", "discretion", "diligence", "integrity"],
+  "primary_keywords": ["law firm", "attorney", "legal services", "consultation"]
+}

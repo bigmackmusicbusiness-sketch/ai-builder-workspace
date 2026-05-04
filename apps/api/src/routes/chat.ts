@@ -58,6 +58,8 @@ const ChatBodySchema = z.object({
    *  has NO access to Higgsfield tools. When true, higgsfield.* tools are exposed
    *  alongside a cost-conscious model-selection prelude. */
   higgsfieldEnabled:   z.boolean().default(false),
+  /** Sora 2 video generation toggle (OpenAI direct). Same gating model as Higgsfield. */
+  soraEnabled:         z.boolean().default(false),
   /** Files attached by the user in the chat composer. */
   attachments: z.array(AttachmentSchema).optional(),
 });
@@ -156,7 +158,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
 
     const {
       provider, projectEnv, projectSlug, projectTypeId, enableTools, attachments,
-      designSkillsEnabled, higgsfieldEnabled,
+      designSkillsEnabled, higgsfieldEnabled, soraEnabled,
     } = parsed.data;
 
     // Normalise model name — guard against stale persisted values from old UI.
@@ -246,6 +248,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
         ? (prompt: string) => adapter.generateImage!({ prompt, signal: controller.signal })
         : undefined,
       tenantId:  ctx.tenantId,
+      env:       projectEnv,
       projectId: null,   // creative tools create tenant-scoped content; no project association from chat
       adapter,
     };
@@ -380,7 +383,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
       });
     }
     // Compute the per-request tool list (gates Higgsfield + design tools by flag).
-    const toolList = getAgentTools({ designSkillsEnabled, higgsfieldEnabled });
+    const toolList = getAgentTools({ designSkillsEnabled, higgsfieldEnabled, soraEnabled });
 
     function send(obj: unknown): void {
       raw.write(`data: ${JSON.stringify(obj)}\n\n`);

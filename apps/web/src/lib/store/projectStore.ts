@@ -57,6 +57,10 @@ export interface ProjectRecord {
   lastActiveAt: number;
   /** Agent memory bank — isolated per project. */
   memory: ProjectMemory;
+  /** Whether this project is shared with other tenant members. */
+  isShared?: boolean;
+  /** UUID of the user who owns the project. */
+  createdBy?: string;
 }
 
 /** Shape of a project row coming back from GET /api/projects */
@@ -69,6 +73,8 @@ export interface DBProjectRow {
   activeEnv:   string;
   createdAt:   string;   // ISO string from DB
   updatedAt:   string;
+  isShared?:   boolean;
+  createdBy?:  string | null;
 }
 
 interface ProjectState {
@@ -88,6 +94,8 @@ interface ProjectState {
   syncFromDB: (rows: DBProjectRow[]) => void;
   /** Fetch projects from GET /api/projects and sync into local store. Non-fatal on error. */
   loadProjectsFromServer: () => Promise<void>;
+  /** Owner-only: toggle whether the project is shared with the tenant. */
+  toggleShare: (id: string, isShared: boolean) => void;
   updateMemory: (id: string, patch: Partial<ProjectMemory>) => void;
   addDecision: (id: string, decision: string) => void;
   addCompletedTask: (id: string, task: string) => void;
@@ -170,6 +178,8 @@ export const useProjectStore = create<ProjectState>()(
               lastActiveAt: existing?.lastActiveAt ?? new Date(row.updatedAt ?? row.createdAt).getTime(),
               // Always preserve agent memory — it lives only in localStorage
               memory: existing?.memory ?? emptyMemory(),
+              isShared:  row.isShared ?? false,
+              createdBy: row.createdBy ?? undefined,
             };
           }
           // If the active project was deleted elsewhere, fall back to global
@@ -179,6 +189,13 @@ export const useProjectStore = create<ProjectState>()(
             projects: next,
             currentProjectId: stillActive ? s.currentProjectId : 'global',
           };
+        }),
+
+      toggleShare: (id, isShared) =>
+        set((s) => {
+          const p = s.projects[id];
+          if (!p) return {};
+          return { projects: { ...s.projects, [id]: { ...p, isShared } } };
         }),
 
       updateMemory: (id, patch) =>

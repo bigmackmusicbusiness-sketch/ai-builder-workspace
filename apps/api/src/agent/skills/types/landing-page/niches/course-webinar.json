@@ -1,0 +1,22 @@
+{
+  "niche": "course-webinar",
+  "label": "Course / Webinar",
+  "triggers": ["course", "webinar", "masterclass", "workshop", "training", "bootcamp", "cohort", "lesson", "online class", "live session"],
+  "default_sitemap": [
+    { "slug": "index", "role": "hero+curriculum+instructor+enroll-cta" }
+  ],
+  "compliance_blocks": ["earnings-results-disclaimer", "refund-policy-link", "intellectual-property-notice", "gdpr-consent-checkbox", "ftc-endorsement-disclosure"],
+  "schema_org_primary": "Course",
+  "voice_template": "instructive and encouraging, expert-led, focuses on transformation and concrete outcomes",
+  "palettes": [
+    { "name": "academic-navy",   "hexes": ["#1E3A8A", "#FBBF24", "#FFFFFF", "#0F172A"] },
+    { "name": "creator-violet",  "hexes": ["#7C3AED", "#FFFFFF", "#EDE9FE", "#1E1B4B"] },
+    { "name": "edu-emerald",     "hexes": ["#059669", "#F0FDF4", "#FBBF24", "#022C22"] },
+    { "name": "professional",    "hexes": ["#0F172A", "#F97316", "#F8FAFC", "#FAFAFA"] },
+    { "name": "warm-classroom",  "hexes": ["#B45309", "#FFFCF5", "#FEF3C7", "#1F1812"] }
+  ],
+  "section_library": ["hero-course-promise", "instructor-card", "video-trailer", "what-you-learn", "curriculum-modules", "outcome-stats", "testimonial-grid", "pricing-tiers", "bonus-stack", "guarantee-badge", "faq", "enroll-cta", "footer"],
+  "image_directives": "instructor at desk or stage, lifestyle shots of students learning, screenshots of course platform, certificates, testimonial video stills. Avoid stock 'graduation cap on laptop' imagery.",
+  "voice_pet_words": ["learn", "master", "transform", "step-by-step", "framework", "results", "cohort"],
+  "primary_keywords": ["online course", "webinar", "masterclass", "training"]
+}

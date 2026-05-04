@@ -1,0 +1,29 @@
+{
+  "niche": "real-estate-agent",
+  "label": "Real Estate Agent / Brokerage",
+  "triggers": ["real estate", "realtor", "broker", "homes for sale", "listings", "mls", "buy a home", "sell my home", "property", "open house"],
+  "default_sitemap": [
+    { "slug": "index",       "role": "hero+search+featured-listings" },
+    { "slug": "listings",    "role": "property-grid" },
+    { "slug": "buyers",      "role": "buyer-guide" },
+    { "slug": "sellers",     "role": "seller-guide+valuation" },
+    { "slug": "neighborhoods","role": "area-guide" },
+    { "slug": "about",       "role": "agent-bio+credentials" },
+    { "slug": "contact",     "role": "consultation-form" }
+  ],
+  "compliance_blocks": ["equal-housing-opportunity-logo", "fair-housing-disclaimer", "broker-license-footer", "mls-attribution", "ada-accessibility-statement"],
+  "schema_org_primary": "RealEstateAgent",
+  "voice_template": "warm-professional, locally knowledgeable, consultative, confident without pressure",
+  "palettes": [
+    { "name": "estate-navy",    "hexes": ["#1E3A5F", "#F5F1E8", "#D4B896", "#0F1F2E"] },
+    { "name": "modern-stone",   "hexes": ["#475569", "#FAFAF9", "#E7E5E4", "#1C1917"] },
+    { "name": "warm-terra",     "hexes": ["#B7410E", "#FFF8F0", "#F5E6D3", "#3F2417"] },
+    { "name": "coastal-sage",   "hexes": ["#7A9B76", "#F8FAF7", "#DDE5DA", "#1F2D1E"] },
+    { "name": "luxury-onyx",    "hexes": ["#0A0A0A", "#D4AF37", "#F5F5F4", "#FAFAFA"] },
+    { "name": "soft-clay",      "hexes": ["#C09782", "#FFFCF7", "#F0E4D7", "#2A1E16"] }
+  ],
+  "section_library": ["hero", "page-hero", "search-bar", "featured-listing-grid", "property-card", "neighborhood-card", "agent-card", "testimonial-strip", "valuation-cta", "process-timeline", "blog-feed", "contact-form", "footer-equal-housing", "footer"],
+  "image_directives": "bright architectural and interior photography. Wide-angle living spaces, twilight exteriors, lifestyle moments in homes. Diverse families and buyers. Local landmarks for area pages. Avoid generic suburban stock. HDR done tastefully.",
+  "voice_pet_words": ["home", "neighborhood", "local", "market", "trusted", "guidance", "lifestyle"],
+  "primary_keywords": ["real estate", "homes for sale", "realtor", "property listings"]
+}

@@ -1,0 +1,22 @@
+{
+  "niche": "lead-gen-waitlist",
+  "label": "Lead Generation / Waitlist",
+  "triggers": ["waitlist", "early access", "join the list", "lead gen", "coming soon", "sign up", "be the first", "invite", "wait list", "interest list"],
+  "default_sitemap": [
+    { "slug": "index", "role": "hero+email-capture+social-proof" }
+  ],
+  "compliance_blocks": ["gdpr-consent-checkbox", "ccpa-privacy-link", "can-spam-footer", "double-optin-disclosure"],
+  "schema_org_primary": "WebPage",
+  "voice_template": "intriguing, exclusive-feeling, scarcity without sleaze, hint at the upside",
+  "palettes": [
+    { "name": "midnight-spark",  "hexes": ["#0F0F1E", "#FBBF24", "#1E1B3A", "#FAFAFA"] },
+    { "name": "gradient-dream",  "hexes": ["#8B5CF6", "#EC4899", "#FFFFFF", "#1E1B4B"] },
+    { "name": "minimal-bone",    "hexes": ["#0A0A0A", "#F5F1E8", "#737373", "#FFFFFF"] },
+    { "name": "deep-emerald",    "hexes": ["#064E3B", "#A7F3D0", "#FFFFFF", "#022C22"] },
+    { "name": "warm-mono",       "hexes": ["#1A1A1A", "#FF6B35", "#FBF8F1", "#FAFAFA"] }
+  ],
+  "section_library": ["hero", "email-capture-form", "value-prop-strip", "founder-quote", "social-proof-counter", "what-you-get", "press-mentions", "faq", "footer-privacy"],
+  "image_directives": "abstract gradients, atmospheric product teasers, blurred screenshots, founder portraits. Build anticipation without revealing too much. Avoid generic 'sign up' stock imagery.",
+  "voice_pet_words": ["early", "first", "soon", "exclusive", "insider", "join", "before"],
+  "primary_keywords": ["waitlist", "early access", "coming soon", "sign up"]
+}

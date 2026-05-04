@@ -1,0 +1,23 @@
+{
+  "niche": "app-download",
+  "label": "Mobile App Download",
+  "triggers": ["app", "download", "ios", "android", "mobile app", "app store", "google play", "iphone app", "play store", "install"],
+  "default_sitemap": [
+    { "slug": "index", "role": "hero+screenshots+features+store-badges" }
+  ],
+  "compliance_blocks": ["app-store-trademark-notice", "google-play-trademark-notice", "privacy-policy-link", "terms-of-service-link", "in-app-purchase-disclosure", "data-collection-disclosure"],
+  "schema_org_primary": "MobileApplication",
+  "voice_template": "punchy, benefit-driven, mobile-native energy with clear single action",
+  "palettes": [
+    { "name": "ios-fresh",       "hexes": ["#0A84FF", "#FFFFFF", "#F2F2F7", "#000000"] },
+    { "name": "android-vibrant", "hexes": ["#3DDC84", "#1F1F1F", "#F8FAFC", "#FFFFFF"] },
+    { "name": "neon-pop",        "hexes": ["#EC4899", "#0A0A0A", "#FAFAFA", "#FBE7F1"] },
+    { "name": "gradient-sunset", "hexes": ["#F59E0B", "#EC4899", "#FFFFFF", "#1F1812"] },
+    { "name": "deep-space",      "hexes": ["#0F0F1E", "#A78BFA", "#FAFAFA", "#1E1B3A"] },
+    { "name": "minimal-mono",    "hexes": ["#0A0A0A", "#FFFFFF", "#737373", "#FACC15"] }
+  ],
+  "section_library": ["hero-with-phone-mockup", "store-badge-row", "screenshot-carousel", "feature-strip", "social-proof-rating", "press-quotes", "qr-download", "video-walkthrough", "faq", "footer"],
+  "image_directives": "device mockups (iPhone, Android), real app UI in context, hands holding phones, lifestyle shots showing the app being used. Avoid stock 'person on couch with phone' imagery. Use product UI front and center.",
+  "voice_pet_words": ["tap", "swipe", "download", "free", "your phone", "anywhere", "instantly"],
+  "primary_keywords": ["mobile app", "download", "ios app", "android app"]
+}

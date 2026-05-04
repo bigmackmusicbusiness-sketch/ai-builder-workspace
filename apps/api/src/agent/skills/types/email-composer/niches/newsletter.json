@@ -1,0 +1,26 @@
+{
+  "niche": "newsletter",
+  "label": "Newsletter",
+  "triggers": ["newsletter", "weekly digest", "monthly update", "email list", "subscribers", "issue", "roundup", "substack", "beehiiv"],
+  "default_sitemap": [
+    { "slug": "header",    "role": "issue-number+date+masthead" },
+    { "slug": "intro",     "role": "editor-note" },
+    { "slug": "main",      "role": "feature-story" },
+    { "slug": "links",     "role": "curated-links-list" },
+    { "slug": "outro",     "role": "signoff+share" },
+    { "slug": "footer",    "role": "unsubscribe+address" }
+  ],
+  "compliance_blocks": ["can-spam-physical-address", "unsubscribe-link", "gdpr-preferences-link", "list-management-link"],
+  "schema_org_primary": "EmailMessage",
+  "voice_template": "personal, conversational first-person, like writing to a friend who shares your interests",
+  "palettes": [
+    { "name": "editorial-mono",  "hexes": ["#0A0A0A", "#FFFFFF", "#737373", "#F5F5F4"] },
+    { "name": "warm-paper",      "hexes": ["#1F1812", "#FBF8F1", "#E8DFCE", "#3D3528"] },
+    { "name": "indie-coral",     "hexes": ["#F97316", "#FFFFFF", "#FED7AA", "#1F1812"] },
+    { "name": "thoughtful-blue", "hexes": ["#1E40AF", "#F8FAFC", "#DBEAFE", "#0F172A"] }
+  ],
+  "section_library": ["masthead", "issue-header", "editor-intro", "feature-story", "section-divider", "link-list-item", "image-with-caption", "pull-quote", "sponsor-block", "share-cta", "signoff", "footer-unsubscribe"],
+  "image_directives": "minimal hero illustrations or editorial photography, sparingly used. Prefer typography-driven design. Inline images should support the writing, not decorate it.",
+  "voice_pet_words": ["this week", "noticed", "thinking", "sharing", "reading", "dear reader"],
+  "primary_keywords": ["newsletter", "email digest", "weekly", "subscribe"]
+}

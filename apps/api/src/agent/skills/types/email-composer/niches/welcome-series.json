@@ -1,0 +1,25 @@
+{
+  "niche": "welcome-series",
+  "label": "Welcome / Onboarding Series",
+  "triggers": ["welcome", "onboarding", "drip", "welcome series", "new subscriber", "first email", "kickoff", "introduction", "getting started"],
+  "default_sitemap": [
+    { "slug": "email-1-welcome",       "role": "warm-welcome+expectations" },
+    { "slug": "email-2-story",         "role": "founder-story+why" },
+    { "slug": "email-3-best-of",       "role": "best-content-roundup" },
+    { "slug": "email-4-soft-offer",    "role": "value-then-offer" },
+    { "slug": "footer",                "role": "unsubscribe+preferences" }
+  ],
+  "compliance_blocks": ["can-spam-physical-address", "unsubscribe-link", "double-optin-confirmation", "preference-center-link"],
+  "schema_org_primary": "EmailMessage",
+  "voice_template": "welcoming, personable, sets expectations clearly, introduces the brand voice from email one",
+  "palettes": [
+    { "name": "welcoming-warm",  "hexes": ["#EA580C", "#FFFCF5", "#FED7AA", "#1F1812"] },
+    { "name": "friendly-blue",   "hexes": ["#0EA5E9", "#FFFFFF", "#E0F2FE", "#0C4A6E"] },
+    { "name": "soft-greeting",   "hexes": ["#84A98C", "#FAFAF7", "#DDE5DA", "#1F2D1E"] },
+    { "name": "modern-mono",     "hexes": ["#0A0A0A", "#FFFFFF", "#FAFAFA", "#737373"] }
+  ],
+  "section_library": ["greeting-hero", "personal-intro", "what-to-expect-list", "founder-story-block", "best-resources-grid", "cta-button", "social-follow-strip", "p-s-postscript", "footer-unsubscribe"],
+  "image_directives": "founder headshot, behind-the-scenes shots, simple branded illustrations. Keep imagery sparse and human. Avoid corporate stock.",
+  "voice_pet_words": ["welcome", "glad you're here", "quick note", "between us", "promise", "thanks"],
+  "primary_keywords": ["welcome email", "onboarding sequence", "subscriber series"]
+}

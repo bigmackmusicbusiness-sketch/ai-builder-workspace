@@ -2,7 +2,7 @@
 // Tenants manage projects; all data is scoped by tenantId from the JWT.
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or } from 'drizzle-orm';
 import { getDb } from '../db/client';
 import { projects } from '@abw/db';
 import { authMiddleware, requireRole, type AuthContext } from '../security/authz';
@@ -24,19 +24,29 @@ const CreateProjectSchema = z.object({
   description: z.string().max(500).optional(),
 });
 
-const UpdateProjectSchema = CreateProjectSchema.partial();
+const UpdateProjectSchema = CreateProjectSchema.partial().extend({
+  /** Owner-only: toggle whether project is visible to other tenant members. */
+  isShared: z.boolean().optional(),
+});
 
 export async function projectsRoutes(app: FastifyInstance): Promise<void> {
   app.addHook('preHandler', authMiddleware);
 
-  /** GET /api/projects — list projects for tenant */
+  /** GET /api/projects — list projects visible to the current user.
+   *  Visible = (created by them) OR (shared with the tenant). Within the same tenant. */
   app.get('/api/projects', async (req) => {
     const ctx = req.authCtx!;
     const db = getDb();
     const rows = await db
       .select()
       .from(projects)
-      .where(eq(projects.tenantId, ctx.tenantId))
+      .where(and(
+        eq(projects.tenantId, ctx.tenantId),
+        or(
+          eq(projects.createdBy, ctx.userId),
+          eq(projects.isShared, true),
+        ),
+      ))
       .orderBy(projects.createdAt);
     return { projects: rows };
   });
@@ -84,7 +94,7 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
     return reply.status(201).send({ project: row });
   });
 
-  /** PATCH /api/projects/:id — update project */
+  /** PATCH /api/projects/:id — update project. Owner-only for ownership-sensitive fields. */
   app.patch<{ Params: { id: string }; Body: unknown }>('/api/projects/:id', async (req, reply) => {
     const ctx = req.authCtx!;
     requireRole(ctx, 'member');
@@ -93,6 +103,20 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
     if (!parsed.success) return reply.status(400).send({ error: 'Invalid body', detail: parsed.error.format() });
 
     const db = getDb();
+
+    // Verify ownership before any update touching isShared
+    if (parsed.data.isShared !== undefined) {
+      const [existing] = await db
+        .select({ createdBy: projects.createdBy })
+        .from(projects)
+        .where(and(eq(projects.id, req.params.id), eq(projects.tenantId, ctx.tenantId)))
+        .limit(1);
+      if (!existing) return reply.status(404).send({ error: 'Not found' });
+      if (existing.createdBy !== ctx.userId) {
+        return reply.status(403).send({ error: 'Only the project owner can change sharing.' });
+      }
+    }
+
     const [row] = await db
       .update(projects)
       .set(parsed.data)

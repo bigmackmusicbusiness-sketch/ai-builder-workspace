@@ -1,0 +1,23 @@
+{
+  "niche": "event-rsvp",
+  "label": "Event RSVP",
+  "triggers": ["event", "rsvp", "conference", "summit", "meetup", "workshop", "gathering", "register", "tickets", "agenda"],
+  "default_sitemap": [
+    { "slug": "index", "role": "hero+date-venue+agenda+rsvp-form" }
+  ],
+  "compliance_blocks": ["ada-accessibility-accommodations", "code-of-conduct-link", "covid-health-policy", "photo-release-notice", "refund-policy-link"],
+  "schema_org_primary": "Event",
+  "voice_template": "energetic and welcoming, sense of occasion, clear and logistical where it matters",
+  "palettes": [
+    { "name": "festival-bright",  "hexes": ["#F43F5E", "#FBBF24", "#0F172A", "#FFFFFF"] },
+    { "name": "summit-sleek",     "hexes": ["#1E40AF", "#F8FAFC", "#FBBF24", "#0F172A"] },
+    { "name": "midnight-gala",    "hexes": ["#0F0F1E", "#D4AF37", "#FAFAFA", "#1E1B3A"] },
+    { "name": "garden-soiree",    "hexes": ["#84A98C", "#FBF8F1", "#E8DFCE", "#1F2D1E"] },
+    { "name": "neon-meetup",      "hexes": ["#A3E635", "#0A0A0A", "#FAFAFA", "#1F1F1F"] },
+    { "name": "warm-conference",  "hexes": ["#EA580C", "#FFFCF5", "#FED7AA", "#1F1812"] }
+  ],
+  "section_library": ["hero-event-banner", "date-time-venue-bar", "speaker-grid", "agenda-timeline", "rsvp-form", "venue-map", "sponsor-logos", "faq", "code-of-conduct-link", "footer"],
+  "image_directives": "energetic event photography from past editions — crowds, speakers on stage, hallway conversations. Venue exteriors at golden hour. Avoid stock 'business conference' photos. Show real attendees.",
+  "voice_pet_words": ["join us", "save the date", "lineup", "doors", "agenda", "in-person"],
+  "primary_keywords": ["event", "rsvp", "register", "tickets"]
+}

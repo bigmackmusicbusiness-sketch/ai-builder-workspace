@@ -1,0 +1,22 @@
+{
+  "niche": "consultation-booking",
+  "label": "Consultation Booking",
+  "triggers": ["consultation", "book a call", "schedule", "discovery call", "free consult", "appointment", "calendly", "strategy session", "intake", "consult"],
+  "default_sitemap": [
+    { "slug": "index", "role": "hero+credibility+booking-widget" }
+  ],
+  "compliance_blocks": ["no-professional-advice-disclaimer", "privacy-policy-link", "scheduling-cancellation-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "warm-authoritative, builds trust quickly, removes friction with a clear next step",
+  "palettes": [
+    { "name": "consult-navy",   "hexes": ["#1E3A5F", "#FBBF24", "#F8FAFC", "#0F172A"] },
+    { "name": "calm-sage",      "hexes": ["#7A9B76", "#FAFAF7", "#DDE5DA", "#1F2D1E"] },
+    { "name": "expert-charcoal","hexes": ["#1F2937", "#D4AF37", "#F5F5F4", "#0A0A0A"] },
+    { "name": "soft-clinic",    "hexes": ["#0EA5E9", "#FFFFFF", "#E0F2FE", "#0C4A6E"] },
+    { "name": "warm-trust",     "hexes": ["#A0673D", "#FDFAF4", "#F2DDC2", "#2C1A0D"] }
+  ],
+  "section_library": ["hero-with-headshot", "credentials-strip", "process-steps", "what-to-expect", "testimonial-quote", "calendar-embed", "booking-form", "faq", "cancellation-policy", "footer"],
+  "image_directives": "warm professional headshot of practitioner, calm office or call setup, candid client conversations. Avoid stock 'handshake' or 'two people at laptop' imagery.",
+  "voice_pet_words": ["book", "schedule", "free", "no obligation", "30 minutes", "let's talk"],
+  "primary_keywords": ["book a consultation", "free consultation", "schedule a call", "discovery call"]
+}

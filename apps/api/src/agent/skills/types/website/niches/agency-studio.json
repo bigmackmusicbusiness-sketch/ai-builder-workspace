@@ -1,0 +1,28 @@
+{
+  "niche": "agency-studio",
+  "label": "Agency / Studio",
+  "triggers": ["agency", "studio", "branding", "consultancy", "design firm", "creative agency", "marketing agency", "production company", "digital agency"],
+  "default_sitemap": [
+    { "slug": "index",     "role": "hero+capabilities-preview" },
+    { "slug": "work",      "role": "case-study-grid" },
+    { "slug": "services",  "role": "capability-list" },
+    { "slug": "about",     "role": "team+studio-story" },
+    { "slug": "thinking",  "role": "blog-archive" },
+    { "slug": "contact",   "role": "new-business-form" }
+  ],
+  "compliance_blocks": ["client-logo-attribution", "privacy-policy-link", "ada-accessibility-statement"],
+  "schema_org_primary": "Organization",
+  "voice_template": "smart, confident, opinionated, with dry wit — speaks like a senior partner, not a salesperson",
+  "palettes": [
+    { "name": "studio-noir",    "hexes": ["#0A0A0A", "#FAFAFA", "#737373", "#FF6B35"] },
+    { "name": "cobalt-bone",    "hexes": ["#1E40AF", "#FBF8F1", "#DBEAFE", "#0F172A"] },
+    { "name": "forest-clay",    "hexes": ["#14532D", "#F5E6D3", "#D6BFA0", "#0A1F12"] },
+    { "name": "electric-paper", "hexes": ["#7C3AED", "#FFFFFF", "#F3F4F6", "#1E1B4B"] },
+    { "name": "warm-oxide",     "hexes": ["#C2410C", "#FFFCF5", "#FED7AA", "#2A0E04"] },
+    { "name": "graphite-mint",  "hexes": ["#1F2937", "#A7F3D0", "#F5F5F4", "#0A0A0A"] }
+  ],
+  "section_library": ["hero", "page-hero", "capability-strip", "case-study-grid", "case-study-detail", "client-logo-grid", "team-grid", "studio-story", "process-timeline", "thinking-feed", "new-business-cta", "contact-form", "footer"],
+  "image_directives": "polished case-study presentations, behind-the-scenes studio life, candid team photos, crafted brand systems shown in real contexts. Treat work imagery with editorial discipline. Avoid stock office photos and generic 'team meeting around laptop' shots.",
+  "voice_pet_words": ["partners", "craft", "thinking", "ambitious", "build", "ship", "considered"],
+  "primary_keywords": ["design agency", "creative studio", "branding", "case studies"]
+}

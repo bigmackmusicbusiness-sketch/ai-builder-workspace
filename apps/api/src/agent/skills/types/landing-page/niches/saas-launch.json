@@ -1,0 +1,23 @@
+{
+  "niche": "saas-launch",
+  "label": "SaaS Product Launch",
+  "triggers": ["saas", "launch", "product launch", "beta", "early access", "platform", "software", "app launch", "v1", "go-to-market"],
+  "default_sitemap": [
+    { "slug": "index", "role": "hero+features+pricing+cta" }
+  ],
+  "compliance_blocks": ["privacy-policy-link", "terms-of-service-link", "gdpr-cookie-notice"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "confident, technical-but-accessible, benefit-led with concrete capability statements",
+  "palettes": [
+    { "name": "indigo-launch",  "hexes": ["#6366F1", "#0F172A", "#F8FAFC", "#A5B4FC"] },
+    { "name": "violet-electric","hexes": ["#7C3AED", "#FAFAFA", "#EDE9FE", "#1E1B4B"] },
+    { "name": "cyber-mint",     "hexes": ["#10B981", "#0A0A0A", "#D1FAE5", "#F0FDF4"] },
+    { "name": "ocean-tech",     "hexes": ["#0EA5E9", "#0C4A6E", "#E0F2FE", "#FFFFFF"] },
+    { "name": "sunset-coral",   "hexes": ["#F97316", "#1F2937", "#FED7AA", "#FFFFFF"] },
+    { "name": "monoline",       "hexes": ["#0A0A0A", "#FFFFFF", "#A3A3A3", "#22D3EE"] }
+  ],
+  "section_library": ["hero", "social-proof-logos", "feature-grid", "feature-detail-split", "interactive-demo", "metric-strip", "testimonial-quote", "pricing-tiers", "faq", "final-cta", "footer"],
+  "image_directives": "polished product UI screenshots and abstract gradient backgrounds. Animated feature reels. Minimal isometric or vector illustrations. Avoid generic 'team in office' stock. Show the product working.",
+  "voice_pet_words": ["ship", "build", "scale", "automate", "faster", "modern", "stack"],
+  "primary_keywords": ["saas", "software", "platform", "free trial"]
+}

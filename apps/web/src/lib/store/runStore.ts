@@ -39,6 +39,10 @@ interface RunState {
   higgsfieldEnabled: boolean;
   setHiggsfieldEnabled: (v: boolean) => void;
 
+  /** Sora 2 (OpenAI) video gen toggle. Off by default. Same gating model as Higgsfield. */
+  soraEnabled: boolean;
+  setSoraEnabled: (v: boolean) => void;
+
   activeRun: ActiveRun | null;
   setActiveRun: (run: ActiveRun | null) => void;
   updateRunStatus: (status: AgentRunStatus, step?: string) => void;
@@ -70,6 +74,9 @@ export const useRunStore = create<RunState>()(
 
       higgsfieldEnabled: false,
       setHiggsfieldEnabled: (v: boolean) => set({ higgsfieldEnabled: v }),
+
+      soraEnabled: false,
+      setSoraEnabled: (v: boolean) => set({ soraEnabled: v }),
 
       activeRun: null,
       setActiveRun: (run: ActiveRun | null) => set({ activeRun: run }),

@@ -247,8 +247,10 @@ export interface ToolContext {
   ws: WorkspaceHandle;
   /** If provided, the gen_image tool can generate real images. */
   generateImage?: (prompt: string) => Promise<ImageGenResponse>;
-  /** Tenant ID — required for Creative Suite tools. */
+  /** Tenant ID — required for Creative Suite tools + repair fallback. */
   tenantId?: string;
+  /** Project env — required for vault scoping in repair fallback. */
+  env?: string;
   /** Project ID to associate generated content with (optional). */
   projectId?: string | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -356,6 +358,35 @@ export async function executeToolCall(
         if (!content) {
           for (const v of Object.values(args)) {
             if (typeof v === 'string' && v.length >= 50) { content = v; break; }
+          }
+        }
+
+        if (!path) {
+          // Heroic recovery exhausted. Try the fallback-model repair pass
+          // (GPT-4o-mini extracts the args from the malformed payload) IF
+          // the tenant has an OpenAI key in vault and repair is enabled.
+          if (process.env.OPENAI_REPAIR_ENABLED !== '0' && ctx.tenantId && ctx.env) {
+            try {
+              const { repairToolCall } = await import('./repair');
+              const repaired = await repairToolCall({
+                rawArgs:  argsJson,
+                toolName: 'write_file',
+                tenantId: ctx.tenantId,
+                env:      ctx.env,
+              });
+              if (repaired.ok && repaired.repairedArgs) {
+                const r = repaired.repairedArgs;
+                if (typeof r.path === 'string' && r.path.trim() && typeof r.content === 'string') {
+                  // eslint-disable-next-line no-console
+                  console.log(`[write_file] recovered via fallback-model: path=${r.path}`);
+                  path    = r.path.trim();
+                  content = r.content;
+                }
+              }
+            } catch (err) {
+              // eslint-disable-next-line no-console
+              console.warn(`[write_file] repair fallback errored: ${err instanceof Error ? err.message : String(err)}`);
+            }
           }
         }
 
@@ -855,6 +886,33 @@ export async function executeToolCall(
         return { ok: out.ok, summary: out.summary, result: out.result };
       }
 
+      case 'sora_video': {
+        if (!ctx.tenantId) {
+          return { ok: false, summary: 'sora_video needs tenant context', result: 'Error: missing tenantId.' };
+        }
+        // Same hard-gate as Higgsfield video: index.html must exist first
+        const existing = await listWorkspaceFiles(ws);
+        const hasEntry = existing.some((p) =>
+          /\/(index\.html?|main\.tsx|main\.jsx)$/i.test(p),
+        );
+        if (!hasEntry) {
+          return {
+            ok: false,
+            summary: 'sora_video refused — no index.html yet',
+            result:
+              'Refused: write index.html FIRST (referencing the planned video paths), ' +
+              'then call sora_video. The site must render even if Sora errors or hits ' +
+              'credit limits. Once index.html exists this gate releases.',
+          };
+        }
+        const out = await executeSoraVideo(args, {
+          tenantId:  ctx.tenantId,
+          env:       ctx.env ?? 'dev',
+          projectId: ctx.projectId,
+        });
+        return out;
+      }
+
       case 'video_summary':
       case 'video_list_clips':
       case 'video_cut_clip':
@@ -898,12 +956,15 @@ export async function executeToolCall(
 import { designRunHuashuToolDefinition } from './tools/design';
 import { HIGGSFIELD_TOOL_DEFINITIONS } from './tools/higgsfield';
 import { VIDEO_EDIT_TOOL_DEFINITIONS } from './tools/video-edit';
+import { SORA_TOOL_DEFINITIONS, executeSoraVideo } from './tools/sora';
 
 export interface GetToolsOpts {
   designSkillsEnabled?: boolean;
   higgsfieldEnabled?:   boolean;
   /** When the user is on the video editor screen, expose timeline ops. */
   videoEditEnabled?:    boolean;
+  /** Sora 2 video generation (OpenAI direct). Gated by SORA_ENABLED env + key in vault. */
+  soraEnabled?:         boolean;
 }
 
 export function getAgentTools(opts: GetToolsOpts = {}): ToolDefinition[] {
@@ -911,5 +972,6 @@ export function getAgentTools(opts: GetToolsOpts = {}): ToolDefinition[] {
   if (opts.designSkillsEnabled) tools.push(designRunHuashuToolDefinition as ToolDefinition);
   if (opts.higgsfieldEnabled)   tools.push(...HIGGSFIELD_TOOL_DEFINITIONS);
   if (opts.videoEditEnabled)    tools.push(...VIDEO_EDIT_TOOL_DEFINITIONS);
+  if (opts.soraEnabled)         tools.push(...SORA_TOOL_DEFINITIONS);
   return tools;
 }

@@ -1,0 +1,26 @@
+{
+  "niche": "creative-portfolio",
+  "label": "Creative Portfolio",
+  "triggers": ["portfolio", "designer", "photographer", "illustrator", "artist", "creative", "freelance", "case study", "showreel", "director"],
+  "default_sitemap": [
+    { "slug": "index",   "role": "hero+selected-work" },
+    { "slug": "work",    "role": "case-study-grid" },
+    { "slug": "about",   "role": "bio+process" },
+    { "slug": "contact", "role": "inquiry-form+links" }
+  ],
+  "compliance_blocks": ["copyright-notice-footer", "image-credit-attribution"],
+  "schema_org_primary": "Person",
+  "voice_template": "confident first-person, opinionated about craft, restrained and tasteful — let the work speak",
+  "palettes": [
+    { "name": "monochrome",     "hexes": ["#000000", "#FFFFFF", "#737373", "#F5F5F5"] },
+    { "name": "warm-paper",     "hexes": ["#1A1A1A", "#FBF8F1", "#E8E1D0", "#3D3528"] },
+    { "name": "studio-saffron", "hexes": ["#F4C430", "#0F0F0F", "#FAFAFA", "#1F1B12"] },
+    { "name": "indigo-cream",   "hexes": ["#312E81", "#FFFCF5", "#E0E7FF", "#1E1B4B"] },
+    { "name": "brutalist-red",  "hexes": ["#EF4444", "#FFFFFF", "#0A0A0A", "#171717"] },
+    { "name": "sage-graphite",  "hexes": ["#84A98C", "#1F2937", "#F5F5F4", "#FAFAFA"] }
+  ],
+  "section_library": ["hero", "page-hero", "selected-work-grid", "case-study-cover", "case-study-detail", "process-strip", "client-list", "press-strip", "about-bio", "contact-block", "social-links", "footer"],
+  "image_directives": "the work is the photography. Show projects in context — printed, on devices, in space. High-fidelity case-study imagery with consistent grid and crops. Avoid generic stock entirely. Treat whitespace as a design element.",
+  "voice_pet_words": ["craft", "selected", "process", "intent", "considered", "made"],
+  "primary_keywords": ["portfolio", "freelance", "creative work", "case studies"]
+}

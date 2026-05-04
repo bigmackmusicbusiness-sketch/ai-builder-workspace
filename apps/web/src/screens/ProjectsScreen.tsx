@@ -54,9 +54,10 @@ const FEATURED_TEMPLATE_IDS: ProjectTypeId[] = ['website', 'landing-page', 'saas
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function ProjectsScreen() {
-  const { projects, createProject, deleteProject, syncFromDB, setCurrentProject } = useProjectStore();
+  const { projects, createProject, deleteProject, syncFromDB, setCurrentProject, toggleShare } = useProjectStore();
   const navigate = useNavigate();
   const userEmail = useAuthStore((s) => s.user?.email ?? null);
+  const userId    = useAuthStore((s) => s.user?.id ?? null);
   const [showNew,  setShowNew]  = useState(false);
   const [search,   setSearch]   = useState('');
   const [syncing,  setSyncing]  = useState(true);
@@ -83,9 +84,15 @@ export function ProjectsScreen() {
     p.slug.toLowerCase().includes(search.toLowerCase()),
   );
 
-  // Recents = the 3 most recently active. The rest go into the main grid.
-  const recents = !search ? projectList.slice(0, 3) : [];
-  const rest    = !search ? projectList.slice(3) : filtered;
+  // Split into "mine" (you own them) and "shared with me" (others' shared projects).
+  // userId may be null briefly during auth hydration — fall back to "everything is mine"
+  // so we don't render an empty dashboard for the legitimate owner.
+  const myProjects = projectList.filter((p) => !userId || !p.createdBy || p.createdBy === userId);
+  const sharedWithMe = projectList.filter((p) => userId && p.createdBy && p.createdBy !== userId && p.isShared);
+
+  // Recents = the 3 most recently active OWN projects. Shared section is separate.
+  const recents = !search ? myProjects.slice(0, 3) : [];
+  const rest    = !search ? myProjects.slice(3) : filtered;
 
   async function handleCreate(data: {
     name: string; slug: string; typeId: ProjectTypeId; description: string;
@@ -143,6 +150,21 @@ export function ProjectsScreen() {
       return;
     }
     deleteProject(id);
+  }
+
+  async function handleToggleShare(id: string, isShared: boolean) {
+    // Optimistic update first
+    toggleShare(id, isShared);
+    try {
+      await apiFetch(`/api/projects/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ isShared }),
+      });
+    } catch (err) {
+      // Revert on failure
+      toggleShare(id, !isShared);
+      alert(`Failed to ${isShared ? 'share' : 'unshare'}: ${err instanceof ApiError ? err.message : 'Server error'}`);
+    }
   }
 
   const hasProjects = projectList.length > 0;
@@ -254,12 +276,36 @@ export function ProjectsScreen() {
                 <ProjectCard
                   key={p.id}
                   project={p}
+                  isOwner={!userId || !p.createdBy || p.createdBy === userId}
                   onOpen={handleOpen}
                   onDelete={handleDelete}
+                  onToggleShare={handleToggleShare}
                 />
               ))}
             </div>
           )}
+        </section>
+      )}
+
+      {/* Shared-with-me section — only renders if there are shared projects from other users */}
+      {!search && sharedWithMe.length > 0 && (
+        <section className="abw-dashboard__section">
+          <div className="abw-dashboard__section-header">
+            <h2 className="abw-dashboard__section-title">Shared with me</h2>
+            <span className="abw-dashboard__section-meta">{sharedWithMe.length} project{sharedWithMe.length === 1 ? '' : 's'}</span>
+          </div>
+          <div className="abw-projects__grid">
+            {sharedWithMe.map((p) => (
+              <ProjectCard
+                key={p.id}
+                project={p}
+                isOwner={false}
+                onOpen={handleOpen}
+                onDelete={handleDelete}
+                onToggleShare={handleToggleShare}
+              />
+            ))}
+          </div>
         </section>
       )}
 
@@ -367,11 +413,13 @@ function RecentCard({
 // ── ProjectCard ───────────────────────────────────────────────────────────────
 
 function ProjectCard({
-  project, onOpen, onDelete,
+  project, isOwner, onOpen, onDelete, onToggleShare,
 }: {
-  project:  ProjectRecord;
-  onOpen:   (p: ProjectRecord) => void;
-  onDelete: (id: string) => void;
+  project:        ProjectRecord;
+  isOwner:        boolean;
+  onOpen:         (p: ProjectRecord) => void;
+  onDelete:       (id: string) => void;
+  onToggleShare:  (id: string, isShared: boolean) => void;
 }) {
   const types       = listProjectTypes();
   const pt          = types.find((t) => t.id === project.typeId);
@@ -422,6 +470,38 @@ function ProjectCard({
           {project.env.toUpperCase()}
         </span>
         <span className="abw-badge" style={{ fontSize: '0.625rem' }}>{pt?.label ?? project.typeId}</span>
+        {/* Shared-with-team pill (owner) */}
+        {isOwner && project.isShared && (
+          <span
+            title="This project is visible to other members of your tenant"
+            style={{
+              fontSize: '0.625rem',
+              padding: '1px 6px',
+              borderRadius: 'var(--radius-pill)',
+              background: 'rgba(139, 92, 246, 0.14)',
+              color: 'var(--accent-300)',
+              fontWeight: 600,
+            }}
+          >
+            👁 Shared
+          </span>
+        )}
+        {/* Shared-with-me pill (non-owner) */}
+        {!isOwner && (
+          <span
+            title="Shared by another member"
+            style={{
+              fontSize: '0.625rem',
+              padding: '1px 6px',
+              borderRadius: 'var(--radius-pill)',
+              background: 'rgba(96, 165, 250, 0.14)',
+              color: '#93c5fd',
+              fontWeight: 600,
+            }}
+          >
+            ↗ Shared with me
+          </span>
+        )}
         <span style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', marginLeft: 'auto' }}>
           {relativeTime(project.lastActiveAt)}
         </span>
@@ -475,6 +555,18 @@ function ProjectCard({
             >
               Open workspace
             </button>
+            {isOwner && (
+              <button
+                role="menuitem"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onToggleShare(project.id, !(project.isShared ?? false));
+                }}
+                style={overflowItemStyle()}
+              >
+                {project.isShared ? '🔒 Unshare' : '👁 Share with team'}
+              </button>
+            )}
             {mem.goal && (
               <div
                 role="menuitem"
@@ -495,13 +587,15 @@ function ProjectCard({
                 Goal: {mem.goal.length > 40 ? mem.goal.slice(0, 40) + '…' : mem.goal}
               </div>
             )}
-            <button
-              role="menuitem"
-              onClick={() => { setMenuOpen(false); void onDelete(project.id); }}
-              style={{ ...overflowItemStyle(), color: 'var(--error-500)' }}
-            >
-              🗑 Delete project
-            </button>
+            {isOwner && (
+              <button
+                role="menuitem"
+                onClick={() => { setMenuOpen(false); void onDelete(project.id); }}
+                style={{ ...overflowItemStyle(), color: 'var(--error-500)' }}
+              >
+                🗑 Delete project
+              </button>
+            )}
           </div>
         )}
       </div>

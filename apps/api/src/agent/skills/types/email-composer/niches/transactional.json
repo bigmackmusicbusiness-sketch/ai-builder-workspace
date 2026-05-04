@@ -1,0 +1,25 @@
+{
+  "niche": "transactional",
+  "label": "Transactional Email",
+  "triggers": ["receipt", "confirmation", "order", "shipping", "password reset", "invoice", "transactional", "verify", "notification", "account"],
+  "default_sitemap": [
+    { "slug": "header",     "role": "logo+transaction-type" },
+    { "slug": "summary",    "role": "transaction-detail" },
+    { "slug": "action",     "role": "primary-action-button" },
+    { "slug": "support",    "role": "help-link+contact" },
+    { "slug": "footer",     "role": "company-address+legal" }
+  ],
+  "compliance_blocks": ["company-physical-address", "transactional-classification-notice", "privacy-policy-link", "data-retention-notice"],
+  "schema_org_primary": "EmailMessage",
+  "voice_template": "clear, factual, reassuring, minimal — every word earns its place",
+  "palettes": [
+    { "name": "system-clean",    "hexes": ["#0A0A0A", "#FFFFFF", "#F5F5F4", "#3B82F6"] },
+    { "name": "trust-blue",      "hexes": ["#1E40AF", "#FFFFFF", "#DBEAFE", "#0F172A"] },
+    { "name": "neutral-gray",    "hexes": ["#374151", "#F9FAFB", "#E5E7EB", "#10B981"] },
+    { "name": "brand-soft",      "hexes": ["#0F172A", "#FAFAFA", "#F1F5F9", "#F97316"] }
+  ],
+  "section_library": ["logo-header", "transaction-summary-card", "line-item-table", "total-row", "primary-cta-button", "secondary-info-block", "support-link-row", "legal-footer", "address-footer"],
+  "image_directives": "minimal — logo and product thumbnails only. No decorative imagery. Function over form. Consistent with the source application.",
+  "voice_pet_words": ["confirmed", "received", "your order", "questions", "thank you"],
+  "primary_keywords": ["order confirmation", "receipt", "transactional email"]
+}
