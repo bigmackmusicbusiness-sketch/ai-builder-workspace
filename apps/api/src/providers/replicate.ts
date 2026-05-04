@@ -5,9 +5,13 @@
 //   2. generateReplicateVideo() — curated video model catalogue exposed
 //      through the agent's `replicate_video` tool
 //
-// Both use the same Replicate REST API (https://api.replicate.com/v1).
+// Stem separation uses the raw REST API. Video gen uses the SDK
+// (`replicate.run`) so versions auto-resolve — community models don't
+// have to be explicitly pinned.
+//
 // Auth: vault[REPLICATE_API_TOKEN] (or REPLICATE_KEY / replicate.api_token).
 
+import Replicate from 'replicate';
 import { vaultGet } from '../security/vault';
 
 const REPLICATE_BASE = 'https://api.replicate.com/v1';
@@ -241,7 +245,6 @@ export async function generateReplicateVideo(input: ReplicateVideoInput): Promis
     return { ok: false, error: `Unknown Replicate model: ${input.model}` };
   }
 
-  const authHeader = `Token ${apiKey}`;
   const prepared = buildVideoInput(
     input.model,
     input.prompt,
@@ -249,114 +252,39 @@ export async function generateReplicateVideo(input: ReplicateVideoInput): Promis
     input.aspectRatio     ?? '16:9',
   );
 
-  // Create the prediction via the model-namespaced endpoint so we don't have
-  // to look up version hashes manually — Replicate uses the latest version.
-  let predictionId: string | undefined;
+  // Use the SDK's `run()` which auto-resolves the latest version of the
+  // model and handles polling internally. Way more robust than hitting the
+  // model-namespaced endpoint manually (which 404s for community models).
+  const replicate = new Replicate({ auth: apiKey });
+
   try {
-    const createRes = await fetch(
-      `${REPLICATE_BASE}/models/${modelPath}/predictions`,
-      {
-        method:  'POST',
-        headers: {
-          Authorization:  authHeader,
-          'Content-Type': 'application/json',
-          // Wait header signals Replicate to hold the connection open up to
-          // 60 s, so quick predictions return immediately without polling.
-          Prefer:         'wait=60',
-        },
-        body:   JSON.stringify({ input: prepared }),
-        signal: input.signal,
-      },
+    const output = await replicate.run(
+      modelPath as `${string}/${string}`,
+      { input: prepared, signal: input.signal },
     );
 
-    const text = await createRes.text();
-    if (!createRes.ok) {
+    const url = extractFirstUrl(output);
+    if (!url) {
       return {
         ok:    false,
         model: modelPath,
-        error: `Replicate create failed (HTTP ${createRes.status}): ${text.slice(0, 240)}`,
+        error: `Replicate succeeded but no URL in output: ${JSON.stringify(output).slice(0, 240)}`,
       };
     }
-    let prediction: Record<string, unknown>;
-    try { prediction = JSON.parse(text) as Record<string, unknown>; }
-    catch { return { ok: false, model: modelPath, error: 'Replicate response not JSON' }; }
-
-    predictionId = prediction['id'] as string | undefined;
-    const status = prediction['status'] as string | undefined;
-
-    // Fast path: succeeded inside the 60s wait window
-    if (status === 'succeeded') {
-      const url = extractFirstUrl(prediction['output']);
-      if (url) return { ok: true, url, predictionId, model: modelPath };
-    }
-    if (status === 'failed' || status === 'canceled') {
-      return {
-        ok:    false,
-        model: modelPath,
-        predictionId,
-        error: `Replicate prediction ${status}: ${(prediction['error'] as string) ?? 'unknown'}`,
-      };
-    }
+    return { ok: true, url, model: modelPath };
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
     return {
       ok:    false,
       model: modelPath,
-      error: err instanceof Error ? err.message : String(err),
+      error: `Replicate run failed: ${msg}`,
     };
   }
-
-  if (!predictionId) {
-    return { ok: false, model: modelPath, error: 'Replicate did not return a prediction id' };
-  }
-
-  // Slow path: poll until done
-  const deadline = Date.now() + MAX_POLL_MS;
-  while (Date.now() < deadline) {
-    if (input.signal?.aborted) {
-      return { ok: false, model: modelPath, predictionId, error: 'aborted' };
-    }
-    await new Promise<void>((r) => setTimeout(r, POLL_INTERVAL_MS));
-
-    let pollRes: Response;
-    try {
-      pollRes = await fetch(`${REPLICATE_BASE}/predictions/${predictionId}`, {
-        headers: { Authorization: authHeader },
-        signal:  input.signal,
-      });
-    } catch (err) {
-      return {
-        ok: false, model: modelPath, predictionId,
-        error: err instanceof Error ? err.message : String(err),
-      };
-    }
-    if (!pollRes.ok) continue;
-
-    const poll = await pollRes.json() as Record<string, unknown>;
-    const status = poll['status'] as string | undefined;
-    if (status === 'failed' || status === 'canceled') {
-      return {
-        ok: false, model: modelPath, predictionId,
-        error: `Replicate prediction ${status}: ${(poll['error'] as string) ?? 'unknown'}`,
-      };
-    }
-    if (status === 'succeeded') {
-      const url = extractFirstUrl(poll['output']);
-      if (url) return { ok: true, url, predictionId, model: modelPath };
-      return {
-        ok: false, model: modelPath, predictionId,
-        error: `Replicate succeeded but no URL in output: ${JSON.stringify(poll['output']).slice(0, 240)}`,
-      };
-    }
-    // status === 'starting' | 'processing' — keep polling
-  }
-
-  return {
-    ok: false, model: modelPath, predictionId,
-    error: 'Replicate prediction timed out after 5 minutes',
-  };
 }
 
-/** Pluck the first http URL from various Replicate output shapes. */
+/** Pluck the first http URL from various Replicate output shapes.
+ *  Handles: bare string, array of strings, FileOutput object (with .url() getter),
+ *  { url, video, output } objects. */
 function extractFirstUrl(output: unknown): string | undefined {
   if (typeof output === 'string' && output.startsWith('http')) return output;
   if (Array.isArray(output)) {
@@ -367,11 +295,22 @@ function extractFirstUrl(output: unknown): string | undefined {
   }
   if (output && typeof output === 'object') {
     const o = output as Record<string, unknown>;
+    // SDK v1 FileOutput: object with .url() method that returns a URL object/string
+    if (typeof o['url'] === 'function') {
+      try {
+        const u = (o['url'] as () => unknown)();
+        if (typeof u === 'string' && u.startsWith('http')) return u;
+        if (u && typeof u === 'object' && 'href' in u) return String((u as { href: string }).href);
+      } catch { /* ignore */ }
+    }
     if (typeof o['url'] === 'string' && (o['url'] as string).startsWith('http')) {
       return o['url'] as string;
     }
     if (typeof o['video'] === 'string' && (o['video'] as string).startsWith('http')) {
       return o['video'] as string;
+    }
+    if (typeof o['output'] !== 'undefined') {
+      return extractFirstUrl(o['output']);
     }
   }
   return undefined;
