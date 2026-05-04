@@ -38,6 +38,8 @@ export const aiMusicVideo: ProjectType = {
       'Lyric attribution required',
     ],
     multiPageStrategy: {
+      nicheManifestPath: 'types/ai-music-video/niches/',
+      detectFromPrompt:  true,
     },
     assetBudget: { images: 0, icons: 8 },
   },

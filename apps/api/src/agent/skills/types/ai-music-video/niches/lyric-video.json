@@ -1,0 +1,44 @@
+{
+  "niche": "lyric-video",
+  "label": "Lyric Video",
+  "triggers": ["lyric video", "lyrics", "kinetic typography", "lyric mv", "official lyrics video", "audio-only release"],
+  "default_sitemap": [
+    { "slug": "intro",   "role": "song-intro",   "sections": [
+      { "slug": "title-card",      "role": "song-title+artist-typography" },
+      { "slug": "vibe-establish",  "role": "color-and-motion-language" }
+    ]},
+    { "slug": "verse-1", "role": "song-verse",   "sections": [
+      { "slug": "verse-typography","role": "kinetic-type-on-beat" },
+      { "slug": "supporting-motif","role": "loopable-graphic-or-collage" }
+    ]},
+    { "slug": "chorus",  "role": "song-chorus",  "sections": [
+      { "slug": "hook-emphasis",   "role": "biggest-typographic-moment" },
+      { "slug": "color-shift",     "role": "palette-change-on-chorus" }
+    ]},
+    { "slug": "verse-2", "role": "song-verse",   "sections": [
+      { "slug": "verse-typography-2","role": "vary-layout+rhythm" },
+      { "slug": "motif-evolution",   "role": "evolve-the-graphic-system" }
+    ]},
+    { "slug": "bridge",  "role": "song-bridge",  "sections": [
+      { "slug": "tonal-pause",     "role": "slow-down+highlight-key-line" }
+    ]},
+    { "slug": "outro",   "role": "song-outro",   "sections": [
+      { "slug": "final-chorus",    "role": "callback-typography" },
+      { "slug": "credits-card",    "role": "writing+production-credits" }
+    ]}
+  ],
+  "compliance_blocks": ["master-recording-license", "publishing-sync-license", "lyric-reproduction-license", "writer-credit-display", "explicit-lyrics-content-warning-if-applicable", "platform-content-policy", "third-party-asset-attribution", "trademark-clearance-on-visible-brands"],
+  "schema_org_primary": "MusicVideoObject",
+  "voice_template": "typographic, rhythmic, design-led; every cut and animation lives on the beat or the syllable",
+  "palettes": [
+    { "name": "bold-contrast", "hexes": ["#000000", "#FFFFFF", "#FBBF24", "#DC2626"] },
+    { "name": "neon-graphic",  "hexes": ["#22D3EE", "#0A0A0A", "#F472B6", "#FFFFFF"] },
+    { "name": "gradient-pop",  "hexes": ["#7C3AED", "#EC4899", "#FBBF24", "#0F172A"] },
+    { "name": "minimal-mono",  "hexes": ["#171717", "#FAFAFA", "#525252", "#E5E5E5"] },
+    { "name": "swiss-modern",  "hexes": ["#DC2626", "#FFFFFF", "#000000", "#94A3B8"] }
+  ],
+  "section_library": ["title-card-type", "kinetic-typography-on-beat", "syllable-emphasis-pop", "lyric-line-animation", "background-motion-graphic", "color-shift-transition", "collage-photo-cutout", "geometric-loopable-motif", "section-divider-card", "credits-roll", "writer-credit-card"],
+  "image_directives": "typography is the star. Choose 1-2 typefaces and use them with discipline. Animate on the beat — every cut earns its rhythm. Use bold contrast and let words breathe. Avoid generic 'lyric video templates'; build a custom motion system.",
+  "voice_pet_words": ["lyrics", "kinetic", "type", "bold", "contrast"],
+  "primary_keywords": ["lyric video", "official lyrics", "kinetic typography"]
+}

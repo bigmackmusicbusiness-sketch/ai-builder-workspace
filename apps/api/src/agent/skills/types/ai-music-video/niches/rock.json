@@ -1,0 +1,44 @@
+{
+  "niche": "rock",
+  "label": "Rock Music Video",
+  "triggers": ["rock", "alternative rock", "punk", "metal", "rock band", "rock music video", "live performance video"],
+  "default_sitemap": [
+    { "slug": "intro",   "role": "song-intro",   "sections": [
+      { "slug": "guitar-or-drum-tease","role": "instrument-driven-cold-open" },
+      { "slug": "band-reveal",         "role": "wide-shot-band-in-place" }
+    ]},
+    { "slug": "verse-1", "role": "song-verse",   "sections": [
+      { "slug": "vocalist-singles",    "role": "lipsync-energy" },
+      { "slug": "instrument-detail-A", "role": "guitar-bass-drum-cuts" }
+    ]},
+    { "slug": "chorus",  "role": "song-chorus",  "sections": [
+      { "slug": "full-band-energy",    "role": "wide-jump-shots" },
+      { "slug": "anthem-image",        "role": "iconic-defining-frame" }
+    ]},
+    { "slug": "verse-2", "role": "song-verse",   "sections": [
+      { "slug": "narrative-or-perf-cut","role": "story-vignette-or-second-set" },
+      { "slug": "instrument-detail-B", "role": "solo-spotlight" }
+    ]},
+    { "slug": "bridge",  "role": "song-bridge",  "sections": [
+      { "slug": "breakdown-or-solo",   "role": "guitar-solo-or-quiet-build" }
+    ]},
+    { "slug": "outro",   "role": "song-outro",   "sections": [
+      { "slug": "final-chorus-explosion","role": "destruction-or-release" },
+      { "slug": "smoldering-fade",     "role": "aftermath-frame" }
+    ]}
+  ],
+  "compliance_blocks": ["master-recording-license", "publishing-sync-license", "performer-likeness-releases", "location-or-venue-permits", "pyrotechnics-permits-if-applicable", "weapon-or-fire-on-set-safety-protocols", "minor-on-set-permits", "platform-content-policy", "explicit-content-warning-if-applicable", "trademark-clearance-on-visible-gear-brands"],
+  "schema_org_primary": "MusicVideoObject",
+  "voice_template": "raw, kinetic, cathartic; embrace grit, sweat, and blown-out highlights; let the band feel like a force",
+  "palettes": [
+    { "name": "garage-noir",  "hexes": ["#0A0A0A", "#FAFAFA", "#DC2626", "#525252"] },
+    { "name": "punk-red",     "hexes": ["#DC2626", "#000000", "#FFFFFF", "#FBBF24"] },
+    { "name": "stadium-amber","hexes": ["#92400E", "#FEF3C7", "#F59E0B", "#1C1917"] },
+    { "name": "metal-steel",  "hexes": ["#1F2937", "#94A3B8", "#FFFFFF", "#DC2626"] },
+    { "name": "alt-rust",     "hexes": ["#78350F", "#F5F5F4", "#A8A29E", "#1C0F08"] }
+  ],
+  "section_library": ["instrument-cold-open", "band-wide-power-stance", "vocalist-screaming-into-mic", "drummer-overhead", "guitarist-low-angle", "bassist-singles", "stage-light-flares", "smoke-machine-haze", "narrative-vignette-cut", "destruction-or-fire-insert", "fade-on-amp"],
+  "image_directives": "handheld energy, deep blacks, blown-out warm practicals, lens flares from stage lights. Sweat, breath, and motion blur are features. Avoid clinical cleanliness. Capture the band as a unit and as individuals.",
+  "voice_pet_words": ["raw", "loud", "anthem", "stage", "live", "sweat"],
+  "primary_keywords": ["rock music video", "official video", "band performance"]
+}
