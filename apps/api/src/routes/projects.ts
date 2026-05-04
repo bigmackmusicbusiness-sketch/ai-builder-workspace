@@ -33,22 +33,42 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
   app.addHook('preHandler', authMiddleware);
 
   /** GET /api/projects — list projects visible to the current user.
-   *  Visible = (created by them) OR (shared with the tenant). Within the same tenant. */
+   *  Visible = (created by them) OR (shared with the tenant). Within the same tenant.
+   *  Falls back to tenant-scoped filter if the is_shared column doesn't exist yet
+   *  (i.e., before the 0008_project_sharing migration has been applied). */
   app.get('/api/projects', async (req) => {
     const ctx = req.authCtx!;
     const db = getDb();
-    const rows = await db
-      .select()
-      .from(projects)
-      .where(and(
-        eq(projects.tenantId, ctx.tenantId),
-        or(
-          eq(projects.createdBy, ctx.userId),
-          eq(projects.isShared, true),
-        ),
-      ))
-      .orderBy(projects.createdAt);
-    return { projects: rows };
+    try {
+      const rows = await db
+        .select()
+        .from(projects)
+        .where(and(
+          eq(projects.tenantId, ctx.tenantId),
+          or(
+            eq(projects.createdBy, ctx.userId),
+            eq(projects.isShared, true),
+          ),
+        ))
+        .orderBy(projects.createdAt);
+      return { projects: rows };
+    } catch (err) {
+      // If the is_shared column doesn't exist yet (Postgres 42703), fall back
+      // to the legacy tenant-only filter. Run migration 0008_project_sharing.sql
+      // in Supabase to enable the per-user filter.
+      const code = (err as { code?: string })?.code;
+      if (code === '42703') {
+        // eslint-disable-next-line no-console
+        console.warn('[projects] is_shared column missing — falling back to tenant-only filter. Run migration 0008_project_sharing.sql.');
+        const rows = await db
+          .select()
+          .from(projects)
+          .where(eq(projects.tenantId, ctx.tenantId))
+          .orderBy(projects.createdAt);
+        return { projects: rows };
+      }
+      throw err;
+    }
   });
 
   /** GET /api/projects/:id */
