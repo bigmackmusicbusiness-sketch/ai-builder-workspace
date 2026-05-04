@@ -94,4 +94,16 @@ export type User = z.infer<typeof UserSchema>;
   },
 
   screens: ['preview', 'code', 'files', 'console', 'tests', 'visualqa', 'split', 'database', 'jobs', 'env-secrets', 'approvals'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/full-stack-app.md',
+    copyGuidance:
+      'Generic FE+BE monorepo. Reuse saas-app patterns when ambiguous.',
+    securitySOPs: [
+      'Auth + audit + Zod validation by default',
+      'No hardcoded keys',
+    ],
+    multiPageStrategy: {
+    },
+    assetBudget: { images: 4, icons: 8 },
+  },
 };

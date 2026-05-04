@@ -1,0 +1,27 @@
+{
+  "niche": "internal-ops",
+  "label": "Internal Operations Dashboard",
+  "triggers": ["internal tool", "admin panel", "ops dashboard", "back office", "internal ops", "crud", "workflow", "operations console", "internal app"],
+  "default_sitemap": [
+    { "slug": "home",          "role": "queue-status+today-tasks" },
+    { "slug": "tickets",       "role": "ticket-queue+filters" },
+    { "slug": "users",         "role": "user-management-table" },
+    { "slug": "actions",       "role": "bulk-actions+approvals" },
+    { "slug": "audit-log",     "role": "activity-history" },
+    { "slug": "settings",      "role": "permissions+integrations" }
+  ],
+  "compliance_blocks": ["role-based-access-notice", "audit-log-availability", "data-retention-policy-link", "internal-use-only-banner", "pii-handling-warning"],
+  "schema_org_primary": "WebApplication",
+  "voice_template": "utilitarian, instructional, surfaces the next action, no marketing fluff",
+  "palettes": [
+    { "name": "ops-light",      "hexes": ["#FFFFFF", "#1F2937", "#3B82F6", "#F1F5F9"] },
+    { "name": "admin-dark",     "hexes": ["#0A0A0A", "#FAFAFA", "#10B981", "#262626"] },
+    { "name": "support-blue",   "hexes": ["#0EA5E9", "#FFFFFF", "#E0F2FE", "#0F172A"] },
+    { "name": "neutral-pro",    "hexes": ["#475569", "#F8FAFC", "#FBBF24", "#0F172A"] },
+    { "name": "high-contrast",  "hexes": ["#000000", "#FFFFFF", "#EF4444", "#10B981"] }
+  ],
+  "section_library": ["top-nav", "side-nav", "search-bar", "queue-list", "ticket-row", "detail-pane", "action-toolbar", "bulk-select", "approval-modal", "user-table", "role-badge", "audit-timeline", "filter-chips", "status-pill", "pagination", "keyboard-shortcuts-hint"],
+  "image_directives": "no decorative imagery. Iconography only — clear, consistent, accessible. Avatars for users. Status colors must be colorblind-safe.",
+  "voice_pet_words": ["assigned", "approve", "reject", "queue", "action required", "owner", "status"],
+  "primary_keywords": ["internal dashboard", "admin panel", "operations tool"]
+}

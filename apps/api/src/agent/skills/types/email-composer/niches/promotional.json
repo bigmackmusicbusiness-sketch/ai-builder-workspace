@@ -1,0 +1,26 @@
+{
+  "niche": "promotional",
+  "label": "Promotional Email",
+  "triggers": ["sale", "promo", "discount", "offer", "deal", "promotional", "campaign", "blast", "launch announcement", "limited time"],
+  "default_sitemap": [
+    { "slug": "header",     "role": "logo+nav" },
+    { "slug": "hero",       "role": "offer-headline+visual" },
+    { "slug": "products",   "role": "featured-product-grid" },
+    { "slug": "cta",        "role": "shop-now-button" },
+    { "slug": "footer",     "role": "unsubscribe+address" }
+  ],
+  "compliance_blocks": ["can-spam-physical-address", "unsubscribe-link", "promotional-tag-disclosure", "discount-terms-link", "ftc-endorsement-disclosure"],
+  "schema_org_primary": "EmailMessage",
+  "voice_template": "punchy, persuasive, urgency without sleaze, brand-consistent and visually rich",
+  "palettes": [
+    { "name": "sale-bold",       "hexes": ["#DC2626", "#FFFFFF", "#FEE2E2", "#0A0A0A"] },
+    { "name": "boutique-blush",  "hexes": ["#C68B8B", "#FFF8F4", "#F5E1DD", "#2A1A1A"] },
+    { "name": "luxury-noir",     "hexes": ["#0A0A0A", "#D4AF37", "#FFFFFF", "#1A1A1A"] },
+    { "name": "playful-pop",     "hexes": ["#EC4899", "#FBBF24", "#FFFFFF", "#1F1F1F"] },
+    { "name": "modern-mint",     "hexes": ["#10B981", "#FFFFFF", "#D1FAE5", "#022C22"] }
+  ],
+  "section_library": ["logo-header", "hero-banner", "offer-headline", "countdown-timer", "product-grid", "product-card", "lifestyle-image-block", "primary-cta-button", "social-icons", "footer-unsubscribe", "address-footer"],
+  "image_directives": "high-impact lifestyle product photography, on-model shots, bold offer graphics. Match seasonal campaign aesthetics. Avoid generic 'sale' clip-art badges.",
+  "voice_pet_words": ["today only", "save", "shop", "ends", "new", "just dropped", "yours"],
+  "primary_keywords": ["sale", "discount", "promo", "limited time"]
+}

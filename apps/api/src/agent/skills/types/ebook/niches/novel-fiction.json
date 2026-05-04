@@ -1,0 +1,31 @@
+{
+  "niche": "novel-fiction",
+  "label": "Novel / Fiction",
+  "triggers": ["novel", "fiction", "story", "thriller", "romance", "fantasy", "literary fiction", "mystery", "sci-fi", "novella"],
+  "default_sitemap": [
+    { "slug": "front-matter",  "role": "title+copyright+epigraph+dedication" },
+    { "slug": "prologue",      "role": "optional-prologue" },
+    { "slug": "chapter-1",     "role": "narrative" },
+    { "slug": "chapter-2",     "role": "narrative" },
+    { "slug": "chapter-3",     "role": "narrative" },
+    { "slug": "chapter-4",     "role": "narrative" },
+    { "slug": "chapter-5",     "role": "narrative" },
+    { "slug": "epilogue",      "role": "optional-epilogue" },
+    { "slug": "back-matter",   "role": "acknowledgments+about-author" }
+  ],
+  "compliance_blocks": ["isbn-placeholder", "copyright-notice", "fiction-disclaimer-coincidental", "publisher-imprint", "library-of-congress-data"],
+  "schema_org_primary": "Book",
+  "voice_template": "voice-driven, genre-appropriate, immersive — let the prose carry the reader",
+  "palettes": [
+    { "name": "literary-noir",    "hexes": ["#0A0A0A", "#D4AF37", "#FAFAFA", "#1A1A1A"] },
+    { "name": "romance-blush",    "hexes": ["#831843", "#FBE7F1", "#FFF8F4", "#2A1A1A"] },
+    { "name": "thriller-blood",   "hexes": ["#7F1D1D", "#0A0A0A", "#FAFAFA", "#3F0A0A"] },
+    { "name": "fantasy-emerald",  "hexes": ["#064E3B", "#D4AF37", "#FBF8F1", "#022C22"] },
+    { "name": "sci-fi-cyan",      "hexes": ["#06B6D4", "#0F0F1E", "#A5F3FC", "#FAFAFA"] },
+    { "name": "literary-cream",   "hexes": ["#1F1812", "#FBF8F1", "#E8DFCE", "#3D3528"] }
+  ],
+  "section_library": ["cover-design", "title-page", "copyright-page", "epigraph", "dedication", "table-of-contents", "part-divider", "chapter-opener", "drop-cap-paragraph", "scene-break", "chapter-end-flourish", "epilogue", "acknowledgments", "about-author", "also-by-author"],
+  "image_directives": "evocative genre-appropriate cover art with strong title typography. Interior is text-driven; chapter ornaments and section breaks only. Avoid stock-photo covers.",
+  "voice_pet_words": ["she", "he", "they", "the", "remembered", "wondered", "knew"],
+  "primary_keywords": ["novel", "fiction ebook", "story", "kindle book"]
+}

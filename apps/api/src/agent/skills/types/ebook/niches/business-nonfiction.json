@@ -1,0 +1,30 @@
+{
+  "niche": "business-nonfiction",
+  "label": "Business Non-Fiction",
+  "triggers": ["business book", "nonfiction", "leadership", "strategy", "entrepreneurship", "management", "thought leadership", "manifesto", "frameworks", "case studies"],
+  "default_sitemap": [
+    { "slug": "front-matter",      "role": "title+copyright+dedication" },
+    { "slug": "introduction",      "role": "premise+who-this-is-for" },
+    { "slug": "chapter-1",         "role": "framework-introduction" },
+    { "slug": "chapter-2",         "role": "case-study+lesson" },
+    { "slug": "chapter-3",         "role": "application+exercises" },
+    { "slug": "chapter-4",         "role": "case-study+lesson" },
+    { "slug": "chapter-5",         "role": "synthesis+next-steps" },
+    { "slug": "conclusion",        "role": "call-to-action+resources" },
+    { "slug": "back-matter",       "role": "about-author+notes+index" }
+  ],
+  "compliance_blocks": ["isbn-placeholder", "copyright-notice", "publisher-imprint", "library-of-congress-data", "disclaimer-not-professional-advice"],
+  "schema_org_primary": "Book",
+  "voice_template": "authoritative but generous, frameworks-driven, real examples, no academic jargon",
+  "palettes": [
+    { "name": "executive-navy",   "hexes": ["#0F172A", "#FBBF24", "#F8FAFC", "#1E293B"] },
+    { "name": "harvard-red",      "hexes": ["#7B1E2E", "#F8F4EC", "#E8DFCE", "#1F1212"] },
+    { "name": "modern-mono",      "hexes": ["#0A0A0A", "#FFFFFF", "#737373", "#F5F5F4"] },
+    { "name": "thoughtful-cream", "hexes": ["#1F2937", "#FBF8F1", "#D6BFA0", "#0F172A"] },
+    { "name": "punch-orange",     "hexes": ["#EA580C", "#FFFCF5", "#0F172A", "#FED7AA"] }
+  ],
+  "section_library": ["title-page", "copyright-page", "dedication", "table-of-contents", "introduction-block", "chapter-opener", "section-heading", "body-paragraph", "pull-quote", "case-study-callout", "framework-diagram", "exercise-box", "chapter-summary", "endnotes", "about-author"],
+  "image_directives": "minimalist editorial cover with strong typographic hierarchy. Inside: simple framework diagrams, clean charts, occasional pull-quote treatments. Avoid stock business imagery.",
+  "voice_pet_words": ["framework", "principle", "leverage", "case", "operator", "compound", "first principles"],
+  "primary_keywords": ["business book", "leadership ebook", "strategy guide"]
+}

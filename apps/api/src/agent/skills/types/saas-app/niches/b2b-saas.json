@@ -1,0 +1,29 @@
+{
+  "niche": "b2b-saas",
+  "label": "B2B SaaS Application",
+  "triggers": ["b2b saas", "enterprise software", "business software", "team app", "workflow tool", "saas platform", "productivity tool", "b2b app", "workspace"],
+  "default_sitemap": [
+    { "slug": "auth",          "role": "login+signup+sso" },
+    { "slug": "dashboard",     "role": "workspace-overview" },
+    { "slug": "core-feature",  "role": "primary-job-to-be-done" },
+    { "slug": "collaboration", "role": "shared-workspace+comments" },
+    { "slug": "integrations",  "role": "connected-apps" },
+    { "slug": "billing",       "role": "plan+invoices+seats" },
+    { "slug": "settings",      "role": "workspace+team+roles" },
+    { "slug": "admin",         "role": "org-admin-controls" }
+  ],
+  "compliance_blocks": ["soc2-compliance-badge", "gdpr-dpa-link", "ccpa-privacy-link", "terms-of-service-link", "data-processing-agreement", "subprocessor-list-link", "role-based-access-notice"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "confident product voice, workplace-appropriate, gets out of the user's way during work and shines during onboarding",
+  "palettes": [
+    { "name": "workspace-indigo","hexes": ["#4F46E5", "#FFFFFF", "#EEF2FF", "#0F172A"] },
+    { "name": "modern-mono",     "hexes": ["#0A0A0A", "#FFFFFF", "#737373", "#3B82F6"] },
+    { "name": "trust-teal",      "hexes": ["#0D9488", "#FFFFFF", "#CCFBF1", "#042F2E"] },
+    { "name": "enterprise-navy", "hexes": ["#1E3A8A", "#F8FAFC", "#DBEAFE", "#0F172A"] },
+    { "name": "calm-graphite",   "hexes": ["#1F2937", "#FAFAFA", "#A7F3D0", "#0A0A0A"] }
+  ],
+  "section_library": ["auth-screen", "side-nav", "top-bar", "workspace-switcher", "dashboard-grid", "data-table", "detail-pane", "comment-thread", "share-modal", "command-palette", "notification-feed", "billing-card", "team-member-list", "integration-card", "empty-state", "onboarding-checklist"],
+  "image_directives": "product UI in marketing screenshots, abstract collaborative imagery, diverse team avatars. Inside the app: zero decorative imagery — function only. Avoid stock 'office team meeting' photography.",
+  "voice_pet_words": ["workspace", "team", "ship", "automate", "sync", "integrate", "scale"],
+  "primary_keywords": ["b2b saas", "team software", "workflow platform", "collaboration tool"]
+}

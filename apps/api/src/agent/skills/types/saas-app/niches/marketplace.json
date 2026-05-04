@@ -1,0 +1,30 @@
+{
+  "niche": "marketplace",
+  "label": "Two-Sided Marketplace",
+  "triggers": ["marketplace", "two-sided", "buyers and sellers", "platform", "listings", "providers", "vendors", "freelance marketplace", "rental platform", "p2p"],
+  "default_sitemap": [
+    { "slug": "auth",            "role": "login+signup+role-select" },
+    { "slug": "browse",          "role": "search+listings-grid" },
+    { "slug": "listing-detail",  "role": "item-detail+booking" },
+    { "slug": "messaging",       "role": "buyer-seller-chat" },
+    { "slug": "checkout",        "role": "payment+escrow" },
+    { "slug": "seller-studio",   "role": "create-listing+manage-orders" },
+    { "slug": "buyer-orders",    "role": "purchase-history+disputes" },
+    { "slug": "trust-safety",    "role": "reviews+verification" },
+    { "slug": "settings",        "role": "profile+payouts+kyc" }
+  ],
+  "compliance_blocks": ["kyc-aml-disclosure", "marketplace-terms-of-service", "buyer-protection-policy", "seller-agreement", "tax-1099-reporting-notice", "dispute-resolution-policy", "payment-processor-disclosure", "gdpr-dpa-link"],
+  "schema_org_primary": "OnlineStore",
+  "voice_template": "neutral and trustworthy, balances both sides of the market, emphasizes safety and clear expectations",
+  "palettes": [
+    { "name": "trust-coral",    "hexes": ["#F97316", "#FFFFFF", "#FED7AA", "#0F172A"] },
+    { "name": "marketplace-mint","hexes": ["#10B981", "#FFFFFF", "#D1FAE5", "#022C22"] },
+    { "name": "platform-blue",  "hexes": ["#2563EB", "#FFFFFF", "#DBEAFE", "#0F172A"] },
+    { "name": "neutral-warm",   "hexes": ["#1F2937", "#FBF8F1", "#F5E1DD", "#0A0A0A"] },
+    { "name": "premium-noir",   "hexes": ["#0A0A0A", "#D4AF37", "#FFFFFF", "#1A1A1A"] }
+  ],
+  "section_library": ["search-hero", "category-grid", "listing-card", "listing-detail-gallery", "seller-profile-card", "review-list", "rating-summary", "booking-widget", "messaging-thread", "checkout-flow", "escrow-status", "kyc-verification-flow", "payout-dashboard", "dispute-form", "trust-badge-strip", "side-nav", "top-bar"],
+  "image_directives": "user-generated imagery from sellers, lifestyle photos in context, real provider/seller portraits with verification badges. Diverse and authentic. Avoid generic ecommerce catalog stock.",
+  "voice_pet_words": ["verified", "trusted", "secure", "list", "discover", "earn", "marketplace"],
+  "primary_keywords": ["marketplace", "buy and sell", "platform", "listings"]
+}

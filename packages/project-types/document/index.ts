@@ -19,4 +19,16 @@ export const document: ProjectType = {
   defaultApprovalPolicy: {},
 
   screens: ['files', 'preview'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/document.md',
+    copyGuidance:
+      'Proposal / case study / invoice / pitch deck / white paper / contract templates. Section libraries by document kind.',
+    securitySOPs: [
+      'NO <script> tags',
+      'Sanitize any user-supplied content for PDF rendering',
+    ],
+    multiPageStrategy: {
+    },
+    assetBudget: { images: 4, icons: 8 },
+  },
 };

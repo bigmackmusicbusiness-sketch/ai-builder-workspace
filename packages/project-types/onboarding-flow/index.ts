@@ -216,4 +216,17 @@ export const onboardingFlow: ProjectType = {
   },
 
   screens: ['preview', 'code', 'files', 'console', 'tests', 'onboarding'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/onboarding-flow.md',
+    copyGuidance:
+      'Multi-step typed wizard. Progress bar. Save-and-resume. Approval gates between sensitive steps.',
+    securitySOPs: [
+      'Validate every step input via Zod',
+      'PII fields use input type="password" or masked',
+      'No auto-submit — user must click Continue',
+    ],
+    multiPageStrategy: {
+    },
+    assetBudget: { images: 2, icons: 8 },
+  },
 };

@@ -1,0 +1,28 @@
+{
+  "niche": "how-to-instructional",
+  "label": "How-To / Instructional Guide",
+  "triggers": ["how to", "guide", "tutorial", "instructional", "step by step", "diy", "manual", "playbook", "handbook", "workbook"],
+  "default_sitemap": [
+    { "slug": "front-matter",      "role": "title+copyright" },
+    { "slug": "introduction",      "role": "outcome+how-to-use" },
+    { "slug": "chapter-1",         "role": "fundamentals" },
+    { "slug": "chapter-2",         "role": "step-by-step-walkthrough" },
+    { "slug": "chapter-3",         "role": "advanced-techniques" },
+    { "slug": "chapter-4",         "role": "troubleshooting" },
+    { "slug": "appendix",          "role": "checklists+templates+resources" },
+    { "slug": "back-matter",       "role": "glossary+about-author" }
+  ],
+  "compliance_blocks": ["isbn-placeholder", "copyright-notice", "use-at-own-risk-disclaimer", "trademark-attribution", "results-may-vary-disclaimer"],
+  "schema_org_primary": "Book",
+  "voice_template": "clear, second-person, instructional, breaks complex steps into achievable wins",
+  "palettes": [
+    { "name": "tutorial-blue",   "hexes": ["#1E40AF", "#FFFFFF", "#DBEAFE", "#0F172A"] },
+    { "name": "workbook-warm",   "hexes": ["#B45309", "#FFFCF5", "#FEF3C7", "#1F1812"] },
+    { "name": "minimal-guide",   "hexes": ["#0A0A0A", "#FFFFFF", "#737373", "#10B981"] },
+    { "name": "playbook-bold",   "hexes": ["#7C3AED", "#FAFAFA", "#EDE9FE", "#1E1B4B"] }
+  ],
+  "section_library": ["title-page", "copyright-page", "table-of-contents", "introduction-block", "learning-objectives", "chapter-opener", "step-numbered-list", "screenshot-with-caption", "callout-tip", "warning-box", "checklist-box", "exercise-prompt", "chapter-recap", "glossary-entry", "resource-list"],
+  "image_directives": "clean diagrams, annotated screenshots, numbered process illustrations, before-and-after photos. Function over decoration. High contrast for readability.",
+  "voice_pet_words": ["step", "next", "try", "you'll", "here's how", "tip", "common mistake"],
+  "primary_keywords": ["how to guide", "instructional ebook", "diy manual", "step by step"]
+}

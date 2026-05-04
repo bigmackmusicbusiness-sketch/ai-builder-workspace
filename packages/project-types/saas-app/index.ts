@@ -95,4 +95,20 @@ export interface Tenant { id: string; name: string; plan: 'starter' | 'pro' | 'e
   },
 
   screens: ['preview', 'code', 'files', 'console', 'tests', 'visualqa', 'database', 'jobs', 'env-secrets', 'approvals'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/saas-app.md',
+    copyGuidance:
+      'Marketing site (landing-page patterns) + dashboard SPA + auth flow. Niches: B2B SaaS / B2C SaaS / marketplace / productivity.',
+    securitySOPs: [
+      'Auth via Supabase or NextAuth — never roll-your-own',
+      'No hardcoded API keys',
+      'Stripe keys via env vars only',
+      'CORS configured per origin',
+    ],
+    multiPageStrategy: {
+      nicheManifestPath: 'types/saas-app/niches/',
+      detectFromPrompt:  true,
+    },
+    assetBudget: { images: 8, icons: 8 },
+  },
 };

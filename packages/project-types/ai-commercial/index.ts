@@ -29,4 +29,16 @@ export const aiCommercial: ProjectType = {
   },
 
   screens: ['files', 'preview'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/ai-commercial.md',
+    copyGuidance:
+      '15/30/60s ad structure: hook/problem/solution/CTA. Pacing rules.',
+    securitySOPs: [
+      'Trademark + copyright cleared assets only',
+      'Required disclaimers per ad regulator (FTC, ASA)',
+    ],
+    multiPageStrategy: {
+    },
+    assetBudget: { images: 0, icons: 8 },
+  },
 };

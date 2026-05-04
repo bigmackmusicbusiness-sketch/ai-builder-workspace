@@ -159,4 +159,17 @@ export interface AutomationHandler<I, O> {
   },
 
   screens: ['preview', 'code', 'files', 'console', 'tests', 'jobs', 'approvals'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/automation-panel.md',
+    copyGuidance:
+      'Task/workflow runner UI. Queue + status + retry patterns.',
+    securitySOPs: [
+      'Webhook receivers verify signature',
+      'Trigger requires confirm step',
+      'Audit run history',
+    ],
+    multiPageStrategy: {
+    },
+    assetBudget: { images: 0, icons: 8 },
+  },
 };

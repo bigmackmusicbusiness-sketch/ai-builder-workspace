@@ -27,4 +27,16 @@ export const aiShort: ProjectType = {
   },
 
   screens: ['files', 'preview'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/ai-short.md',
+    copyGuidance:
+      '15-60s vertical. Hook in first 1.5s, single beat, payoff. Vertical safe zones.',
+    securitySOPs: [
+      'Trending audio licensing per platform (TikTok, Reels)',
+      'Vertical safe zones (top 14% / bottom 18%)',
+    ],
+    multiPageStrategy: {
+    },
+    assetBudget: { images: 0, icons: 8 },
+  },
 };

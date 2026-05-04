@@ -166,4 +166,17 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); }
   },
 
   screens: ['preview', 'code', 'files', 'console', 'tests', 'database'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/internal-tool.md',
+    copyGuidance:
+      'list-detail-form CRUD. Audit log, role-based UI, auth gate, data table with filters.',
+    securitySOPs: [
+      'Auth gate is mandatory',
+      'Audit log every mutation',
+      'Role-based UI guards on sensitive actions',
+    ],
+    multiPageStrategy: {
+    },
+    assetBudget: { images: 0, icons: 8 },
+  },
 };

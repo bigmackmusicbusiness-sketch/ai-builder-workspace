@@ -127,4 +127,19 @@ describe('example route', () => {
   },
 
   screens: ['code', 'files', 'console', 'tests', 'database', 'jobs'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/api-service.md',
+    copyGuidance:
+      'Fastify + Zod + OpenAPI. Standard middleware: auth, rate limit, structured logs, /health.',
+    securitySOPs: [
+      'Credentials NEVER in source — vault/env only',
+      'Zod validation on every request',
+      'Rate limiting by default (Fastify rate-limit plugin)',
+      'CORS allowlist, never *',
+      'pino structured logs, never log secrets or full request bodies with PII',
+    ],
+    multiPageStrategy: {
+    },
+    assetBudget: { images: 0, icons: 8 },
+  },
 };

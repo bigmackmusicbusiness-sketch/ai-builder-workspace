@@ -1,0 +1,30 @@
+{
+  "niche": "cookbook",
+  "label": "Cookbook",
+  "triggers": ["cookbook", "recipes", "cooking", "food", "baking", "chef", "culinary", "meal plan", "kitchen", "recipe collection"],
+  "default_sitemap": [
+    { "slug": "front-matter",     "role": "title+copyright+dedication" },
+    { "slug": "introduction",     "role": "chef-story+philosophy" },
+    { "slug": "pantry",           "role": "ingredients+equipment" },
+    { "slug": "chapter-starters", "role": "recipe-collection" },
+    { "slug": "chapter-mains",    "role": "recipe-collection" },
+    { "slug": "chapter-sides",    "role": "recipe-collection" },
+    { "slug": "chapter-desserts", "role": "recipe-collection" },
+    { "slug": "back-matter",      "role": "index+conversion-charts+about-author" }
+  ],
+  "compliance_blocks": ["isbn-placeholder", "copyright-notice", "allergen-disclaimer", "food-safety-disclaimer", "results-may-vary-disclaimer", "trademark-attribution"],
+  "schema_org_primary": "Book",
+  "voice_template": "warm, sensory, generous with stories, technique-confident without being precious",
+  "palettes": [
+    { "name": "rustic-kitchen",  "hexes": ["#7B341E", "#FBF8F1", "#E8D5BC", "#3D2418"] },
+    { "name": "fresh-market",    "hexes": ["#15803D", "#FFFCF5", "#D6BFA0", "#1F2D1E"] },
+    { "name": "warm-bread",      "hexes": ["#D97706", "#FFFCF5", "#FEF3C7", "#3F2417"] },
+    { "name": "deep-spice",      "hexes": ["#9A3412", "#FBF8F1", "#FED7AA", "#2A1A0E"] },
+    { "name": "garden-herb",     "hexes": ["#65A30D", "#FAFAF7", "#ECFCCB", "#1A2E05"] },
+    { "name": "linen-wine",      "hexes": ["#7F1D1D", "#FBF8F1", "#E8DFCE", "#2A1212"] }
+  ],
+  "section_library": ["cover-photography", "title-page", "copyright-page", "dedication", "introduction-block", "table-of-contents", "pantry-list", "equipment-list", "chapter-opener-photo", "recipe-card", "ingredient-list", "step-numbered-method", "chef-tip-box", "variation-note", "full-bleed-food-photo", "index", "conversion-chart", "about-chef"],
+  "image_directives": "natural-light food photography. Overhead and angled hero shots, ingredient flat-lays, hands-in-action process shots. Real, textured, slightly imperfect plating. Avoid glossy commercial food stock. Warm wood, linen, ceramic surfaces.",
+  "voice_pet_words": ["fold", "season", "rest", "taste", "deeply", "weeknight", "make-ahead", "variation"],
+  "primary_keywords": ["cookbook", "recipes", "cooking ebook", "recipe collection"]
+}

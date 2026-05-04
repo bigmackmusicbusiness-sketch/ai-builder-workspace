@@ -1,0 +1,24 @@
+{
+  "niche": "abandoned-cart",
+  "label": "Abandoned Cart Recovery",
+  "triggers": ["abandoned cart", "cart recovery", "left behind", "checkout reminder", "complete order", "still thinking", "incomplete purchase", "browse abandonment"],
+  "default_sitemap": [
+    { "slug": "email-1-reminder",   "role": "soft-reminder+cart-items" },
+    { "slug": "email-2-objection",  "role": "address-objections+social-proof" },
+    { "slug": "email-3-incentive",  "role": "discount-offer+urgency" },
+    { "slug": "footer",             "role": "unsubscribe+address" }
+  ],
+  "compliance_blocks": ["can-spam-physical-address", "unsubscribe-link", "discount-terms-link", "privacy-policy-link"],
+  "schema_org_primary": "EmailMessage",
+  "voice_template": "helpful and low-pressure first, then friendly nudge, then a clear incentive — never desperate",
+  "palettes": [
+    { "name": "soft-recovery",   "hexes": ["#0A0A0A", "#FFFCF5", "#F5E1DD", "#F97316"] },
+    { "name": "boutique-warm",   "hexes": ["#1A1A1A", "#FBF8F1", "#E8DFCE", "#C68B8B"] },
+    { "name": "modern-clean",    "hexes": ["#0F172A", "#FFFFFF", "#F1F5F9", "#10B981"] },
+    { "name": "urgency-amber",   "hexes": ["#B45309", "#FFFCF5", "#FEF3C7", "#1F1812"] }
+  ],
+  "section_library": ["soft-headline", "cart-summary-card", "product-thumbnail-row", "shipping-reassurance", "review-quote", "discount-code-block", "complete-purchase-cta", "support-link", "footer-unsubscribe"],
+  "image_directives": "show the actual products the customer left behind, clearly. Use lifestyle shots of products in use to reinforce desire. Avoid generic 'shopping bag' imagery.",
+  "voice_pet_words": ["still here", "saved", "before it's gone", "complete", "any questions", "ready when you are"],
+  "primary_keywords": ["abandoned cart", "cart recovery", "checkout reminder"]
+}

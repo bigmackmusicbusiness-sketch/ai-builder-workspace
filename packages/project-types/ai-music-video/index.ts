@@ -29,4 +29,16 @@ export const aiMusicVideo: ProjectType = {
   },
 
   screens: ['files', 'preview'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/ai-music-video.md',
+    copyGuidance:
+      'Sync-to-beat patterns. Visual energy curve. Lyric overlays optional. Multi-scene structure.',
+    securitySOPs: [
+      'Music license required',
+      'Lyric attribution required',
+    ],
+    multiPageStrategy: {
+    },
+    assetBudget: { images: 0, icons: 8 },
+  },
 };

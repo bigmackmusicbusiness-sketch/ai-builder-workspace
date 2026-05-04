@@ -22,4 +22,18 @@ export const ebook: ProjectType = {
   },
 
   screens: ['files', 'preview'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/ebook.md',
+    copyGuidance:
+      'KDP-ready manuscript. Front matter (title, copyright, dedication, ToC, foreword). Back matter (about author, also-by, acknowledgments). Cover spec.',
+    securitySOPs: [
+      'NO <script> tags — PDFs and EPUB do not execute JS',
+      'No external CDN refs',
+    ],
+    multiPageStrategy: {
+      nicheManifestPath: 'types/ebook/niches/',
+      detectFromPrompt:  true,
+    },
+    assetBudget: { images: 6, icons: 8 },
+  },
 };

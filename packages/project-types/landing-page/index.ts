@@ -279,4 +279,19 @@ export const landingPage: ProjectType = {
   },
 
   screens: ['preview', 'code', 'files', 'tests', 'visualqa'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/landing-page.md',
+    copyGuidance:
+      'Single-page conversion-focused. Hero/proof/features/pricing/FAQ/CTA. Strong CTA above fold. Niche detection picks SaaS launch / lead-gen / event / course / app download / consultation patterns.',
+    securitySOPs: [
+      'No hardcoded API keys (sk-, AKIA, pk_live_, ghp_, ya29., JWT-shaped) — auto-strip',
+      'rel="noopener noreferrer" on target="_blank" — auto-fix',
+      'Form fields must have <label> — auto-fix',
+    ],
+    multiPageStrategy: {
+      nicheManifestPath: 'types/landing-page/niches/',
+      detectFromPrompt:  true,
+    },
+    assetBudget: { images: 4, icons: 8 },
+  },
 };

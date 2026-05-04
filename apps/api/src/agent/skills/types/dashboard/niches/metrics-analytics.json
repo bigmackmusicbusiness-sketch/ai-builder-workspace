@@ -1,0 +1,27 @@
+{
+  "niche": "metrics-analytics",
+  "label": "Metrics & Analytics Dashboard",
+  "triggers": ["dashboard", "analytics", "metrics", "kpi", "reporting", "bi", "data viz", "insights", "performance", "stats"],
+  "default_sitemap": [
+    { "slug": "overview",     "role": "headline-kpis+trend-summary" },
+    { "slug": "performance",  "role": "time-series-charts" },
+    { "slug": "segments",     "role": "breakdown-tables" },
+    { "slug": "funnels",      "role": "conversion-flow" },
+    { "slug": "reports",      "role": "saved-reports-list" },
+    { "slug": "settings",     "role": "data-sources+permissions" }
+  ],
+  "compliance_blocks": ["data-privacy-notice", "gdpr-data-processing-disclosure", "audit-log-availability", "soc2-compliance-badge", "role-based-access-notice"],
+  "schema_org_primary": "WebApplication",
+  "voice_template": "precise, data-literate, signal over noise, surfaces meaning not just numbers",
+  "palettes": [
+    { "name": "data-dark",       "hexes": ["#0F172A", "#10B981", "#3B82F6", "#F8FAFC"] },
+    { "name": "executive-light", "hexes": ["#FFFFFF", "#1E293B", "#3B82F6", "#F1F5F9"] },
+    { "name": "ops-graphite",    "hexes": ["#18181B", "#A3E635", "#F59E0B", "#FAFAFA"] },
+    { "name": "fintech-trust",   "hexes": ["#1E40AF", "#FFFFFF", "#10B981", "#F8FAFC"] },
+    { "name": "startup-violet",  "hexes": ["#1E1B4B", "#A78BFA", "#FBBF24", "#FAFAFA"] }
+  ],
+  "section_library": ["top-nav-bar", "filter-bar", "kpi-card-row", "trend-line-chart", "bar-chart", "stacked-area-chart", "donut-chart", "data-table", "funnel-visualization", "cohort-grid", "segment-breakdown", "alert-banner", "saved-view-tabs", "export-menu", "side-nav"],
+  "image_directives": "no decorative imagery — the data is the visual. High-density chart and table layouts. Iconography minimal and consistent. Dark and light modes both required.",
+  "voice_pet_words": ["trend", "vs prior", "delta", "drill in", "segment", "cohort", "anomaly"],
+  "primary_keywords": ["analytics dashboard", "kpi tracking", "business intelligence", "metrics"]
+}

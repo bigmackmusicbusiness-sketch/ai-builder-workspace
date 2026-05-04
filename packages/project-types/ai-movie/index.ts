@@ -27,4 +27,16 @@ export const aiMovie: ProjectType = {
   },
 
   screens: ['files', 'preview'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/ai-movie.md',
+    copyGuidance:
+      'Long-form structure: act 1/2/3, scene boundaries, voiceover scripting, music cue sheet.',
+    securitySOPs: [
+      'No copyrighted music without license',
+      'No likeness of real people without consent',
+    ],
+    multiPageStrategy: {
+    },
+    assetBudget: { images: 0, icons: 8 },
+  },
 };

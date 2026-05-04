@@ -177,4 +177,19 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); }
   defaultApprovalPolicy: {},
 
   screens: ['preview', 'code', 'files', 'console', 'tests', 'split'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/dashboard.md',
+    copyGuidance:
+      'React+Vite admin SPA. Sidebar nav, KPI cards, time-series charts, paginated tables, filter bar.',
+    securitySOPs: [
+      'Auth gate on all routes by default',
+      'No hardcoded API keys — env vars only',
+      'CSP-conscious script tags',
+    ],
+    multiPageStrategy: {
+      nicheManifestPath: 'types/dashboard/niches/',
+      detectFromPrompt:  true,
+    },
+    assetBudget: { images: 2, icons: 8 },
+  },
 };

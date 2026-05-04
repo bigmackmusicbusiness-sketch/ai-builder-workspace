@@ -21,4 +21,16 @@ export const musicStudio: ProjectType = {
   },
 
   screens: ['files', 'preview'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/music-studio.md',
+    copyGuidance:
+      'Beat (trap/lo-fi/boom-bap/drill) and cinematic (orchestral/ambient/tension/upbeat). BPM ranges, key suggestions, stem layout.',
+    securitySOPs: [
+      'No copyrighted samples without license',
+      'Stems labeled by role (kick, snare, hat, bass, melody, vocal)',
+    ],
+    multiPageStrategy: {
+    },
+    assetBudget: { images: 1, icons: 8 },
+  },
 };

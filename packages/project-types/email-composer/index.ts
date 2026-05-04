@@ -21,4 +21,20 @@ export const emailComposer: ProjectType = {
   },
 
   screens: ['preview', 'files'],
+  agentInstructions: {
+    systemPromptPrelude: 'types/email-composer.md',
+    copyGuidance:
+      'HTML email. Single-column inline-CSS layouts. CAN-SPAM/GDPR unsubscribe footer required.',
+    securitySOPs: [
+      'Inline CSS only — many email clients strip <style>',
+      'No external scripts (email clients block JS)',
+      'Unsubscribe link required (CAN-SPAM compliance)',
+      'Image alt text required',
+    ],
+    multiPageStrategy: {
+      nicheManifestPath: 'types/email-composer/niches/',
+      detectFromPrompt:  true,
+    },
+    assetBudget: { images: 2, icons: 8 },
+  },
 };
