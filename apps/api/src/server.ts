@@ -4,6 +4,7 @@ import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
 import { env } from './config/env';
 import { initDb }         from './db/client';
+import { runMigrations }  from './db/runMigrations';
 import { filesRoutes }    from './routes/files';
 import { versionsRoutes } from './routes/versions';
 import { previewRoutes }  from './routes/preview';
@@ -33,6 +34,14 @@ async function main(): Promise<void> {
   // Initialise DB before anything else so getDb() is ready for all route handlers.
   // This resolves the Supabase hostname to IPv4 (Railway cannot route IPv6 to Supabase).
   await initDb();
+
+  // Auto-apply any pending SQL migrations. Idempotent — already-applied
+  // migrations are tracked in `_migrations` and skipped. Safe across redeploys.
+  // Failures log but don't crash the server; routes have defensive fallbacks.
+  await runMigrations().catch((err) => {
+    // eslint-disable-next-line no-console
+    console.warn('[migrations] runner errored, server continuing:', err instanceof Error ? err.message : String(err));
+  });
 
   const app = Fastify({ logger: { level: 'info' } });
 
