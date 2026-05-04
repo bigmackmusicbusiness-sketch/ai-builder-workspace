@@ -104,20 +104,53 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
     if (!parsed.success) return reply.status(400).send({ error: 'Invalid body', detail: parsed.error.format() });
 
     const db = getDb();
-    const [row] = await db.insert(projects).values({
-      tenantId:    ctx.tenantId,
-      createdBy:   ctx.userId,
-      name:        parsed.data.name,
-      slug:        parsed.data.slug,
-      type:        parsed.data.type,
-      description: parsed.data.description ?? null,
-      config:      {},
-      activeEnv:   'dev',
-    }).returning();
+    let row: Record<string, unknown> | undefined;
+    try {
+      const inserted = await db.insert(projects).values({
+        tenantId:    ctx.tenantId,
+        createdBy:   ctx.userId,
+        name:        parsed.data.name,
+        slug:        parsed.data.slug,
+        type:        parsed.data.type,
+        description: parsed.data.description ?? null,
+        config:      {},
+        activeEnv:   'dev',
+      }).returning();
+      row = inserted[0] as Record<string, unknown> | undefined;
+    } catch (err) {
+      // If the is_shared column hasn't been added yet (migration 0008 not applied),
+      // Drizzle's `RETURNING *` references a non-existent column and fails. Fall
+      // back to a raw INSERT that only touches columns guaranteed to exist.
+      const msg  = err instanceof Error ? err.message : String(err);
+      const code = (err as { code?: string })?.code ?? '';
+      // eslint-disable-next-line no-console
+      console.warn(`[projects] drizzle insert failed (${code} ${msg}) — falling back to raw SQL.`);
+      const sql = getRawSql();
+      const rows = await sql.unsafe(
+        `INSERT INTO projects
+           (tenant_id, created_by, name, slug, type, description, config, active_env)
+         VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8)
+         RETURNING id, tenant_id AS "tenantId", created_by AS "createdBy",
+                   name, slug, type, description, config,
+                   active_env AS "activeEnv",
+                   created_at AS "createdAt", updated_at AS "updatedAt"`,
+        [
+          ctx.tenantId,
+          ctx.userId,
+          parsed.data.name,
+          parsed.data.slug,
+          parsed.data.type,
+          parsed.data.description ?? null,
+          '{}',
+          'dev',
+        ],
+      ) as Array<Record<string, unknown>>;
+      row = rows[0];
+    }
 
     await writeAuditEvent({
       actor: ctx.userId, tenantId: ctx.tenantId,
-      action: 'project.create', target: 'project', targetId: row?.id,
+      action: 'project.create', target: 'project', targetId: row?.['id'] as string | undefined,
       after: { name: parsed.data.name, type: parsed.data.type }, env: 'dev',
       ip: req.ip, ua: req.headers['user-agent'] ?? '',
     });
