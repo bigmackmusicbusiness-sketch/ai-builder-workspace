@@ -12,6 +12,7 @@ import postgres from 'postgres';
 import * as schema from '@abw/db';
 
 let _client: ReturnType<typeof drizzle<typeof schema>> | undefined;
+let _sql: ReturnType<typeof postgres> | undefined;
 
 /**
  * Call once at server startup (before any route handlers run).
@@ -50,6 +51,7 @@ export async function initDb(): Promise<void> {
     },
   });
 
+  _sql    = sql;
   _client = drizzle(sql, { schema });
 }
 
@@ -57,4 +59,12 @@ export async function initDb(): Promise<void> {
 export function getDb(): ReturnType<typeof drizzle<typeof schema>> {
   if (!_client) throw new Error('DB not initialised — call initDb() during server startup');
   return _client as ReturnType<typeof drizzle<typeof schema>>;
+}
+
+/** Returns the raw postgres-js client. Used when we need to issue SQL that
+ *  bypasses Drizzle's schema (e.g., fallback queries when a column added to
+ *  the schema doesn't yet exist in the DB). */
+export function getRawSql(): ReturnType<typeof postgres> {
+  if (!_sql) throw new Error('DB not initialised — call initDb() during server startup');
+  return _sql;
 }

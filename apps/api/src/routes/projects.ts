@@ -3,7 +3,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { eq, and, or } from 'drizzle-orm';
-import { getDb } from '../db/client';
+import { getDb, getRawSql } from '../db/client';
 import { projects } from '@abw/db';
 import { authMiddleware, requireRole, type AuthContext } from '../security/authz';
 import { writeAuditEvent } from '../security/audit';
@@ -53,26 +53,30 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
         .orderBy(projects.createdAt);
       return { projects: rows };
     } catch (err) {
-      // The new sharing filter introduced two columns (is_shared, created_by)
-      // that may not exist in older deployments AND may have NULL values for
-      // pre-existing rows. Fall back to the legacy tenant-only filter on ANY
-      // error from the visibility-aware query so the dashboard keeps working.
-      // Once migration 0008_project_sharing.sql is applied AND created_by is
-      // backfilled, this fallback path stops triggering.
+      // Drizzle generates SELECT * which includes the is_shared column we just
+      // added to the schema. If the column doesn't exist in the DB yet, even
+      // the simple tenant-only query fails. Fall back to a raw SQL query that
+      // ONLY references columns guaranteed to exist pre-migration.
       const msg  = err instanceof Error ? err.message : String(err);
       const code = (err as { code?: string })?.code ?? '';
       // eslint-disable-next-line no-console
-      console.warn(`[projects] visibility-aware query failed (${code} ${msg}) — falling back to tenant-only.`);
+      console.warn(`[projects] visibility-aware query failed (${code} ${msg}) — falling back to raw SQL.`);
       try {
-        const rows = await db
-          .select()
-          .from(projects)
-          .where(eq(projects.tenantId, ctx.tenantId))
-          .orderBy(projects.createdAt);
+        const sql = getRawSql();
+        const rows = await sql.unsafe(
+          `SELECT id, tenant_id AS "tenantId", created_by AS "createdBy",
+                  name, slug, type, description, config,
+                  active_env AS "activeEnv",
+                  created_at AS "createdAt", updated_at AS "updatedAt"
+             FROM projects
+            WHERE tenant_id = $1
+            ORDER BY created_at`,
+          [ctx.tenantId],
+        ) as Array<Record<string, unknown>>;
         return { projects: rows };
       } catch (fallbackErr) {
         // eslint-disable-next-line no-console
-        console.error(`[projects] fallback query also failed: ${fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr)}`);
+        console.error(`[projects] raw fallback also failed: ${fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr)}`);
         throw fallbackErr;
       }
     }
