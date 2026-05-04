@@ -411,14 +411,23 @@ export function ChatThread() {
           if (raw === '[DONE]') break;
           try {
             const event = JSON.parse(raw) as {
-              type:     string;
-              delta?:   string;
-              error?:   string;
-              name?:    string;
-              args?:    string;
-              summary?: string;
-              ok?:      boolean;
-              id?:      string;
+              type:         string;
+              delta?:       string;
+              error?:       string;
+              name?:        string;
+              args?:        string;
+              summary?:     string;
+              ok?:          boolean;
+              id?:          string;
+              // Phase events from the orchestrator
+              niche?:       string;
+              pagesCount?:  number;
+              assetsCount?: number;
+              voice?:       string;
+              palette?:     string;
+              filesTouched?: number;
+              swaps?:       number;
+              findings?:    Array<{ level: string; category: string; page?: string; message: string }>;
             };
             if (event.type === 'delta' && event.delta) {
               appendToLast(currentProjectId, event.delta);
@@ -432,6 +441,27 @@ export function ChatThread() {
             } else if (event.type === 'tool_result') {
               const icon = event.ok ? '✓' : '✗';
               appendToLast(currentProjectId, `\n  ${icon} ${event.summary ?? ''}`);
+            } else if (event.type === 'plan_start') {
+              appendToLast(currentProjectId, `\n\n☆ Planning…`);
+            } else if (event.type === 'plan_done') {
+              const niche = event.niche ?? 'generic';
+              appendToLast(currentProjectId, `\n  ✓ Plan ready · niche: **${niche}** · ${event.pagesCount ?? 0} page${event.pagesCount === 1 ? '' : 's'} · ${event.assetsCount ?? 0} image${event.assetsCount === 1 ? '' : 's'} · palette: \`${event.palette ?? '?'}\``);
+            } else if (event.type === 'plan_failed') {
+              appendToLast(currentProjectId, `\n  ⚠ Planner skipped: ${event.error ?? 'unknown'}. Falling back to legacy build.`);
+            } else if (event.type === 'humanize_done') {
+              if ((event.swaps ?? 0) > 0) {
+                appendToLast(currentProjectId, `\n\n✨ Humanizer: ${event.swaps} AI-tells removed across ${event.filesTouched} file${event.filesTouched === 1 ? '' : 's'}`);
+              }
+            } else if (event.type === 'polish_done') {
+              const findings = event.findings ?? [];
+              const fixed = findings.filter((f) => f.level === 'auto-fixed').length;
+              const flagged = findings.filter((f) => f.level === 'flag').length;
+              if (fixed > 0 || flagged > 0) {
+                appendToLast(currentProjectId, `\n\n🔍 Polish: ${fixed} auto-fixed, ${flagged} flag${flagged === 1 ? '' : 's'}`);
+                for (const f of findings.filter((f) => f.level === 'flag').slice(0, 5)) {
+                  appendToLast(currentProjectId, `\n  ⚠ ${f.category} — ${f.message}${f.page ? ` (${f.page})` : ''}`);
+                }
+              }
             } else if (event.type === 'error') {
               appendToLast(currentProjectId, `\n\n⚠ ${event.error}`);
             }
