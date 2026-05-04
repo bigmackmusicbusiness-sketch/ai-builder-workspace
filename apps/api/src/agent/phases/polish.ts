@@ -29,6 +29,21 @@ export interface PolishResult {
   error?:    string;
 }
 
+// Patterns matching common niche-specific compliance disclaimers. The check
+// below flags a page when sibling pages contain one of these phrases but the
+// page itself doesn't — catches iterative rewrites that strip required text.
+const COMPLIANCE_PATTERNS: RegExp[] = [
+  /Federal Fair Housing Act[^<]{0,200}/i,
+  /Equal Housing Opportunity/i,
+  /All real estate advertised/i,
+  /FDA[- ]approved/i,
+  /not (?:medical|financial|legal|investment) advice/i,
+  /SEC[- ]registered/i,
+  /Attorney Advertising/i,
+  /Member SIPC/i,
+  /FINRA[- ]registered/i,
+];
+
 /** Run inline polish auto-fixes over all HTML files in a workspace. */
 export async function runInlinePolish(ws: WorkspaceHandle): Promise<PolishResult> {
   const findings: AuditFinding[] = [];
@@ -38,6 +53,24 @@ export async function runInlinePolish(ws: WorkspaceHandle): Promise<PolishResult
   try {
     const files = await listWorkspaceFiles(ws);
     const htmlFiles = files.filter((p) => /\.html?$/i.test(p));
+
+    // Pre-scan for compliance phrases that appear on AT LEAST ONE page in the
+    // workspace. Build a phrase→pages map so the per-page audit can spot
+    // pages that "fell behind" on niche disclaimers (typical regression
+    // when the agent rewrites a single page and omits the footer block).
+    const compliancePagesByPhrase = new Map<string, Set<string>>();
+    for (const p of htmlFiles) {
+      const c = await readWorkspaceFile(ws, p);
+      if (!c) continue;
+      for (const pat of COMPLIANCE_PATTERNS) {
+        const m = c.match(pat);
+        if (m && m[0]) {
+          const key = m[0].slice(0, 80);
+          if (!compliancePagesByPhrase.has(key)) compliancePagesByPhrase.set(key, new Set());
+          compliancePagesByPhrase.get(key)!.add(p);
+        }
+      }
+    }
 
     for (const path of htmlFiles) {
       const original = await readWorkspaceFile(ws, path);
@@ -165,6 +198,25 @@ export async function runInlinePolish(ws: WorkspaceHandle): Promise<PolishResult
         updated = headPortion + tailFixed;
         if (lazyBefore !== updated) {
           findings.push({ level: 'auto-fixed', category: 'perf', page: path, message: 'Added loading="lazy" to below-the-fold images' });
+        }
+      }
+
+      // ── Audit: compliance disclaimer regression ────────────────────────────
+      // If a compliance phrase appears on the majority of pages but is missing
+      // here, flag it. Catches the common pattern of agent rewriting one page
+      // (e.g., adding a hero video) and stripping the footer's required text.
+      for (const [phrase, pagesWithIt] of compliancePagesByPhrase) {
+        if (pagesWithIt.has(path)) continue;
+        // Threshold: the phrase needs to appear on >=2 other pages to count
+        // as "established" — a single occurrence might be intentional and
+        // page-specific (e.g., a contact-page-only legal note).
+        if (pagesWithIt.size >= 2) {
+          findings.push({
+            level:    'flag',
+            category: 'consistency',
+            page:     path,
+            message:  `Compliance disclaimer "${phrase}…" appears on ${pagesWithIt.size} sibling page(s) but is missing here — likely stripped during a rewrite.`,
+          });
         }
       }
 
