@@ -1,0 +1,26 @@
+{
+  "niche": "trend-reaction",
+  "label": "Trend Reaction Short",
+  "triggers": ["trend", "trending audio", "react to trend", "duet", "stitch", "trend reaction", "meme reaction"],
+  "default_sitemap": [
+    { "slug": "short", "role": "single-short", "duration": "10-30s", "sections": [
+      { "slug": "hook-1.5s",   "role": "reference-the-trend","duration": "0-1.5s",  "purpose": "show-source-context" },
+      { "slug": "single-beat", "role": "your-take-or-twist", "duration": "1.5-22s", "purpose": "personal-pov-on-trend" },
+      { "slug": "payoff",      "role": "punchline-or-flip",  "duration": "22-30s",  "purpose": "deliver-twist+follow-cta" }
+    ]}
+  ],
+  "compliance_blocks": ["platform-trending-audio-license", "tiktok-music-license-commercial-restriction-warning", "fair-use-of-source-clip", "stitch-duet-attribution", "trademark-clearance", "no-defamation-of-original-creator", "ftc-disclosure-if-sponsored"],
+  "schema_org_primary": "VideoObject",
+  "voice_template": "reactive, in-on-the-joke, fast; assume audience knows the trend; deliver your spin in seconds",
+  "palettes": [
+    { "name": "tiktok-bold",  "hexes": ["#FE2C55", "#000000", "#FFFFFF", "#25F4EE"] },
+    { "name": "meme-yellow",  "hexes": ["#FBBF24", "#0A0A0A", "#FFFFFF", "#DC2626"] },
+    { "name": "react-purple", "hexes": ["#A855F7", "#FFFFFF", "#0F172A", "#F472B6"] },
+    { "name": "neon-cyber",   "hexes": ["#22D3EE", "#0A0A0A", "#F472B6", "#FFFFFF"] },
+    { "name": "high-contrast","hexes": ["#000000", "#FFFFFF", "#FBBF24", "#DC2626"] }
+  ],
+  "section_library": ["source-clip-stitch", "duet-side-by-side", "reaction-face", "burned-in-caption", "trending-audio-bed", "twist-cut", "follow-cta-card"],
+  "image_directives": "vertical 9:16. If using stitch/duet, frame your half clearly with strong lighting. Reaction face must be readable in thumbnail. Match the trend's visual language while adding your brand cue.",
+  "voice_pet_words": ["okay but", "wait", "hot take", "i had to", "hear me out"],
+  "primary_keywords": ["trending", "trend", "duet", "stitch"]
+}

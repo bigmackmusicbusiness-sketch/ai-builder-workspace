@@ -1,0 +1,44 @@
+{
+  "niche": "ballad",
+  "label": "Ballad Music Video",
+  "triggers": ["ballad", "slow song", "love song", "piano ballad", "acoustic ballad", "torch song", "emotional ballad"],
+  "default_sitemap": [
+    { "slug": "intro",   "role": "song-intro",   "sections": [
+      { "slug": "still-opening-frame","role": "quiet-tableau+breath" },
+      { "slug": "artist-close-up",    "role": "intimate-portrait" }
+    ]},
+    { "slug": "verse-1", "role": "song-verse",   "sections": [
+      { "slug": "vocal-performance",  "role": "tight-singles+vulnerability" },
+      { "slug": "memory-cutaway-A",   "role": "subtle-narrative-flashback" }
+    ]},
+    { "slug": "chorus",  "role": "song-chorus",  "sections": [
+      { "slug": "emotional-swell",    "role": "wider-frame+light-shift" },
+      { "slug": "core-image",         "role": "central-emotional-symbol" }
+    ]},
+    { "slug": "verse-2", "role": "song-verse",   "sections": [
+      { "slug": "deeper-revelation",  "role": "lyric-illustration" },
+      { "slug": "memory-cutaway-B",   "role": "extend-narrative" }
+    ]},
+    { "slug": "bridge",  "role": "song-bridge",  "sections": [
+      { "slug": "breaking-point",     "role": "release-or-tear-moment" }
+    ]},
+    { "slug": "outro",   "role": "song-outro",   "sections": [
+      { "slug": "final-chorus-resolution","role": "earned-catharsis" },
+      { "slug": "lingering-stillness","role": "hold-on-emotion" }
+    ]}
+  ],
+  "compliance_blocks": ["master-recording-license", "publishing-sync-license", "performer-likeness-releases", "location-permits", "minor-on-set-permits", "depiction-of-grief-or-trauma-sensitivity-review", "platform-content-policy", "trademark-clearance-on-visible-brands"],
+  "schema_org_primary": "MusicVideoObject",
+  "voice_template": "restrained, vulnerable, breath-aware; let stillness and silence carry the emotion",
+  "palettes": [
+    { "name": "warm-pastel-blush","hexes": ["#FBCFE8", "#FFF1F2", "#F472B6", "#831843"] },
+    { "name": "candlelight-amber","hexes": ["#D97706", "#FFFBEB", "#FCD34D", "#451A03"] },
+    { "name": "moonlit-blue",     "hexes": ["#1E3A8A", "#F1F5F9", "#94A3B8", "#0F172A"] },
+    { "name": "soft-cream",       "hexes": ["#A78F6E", "#FFFCF5", "#F5EFE0", "#2A2418"] },
+    { "name": "twilight-mauve",   "hexes": ["#A78BFA", "#FAF5FF", "#E9D5FF", "#2E1065"] }
+  ],
+  "section_library": ["still-tableau-opening", "extreme-close-up-eyes", "single-light-source-portrait", "window-light-vocal", "slow-push-in", "memory-flashback-soft-focus", "symbolic-object-still-life", "dance-of-grief-or-love", "rain-or-water-motif", "hold-on-final-frame"],
+  "image_directives": "very few cuts. Long takes. One light source preferred (window, candle, lamp). Wardrobe in soft natural tones. Hair, breath, and tears in frame are gifts — don't shy from them. Avoid camera moves that draw attention to themselves.",
+  "voice_pet_words": ["intimate", "tender", "still", "breath", "longing"],
+  "primary_keywords": ["ballad music video", "love song video", "official video"]
+}

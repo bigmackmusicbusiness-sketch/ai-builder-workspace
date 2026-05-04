@@ -1,0 +1,26 @@
+{
+  "niche": "tutorial",
+  "label": "Tutorial Short",
+  "triggers": ["short tutorial", "quick how to", "tip", "hack", "60 second tutorial", "how-to short", "tiktok tutorial"],
+  "default_sitemap": [
+    { "slug": "short", "role": "single-short", "duration": "15-60s", "sections": [
+      { "slug": "hook-1.5s",   "role": "promise-the-skill", "duration": "0-1.5s",  "purpose": "name-the-outcome" },
+      { "slug": "single-beat", "role": "do-it-on-camera",   "duration": "1.5-50s", "purpose": "rapid-step-by-step+text-overlays" },
+      { "slug": "payoff",      "role": "before-after-result","duration": "50-60s",  "purpose": "show-result+follow-for-more" }
+    ]}
+  ],
+  "compliance_blocks": ["platform-community-guidelines", "ftc-sponsored-disclosure-if-applicable", "safety-disclaimer-if-physical", "third-party-asset-attribution", "trademark-clearance", "ada-captions-burned-in"],
+  "schema_org_primary": "HowTo",
+  "voice_template": "direct, fast, action-first; cut every breath; let text overlays do the heavy lifting",
+  "palettes": [
+    { "name": "creator-clean", "hexes": ["#FFFFFF", "#0F172A", "#FBBF24", "#94A3B8"] },
+    { "name": "kitchen-warm",  "hexes": ["#F97316", "#FFFBEB", "#FED7AA", "#431407"] },
+    { "name": "tech-dark",     "hexes": ["#0F172A", "#22D3EE", "#FFFFFF", "#1E293B"] },
+    { "name": "studio-pastel", "hexes": ["#F472B6", "#FDE68A", "#A7F3D0", "#1F2937"] },
+    { "name": "high-contrast", "hexes": ["#000000", "#FFFFFF", "#DC2626", "#FBBF24"] }
+  ],
+  "section_library": ["outcome-promise-hook", "step-number-overlay", "screen-record-zoomed", "POV-overhead-shot", "text-callout-box", "speed-ramp", "before-after-split", "follow-for-more-card"],
+  "image_directives": "vertical 9:16. Overhead POV when hands-on. Burned-in step numbers and short captions. Speed ramps for slow steps. Avoid talking-head longer than 3s at a time.",
+  "voice_pet_words": ["here's how", "step one", "and now", "boom", "save this for later"],
+  "primary_keywords": ["how to", "tutorial", "hack", "tip"]
+}

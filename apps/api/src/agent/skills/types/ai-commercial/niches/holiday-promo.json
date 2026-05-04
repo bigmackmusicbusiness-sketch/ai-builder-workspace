@@ -1,0 +1,27 @@
+{
+  "niche": "holiday-promo",
+  "label": "Holiday Promo Commercial",
+  "triggers": ["holiday ad", "holiday promo", "black friday", "cyber monday", "christmas ad", "valentine's", "seasonal sale", "back to school"],
+  "default_sitemap": [
+    { "slug": "spot", "role": "single-spot", "durations": ["15s", "30s", "60s"], "sections": [
+      { "slug": "hook",     "role": "seasonal-tone",      "duration_15": "0-2s",  "duration_30": "0-3s",  "duration_60": "0-6s",  "purpose": "establish-holiday-mood" },
+      { "slug": "problem",  "role": "gifting-pain",       "duration_15": "2-4s",  "duration_30": "3-8s",  "duration_60": "6-15s", "purpose": "find-the-perfect-gift" },
+      { "slug": "solution", "role": "product-as-gift",    "duration_15": "4-11s", "duration_30": "8-23s", "duration_60": "15-50s","purpose": "show-product-in-holiday-context" },
+      { "slug": "cta",      "role": "promo-and-deadline", "duration_15": "11-15s","duration_30": "23-30s","duration_60": "50-60s","purpose": "discount-percent+deadline+code" }
+    ]}
+  ],
+  "compliance_blocks": ["ftc-truth-in-advertising", "discount-terms-clear-disclosure", "shipping-deadline-disclosure", "trademark-clearance-on-holiday-imagery", "music-sync-license", "actor-talent-releases", "minor-on-camera-consent", "ada-captions-recommended"],
+  "schema_org_primary": "Offer",
+  "voice_template": "warm, festive, urgent in the right places; lean into the season's emotional cues",
+  "palettes": [
+    { "name": "christmas-classic","hexes": ["#15803D", "#DC2626", "#FAFAF9", "#FBBF24"] },
+    { "name": "bfcm-black",      "hexes": ["#0A0A0A", "#FBBF24", "#FFFFFF", "#DC2626"] },
+    { "name": "valentine-rose",  "hexes": ["#E11D48", "#FFF1F2", "#FECDD3", "#4C0519"] },
+    { "name": "winter-blue",     "hexes": ["#1E40AF", "#FFFFFF", "#DBEAFE", "#FBBF24"] },
+    { "name": "cozy-cocoa",      "hexes": ["#78350F", "#FFFBEB", "#FCD34D", "#1C0F04"] }
+  ],
+  "section_library": ["seasonal-establishing-shot", "gift-wrap-detail", "family-moment-vignette", "product-as-gift-reveal", "discount-percent-badge", "promo-code-card", "deadline-countdown", "cta-end-card", "platform-disclaimer-fine-print"],
+  "image_directives": "lean into seasonal visual codes — tinsel, snow, hearts, fireworks — but tasteful. Practical lights, warm tones, real gifting moments. Avoid generic holiday stock; commission specific, branded seasonal art direction.",
+  "voice_pet_words": ["this season", "limited time", "ends sunday", "save", "give the gift of"],
+  "primary_keywords": ["holiday sale", "black friday", "limited time", "gift"]
+}

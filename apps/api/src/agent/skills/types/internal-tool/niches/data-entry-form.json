@@ -1,0 +1,25 @@
+{
+  "niche": "data-entry-form",
+  "label": "Data Entry Form Tool",
+  "triggers": ["data entry", "form", "intake", "submission", "record", "input", "field", "validation", "bulk import"],
+  "default_sitemap": [
+    { "slug": "list",         "role": "record-list+search" },
+    { "slug": "new",          "role": "create-form" },
+    { "slug": "edit",         "role": "edit-form" },
+    { "slug": "import",       "role": "bulk-csv-upload" },
+    { "slug": "audit",        "role": "change-history" }
+  ],
+  "compliance_blocks": ["field-level-validation-disclaimer", "audit-log-trail", "data-retention-notice"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "neutral, instructional, clear field labeling and error guidance",
+  "palettes": [
+    { "name": "form-clean",     "hexes": ["#1E40AF", "#FFFFFF", "#F1F5F9", "#0F172A"] },
+    { "name": "neutral-paper",  "hexes": ["#374151", "#FAFAF9", "#E5E7EB", "#111827"] },
+    { "name": "soft-green",     "hexes": ["#15803D", "#FFFFFF", "#F0FDF4", "#14532D"] },
+    { "name": "approachable",   "hexes": ["#6366F1", "#FAFAFF", "#E0E7FF", "#1E1B4B"] },
+    { "name": "minimal-mono",   "hexes": ["#000000", "#FFFFFF", "#F4F4F5", "#52525B"] }
+  ],
+  "section_library": ["app-shell", "data-table", "search-bar", "filter-chip-row", "form-section", "field-text", "field-select", "field-date", "field-textarea", "field-checkbox", "field-file-upload", "field-help", "field-error", "save-bar", "draft-toast", "audit-row", "csv-uploader", "validation-summary"],
+  "voice_pet_words": ["required", "valid", "save", "draft", "submit", "record", "field"],
+  "primary_keywords": ["data entry", "form builder", "bulk import", "record management"]
+}

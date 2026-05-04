@@ -1,0 +1,37 @@
+{
+  "niche": "explainer",
+  "label": "Explainer Film",
+  "triggers": ["explainer", "explainer video", "educational film", "concept video", "long-form explainer", "deep dive"],
+  "default_sitemap": [
+    { "slug": "act-1", "role": "frame-the-question", "sections": [
+      { "slug": "hook",         "role": "surprising-fact-or-question" },
+      { "slug": "stakes",       "role": "why-you-should-care" },
+      { "slug": "thesis",       "role": "what-this-video-will-explain" }
+    ]},
+    { "slug": "act-2", "role": "build-the-mental-model", "sections": [
+      { "slug": "concept-1",       "role": "foundational-idea" },
+      { "slug": "concept-2",       "role": "build-on-1" },
+      { "slug": "common-mistake",  "role": "address-misconception" },
+      { "slug": "concept-3",       "role": "synthesis" }
+    ]},
+    { "slug": "act-3", "role": "land-the-insight", "sections": [
+      { "slug": "payoff",         "role": "answer-original-question" },
+      { "slug": "implications",   "role": "what-this-changes" },
+      { "slug": "call-to-action", "role": "subscribe+next-video+sources" }
+    ]}
+  ],
+  "compliance_blocks": ["citation-of-sources", "fair-use-of-clips", "music-sync-license", "ftc-disclosure-if-sponsored", "accuracy-and-fact-check", "ada-captions-required"],
+  "schema_org_primary": "VideoObject",
+  "voice_template": "clear, curious, slightly nerdy; explain concepts the way a great teacher friend would",
+  "palettes": [
+    { "name": "kurzgesagt-flat", "hexes": ["#1E3A8A", "#F59E0B", "#FFFFFF", "#0F172A"] },
+    { "name": "vox-clean",       "hexes": ["#FEDB00", "#FFFFFF", "#000000", "#7A7A7A"] },
+    { "name": "edu-teal",        "hexes": ["#0EA5E9", "#FFFFFF", "#F0F9FF", "#0C4A6E"] },
+    { "name": "research-paper",  "hexes": ["#FAFAF9", "#171717", "#DC2626", "#525252"] },
+    { "name": "infographic-pop", "hexes": ["#7C3AED", "#FBBF24", "#FFFFFF", "#1E1B4B"] }
+  ],
+  "section_library": ["hook-cold-open", "title-graphic", "thesis-card", "talking-head-A-roll", "motion-graphic-explainer", "data-visualization", "diagram-build", "split-screen-comparison", "lower-third-citation", "callout-text-overlay", "transition-wipe", "summary-recap", "outro-card", "subscribe-bug"],
+  "image_directives": "motion graphics, diagrams, charts, and clean typographic kinetic text. Cohesive icon set. Limited palette executed with discipline. Use real-world footage sparingly to ground abstract concepts.",
+  "voice_pet_words": ["here's why", "imagine", "the trick is", "but here's the thing", "in other words"],
+  "primary_keywords": ["explainer", "how it works", "explained", "deep dive"]
+}

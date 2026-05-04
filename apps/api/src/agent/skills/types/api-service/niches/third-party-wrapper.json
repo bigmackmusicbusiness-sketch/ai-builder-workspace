@@ -1,0 +1,27 @@
+{
+  "niche": "third-party-wrapper",
+  "label": "Third-Party API Wrapper",
+  "triggers": ["wrapper", "proxy", "facade", "sdk", "third-party integration", "adapter", "client library", "passthrough"],
+  "default_sitemap": [
+    { "slug": "configure",    "role": "client-init+credentials" },
+    { "slug": "passthrough",  "role": "proxied-endpoints" },
+    { "slug": "transformed",  "role": "response-shape-normalizers" },
+    { "slug": "cache",        "role": "cache-layer-config" },
+    { "slug": "retry",        "role": "backoff+retry-policy" },
+    { "slug": "errors",       "role": "error-mapping-table" }
+  ],
+  "compliance_blocks": ["upstream-tos-compliance", "rate-limit-passthrough", "credential-storage-policy", "data-pii-passthrough-disclosure"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "developer-pragmatic, clear about what's proxied vs transformed",
+  "palettes": [
+    { "name": "wrapper-cyan",     "hexes": ["#0891B2", "#FFFFFF", "#A5F3FC", "#164E63"] },
+    { "name": "adapter-violet",   "hexes": ["#7C3AED", "#FAFAFF", "#EDE9FE", "#2E1065"] },
+    { "name": "proxy-graphite",   "hexes": ["#1F2937", "#F9FAFB", "#374151", "#3B82F6"] },
+    { "name": "sdk-mono",         "hexes": ["#18181B", "#FAFAFA", "#71717A", "#06B6D4"] },
+    { "name": "integration-blue", "hexes": ["#1D4ED8", "#FFFFFF", "#DBEAFE", "#172554"] }
+  ],
+  "section_library": ["endpoint-card", "auth-config-block", "request-mapping-table", "response-mapping-table", "cache-strategy-block", "retry-policy-block", "error-mapping-table", "code-sample-init", "code-sample-call", "upstream-status-link", "version-pinning-note"],
+  "image_directives": "integration architecture diagrams; service-to-service connection lines; logo-bridge iconography",
+  "voice_pet_words": ["upstream", "proxy", "wrap", "normalize", "passthrough", "adapter"],
+  "primary_keywords": ["api wrapper", "sdk", "third-party integration", "api client"]
+}

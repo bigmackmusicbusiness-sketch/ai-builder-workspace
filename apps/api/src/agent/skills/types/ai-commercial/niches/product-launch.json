@@ -1,0 +1,27 @@
+{
+  "niche": "product-launch",
+  "label": "Product Launch Commercial",
+  "triggers": ["product launch", "new product", "launch ad", "unveiling", "drop", "release ad", "reveal"],
+  "default_sitemap": [
+    { "slug": "spot", "role": "single-spot", "durations": ["15s", "30s", "60s"], "sections": [
+      { "slug": "hook",       "role": "attention-grab", "duration_15": "0-2s",  "duration_30": "0-3s",  "duration_60": "0-5s",  "purpose": "stop-the-scroll" },
+      { "slug": "problem",    "role": "tension",        "duration_15": "2-5s",  "duration_30": "3-8s",  "duration_60": "5-15s", "purpose": "name-the-pain" },
+      { "slug": "solution",   "role": "product-reveal", "duration_15": "5-11s", "duration_30": "8-22s", "duration_60": "15-45s","purpose": "show-product+key-feature" },
+      { "slug": "cta",        "role": "call-to-action", "duration_15": "11-15s","duration_30": "22-30s","duration_60": "45-60s","purpose": "where-to-buy+launch-date" }
+    ]}
+  ],
+  "compliance_blocks": ["ftc-truth-in-advertising", "ftc-endorsement-disclosures", "claim-substantiation", "trademark-clearance", "music-sync-license", "actor-talent-releases", "comparative-advertising-rules", "ada-captions-recommended"],
+  "schema_org_primary": "Product",
+  "voice_template": "bold, confident, premium; the product is the hero — every frame earns its place",
+  "palettes": [
+    { "name": "premium-noir",  "hexes": ["#0A0A0A", "#FFFFFF", "#FBBF24", "#525252"] },
+    { "name": "tech-electric", "hexes": ["#06B6D4", "#0F172A", "#FFFFFF", "#22D3EE"] },
+    { "name": "luxury-gold",   "hexes": ["#1C1917", "#FFFCF5", "#A78F6E", "#D4A574"] },
+    { "name": "bold-crimson",  "hexes": ["#DC2626", "#FFFFFF", "#0A0A0A", "#FCA5A5"] },
+    { "name": "modern-mint",   "hexes": ["#10B981", "#F8FAFC", "#0F172A", "#A7F3D0"] }
+  ],
+  "section_library": ["hook-shot", "problem-vignette", "product-reveal-glamour", "feature-callout-text", "lifestyle-use-case", "logo-sting", "price-and-availability-card", "cta-end-card", "music-bed", "voiceover-tag"],
+  "image_directives": "premium product cinematography. Macro detail shots, controlled lighting, hero product on simple backgrounds. Lifestyle inserts must look intentional and high-end. Avoid stock photography. Color grade for cohesion across all four beats.",
+  "voice_pet_words": ["introducing", "the new", "now available", "designed for", "from"],
+  "primary_keywords": ["new product", "launch", "now available", "introducing"]
+}

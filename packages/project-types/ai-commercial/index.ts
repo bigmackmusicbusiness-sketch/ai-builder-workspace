@@ -38,6 +38,8 @@ export const aiCommercial: ProjectType = {
       'Required disclaimers per ad regulator (FTC, ASA)',
     ],
     multiPageStrategy: {
+      nicheManifestPath: 'types/ai-commercial/niches/',
+      detectFromPrompt:  true,
     },
     assetBudget: { images: 0, icons: 8 },
   },

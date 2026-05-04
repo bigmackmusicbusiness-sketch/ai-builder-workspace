@@ -1,0 +1,27 @@
+{
+  "niche": "house-edm",
+  "label": "House / EDM",
+  "triggers": ["house", "edm", "electronic", "dance", "techno", "club", "festival", "drop", "four on the floor", "deep house"],
+  "default_sitemap": [
+    { "slug": "intro",        "role": "filtered-pad+kick-tease" },
+    { "slug": "build-1",      "role": "rising-tension+snare-roll" },
+    { "slug": "drop-1",       "role": "main-energy+lead-synth" },
+    { "slug": "breakdown",    "role": "vocal-chop+chord-stab" },
+    { "slug": "build-2",      "role": "second-build+riser" },
+    { "slug": "drop-2",       "role": "drop-with-variation" },
+    { "slug": "outro",        "role": "filter-out+kick-fade" }
+  ],
+  "compliance_blocks": ["sample-clearance-disclaimer", "club-loudness-mastering-note", "dj-friendly-cue-points"],
+  "voice_template": "high-energy, dancefloor-focused, festival-grade production",
+  "palettes": [
+    { "name": "neon-cyber",       "hexes": ["#06B6D4", "#0A0A0A", "#0E7490", "#F0F9FF"] },
+    { "name": "sunset-rave",      "hexes": ["#F472B6", "#FACC15", "#7C3AED", "#0A0A0A"] },
+    { "name": "deep-house-purple","hexes": ["#7C3AED", "#0A0A0A", "#2E1065", "#A78BFA"] },
+    { "name": "tropical-festival","hexes": ["#22D3EE", "#FB923C", "#FDE68A", "#0C4A6E"] },
+    { "name": "warehouse-techno", "hexes": ["#0A0A0A", "#525252", "#22C55E", "#FAFAFA"] }
+  ],
+  "section_library": ["four-on-floor-kick", "filtered-pad", "white-noise-riser", "vocal-chop", "lead-synth-stab", "sidechain-pump", "snare-roll-build", "uplifter-fx", "downlifter", "drop-bass", "claps-on-2-and-4", "breakdown-chords"],
+  "image_directives": "festival photography; neon stage lights; crowd silhouettes; abstract gradient covers; chrome typography; high-saturation color",
+  "voice_pet_words": ["drop", "build", "groove", "pump", "festival", "dancefloor"],
+  "primary_keywords": ["house music", "edm", "electronic dance", "festival music"]
+}

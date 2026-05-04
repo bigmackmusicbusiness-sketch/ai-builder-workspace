@@ -1,0 +1,27 @@
+{
+  "niche": "crud-resource-api",
+  "label": "CRUD Resource API",
+  "triggers": ["crud", "rest", "resource", "endpoint", "api", "create read update delete", "json api", "openapi"],
+  "default_sitemap": [
+    { "slug": "list",         "role": "GET-collection-endpoint" },
+    { "slug": "create",       "role": "POST-create-endpoint" },
+    { "slug": "retrieve",     "role": "GET-single-endpoint" },
+    { "slug": "update",       "role": "PUT-PATCH-endpoint" },
+    { "slug": "delete",       "role": "DELETE-endpoint" },
+    { "slug": "search",       "role": "GET-filtered-endpoint" }
+  ],
+  "compliance_blocks": ["rate-limiting-policy", "api-versioning-strategy", "openapi-spec-publication", "auth-required-disclosure"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "developer-friendly reference docs voice; precise contracts; consistent verb-noun naming",
+  "palettes": [
+    { "name": "docs-clean",       "hexes": ["#FFFFFF", "#0A0A0A", "#3B82F6", "#F4F4F5"] },
+    { "name": "swagger-green",    "hexes": ["#85EA2D", "#0A0A0A", "#3B4151", "#FAFAFA"] },
+    { "name": "api-mono",         "hexes": ["#18181B", "#FAFAFA", "#71717A", "#06B6D4"] },
+    { "name": "rest-blue",        "hexes": ["#1E40AF", "#FFFFFF", "#DBEAFE", "#0F172A"] },
+    { "name": "code-graphite",    "hexes": ["#1F2937", "#F9FAFB", "#374151", "#10B981"] }
+  ],
+  "section_library": ["endpoint-card", "method-tag-get", "method-tag-post", "method-tag-put", "method-tag-delete", "request-schema", "response-schema", "code-sample-curl", "code-sample-js", "code-sample-python", "auth-header-block", "pagination-block", "error-response-table", "rate-limit-headers"],
+  "image_directives": "developer documentation hero images; code-on-screen; clean monospace typography; minimal illustration",
+  "voice_pet_words": ["resource", "endpoint", "schema", "payload", "response", "idempotent"],
+  "primary_keywords": ["rest api", "crud api", "resource endpoints", "json api"]
+}

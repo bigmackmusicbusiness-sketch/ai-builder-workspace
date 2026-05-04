@@ -1,0 +1,26 @@
+{
+  "niche": "report-scheduler",
+  "label": "Report Scheduler",
+  "triggers": ["report", "scheduled report", "recurring report", "digest", "cron", "weekly summary", "automated reporting"],
+  "default_sitemap": [
+    { "slug": "reports",      "role": "scheduled-report-list" },
+    { "slug": "builder",      "role": "query+template-config" },
+    { "slug": "schedule",     "role": "cron+timezone-config" },
+    { "slug": "queue",        "role": "upcoming-runs" },
+    { "slug": "history",      "role": "delivered-reports-archive" },
+    { "slug": "recipients",   "role": "distribution-lists" }
+  ],
+  "compliance_blocks": ["data-export-classification", "recipient-access-verification", "audit-log-trail", "pii-redaction-policy"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "executive-friendly, schedule-clarity language, deliverable-focused",
+  "palettes": [
+    { "name": "executive-navy",   "hexes": ["#1E3A8A", "#FFFFFF", "#DBEAFE", "#0C1E3F"] },
+    { "name": "report-graphite",  "hexes": ["#27272A", "#FAFAFA", "#D4D4D8", "#09090B"] },
+    { "name": "data-emerald",     "hexes": ["#047857", "#FFFFFF", "#D1FAE5", "#022C22"] },
+    { "name": "schedule-violet",  "hexes": ["#6D28D9", "#FAFAFF", "#EDE9FE", "#2E1065"] },
+    { "name": "warm-paper",       "hexes": ["#92400E", "#FFFBEB", "#FEF3C7", "#451A03"] }
+  ],
+  "section_library": ["app-shell", "report-table", "report-card", "query-editor", "template-picker", "cron-builder", "timezone-picker", "format-toggle-pdf-csv", "recipient-multi-select", "next-run-pill", "history-row", "preview-pane", "delivery-channel-config"],
+  "voice_pet_words": ["schedule", "deliver", "recurring", "weekly", "monthly", "snapshot", "digest"],
+  "primary_keywords": ["report scheduler", "automated reporting", "scheduled reports", "recurring reports"]
+}

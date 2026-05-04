@@ -1,0 +1,26 @@
+{
+  "niche": "data-pipeline",
+  "label": "Data Pipeline",
+  "triggers": ["etl", "elt", "pipeline", "ingest", "transform", "warehouse", "dbt", "airflow", "data flow"],
+  "default_sitemap": [
+    { "slug": "flows",        "role": "pipeline-list" },
+    { "slug": "graph",        "role": "dag-visualization" },
+    { "slug": "schedules",    "role": "cron+trigger-rules" },
+    { "slug": "queue",        "role": "running-tasks" },
+    { "slug": "runs",         "role": "execution-history" },
+    { "slug": "data-quality", "role": "test-results+freshness" }
+  ],
+  "compliance_blocks": ["data-lineage-tracking", "pii-redaction-policy", "data-retention-notice", "gdpr-data-processing-record"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "data-engineer terse, source-to-sink language, fail-fast posture",
+  "palettes": [
+    { "name": "data-indigo",      "hexes": ["#4338CA", "#FFFFFF", "#E0E7FF", "#1E1B4B"] },
+    { "name": "warehouse-slate",  "hexes": ["#475569", "#F1F5F9", "#CBD5E1", "#0F172A"] },
+    { "name": "stream-cyan",      "hexes": ["#0891B2", "#F0FDFA", "#A5F3FC", "#164E63"] },
+    { "name": "etl-amber",        "hexes": ["#D97706", "#FFFBEB", "#FCD34D", "#451A03"] },
+    { "name": "warehouse-dark",   "hexes": ["#0B1220", "#E2E8F0", "#1E293B", "#22D3EE"] }
+  ],
+  "section_library": ["app-shell", "pipeline-list", "dag-canvas", "node-source", "node-transform", "node-sink", "schedule-config", "run-history-row", "task-status-pill", "data-quality-card", "freshness-indicator", "row-count-delta", "lineage-graph", "log-panel"],
+  "voice_pet_words": ["ingest", "transform", "load", "upstream", "downstream", "freshness", "lineage"],
+  "primary_keywords": ["data pipeline", "etl orchestration", "data workflow", "pipeline scheduler"]
+}

@@ -1,0 +1,24 @@
+{
+  "niche": "jingle",
+  "label": "Jingle",
+  "triggers": ["jingle", "ad music", "commercial", "brand song", "tagline", "audio logo", "sonic branding", "radio spot"],
+  "default_sitemap": [
+    { "slug": "hook",         "role": "memorable-melodic-phrase" },
+    { "slug": "verse",        "role": "brand-message+vocal" },
+    { "slug": "tagline",      "role": "spoken-or-sung-slogan" },
+    { "slug": "logo-stinger", "role": "brand-mnemonic-end" }
+  ],
+  "compliance_blocks": ["broadcast-loudness-spec-cdrkns", "advertising-truth-claims-disclosure", "voice-talent-buyout-rights"],
+  "voice_template": "catchy, upbeat, memorable in 15-30 seconds with strong tagline payoff",
+  "palettes": [
+    { "name": "happy-yellow",     "hexes": ["#FACC15", "#FFFFFF", "#FEF3C7", "#451A03"] },
+    { "name": "candy-pop",        "hexes": ["#EC4899", "#FAFAFA", "#FBCFE8", "#500724"] },
+    { "name": "fresh-citrus",     "hexes": ["#F97316", "#FFFBEB", "#FED7AA", "#7C2D12"] },
+    { "name": "playful-teal",     "hexes": ["#14B8A6", "#FFFFFF", "#CCFBF1", "#134E4A"] },
+    { "name": "bold-cobalt",      "hexes": ["#1D4ED8", "#FFFFFF", "#DBEAFE", "#172554"] }
+  ],
+  "section_library": ["earworm-hook", "bouncy-bassline", "vocal-melody", "harmony-vox", "tagline-line", "logo-stinger-end", "smile-fx"],
+  "image_directives": "vibrant flat illustration; cheerful brand imagery; clean typography; high-energy color blocking",
+  "voice_pet_words": ["catchy", "earworm", "tagline", "brand", "hook", "memorable"],
+  "primary_keywords": ["jingle", "audio logo", "brand jingle", "commercial music"]
+}

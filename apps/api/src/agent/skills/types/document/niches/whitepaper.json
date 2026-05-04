@@ -1,0 +1,29 @@
+{
+  "niche": "whitepaper",
+  "label": "Whitepaper",
+  "triggers": ["whitepaper", "white paper", "research", "industry report", "thought leadership", "in-depth", "analysis"],
+  "default_sitemap": [
+    { "slug": "cover",        "role": "title+author+date" },
+    { "slug": "abstract",     "role": "executive-summary" },
+    { "slug": "introduction", "role": "context+thesis" },
+    { "slug": "background",   "role": "literature+landscape" },
+    { "slug": "analysis",     "role": "core-findings" },
+    { "slug": "data",         "role": "charts+evidence" },
+    { "slug": "implications", "role": "what-this-means" },
+    { "slug": "conclusion",   "role": "summary+takeaways" },
+    { "slug": "references",   "role": "citations" }
+  ],
+  "compliance_blocks": ["citation-attribution-required", "research-methodology-disclosure", "sponsor-disclosure-if-applicable"],
+  "voice_template": "authoritative, research-grade, third-person formal tone with cited evidence",
+  "palettes": [
+    { "name": "academic-navy",    "hexes": ["#0C1E3F", "#FFFFFF", "#E0E7FF", "#1E1B4B"] },
+    { "name": "research-graphite","hexes": ["#27272A", "#FAFAFA", "#D4D4D8", "#09090B"] },
+    { "name": "institutional-burgundy","hexes": ["#7F1D1D", "#FEF2F2", "#FECACA", "#450A0A"] },
+    { "name": "data-teal",        "hexes": ["#115E59", "#F0FDFA", "#99F6E4", "#042F2E"] },
+    { "name": "scholarly-cream",  "hexes": ["#451A03", "#FFFBF5", "#FED7AA", "#1C0A02"] }
+  ],
+  "section_library": ["cover-page", "abstract-block", "table-of-contents", "section-heading", "body-paragraph", "pull-quote", "data-chart", "data-table", "callout-box", "footnote", "references-list", "author-bio", "appendix"],
+  "image_directives": "data-driven charts; serious editorial photography; minimal decorative imagery; clear chart axis labels",
+  "voice_pet_words": ["evidence", "findings", "analysis", "research", "implications", "framework"],
+  "primary_keywords": ["whitepaper", "industry research", "thought leadership", "research report"]
+}

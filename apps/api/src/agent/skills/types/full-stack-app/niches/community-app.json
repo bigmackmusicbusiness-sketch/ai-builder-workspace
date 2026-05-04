@@ -1,0 +1,35 @@
+{
+  "niche": "community-app",
+  "label": "Community App",
+  "triggers": ["community", "forum", "discussion", "circle-style", "discord-like", "membership community", "cohort community"],
+  "default_sitemap": [
+    { "slug": "index",            "role": "marketing-hero+community-pitch" },
+    { "slug": "values",           "role": "marketing-community-guidelines" },
+    { "slug": "membership",       "role": "marketing-tiers+benefits" },
+    { "slug": "events",           "role": "marketing-public-events" },
+    { "slug": "feed",             "role": "app-community-feed" },
+    { "slug": "spaces",           "role": "app-channel-list" },
+    { "slug": "space/:slug",      "role": "app-channel-threaded-feed" },
+    { "slug": "thread/:id",       "role": "app-thread-detail+replies" },
+    { "slug": "events/upcoming",  "role": "app-events-calendar" },
+    { "slug": "members",          "role": "app-member-directory" },
+    { "slug": "profile/:handle",  "role": "app-member-profile" },
+    { "slug": "messages",         "role": "app-direct-messages" },
+    { "slug": "moderation",       "role": "app-mod-queue+reports" },
+    { "slug": "account/settings", "role": "app-notifications+privacy" }
+  ],
+  "compliance_blocks": ["community-guidelines", "code-of-conduct", "coppa-under-13-block", "dmca-takedown-procedure", "user-content-license-grant", "moderation-policy-published", "subscription-recurring-billing-disclosure", "gdpr-data-processing", "ccpa-rights-notice"],
+  "schema_org_primary": "Organization",
+  "voice_template": "warm, inviting, member-first; reinforce belonging, contribution, and shared norms",
+  "palettes": [
+    { "name": "warm-amber",   "hexes": ["#F59E0B", "#FFFBEB", "#FEF3C7", "#451A03"] },
+    { "name": "friendly-rose","hexes": ["#F43F5E", "#FFF1F2", "#FECDD3", "#4C0519"] },
+    { "name": "circle-violet","hexes": ["#7C3AED", "#FAF5FF", "#E9D5FF", "#3B0764"] },
+    { "name": "campfire",     "hexes": ["#EA580C", "#FFF7ED", "#FED7AA", "#431407"] },
+    { "name": "sage-quiet",   "hexes": ["#65A30D", "#F7FEE7", "#D9F99D", "#1A2E05"] }
+  ],
+  "section_library": ["marketing-hero", "member-spotlight", "tier-comparison", "events-preview", "community-feed", "channel-sidebar", "threaded-replies", "reaction-bar", "event-card", "rsvp-button", "live-room-card", "member-directory-grid", "member-profile", "dm-thread", "mod-queue", "report-modal", "welcome-onboarding-tour"],
+  "image_directives": "candid photographs of real members, meetups, and shared moments. Diverse, joyful, unposed. Avoid corporate or generic stock. Lean into warmth and human texture.",
+  "voice_pet_words": ["welcome", "members", "belong", "circle", "together", "share"],
+  "primary_keywords": ["community app", "membership community", "online community", "forum"]
+}

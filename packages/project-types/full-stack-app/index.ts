@@ -103,6 +103,8 @@ export type User = z.infer<typeof UserSchema>;
       'No hardcoded keys',
     ],
     multiPageStrategy: {
+      nicheManifestPath: 'types/full-stack-app/niches/',
+      detectFromPrompt:  true,
     },
     assetBudget: { images: 4, icons: 8 },
   },

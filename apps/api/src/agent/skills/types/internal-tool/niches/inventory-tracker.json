@@ -1,0 +1,26 @@
+{
+  "niche": "inventory-tracker",
+  "label": "Inventory Tracker",
+  "triggers": ["inventory", "stock", "warehouse", "sku", "barcode", "reorder", "supplier", "fulfillment", "asset"],
+  "default_sitemap": [
+    { "slug": "stock",        "role": "sku-list" },
+    { "slug": "item",         "role": "sku-detail" },
+    { "slug": "movements",    "role": "in-out-history" },
+    { "slug": "locations",    "role": "warehouse-bins" },
+    { "slug": "purchase",     "role": "purchase-orders" },
+    { "slug": "alerts",       "role": "low-stock-rules" }
+  ],
+  "compliance_blocks": ["audit-log-trail", "fifo-lifo-disclosure", "shrinkage-reporting-note"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "logistics-precise, count-driven, warehouse-operator language",
+  "palettes": [
+    { "name": "warehouse-steel","hexes": ["#475569", "#F1F5F9", "#CBD5E1", "#0F172A"] },
+    { "name": "stockroom-amber","hexes": ["#D97706", "#FFFBEB", "#FED7AA", "#7C2D12"] },
+    { "name": "logistics-blue", "hexes": ["#0369A1", "#FFFFFF", "#E0F2FE", "#0C4A6E"] },
+    { "name": "barcode-mono",   "hexes": ["#0A0A0A", "#FAFAFA", "#E5E5E5", "#525252"] },
+    { "name": "industrial-green","hexes": ["#166534", "#F0FDF4", "#BBF7D0", "#14532D"] }
+  ],
+  "section_library": ["app-shell", "sku-table", "sku-card", "stock-level-bar", "barcode-scanner-input", "location-tree", "movement-log-row", "po-list", "supplier-card", "low-stock-alert", "reorder-cta", "transfer-form", "cycle-count-form", "kpi-card-stock-value"],
+  "voice_pet_words": ["sku", "on-hand", "available", "reorder point", "lead time", "bin", "lot"],
+  "primary_keywords": ["inventory management", "stock tracking", "warehouse software", "sku management"]
+}

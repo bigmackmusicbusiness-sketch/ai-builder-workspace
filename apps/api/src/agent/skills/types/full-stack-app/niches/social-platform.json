@@ -1,0 +1,35 @@
+{
+  "niche": "social-platform",
+  "label": "Social Platform",
+  "triggers": ["social network", "social platform", "social app", "feed", "follow", "ugc", "community feed", "social media app"],
+  "default_sitemap": [
+    { "slug": "index",             "role": "marketing-hero+social-proof" },
+    { "slug": "explore",           "role": "marketing-public-feed-preview" },
+    { "slug": "safety",            "role": "marketing-safety+moderation" },
+    { "slug": "creators",          "role": "marketing-creator-program" },
+    { "slug": "feed",              "role": "app-home-feed" },
+    { "slug": "post/:id",          "role": "app-post-detail+comments" },
+    { "slug": "compose",           "role": "app-post-composer" },
+    { "slug": "profile/:handle",   "role": "app-user-profile" },
+    { "slug": "notifications",     "role": "app-notifications" },
+    { "slug": "messages",          "role": "app-direct-messages" },
+    { "slug": "search",            "role": "app-search-people-posts" },
+    { "slug": "trending",          "role": "app-trending+topics" },
+    { "slug": "moderation/reports","role": "app-report-queue" },
+    { "slug": "account/settings",  "role": "app-privacy+blocked+sessions" }
+  ],
+  "compliance_blocks": ["coppa-under-13-block", "dsa-content-moderation-eu", "section-230-tos", "community-guidelines", "dmca-takedown-procedure", "user-content-license-grant", "ncii-reporting-policy", "minor-safety-policy", "gdpr-data-processing", "ccpa-rights-notice", "ad-transparency-disclosure"],
+  "schema_org_primary": "SocialMediaPosting",
+  "voice_template": "energetic, inclusive, safety-aware; celebrates user voice while reinforcing community norms",
+  "palettes": [
+    { "name": "vibrant-magenta","hexes": ["#EC4899", "#FFFFFF", "#FCE7F3", "#500724"] },
+    { "name": "social-violet", "hexes": ["#8B5CF6", "#FFFFFF", "#EDE9FE", "#2E1065"] },
+    { "name": "lively-cyan",   "hexes": ["#06B6D4", "#FFFFFF", "#CFFAFE", "#164E63"] },
+    { "name": "dark-mode-base","hexes": ["#0F172A", "#F8FAFC", "#1E293B", "#FFFFFF"] },
+    { "name": "sunset-gradient","hexes": ["#F97316", "#EC4899", "#8B5CF6", "#0F172A"] }
+  ],
+  "section_library": ["marketing-hero", "feed-preview-mosaic", "creator-spotlight", "safety-cta", "infinite-feed", "post-card", "post-composer", "media-attachment-strip", "comment-thread", "like-button", "share-sheet", "follow-button", "user-profile-header", "follower-counts", "story-row", "notification-list", "dm-thread", "report-modal", "block-list", "mute-keywords", "two-factor-toggle"],
+  "image_directives": "user-generated content aesthetic — varied, candid, authentic. For marketing screens use diverse mock posts that look real. Avoid corporate stock. Mobile-first compositions and vertical aspect ratios.",
+  "voice_pet_words": ["share", "discover", "follow", "your community", "your voice", "safe"],
+  "primary_keywords": ["social platform", "social network", "community feed", "share posts"]
+}

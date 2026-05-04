@@ -1,0 +1,26 @@
+{
+  "niche": "deployment-ops",
+  "label": "Deployment Ops",
+  "triggers": ["deploy", "ci/cd", "pipeline", "release", "rollout", "rollback", "canary", "blue-green", "staging"],
+  "default_sitemap": [
+    { "slug": "pipelines",    "role": "pipeline-list+status" },
+    { "slug": "triggers",     "role": "branch+webhook-config" },
+    { "slug": "queue",        "role": "running-pending-jobs" },
+    { "slug": "environments", "role": "env-targets+health" },
+    { "slug": "history",      "role": "deploy-history+rollback" },
+    { "slug": "approvals",    "role": "manual-gate-queue" }
+  ],
+  "compliance_blocks": ["change-management-audit-trail", "production-deploy-approval-required", "secrets-handling-policy"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "engineer-precise, status-driven, release-management language",
+  "palettes": [
+    { "name": "ci-graphite",      "hexes": ["#1F2937", "#F9FAFB", "#374151", "#10B981"] },
+    { "name": "release-green",    "hexes": ["#059669", "#0F172A", "#065F46", "#ECFDF5"] },
+    { "name": "rollback-amber",   "hexes": ["#F59E0B", "#0F172A", "#92400E", "#FEF3C7"] },
+    { "name": "devops-blue",      "hexes": ["#0EA5E9", "#0B1220", "#082F49", "#F0F9FF"] },
+    { "name": "terminal-mono",    "hexes": ["#0A0A0A", "#22C55E", "#262626", "#FAFAFA"] }
+  ],
+  "section_library": ["app-shell", "pipeline-table", "pipeline-row", "stage-pill", "build-status-tag", "trigger-config-card", "env-card", "health-check-pill", "deploy-history-row", "rollback-cta", "approval-card", "diff-viewer", "log-stream-panel", "canary-percentage-slider"],
+  "voice_pet_words": ["deploy", "rollback", "canary", "stage", "promote", "approve", "pipeline"],
+  "primary_keywords": ["deployment automation", "ci/cd dashboard", "release management", "pipeline ops"]
+}

@@ -1,0 +1,26 @@
+{
+  "niche": "marketing-automation",
+  "label": "Marketing Automation",
+  "triggers": ["marketing automation", "drip", "campaign", "email sequence", "nurture", "lead score", "segment", "broadcast"],
+  "default_sitemap": [
+    { "slug": "campaigns",    "role": "campaign-list+status" },
+    { "slug": "builder",      "role": "drag-drop-flow-canvas" },
+    { "slug": "audiences",    "role": "segments+lists" },
+    { "slug": "queue",        "role": "scheduled-sends" },
+    { "slug": "history",      "role": "delivery-logs" },
+    { "slug": "analytics",    "role": "open-click-conversion" }
+  ],
+  "compliance_blocks": ["can-spam-compliance", "gdpr-consent-tracking", "ccpa-opt-out-link", "unsubscribe-link-required"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "performance-marketer, data-driven, conversion-focused",
+  "palettes": [
+    { "name": "growth-magenta",   "hexes": ["#EC4899", "#FFFFFF", "#FCE7F3", "#831843"] },
+    { "name": "campaign-coral",   "hexes": ["#F97316", "#FFFFFF", "#FED7AA", "#7C2D12"] },
+    { "name": "funnel-blue",      "hexes": ["#3B82F6", "#FFFFFF", "#DBEAFE", "#1E3A8A"] },
+    { "name": "performance-green","hexes": ["#10B981", "#FFFFFF", "#D1FAE5", "#022C22"] },
+    { "name": "automation-violet","hexes": ["#7C3AED", "#FAFAFA", "#EDE9FE", "#2E1065"] }
+  ],
+  "section_library": ["app-shell", "campaign-table", "campaign-card", "flow-canvas", "trigger-node", "delay-node", "email-node", "branch-node", "segment-builder", "audience-card", "send-queue-row", "history-log-row", "kpi-card-open-rate", "ab-test-panel", "unsubscribe-link-config"],
+  "voice_pet_words": ["nurture", "trigger", "segment", "conversion", "open rate", "drip"],
+  "primary_keywords": ["marketing automation", "email automation", "drip campaigns", "lead nurture"]
+}

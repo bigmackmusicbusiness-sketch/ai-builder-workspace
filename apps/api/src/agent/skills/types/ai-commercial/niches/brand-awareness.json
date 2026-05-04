@@ -1,0 +1,27 @@
+{
+  "niche": "brand-awareness",
+  "label": "Brand Awareness Commercial",
+  "triggers": ["brand awareness", "brand spot", "brand film", "anthem ad", "manifesto ad", "top-of-funnel"],
+  "default_sitemap": [
+    { "slug": "spot", "role": "single-spot", "durations": ["15s", "30s", "60s"], "sections": [
+      { "slug": "hook",     "role": "emotional-attention",  "duration_15": "0-2s",  "duration_30": "0-4s",  "duration_60": "0-7s",  "purpose": "evoke-feeling" },
+      { "slug": "problem",  "role": "shared-truth",         "duration_15": "2-5s",  "duration_30": "4-10s", "duration_60": "7-20s", "purpose": "name-universal-feeling" },
+      { "slug": "solution", "role": "brand-as-answer",      "duration_15": "5-12s", "duration_30": "10-25s","duration_60": "20-52s","purpose": "show-brand-values-via-imagery" },
+      { "slug": "cta",      "role": "logo-and-tagline",     "duration_15": "12-15s","duration_30": "25-30s","duration_60": "52-60s","purpose": "logo+tagline+url" }
+    ]}
+  ],
+  "compliance_blocks": ["ftc-truth-in-advertising", "trademark-clearance", "music-sync-license", "actor-talent-releases", "location-permits", "minor-on-camera-consent", "diversity-and-representation-review", "ada-captions-recommended"],
+  "schema_org_primary": "Brand",
+  "voice_template": "evocative, cinematic, restrained; emotion over information; let the brand tagline land at the end",
+  "palettes": [
+    { "name": "cinematic-warm","hexes": ["#92400E", "#FEF3C7", "#F59E0B", "#1C1917"] },
+    { "name": "brand-noir",   "hexes": ["#0A0A0A", "#FAFAFA", "#A78F6E", "#404040"] },
+    { "name": "uplift-sky",   "hexes": ["#0EA5E9", "#FFFFFF", "#F0F9FF", "#0C4A6E"] },
+    { "name": "rich-emerald", "hexes": ["#047857", "#F0FDF4", "#A7F3D0", "#022C22"] },
+    { "name": "rose-warm",    "hexes": ["#E11D48", "#FFF1F2", "#FECDD3", "#4C0519"] }
+  ],
+  "section_library": ["emotional-hook-image", "human-vignette", "narrative-voice-over", "music-driven-montage", "slow-motion-detail", "wide-establishing", "logo-sting", "tagline-card", "url-bug"],
+  "image_directives": "cinematic, emotionally driven imagery. Shallow depth, golden hour, real human moments. Avoid product close-ups. The brand's values should be felt, not stated. Music carries the spot.",
+  "voice_pet_words": ["we believe", "for those who", "this is for", "because"],
+  "primary_keywords": ["brand", "values", "story", "we believe"]
+}

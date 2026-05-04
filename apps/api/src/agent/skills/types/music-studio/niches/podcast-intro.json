@@ -1,0 +1,24 @@
+{
+  "niche": "podcast-intro",
+  "label": "Podcast Intro",
+  "triggers": ["podcast intro", "podcast theme", "show open", "bumper", "stinger", "audio branding", "podcast outro"],
+  "default_sitemap": [
+    { "slug": "cold-open",    "role": "signature-hook+impact" },
+    { "slug": "theme",        "role": "main-melody+groove" },
+    { "slug": "bed",          "role": "underbed-for-host-vo" },
+    { "slug": "button",       "role": "resolve-stinger" }
+  ],
+  "compliance_blocks": ["royalty-free-licensing-note", "voice-talent-rights-attribution", "music-cue-sheet-export"],
+  "voice_template": "punchy, branded, broadcast-ready audio identity in 15-30 seconds",
+  "palettes": [
+    { "name": "broadcast-red",    "hexes": ["#DC2626", "#FFFFFF", "#7F1D1D", "#0A0A0A"] },
+    { "name": "studio-orange",    "hexes": ["#EA580C", "#FFFFFF", "#FED7AA", "#7C2D12"] },
+    { "name": "indie-mint",       "hexes": ["#10B981", "#FFFFFF", "#A7F3D0", "#022C22"] },
+    { "name": "talk-show-navy",   "hexes": ["#1E40AF", "#FFFFFF", "#DBEAFE", "#0C1E3F"] },
+    { "name": "true-crime-noir",  "hexes": ["#0A0A0A", "#FAFAFA", "#404040", "#DC2626"] }
+  ],
+  "section_library": ["cold-open-hit", "logo-stinger", "main-theme-loop", "host-bed", "transition-whoosh", "outro-button", "tagline-vo-slot"],
+  "image_directives": "podcast cover art aesthetics; bold typography on solid backgrounds; microphone iconography; high-contrast portraits when relevant",
+  "voice_pet_words": ["bumper", "bed", "stinger", "intro", "branded", "punch"],
+  "primary_keywords": ["podcast intro music", "podcast theme", "podcast bumper", "audio branding"]
+}

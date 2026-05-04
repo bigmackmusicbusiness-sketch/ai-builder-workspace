@@ -1,0 +1,29 @@
+{
+  "niche": "legal-letter",
+  "label": "Legal Letter",
+  "triggers": ["legal letter", "demand letter", "cease and desist", "notice", "counsel", "attorney letter", "formal notice"],
+  "default_sitemap": [
+    { "slug": "letterhead",   "role": "firm-letterhead" },
+    { "slug": "date",         "role": "letter-date" },
+    { "slug": "recipient",    "role": "addressee-block" },
+    { "slug": "re-line",      "role": "subject-reference" },
+    { "slug": "salutation",   "role": "dear-counsel" },
+    { "slug": "body",         "role": "narrative+demand" },
+    { "slug": "demand",       "role": "specific-action-required" },
+    { "slug": "deadline",     "role": "response-by-date" },
+    { "slug": "closing",      "role": "sincerely+signature" },
+    { "slug": "enclosures",   "role": "cc+enclosures-list" }
+  ],
+  "compliance_blocks": ["not-legal-advice", "without-prejudice-marking", "attorney-client-privilege-notice", "consult-licensed-attorney"],
+  "voice_template": "formal, measured, authoritative legal correspondence in serif tradition",
+  "palettes": [
+    { "name": "counsel-cream",    "hexes": ["#1E3A8A", "#FFFCF7", "#E0E7FF", "#0C0A09"] },
+    { "name": "firm-navy",        "hexes": ["#0C1E3F", "#FFFFFF", "#DBEAFE", "#1E1B4B"] },
+    { "name": "barrister-burgundy","hexes": ["#7F1D1D", "#FFFBF7", "#FECACA", "#450A0A"] },
+    { "name": "chambers-charcoal","hexes": ["#1F2937", "#FAFAF9", "#D6D3D1", "#0C0A09"] },
+    { "name": "parchment-serif",  "hexes": ["#3C2A1A", "#FFFBF0", "#F0E0C8", "#1A100A"] }
+  ],
+  "section_library": ["letterhead-block", "firm-name", "firm-address", "date-line", "recipient-block", "via-line", "re-line", "salutation", "body-paragraph", "indented-quote", "numbered-demand-list", "deadline-callout", "closing-line", "signature-block", "attorney-bar-info", "cc-list", "enclosures-list"],
+  "voice_pet_words": ["hereby", "demand", "cease", "desist", "respond", "matter", "client"],
+  "primary_keywords": ["legal letter", "demand letter", "cease and desist", "attorney letter"]
+}

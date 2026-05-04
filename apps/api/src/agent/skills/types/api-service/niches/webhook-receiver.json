@@ -1,0 +1,26 @@
+{
+  "niche": "webhook-receiver",
+  "label": "Webhook Receiver",
+  "triggers": ["webhook", "callback", "event receiver", "incoming hook", "signature verify", "hmac", "subscription"],
+  "default_sitemap": [
+    { "slug": "endpoint",     "role": "POST-receiver-endpoint" },
+    { "slug": "verify",       "role": "signature-verification" },
+    { "slug": "events",       "role": "event-types-handlers" },
+    { "slug": "retry",        "role": "ack-retry-policy" },
+    { "slug": "logs",         "role": "delivery-history" }
+  ],
+  "compliance_blocks": ["signature-verification-required", "replay-attack-prevention", "idempotency-key-handling", "tls-mandatory"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "security-conscious developer voice; emphasizes signature verification and idempotency",
+  "palettes": [
+    { "name": "secure-graphite",  "hexes": ["#1F2937", "#F9FAFB", "#374151", "#10B981"] },
+    { "name": "webhook-violet",   "hexes": ["#6D28D9", "#FAFAFF", "#EDE9FE", "#2E1065"] },
+    { "name": "event-cyan",       "hexes": ["#0891B2", "#F0FDFA", "#A5F3FC", "#164E63"] },
+    { "name": "secure-black",     "hexes": ["#0A0A0A", "#FAFAFA", "#262626", "#22C55E"] },
+    { "name": "trust-navy",       "hexes": ["#1E3A8A", "#FFFFFF", "#DBEAFE", "#0C1E3F"] }
+  ],
+  "section_library": ["endpoint-card", "signature-header-block", "event-payload-schema", "event-type-table", "verification-code-sample", "idempotency-note", "retry-policy-block", "delivery-log-row", "replay-tool", "test-event-sender"],
+  "image_directives": "system architecture diagrams; arrows between services; minimal but technical illustration; lock and shield iconography",
+  "voice_pet_words": ["event", "payload", "signature", "verify", "idempotent", "ack", "retry"],
+  "primary_keywords": ["webhook receiver", "webhook handler", "event subscription", "callback endpoint"]
+}

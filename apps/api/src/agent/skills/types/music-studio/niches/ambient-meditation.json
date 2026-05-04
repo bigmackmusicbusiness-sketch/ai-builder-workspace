@@ -1,0 +1,26 @@
+{
+  "niche": "ambient-meditation",
+  "label": "Ambient Meditation",
+  "triggers": ["meditation", "ambient", "mindfulness", "binaural", "spa", "calm", "yoga", "deep sleep", "528hz"],
+  "default_sitemap": [
+    { "slug": "settle",       "role": "drone-bed+breath-cue" },
+    { "slug": "drift",        "role": "slow-pad-evolution" },
+    { "slug": "expand",       "role": "added-textures+nature" },
+    { "slug": "still-point",  "role": "minimal-sustained-note" },
+    { "slug": "return",       "role": "gentle-melodic-motif" },
+    { "slug": "release",      "role": "fade-to-silence" }
+  ],
+  "compliance_blocks": ["not-medical-advice", "wellness-disclaimer", "binaural-headphone-recommendation"],
+  "voice_template": "spacious, breath-paced, gentle and non-directive",
+  "palettes": [
+    { "name": "soft-aurora",      "hexes": ["#A78BFA", "#FAF5FF", "#DDD6FE", "#1E1B4B"] },
+    { "name": "ocean-calm",       "hexes": ["#0EA5E9", "#F0F9FF", "#BAE6FD", "#0C4A6E"] },
+    { "name": "forest-mist",      "hexes": ["#65A30D", "#F7FEE7", "#D9F99D", "#1A2E05"] },
+    { "name": "sunrise-glow",     "hexes": ["#FB923C", "#FFF7ED", "#FED7AA", "#7C2D12"] },
+    { "name": "moonstone",        "hexes": ["#94A3B8", "#F8FAFC", "#E2E8F0", "#0F172A"] }
+  ],
+  "section_library": ["drone-bed", "breath-cue", "tibetan-bowl", "evolving-pad", "field-recording", "harp-arpeggio", "binaural-tone", "sub-rumble", "wind-chime-ambient", "silence-rest"],
+  "image_directives": "soft gradient art; aerial nature; misty forests; gentle dawn light; abstract flowing forms; no faces; muted dreamy color",
+  "voice_pet_words": ["breathe", "soften", "release", "stillness", "presence", "drift"],
+  "primary_keywords": ["meditation music", "ambient meditation", "calm music", "mindfulness audio"]
+}

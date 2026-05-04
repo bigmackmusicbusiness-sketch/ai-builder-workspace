@@ -1,0 +1,36 @@
+{
+  "niche": "marketplace",
+  "label": "Marketplace",
+  "triggers": ["marketplace", "two-sided", "buyers and sellers", "etsy-style", "airbnb-style", "platform", "listings", "vendor"],
+  "default_sitemap": [
+    { "slug": "index",             "role": "marketing-hero+featured-listings" },
+    { "slug": "how-it-works",      "role": "marketing-explainer" },
+    { "slug": "for-sellers",       "role": "marketing-seller-pitch" },
+    { "slug": "pricing",           "role": "marketing-fees" },
+    { "slug": "browse",            "role": "app-search+filter+listings" },
+    { "slug": "listing/:id",       "role": "app-listing-detail" },
+    { "slug": "checkout",          "role": "app-cart+payment+escrow" },
+    { "slug": "dashboard",         "role": "app-buyer-orders" },
+    { "slug": "seller/dashboard",  "role": "app-seller-overview" },
+    { "slug": "seller/listings",   "role": "app-listing-crud" },
+    { "slug": "seller/orders",     "role": "app-order-fulfillment" },
+    { "slug": "seller/payouts",    "role": "app-payout-history" },
+    { "slug": "messages",          "role": "app-buyer-seller-chat" },
+    { "slug": "disputes",          "role": "app-dispute-resolution" },
+    { "slug": "account/settings",  "role": "app-profile+kyc-status" }
+  ],
+  "compliance_blocks": ["seller-kyc-stripe-connect", "1099-k-tax-reporting", "marketplace-tos", "buyer-protection-policy", "dispute-resolution-policy", "prohibited-items-policy", "ofac-sanctions-screening", "gdpr-data-processing", "ccpa-rights-notice", "dmca-takedown-procedure"],
+  "schema_org_primary": "OnlineStore",
+  "voice_template": "trustworthy, balanced for both sides of the market; transparent on fees and protections",
+  "palettes": [
+    { "name": "trust-teal",   "hexes": ["#0D9488", "#FFFFFF", "#CCFBF1", "#134E4A"] },
+    { "name": "vibrant-coral","hexes": ["#F97316", "#FFFFFF", "#FFEDD5", "#7C2D12"] },
+    { "name": "modern-indigo","hexes": ["#4F46E5", "#FFFFFF", "#E0E7FF", "#1E1B4B"] },
+    { "name": "clean-slate",  "hexes": ["#0F172A", "#FFFFFF", "#F1F5F9", "#020617"] },
+    { "name": "growth-green", "hexes": ["#16A34A", "#F0FDF4", "#BBF7D0", "#14532D"] }
+  ],
+  "section_library": ["marketing-hero", "featured-listings-grid", "category-tiles", "trust-badges", "fee-table", "search-bar", "filter-sidebar", "listing-card", "listing-detail-gallery", "seller-profile-card", "review-stars", "add-to-cart", "checkout-stepper", "escrow-notice", "buyer-dashboard", "seller-dashboard-kpis", "listing-form", "order-table", "payout-table", "messaging-thread", "dispute-form", "kyc-status-badge"],
+  "image_directives": "authentic photography of products and people transacting. Avoid generic stock. Show diversity of seller categories. Use lifestyle imagery for marketing pages and crisp product shots for listing UIs.",
+  "voice_pet_words": ["trusted", "secure payments", "buyer protection", "earn", "list", "discover"],
+  "primary_keywords": ["marketplace", "buy and sell", "online platform", "list your products"]
+}

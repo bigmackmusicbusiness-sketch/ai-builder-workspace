@@ -1,0 +1,28 @@
+{
+  "niche": "account-setup",
+  "label": "Account Setup Onboarding",
+  "triggers": ["account setup", "signup", "registration", "create account", "new user", "onboard", "welcome flow", "user provisioning"],
+  "default_sitemap": [
+    { "slug": "welcome",          "step": 1, "role": "intro+value-prop" },
+    { "slug": "create-credentials","step": 2, "role": "email+password" },
+    { "slug": "verify-email",     "step": 3, "role": "otp-confirmation" },
+    { "slug": "profile-basics",   "step": 4, "role": "name+avatar+timezone" },
+    { "slug": "preferences",      "step": 5, "role": "notification+locale" },
+    { "slug": "first-action",     "step": 6, "role": "guided-task" },
+    { "slug": "complete",         "step": 7, "role": "success+next-steps" }
+  ],
+  "compliance_blocks": ["gdpr-consent-checkbox", "terms-of-service-acceptance", "privacy-policy-link", "double-opt-in-email"],
+  "schema_org_primary": "RegisterAction",
+  "voice_template": "friendly, encouraging, low-friction; celebrate small wins and reduce cognitive load",
+  "palettes": [
+    { "name": "trust-blue",     "hexes": ["#3B82F6", "#FFFFFF", "#EFF6FF", "#0F172A"] },
+    { "name": "fresh-mint",     "hexes": ["#10B981", "#F8FAFC", "#D1FAE5", "#064E3B"] },
+    { "name": "modern-violet",  "hexes": ["#7C3AED", "#FFFFFF", "#F5F3FF", "#1E1B4B"] },
+    { "name": "neutral-warm",   "hexes": ["#F59E0B", "#FFFBEB", "#FEF3C7", "#451A03"] },
+    { "name": "soft-coral",     "hexes": ["#F87171", "#FFFFFF", "#FEE2E2", "#7F1D1D"] }
+  ],
+  "section_library": ["welcome-hero", "progress-bar", "stepper", "email-input", "password-strength-meter", "social-sso-buttons", "otp-input", "avatar-upload", "timezone-picker", "preference-toggles", "skip-link", "back-button", "primary-cta", "tos-checkbox", "success-confetti", "next-steps-card"],
+  "image_directives": "clean, friendly illustrations or abstract gradients. Avoid stock photos of people pointing at screens. Use soft shapes, subtle motion cues, and progress indicators that feel encouraging.",
+  "voice_pet_words": ["welcome", "let's get started", "almost there", "you're all set", "quick"],
+  "primary_keywords": ["sign up", "create account", "get started", "onboarding"]
+}

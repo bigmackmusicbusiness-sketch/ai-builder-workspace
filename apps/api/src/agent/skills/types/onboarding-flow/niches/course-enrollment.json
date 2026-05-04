@@ -1,0 +1,28 @@
+{
+  "niche": "course-enrollment",
+  "label": "Course Enrollment",
+  "triggers": ["course enrollment", "register for course", "lms", "edtech", "online course signup", "student onboarding", "cohort signup"],
+  "default_sitemap": [
+    { "slug": "course-overview", "step": 1, "role": "syllabus+outcomes" },
+    { "slug": "student-profile", "step": 2, "role": "name+goals+experience-level" },
+    { "slug": "placement-quiz",  "step": 3, "role": "skill-assessment" },
+    { "slug": "schedule-pick",   "step": 4, "role": "cohort-or-self-paced" },
+    { "slug": "payment",         "step": 5, "role": "tuition+payment-plan" },
+    { "slug": "consent-forms",   "step": 6, "role": "code-of-conduct+ferpa" },
+    { "slug": "welcome-kit",     "step": 7, "role": "slack+resources+kickoff" }
+  ],
+  "compliance_blocks": ["ferpa-student-records-notice", "ada-accessibility-statement", "refund-policy-disclosure", "code-of-conduct-acknowledgment", "minor-parental-consent-if-under-18"],
+  "schema_org_primary": "EducationalOccupationalProgram",
+  "voice_template": "encouraging, clear, mentor-like; reduce anxiety about commitment and difficulty",
+  "palettes": [
+    { "name": "academic-indigo","hexes": ["#4F46E5", "#FFFFFF", "#E0E7FF", "#1E1B4B"] },
+    { "name": "scholar-amber", "hexes": ["#D97706", "#FFFBEB", "#FDE68A", "#451A03"] },
+    { "name": "campus-green",  "hexes": ["#16A34A", "#F0FDF4", "#BBF7D0", "#14532D"] },
+    { "name": "study-rose",    "hexes": ["#E11D48", "#FFF1F2", "#FECDD3", "#4C0519"] },
+    { "name": "calm-sky",      "hexes": ["#0EA5E9", "#F0F9FF", "#BAE6FD", "#0C4A6E"] }
+  ],
+  "section_library": ["course-hero", "syllabus-accordion", "outcome-list", "instructor-card", "stepper", "goal-picker", "experience-level-radio", "placement-quiz", "schedule-picker", "cohort-card", "tuition-summary", "payment-plan-toggle", "scholarship-link", "ferpa-notice", "code-of-conduct", "kickoff-calendar", "slack-invite", "syllabus-download"],
+  "image_directives": "warm photographs of students learning, both in-person and remote. Diverse age and background. Notebook details, screens with code or content, collaborative whiteboards. Avoid sterile 'classroom stock' shots.",
+  "voice_pet_words": ["learn", "grow", "cohort", "outcomes", "support", "community"],
+  "primary_keywords": ["course enrollment", "online course", "register", "learning"]
+}

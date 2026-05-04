@@ -1,0 +1,26 @@
+{
+  "niche": "viral-hook",
+  "label": "Viral Hook Short",
+  "triggers": ["viral", "viral hook", "scroll stopper", "hook video", "viral short", "tiktok hook", "reels hook"],
+  "default_sitemap": [
+    { "slug": "short", "role": "single-short", "duration": "15-30s", "sections": [
+      { "slug": "hook-1.5s",   "role": "scroll-stopper",   "duration": "0-1.5s",  "purpose": "shock-curiosity-or-promise" },
+      { "slug": "single-beat", "role": "deliver-the-payoff-setup","duration": "1.5-12s","purpose": "build-tension-keep-watching" },
+      { "slug": "payoff",      "role": "twist-or-reveal",  "duration": "12-22s",  "purpose": "deliver+loopable-ending" }
+    ]}
+  ],
+  "compliance_blocks": ["platform-community-guidelines-tiktok-reels", "tiktok-music-license-commercial-restriction", "ftc-endorsement-disclosures", "music-platform-pool-only-if-business-account", "trademark-clearance", "no-misleading-clickbait-policy"],
+  "schema_org_primary": "VideoObject",
+  "voice_template": "first-second urgent, second-person direct, conspiratorial; promise then deliver",
+  "palettes": [
+    { "name": "tiktok-bold",   "hexes": ["#FE2C55", "#000000", "#FFFFFF", "#25F4EE"] },
+    { "name": "neon-pop",      "hexes": ["#F97316", "#A855F7", "#FFFFFF", "#0F172A"] },
+    { "name": "high-contrast-mono","hexes": ["#000000", "#FFFFFF", "#FBBF24", "#737373"] },
+    { "name": "gen-z-pastel",  "hexes": ["#F472B6", "#A7F3D0", "#FDE68A", "#1F2937"] },
+    { "name": "tabloid-red",   "hexes": ["#DC2626", "#FFFFFF", "#0A0A0A", "#FBBF24"] }
+  ],
+  "section_library": ["pattern-interrupt-frame-1", "bold-text-overlay-hook", "talking-head-vertical", "rapid-cut-montage", "subtitle-burned-in", "zoom-punch-emphasis", "reveal-cut", "loopable-ending"],
+  "image_directives": "vertical 9:16 only. First frame must work as a thumbnail with bold burned-in text. Quick cuts, oversaturated color when on-brand, faces close to camera. Avoid wide cinematic compositions.",
+  "voice_pet_words": ["wait", "you won't believe", "stop scrolling", "watch this", "the secret is"],
+  "primary_keywords": ["viral", "tiktok", "reels", "short"]
+}

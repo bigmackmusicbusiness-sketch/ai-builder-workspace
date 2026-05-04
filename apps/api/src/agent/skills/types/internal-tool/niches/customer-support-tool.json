@@ -1,0 +1,27 @@
+{
+  "niche": "customer-support-tool",
+  "label": "Customer Support Tool",
+  "triggers": ["support", "ticket", "helpdesk", "customer service", "case management", "agent console", "csat", "sla", "queue"],
+  "default_sitemap": [
+    { "slug": "queue",        "role": "ticket-list" },
+    { "slug": "ticket",       "role": "case-detail" },
+    { "slug": "customer",     "role": "contact-profile" },
+    { "slug": "macros",       "role": "canned-response-library" },
+    { "slug": "reports",      "role": "agent-performance-dashboard" },
+    { "slug": "settings",     "role": "team+sla-config" }
+  ],
+  "compliance_blocks": ["pii-handling-disclaimer", "data-retention-notice", "audit-log-trail"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "calm, efficient, empathetic operator-focused tone with concise action labels",
+  "palettes": [
+    { "name": "support-blue",   "hexes": ["#2563EB", "#FFFFFF", "#EFF6FF", "#1E293B"] },
+    { "name": "calm-slate",     "hexes": ["#475569", "#F8FAFC", "#E2E8F0", "#0F172A"] },
+    { "name": "trust-teal",     "hexes": ["#0D9488", "#FFFFFF", "#CCFBF1", "#134E4A"] },
+    { "name": "neutral-pro",    "hexes": ["#6366F1", "#FAFAFA", "#EEF2FF", "#1E1B4B"] },
+    { "name": "focused-gray",   "hexes": ["#374151", "#F9FAFB", "#E5E7EB", "#111827"] }
+  ],
+  "section_library": ["app-shell", "left-nav", "ticket-table", "ticket-row", "filter-bar", "search-bar", "ticket-header", "conversation-thread", "internal-note", "macro-picker", "customer-sidebar", "sla-pill", "priority-tag", "status-tag", "assign-dropdown", "tag-input", "csat-widget", "agent-leaderboard", "kpi-card", "footer-audit"],
+  "image_directives": "minimal product UI screenshots; clean dashboard mockups with subtle drop shadows; avoid stock photo people. Use gray-blue palettes with accent highlights on status pills.",
+  "voice_pet_words": ["resolve", "queue", "priority", "SLA", "follow-up", "macro", "escalate"],
+  "primary_keywords": ["customer support", "ticketing", "helpdesk software", "case management"]
+}

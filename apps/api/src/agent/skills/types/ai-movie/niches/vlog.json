@@ -1,0 +1,38 @@
+{
+  "niche": "vlog",
+  "label": "Vlog",
+  "triggers": ["vlog", "video log", "day in the life", "personal vlog", "lifestyle vlog", "travel vlog", "weekly vlog"],
+  "default_sitemap": [
+    { "slug": "act-1", "role": "set-up-the-day", "sections": [
+      { "slug": "cold-open-tease",    "role": "tease-best-moment" },
+      { "slug": "morning-greeting",   "role": "say-hi+today's-plan" },
+      { "slug": "context",            "role": "where-we-are+why" }
+    ]},
+    { "slug": "act-2", "role": "live-the-day", "sections": [
+      { "slug": "activity-1",         "role": "first-segment" },
+      { "slug": "transition-bts",     "role": "candid-moment" },
+      { "slug": "activity-2",         "role": "main-event" },
+      { "slug": "unexpected-moment",  "role": "real-detour-or-mishap" },
+      { "slug": "food-or-people",     "role": "meal+companions-segment" }
+    ]},
+    { "slug": "act-3", "role": "wrap-and-reflect", "sections": [
+      { "slug": "reflection",         "role": "what-i-learned-felt" },
+      { "slug": "outro",              "role": "sign-off+next-week" },
+      { "slug": "subscribe-cta",      "role": "subscribe+follow" }
+    ]}
+  ],
+  "compliance_blocks": ["ftc-sponsored-disclosure", "location-permit-if-applicable", "minor-on-camera-consent", "third-party-likeness-blur", "music-license-platform-pool", "platform-monetization-policy", "private-property-permission"],
+  "schema_org_primary": "VideoObject",
+  "voice_template": "personal, conversational, candid; speak directly to camera like a friend on FaceTime",
+  "palettes": [
+    { "name": "warm-lifestyle", "hexes": ["#F97316", "#FFFBEB", "#FED7AA", "#431407"] },
+    { "name": "soft-pastel",    "hexes": ["#F472B6", "#FFF1F2", "#FBCFE8", "#831843"] },
+    { "name": "cozy-cream",     "hexes": ["#A78F6E", "#FFFCF5", "#F5EFE0", "#2A2418"] },
+    { "name": "travel-azure",   "hexes": ["#0891B2", "#F0F9FF", "#A5F3FC", "#164E63"] },
+    { "name": "golden-hour",    "hexes": ["#D97706", "#FFFBEB", "#FCD34D", "#451A03"] }
+  ],
+  "section_library": ["cold-open-tease", "intro-greeting", "establishing-location", "selfie-vertical-handheld", "B-roll-establishing", "day-in-the-life-montage", "jump-cut", "talk-to-camera", "voice-over-narration", "text-overlay-callout", "music-bed", "outro-card", "subscribe-bug"],
+  "image_directives": "handheld, candid, vlog-camera aesthetic. Wide-angle selfies, real light, real audio. Embrace imperfection — wind, laughter, jump cuts. Avoid overly produced or stagey shots.",
+  "voice_pet_words": ["hey guys", "today", "honestly", "real quick", "let's get into it"],
+  "primary_keywords": ["vlog", "day in the life", "lifestyle", "travel"]
+}

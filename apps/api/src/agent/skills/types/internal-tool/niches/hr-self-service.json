@@ -1,0 +1,27 @@
+{
+  "niche": "hr-self-service",
+  "label": "HR Self-Service Portal",
+  "triggers": ["hr", "human resources", "employee", "pto", "time off", "payroll", "benefits", "onboarding", "self-service"],
+  "default_sitemap": [
+    { "slug": "home",         "role": "employee-dashboard" },
+    { "slug": "profile",      "role": "personal-info" },
+    { "slug": "time-off",     "role": "pto-request+balance" },
+    { "slug": "benefits",     "role": "enrollment+coverage" },
+    { "slug": "documents",    "role": "paystubs+tax-forms" },
+    { "slug": "directory",    "role": "company-directory" }
+  ],
+  "compliance_blocks": ["pii-handling-disclaimer", "hipaa-benefits-notice", "eeoc-equal-opportunity-statement", "data-retention-notice"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "supportive, plain-language HR voice; respectful and inclusive",
+  "palettes": [
+    { "name": "people-teal",    "hexes": ["#0D9488", "#FFFFFF", "#CCFBF1", "#134E4A"] },
+    { "name": "trust-navy",     "hexes": ["#1E3A8A", "#FFFFFF", "#DBEAFE", "#1E1B4B"] },
+    { "name": "warm-welcome",   "hexes": ["#C2410C", "#FFF7ED", "#FFEDD5", "#431407"] },
+    { "name": "calm-sage",      "hexes": ["#65A30D", "#FAFAF9", "#ECFCCB", "#1A2E05"] },
+    { "name": "soft-plum",      "hexes": ["#7E22CE", "#FAF5FF", "#F3E8FF", "#3B0764"] }
+  ],
+  "section_library": ["app-shell", "welcome-card", "pto-balance-card", "leave-request-form", "calendar-view", "payslip-list", "tax-form-list", "benefits-card", "open-enrollment-banner", "directory-grid", "employee-card", "profile-form", "emergency-contact-form", "policy-acknowledgement", "footer-eeo"],
+  "image_directives": "diverse, candid workplace photography; respectful and inclusive imagery; avoid stock business cliches",
+  "voice_pet_words": ["benefits", "balance", "request", "enrollment", "manager", "policy", "acknowledge"],
+  "primary_keywords": ["hr self-service", "employee portal", "pto management", "benefits enrollment"]
+}

@@ -1,0 +1,33 @@
+{
+  "niche": "internal-corporate-tool",
+  "label": "Internal Corporate Tool",
+  "triggers": ["internal tool", "admin panel", "back-office", "ops tool", "corporate intranet", "internal app", "lob app"],
+  "default_sitemap": [
+    { "slug": "index",            "role": "marketing-internal-launch-page" },
+    { "slug": "docs",             "role": "marketing-internal-docs" },
+    { "slug": "login",            "role": "app-sso-only" },
+    { "slug": "dashboard",        "role": "app-overview+team-kpis" },
+    { "slug": "records",          "role": "app-data-table-list" },
+    { "slug": "records/:id",      "role": "app-record-detail+history" },
+    { "slug": "records/new",      "role": "app-record-create-form" },
+    { "slug": "approvals",        "role": "app-approval-queue" },
+    { "slug": "reports",          "role": "app-reports+exports" },
+    { "slug": "admin/users",      "role": "app-user-rbac" },
+    { "slug": "admin/audit-log",  "role": "app-audit-trail" },
+    { "slug": "settings",         "role": "app-tenant-config" }
+  ],
+  "compliance_blocks": ["sso-saml-required", "rbac-least-privilege", "audit-log-retention-policy", "internal-data-classification", "acceptable-use-policy", "data-loss-prevention-policy", "vpn-or-zero-trust-required"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "direct, utilitarian, no marketing fluff; designed for power users and speed",
+  "palettes": [
+    { "name": "ops-graphite",  "hexes": ["#1F2937", "#FFFFFF", "#F3F4F6", "#030712"] },
+    { "name": "admin-blue",    "hexes": ["#2563EB", "#FFFFFF", "#DBEAFE", "#172554"] },
+    { "name": "neutral-stone", "hexes": ["#57534E", "#FAFAF9", "#E7E5E4", "#1C1917"] },
+    { "name": "console-mono",  "hexes": ["#0A0A0A", "#FAFAFA", "#262626", "#FFFFFF"] },
+    { "name": "internal-teal", "hexes": ["#0F766E", "#F8FAFC", "#CCFBF1", "#042F2E"] }
+  ],
+  "section_library": ["sso-login", "sidebar-nav", "breadcrumb", "data-table-with-filters", "bulk-action-bar", "record-detail-tabs", "audit-history-panel", "approval-card", "approval-queue", "report-builder", "csv-export-button", "user-rbac-table", "permission-matrix", "audit-log-table", "tenant-config-form", "feature-flag-toggles", "command-palette"],
+  "image_directives": "minimal-to-none. Use dense data UIs, monospace numbers, status badges, and information density over imagery. Avoid hero photography entirely on app screens.",
+  "voice_pet_words": ["search", "filter", "approve", "export", "audit", "shortcut"],
+  "primary_keywords": ["internal tool", "admin panel", "back office", "ops dashboard"]
+}

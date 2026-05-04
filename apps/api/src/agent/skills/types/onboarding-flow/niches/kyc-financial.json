@@ -1,0 +1,30 @@
+{
+  "niche": "kyc-financial",
+  "label": "KYC Financial Onboarding",
+  "triggers": ["kyc", "aml", "know your customer", "identity verification", "financial onboarding", "fintech onboard", "ofac", "fincen", "cip"],
+  "default_sitemap": [
+    { "slug": "intro",              "step": 1, "role": "regulatory-disclosure+intro" },
+    { "slug": "personal-info",      "step": 2, "role": "legal-name+dob+ssn-tin" },
+    { "slug": "address-verification","step": 3, "role": "residential-address+proof" },
+    { "slug": "identity-doc-upload","step": 4, "role": "gov-id-capture" },
+    { "slug": "liveness-check",     "step": 5, "role": "selfie+liveness" },
+    { "slug": "source-of-funds",    "step": 6, "role": "funds-origin+occupation" },
+    { "slug": "pep-screening",      "step": 7, "role": "pep+sanctions-questionnaire" },
+    { "slug": "consent-screen",     "step": 8, "role": "disclosures+e-sign" },
+    { "slug": "review-pending",     "step": 9, "role": "manual-review-status" }
+  ],
+  "compliance_blocks": ["fincen-cip-disclosure", "ofac-sanctions-screening", "aml-bsa-policy", "patriot-act-disclosure", "gdpr-data-processing", "ccpa-rights-notice", "e-sign-act-consent", "regulation-cf-or-d-disclosures"],
+  "schema_org_primary": "RegisterAction",
+  "voice_template": "formal, authoritative, reassuring; explain why each piece of data is needed and how it is protected",
+  "palettes": [
+    { "name": "institutional-navy","hexes": ["#1E3A8A", "#FFFFFF", "#EFF6FF", "#0F172A"] },
+    { "name": "vault-slate",      "hexes": ["#334155", "#F8FAFC", "#E2E8F0", "#0F172A"] },
+    { "name": "trust-teal",       "hexes": ["#0F766E", "#FFFFFF", "#CCFBF1", "#042F2E"] },
+    { "name": "compliance-graphite","hexes": ["#111827", "#F9FAFB", "#E5E7EB", "#030712"] },
+    { "name": "secure-blue",      "hexes": ["#2563EB", "#FFFFFF", "#DBEAFE", "#172554"] }
+  ],
+  "section_library": ["regulatory-banner", "stepper", "field-tooltip", "ssn-tin-input", "address-autocomplete", "doc-type-picker", "id-front-capture", "id-back-capture", "liveness-check", "selfie-capture", "occupation-select", "source-of-funds-form", "pep-questionnaire", "ofac-screening-disclosure", "consent-screen", "e-signature-pad", "encryption-notice", "manual-review-status", "secure-upload", "audit-trail-footer"],
+  "image_directives": "minimal, institutional iconography. Lock and shield icons in monochrome. Avoid casual photography. Convey security without alarm — clean lines, generous whitespace, formal typography.",
+  "voice_pet_words": ["secure", "regulated", "verified", "encrypted", "compliant", "protected"],
+  "primary_keywords": ["kyc verification", "identity verification", "aml compliance", "fintech onboarding"]
+}

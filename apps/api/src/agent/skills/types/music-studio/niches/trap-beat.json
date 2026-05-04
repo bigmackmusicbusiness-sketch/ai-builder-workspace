@@ -1,0 +1,27 @@
+{
+  "niche": "trap-beat",
+  "label": "Trap Beat",
+  "triggers": ["trap", "808", "hi-hat rolls", "drill", "rap beat", "type beat", "trap soul", "snare roll"],
+  "default_sitemap": [
+    { "slug": "intro",        "role": "atmosphere+808-tease" },
+    { "slug": "verse-1",      "role": "main-loop+sparse-hats" },
+    { "slug": "hook",         "role": "full-arrangement+melody" },
+    { "slug": "verse-2",      "role": "variation+filter-sweep" },
+    { "slug": "hook-2",       "role": "full-arrangement-reprise" },
+    { "slug": "bridge",       "role": "breakdown+drum-roll" },
+    { "slug": "outro",        "role": "808-tail+fade" }
+  ],
+  "compliance_blocks": ["sample-clearance-disclaimer", "explicit-content-warning-if-applicable", "producer-tag-attribution"],
+  "voice_template": "dark, hard-hitting, modern hip-hop production aesthetic",
+  "palettes": [
+    { "name": "blood-red",        "hexes": ["#DC2626", "#0A0A0A", "#7F1D1D", "#FAFAFA"] },
+    { "name": "black-gold",       "hexes": ["#000000", "#D4AF37", "#1F1F1F", "#F5F5F4"] },
+    { "name": "neon-purple",      "hexes": ["#7C3AED", "#0A0A0A", "#2E1065", "#F4F4F5"] },
+    { "name": "matte-black",      "hexes": ["#0A0A0A", "#262626", "#404040", "#F5F5F5"] },
+    { "name": "toxic-green",      "hexes": ["#22C55E", "#0A0A0A", "#14532D", "#FAFAFA"] }
+  ],
+  "section_library": ["intro-loop", "808-bass-pattern", "hi-hat-roll", "snare-fill", "melody-loop", "vocal-chop", "filter-sweep", "drop-impact", "tag-stinger", "outro-tail"],
+  "image_directives": "dark moody album art; neon accents; chrome textures; smoke effects; high-contrast portrait silhouettes; luxury but gritty",
+  "voice_pet_words": ["hard", "knock", "808", "drip", "vibe", "type beat"],
+  "primary_keywords": ["trap beat", "type beat", "808 beats", "hip hop instrumental"]
+}

@@ -226,6 +226,8 @@ export const onboardingFlow: ProjectType = {
       'No auto-submit — user must click Continue',
     ],
     multiPageStrategy: {
+      nicheManifestPath: 'types/onboarding-flow/niches/',
+      detectFromPrompt:  true,
     },
     assetBudget: { images: 2, icons: 8 },
   },

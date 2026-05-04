@@ -1,0 +1,38 @@
+{
+  "niche": "narrative-short",
+  "label": "Narrative Short Film",
+  "triggers": ["narrative short", "short film", "fiction short", "indie short", "festival short", "scripted"],
+  "default_sitemap": [
+    { "slug": "act-1", "role": "setup", "sections": [
+      { "slug": "opening-image",     "role": "tone+world-statement" },
+      { "slug": "ordinary-world",    "role": "protagonist-status-quo" },
+      { "slug": "inciting-incident", "role": "disruptive-event" }
+    ]},
+    { "slug": "act-2", "role": "confrontation", "sections": [
+      { "slug": "first-attempt",     "role": "protagonist-tries-fails" },
+      { "slug": "midpoint-shift",    "role": "stakes-raise+truth-emerges" },
+      { "slug": "low-point",         "role": "all-is-lost" },
+      { "slug": "decision",          "role": "protagonist-chooses" }
+    ]},
+    { "slug": "act-3", "role": "resolution", "sections": [
+      { "slug": "climax",         "role": "final-confrontation" },
+      { "slug": "denouement",     "role": "aftermath+change" },
+      { "slug": "closing-image",  "role": "mirror-or-contrast-opening" },
+      { "slug": "credits",        "role": "credits" }
+    ]}
+  ],
+  "compliance_blocks": ["screenplay-copyright-registration", "actor-talent-releases", "location-permits", "music-sync-license", "minor-on-set-permits", "stunt-safety-disclosures", "festival-submission-eligibility", "depiction-of-real-persons-clearance"],
+  "schema_org_primary": "Movie",
+  "voice_template": "scene-driven, subtext over exposition; trust the audience to read images and silence",
+  "palettes": [
+    { "name": "indie-cinema",    "hexes": ["#1F2937", "#F9FAFB", "#9CA3AF", "#FBBF24"] },
+    { "name": "moody-teal",      "hexes": ["#134E4A", "#F0FDFA", "#5EEAD4", "#0F172A"] },
+    { "name": "warm-nostalgia",  "hexes": ["#92400E", "#FEF3C7", "#F59E0B", "#1C1917"] },
+    { "name": "neo-noir",        "hexes": ["#0A0A0A", "#FAFAFA", "#DC2626", "#404040"] },
+    { "name": "sun-bleached",    "hexes": ["#D4A574", "#FAF6EE", "#A78F6E", "#2A2418"] }
+  ],
+  "section_library": ["opening-image", "establishing-shot", "character-close-up", "two-shot-dialogue", "wide-action-shot", "pov-shot", "match-cut", "smash-cut", "montage-sequence", "silent-beat", "score-sting", "title-reveal", "closing-image", "credits-roll"],
+  "image_directives": "intentional cinematography with a defined visual grammar. Choose a coherent palette and stick to it. Composition reveals character — use negative space, eyelines, and blocking deliberately. Avoid TV-flat lighting; embrace shadow and contrast.",
+  "voice_pet_words": ["beat", "subtext", "reveal", "image", "silence"],
+  "primary_keywords": ["short film", "narrative", "indie film", "festival"]
+}

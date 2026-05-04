@@ -1,0 +1,29 @@
+{
+  "niche": "business-proposal",
+  "label": "Business Proposal",
+  "triggers": ["proposal", "rfp", "rfq", "scope of work", "sow", "engagement", "bid", "vendor proposal"],
+  "default_sitemap": [
+    { "slug": "cover",            "role": "title-page+client-info" },
+    { "slug": "executive-summary","role": "high-level-overview" },
+    { "slug": "problem",          "role": "client-challenge-statement" },
+    { "slug": "solution",         "role": "approach+methodology" },
+    { "slug": "scope",            "role": "deliverables+exclusions" },
+    { "slug": "timeline",         "role": "milestone-schedule" },
+    { "slug": "investment",       "role": "pricing+payment-terms" },
+    { "slug": "team",             "role": "key-personnel-bios" },
+    { "slug": "next-steps",       "role": "signature-page" }
+  ],
+  "compliance_blocks": ["confidentiality-notice", "validity-period-disclaimer", "terms-of-engagement-reference"],
+  "voice_template": "confident consultative tone, client-focused and outcomes-oriented",
+  "palettes": [
+    { "name": "corporate-navy",   "hexes": ["#1E3A8A", "#FFFFFF", "#E0E7FF", "#0F172A"] },
+    { "name": "executive-charcoal","hexes": ["#1F2937", "#FFFFFF", "#F3F4F6", "#9CA3AF"] },
+    { "name": "premium-emerald",  "hexes": ["#047857", "#FFFFFF", "#D1FAE5", "#022C22"] },
+    { "name": "modern-sand",      "hexes": ["#A16207", "#FFFBEB", "#FEF3C7", "#451A03"] },
+    { "name": "boutique-burgundy","hexes": ["#9F1239", "#FFFFFF", "#FFE4E6", "#4C0519"] }
+  ],
+  "section_library": ["cover-page", "client-logo-block", "executive-summary-block", "problem-statement", "solution-overview", "approach-steps", "deliverables-table", "exclusions-list", "timeline-gantt", "pricing-table", "payment-schedule", "team-bio-card", "case-study-callout", "signature-block", "appendix"],
+  "image_directives": "professional photography; clean infographics; minimal stock imagery; emphasize charts and timeline visuals",
+  "voice_pet_words": ["partnership", "outcomes", "deliverables", "scope", "investment", "milestones"],
+  "primary_keywords": ["business proposal", "project proposal", "rfp response", "scope of work"]
+}

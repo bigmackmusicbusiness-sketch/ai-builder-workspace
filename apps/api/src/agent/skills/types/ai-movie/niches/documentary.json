@@ -1,0 +1,39 @@
+{
+  "niche": "documentary",
+  "label": "Documentary",
+  "triggers": ["documentary", "doc", "non-fiction film", "factual", "investigative", "biography film", "docu-series"],
+  "default_sitemap": [
+    { "slug": "act-1", "role": "setup", "sections": [
+      { "slug": "cold-open",      "role": "hook+thesis-question" },
+      { "slug": "title-sequence", "role": "title-card+credits" },
+      { "slug": "world-context",  "role": "establishing-bckgd+stakes" },
+      { "slug": "character-intro","role": "primary-subjects-introduction" }
+    ]},
+    { "slug": "act-2", "role": "investigation", "sections": [
+      { "slug": "rising-evidence",   "role": "interviews+archival-evidence" },
+      { "slug": "complication",      "role": "counter-evidence+conflict" },
+      { "slug": "midpoint-revelation","role": "key-discovery+pivot" },
+      { "slug": "deeper-stakes",     "role": "human-cost+broader-implications" }
+    ]},
+    { "slug": "act-3", "role": "resolution", "sections": [
+      { "slug": "climax-confrontation","role": "subject-confronts-truth" },
+      { "slug": "resolution",         "role": "outcome+aftermath" },
+      { "slug": "thematic-coda",      "role": "what-this-means" },
+      { "slug": "credits",            "role": "credits+sources+CTA" }
+    ]}
+  ],
+  "compliance_blocks": ["interview-release-forms", "archival-footage-licensing", "fair-use-doctrine-doc", "music-sync-license", "subject-likeness-consent", "minor-guardian-consent", "redaction-of-pii-from-archival", "fact-check-citations", "anti-defamation-review"],
+  "schema_org_primary": "Movie",
+  "voice_template": "observational, journalistic, restrained narration; let subjects speak and let evidence accrue",
+  "palettes": [
+    { "name": "verite-mono",     "hexes": ["#171717", "#FAFAFA", "#525252", "#E5E5E5"] },
+    { "name": "archival-sepia", "hexes": ["#78350F", "#FFFBEB", "#D6A872", "#1C0F04"] },
+    { "name": "investigative-noir","hexes": ["#0F172A", "#94A3B8", "#1E293B", "#F8FAFC"] },
+    { "name": "naturalistic-earth","hexes": ["#57534E", "#F5F5F4", "#A8A29E", "#1C1917"] },
+    { "name": "field-cool",     "hexes": ["#1E3A8A", "#F1F5F9", "#475569", "#E2E8F0"] }
+  ],
+  "section_library": ["cold-open-hook", "title-card", "establishing-shot", "lower-third-name-title", "interview-A-roll", "B-roll-sequence", "archival-photo-zoom", "archival-footage-clip", "map-graphic", "data-visualization", "narration-voice-over", "ambient-sync-sound", "transition-fade", "act-break-card", "credits-roll", "fact-check-overlay"],
+  "image_directives": "naturalistic cinematography. Available light, handheld where appropriate, observational compositions. Archival materials should be color-graded for cohesion. Avoid glossy commercial looks. Restrained color, real textures, real grain when appropriate.",
+  "voice_pet_words": ["according to", "the record shows", "in their own words", "what we found", "the question remains"],
+  "primary_keywords": ["documentary", "non-fiction", "true story", "investigation"]
+}

@@ -1,0 +1,28 @@
+{
+  "niche": "auth-service",
+  "label": "Auth Service",
+  "triggers": ["auth", "oauth", "jwt", "login", "session", "sso", "identity", "token", "openid"],
+  "default_sitemap": [
+    { "slug": "register",     "role": "POST-signup-endpoint" },
+    { "slug": "login",        "role": "POST-login-endpoint" },
+    { "slug": "refresh",      "role": "POST-refresh-token-endpoint" },
+    { "slug": "logout",       "role": "POST-revoke-endpoint" },
+    { "slug": "oauth",        "role": "oauth2-authorize-callback" },
+    { "slug": "userinfo",     "role": "GET-current-user" },
+    { "slug": "mfa",          "role": "totp-enroll-verify" }
+  ],
+  "compliance_blocks": ["password-hashing-bcrypt-argon2", "rate-limiting-on-login", "csrf-protection", "secure-cookie-flags", "gdpr-data-subject-rights", "soc2-audit-logging"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "security-first, precise, standards-referencing (OAuth2, OIDC, RFC) developer voice",
+  "palettes": [
+    { "name": "vault-navy",       "hexes": ["#0C1E3F", "#FFFFFF", "#1E40AF", "#FCD34D"] },
+    { "name": "shield-emerald",   "hexes": ["#047857", "#FFFFFF", "#D1FAE5", "#022C22"] },
+    { "name": "secure-mono",      "hexes": ["#000000", "#FAFAFA", "#262626", "#22C55E"] },
+    { "name": "identity-violet",  "hexes": ["#6D28D9", "#FAFAFF", "#EDE9FE", "#2E1065"] },
+    { "name": "trust-graphite",   "hexes": ["#1F2937", "#F9FAFB", "#374151", "#3B82F6"] }
+  ],
+  "section_library": ["endpoint-card", "request-body-schema", "token-response-schema", "oauth-flow-diagram", "scope-table", "code-sample-curl", "code-sample-js", "error-codes-table", "session-cookie-config", "mfa-flow-diagram", "rate-limit-headers", "rfc-reference-link"],
+  "image_directives": "lock and key iconography; abstract identity diagrams; OAuth flow visualizations; minimal illustration with developer aesthetic",
+  "voice_pet_words": ["token", "scope", "claim", "issuer", "audience", "expiry", "revoke"],
+  "primary_keywords": ["auth service", "oauth2 api", "jwt authentication", "identity api"]
+}

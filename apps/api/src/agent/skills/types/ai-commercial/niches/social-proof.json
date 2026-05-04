@@ -1,0 +1,27 @@
+{
+  "niche": "social-proof",
+  "label": "Social Proof Commercial",
+  "triggers": ["social proof", "testimonial ad", "ugc ad", "review ad", "customer story ad", "case study spot"],
+  "default_sitemap": [
+    { "slug": "spot", "role": "single-spot", "durations": ["15s", "30s", "60s"], "sections": [
+      { "slug": "hook",     "role": "real-customer-quote",     "duration_15": "0-2s",  "duration_30": "0-4s",  "duration_60": "0-7s",  "purpose": "lead-with-strongest-quote" },
+      { "slug": "problem",  "role": "skepticism-named",        "duration_15": "2-4s",  "duration_30": "4-9s",  "duration_60": "7-15s", "purpose": "what-they-tried-before" },
+      { "slug": "solution", "role": "results-and-credibility", "duration_15": "4-11s", "duration_30": "9-24s", "duration_60": "15-52s","purpose": "specific-results+stars+counts" },
+      { "slug": "cta",      "role": "join-them",               "duration_15": "11-15s","duration_30": "24-30s","duration_60": "52-60s","purpose": "join-N-other-customers+CTA" }
+    ]}
+  ],
+  "compliance_blocks": ["ftc-endorsement-disclosures", "ftc-typical-results-disclaimer", "verified-customer-attestation", "model-talent-release-for-customer", "before-after-disclosure-rules", "claim-substantiation", "ada-captions-recommended"],
+  "schema_org_primary": "Review",
+  "voice_template": "let the customer carry the message; minimal brand voice-over; specifics over superlatives",
+  "palettes": [
+    { "name": "authentic-warm","hexes": ["#F97316", "#FFFBEB", "#FED7AA", "#431407"] },
+    { "name": "ugc-natural",  "hexes": ["#FAFAF9", "#171717", "#A78F6E", "#525252"] },
+    { "name": "trust-blue",   "hexes": ["#2563EB", "#FFFFFF", "#DBEAFE", "#172554"] },
+    { "name": "review-gold",  "hexes": ["#F59E0B", "#FFFFFF", "#FEF3C7", "#451A03"] },
+    { "name": "fresh-green",  "hexes": ["#16A34A", "#F0FDF4", "#BBF7D0", "#14532D"] }
+  ],
+  "section_library": ["customer-on-camera-talking-head", "lower-third-customer-name", "verified-customer-badge", "review-stars-overlay", "specific-result-stat-card", "before-after-split", "ugc-vertical-clip-stitched", "join-N-customers-card", "cta-end-card", "ftc-disclosure-fine-print"],
+  "image_directives": "authentic, slightly imperfect customer footage. Vertical phone selfies, real homes, real lighting. Avoid actor-y testimonials. Pair with clean lower-thirds and stat overlays for credibility.",
+  "voice_pet_words": ["i was skeptical", "honestly", "in just", "would recommend", "join over"],
+  "primary_keywords": ["customer reviews", "real results", "testimonials", "trusted by"]
+}

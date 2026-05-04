@@ -1,0 +1,36 @@
+{
+  "niche": "b2b-portal",
+  "label": "B2B Portal",
+  "triggers": ["b2b portal", "client portal", "customer portal", "vendor portal", "partner portal", "enterprise saas", "self-service"],
+  "default_sitemap": [
+    { "slug": "index",                "role": "marketing-hero+enterprise-pitch" },
+    { "slug": "solutions",            "role": "marketing-by-industry" },
+    { "slug": "security",             "role": "marketing-soc2+iso27001" },
+    { "slug": "pricing",              "role": "marketing-tiers+contact-sales" },
+    { "slug": "case-studies",         "role": "marketing-customer-stories" },
+    { "slug": "dashboard",            "role": "app-account-overview+kpis" },
+    { "slug": "orders",               "role": "app-orders+invoices" },
+    { "slug": "contracts",            "role": "app-contract-repository" },
+    { "slug": "support/tickets",      "role": "app-ticket-list" },
+    { "slug": "support/ticket/:id",   "role": "app-ticket-detail" },
+    { "slug": "documents",            "role": "app-document-library" },
+    { "slug": "team",                 "role": "app-user-rbac-management" },
+    { "slug": "billing",              "role": "app-invoices+payment-methods" },
+    { "slug": "api-keys",             "role": "app-api-keys+webhooks" },
+    { "slug": "audit-log",            "role": "app-activity-audit-trail" }
+  ],
+  "compliance_blocks": ["soc2-type-ii-statement", "iso-27001-statement", "gdpr-dpa-link", "ccpa-rights-notice", "data-processing-agreement", "msa-tos-link", "sso-saml-support-notice", "audit-log-retention-policy"],
+  "schema_org_primary": "Organization",
+  "voice_template": "professional, confident, enterprise-grade; emphasize control, security, and ROI",
+  "palettes": [
+    { "name": "enterprise-navy", "hexes": ["#1E40AF", "#FFFFFF", "#DBEAFE", "#172554"] },
+    { "name": "executive-slate", "hexes": ["#334155", "#F8FAFC", "#E2E8F0", "#0F172A"] },
+    { "name": "trust-emerald",   "hexes": ["#047857", "#FFFFFF", "#D1FAE5", "#022C22"] },
+    { "name": "premium-graphite","hexes": ["#1F2937", "#F9FAFB", "#E5E7EB", "#111827"] },
+    { "name": "modern-azure",    "hexes": ["#0369A1", "#FFFFFF", "#E0F2FE", "#082F49"] }
+  ],
+  "section_library": ["marketing-hero", "logo-strip-customers", "industry-cards", "security-badges", "pricing-tiers", "contact-sales-form", "case-study-card", "kpi-card-row", "order-table", "invoice-table", "contract-card", "ticket-list", "ticket-thread", "document-library", "user-roles-table", "rbac-permission-matrix", "api-key-manager", "webhook-config", "audit-log-table", "sso-login-button"],
+  "image_directives": "polished enterprise photography or abstract data visualizations. Conference rooms, dashboards on monitors, secure data center motifs. Avoid casual or playful imagery. Convey scale and reliability.",
+  "voice_pet_words": ["enterprise", "scale", "secure", "compliance", "audit", "reliability", "uptime"],
+  "primary_keywords": ["b2b portal", "client portal", "enterprise saas", "self-service portal"]
+}

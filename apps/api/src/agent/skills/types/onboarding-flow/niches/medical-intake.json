@@ -1,0 +1,29 @@
+{
+  "niche": "medical-intake",
+  "label": "Medical Intake",
+  "triggers": ["medical intake", "patient intake", "new patient", "phi", "health history", "telehealth onboard", "clinic registration"],
+  "default_sitemap": [
+    { "slug": "welcome",            "step": 1, "role": "clinic-intro+what-to-expect" },
+    { "slug": "patient-demographics","step": 2, "role": "name+dob+address" },
+    { "slug": "insurance-info",     "step": 3, "role": "carrier+member-id+upload" },
+    { "slug": "health-history",     "step": 4, "role": "conditions+medications+allergies" },
+    { "slug": "current-symptoms",   "step": 5, "role": "chief-complaint+symptoms" },
+    { "slug": "consent-forms",      "step": 6, "role": "hipaa-noc+treatment-consent" },
+    { "slug": "pharmacy-preferred", "step": 7, "role": "pharmacy-selection" },
+    { "slug": "appointment-confirm","step": 8, "role": "schedule+pre-visit-instructions" }
+  ],
+  "compliance_blocks": ["hipaa-notice-of-privacy-practices", "phi-handling-disclosure", "treatment-consent-form", "release-of-information-roi", "ada-accessibility-statement", "minor-parental-consent-if-under-18", "telehealth-consent-if-applicable", "insurance-assignment-of-benefits"],
+  "schema_org_primary": "MedicalProcedure",
+  "voice_template": "calm, clinical, reassuring; explain why each clinical question is asked and protect dignity",
+  "palettes": [
+    { "name": "clinical-blue",  "hexes": ["#0284C7", "#FFFFFF", "#E0F2FE", "#0C4A6E"] },
+    { "name": "fresh-mint",     "hexes": ["#0EA5A4", "#FFFFFF", "#F0FDFA", "#134E4A"] },
+    { "name": "soft-sage",      "hexes": ["#84A98C", "#FFFFFF", "#E8EFE8", "#1F2D1F"] },
+    { "name": "calm-lavender",  "hexes": ["#A78BFA", "#FFFFFF", "#EDE9FE", "#2E1065"] },
+    { "name": "warm-clinical",  "hexes": ["#14B8A6", "#FAFAF9", "#CCFBF1", "#064E3B"] }
+  ],
+  "section_library": ["welcome-card", "stepper", "phi-encryption-banner", "demographics-form", "insurance-card-upload", "carrier-autocomplete", "condition-multiselect", "medication-list", "allergy-list", "symptom-checker", "pain-scale", "hipaa-noc-block", "treatment-consent", "roi-form", "pharmacy-picker", "telehealth-consent", "appointment-confirmation", "secure-upload"],
+  "image_directives": "warm clinical photography or soft medical illustrations. Hands of clinicians, calming clinic interiors, plants and natural light. Avoid graphic medical imagery. Aim for trust, calm, and dignity.",
+  "voice_pet_words": ["your privacy", "secure", "care team", "comfortable", "we'll review", "confidential"],
+  "primary_keywords": ["patient intake", "medical intake", "new patient form", "telehealth onboarding"]
+}

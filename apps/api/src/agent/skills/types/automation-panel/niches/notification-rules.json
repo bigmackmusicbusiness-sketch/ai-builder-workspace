@@ -1,0 +1,26 @@
+{
+  "niche": "notification-rules",
+  "label": "Notification Rules",
+  "triggers": ["notification", "alert", "rules", "subscribe", "channel", "slack", "email alert", "pager", "digest"],
+  "default_sitemap": [
+    { "slug": "rules",        "role": "rule-list" },
+    { "slug": "builder",      "role": "condition+channel-config" },
+    { "slug": "channels",     "role": "destination-config" },
+    { "slug": "queue",        "role": "pending-deliveries" },
+    { "slug": "history",      "role": "sent-log+delivery-status" },
+    { "slug": "subscribers",  "role": "user-preferences" }
+  ],
+  "compliance_blocks": ["unsubscribe-link-required", "user-consent-tracking", "do-not-disturb-respect", "rate-limit-policy"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "succinct, signal-not-noise philosophy, user-respectful tone",
+  "palettes": [
+    { "name": "alert-red",        "hexes": ["#DC2626", "#FFFFFF", "#FEE2E2", "#7F1D1D"] },
+    { "name": "channel-blue",     "hexes": ["#3B82F6", "#FFFFFF", "#DBEAFE", "#1E3A8A"] },
+    { "name": "calm-amber",       "hexes": ["#F59E0B", "#FFFBEB", "#FEF3C7", "#7C2D12"] },
+    { "name": "info-cyan",        "hexes": ["#0891B2", "#F0FDFA", "#A5F3FC", "#164E63"] },
+    { "name": "neutral-slate",    "hexes": ["#475569", "#F8FAFC", "#E2E8F0", "#0F172A"] }
+  ],
+  "section_library": ["app-shell", "rule-table", "rule-card", "condition-builder", "channel-picker-email", "channel-picker-slack", "channel-picker-webhook", "channel-picker-sms", "severity-pill", "throttle-config", "quiet-hours-config", "digest-grouping-config", "delivery-log-row", "subscriber-prefs"],
+  "voice_pet_words": ["notify", "alert", "channel", "digest", "throttle", "quiet hours", "severity"],
+  "primary_keywords": ["notification rules", "alert system", "notification automation", "alert routing"]
+}

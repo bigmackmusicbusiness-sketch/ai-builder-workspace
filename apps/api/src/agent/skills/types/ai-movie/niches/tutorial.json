@@ -1,0 +1,38 @@
+{
+  "niche": "tutorial",
+  "label": "Tutorial",
+  "triggers": ["tutorial", "how-to", "step-by-step", "lesson", "training video", "walkthrough", "course module"],
+  "default_sitemap": [
+    { "slug": "act-1", "role": "frame-the-task", "sections": [
+      { "slug": "outcome-preview",   "role": "show-finished-result" },
+      { "slug": "what-you-need",     "role": "tools+prerequisites" },
+      { "slug": "agenda",            "role": "table-of-contents" }
+    ]},
+    { "slug": "act-2", "role": "do-the-steps", "sections": [
+      { "slug": "step-1",            "role": "first-action+screen-record" },
+      { "slug": "step-2",            "role": "next-action" },
+      { "slug": "common-pitfall",    "role": "warning+how-to-fix" },
+      { "slug": "step-3",            "role": "next-action" },
+      { "slug": "step-n",            "role": "final-action" }
+    ]},
+    { "slug": "act-3", "role": "review-and-extend", "sections": [
+      { "slug": "result-recap",      "role": "show-what-we-built" },
+      { "slug": "next-steps",        "role": "advanced-or-related-tutorials" },
+      { "slug": "resources-and-cta", "role": "downloads+subscribe" }
+    ]}
+  ],
+  "compliance_blocks": ["software-license-compliance", "third-party-asset-attribution", "ftc-sponsored-disclosure-if-applicable", "accuracy-of-instructions", "safety-disclaimers-if-physical-task", "ada-captions-required"],
+  "schema_org_primary": "HowTo",
+  "voice_template": "calm, patient, precise; never assume context; always say what you're about to do before doing it",
+  "palettes": [
+    { "name": "edu-clean",      "hexes": ["#0EA5E9", "#FFFFFF", "#F0F9FF", "#0C4A6E"] },
+    { "name": "ide-dark",       "hexes": ["#0F172A", "#F8FAFC", "#22D3EE", "#1E293B"] },
+    { "name": "workshop-warm",  "hexes": ["#D97706", "#FFFBEB", "#FCD34D", "#451A03"] },
+    { "name": "minimal-mono",   "hexes": ["#171717", "#FAFAFA", "#525252", "#E5E5E5"] },
+    { "name": "creator-violet", "hexes": ["#7C3AED", "#FAF5FF", "#E9D5FF", "#3B0764"] }
+  ],
+  "section_library": ["outcome-preview", "tools-list-graphic", "agenda-card", "screen-recording-zoomed", "talking-head-pip", "step-number-overlay", "callout-box", "warning-card", "keyboard-shortcut-overlay", "before-after-comparison", "chapter-marker", "recap-summary", "resources-list", "subscribe-bug"],
+  "image_directives": "clean screen recordings with intentional cursor highlighting and zoom. Talking-head PIP only when adding value. Use callouts and arrows generously. Pace patiently — let the viewer follow along.",
+  "voice_pet_words": ["first", "next", "now we'll", "if you see", "you should now have"],
+  "primary_keywords": ["tutorial", "how to", "step by step", "walkthrough"]
+}

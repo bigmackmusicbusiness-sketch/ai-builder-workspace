@@ -1,0 +1,31 @@
+{
+  "niche": "pitch-deck",
+  "label": "Investor Pitch Deck",
+  "triggers": ["pitch deck", "investor deck", "fundraising", "seed", "series a", "tam", "traction", "burn rate", "vc"],
+  "default_sitemap": [
+    { "slug": "title",        "role": "company+tagline" },
+    { "slug": "problem",      "role": "pain-statement" },
+    { "slug": "solution",     "role": "product-overview" },
+    { "slug": "market",       "role": "tam-sam-som" },
+    { "slug": "product",      "role": "demo+features" },
+    { "slug": "traction",     "role": "metrics+growth" },
+    { "slug": "business-model","role": "revenue-streams" },
+    { "slug": "competition",  "role": "competitive-matrix" },
+    { "slug": "team",         "role": "founders+advisors" },
+    { "slug": "financials",   "role": "projections" },
+    { "slug": "ask",          "role": "raise-amount+use-of-funds" }
+  ],
+  "compliance_blocks": ["forward-looking-statements-disclaimer", "confidentiality-notice", "not-an-offer-to-sell-securities"],
+  "voice_template": "confident, vision-driven, founder-energy with concrete numbers",
+  "palettes": [
+    { "name": "founder-bold",     "hexes": ["#0F172A", "#FFFFFF", "#3B82F6", "#F59E0B"] },
+    { "name": "vc-clean",         "hexes": ["#FFFFFF", "#0A0A0A", "#E5E5E5", "#EF4444"] },
+    { "name": "growth-emerald",   "hexes": ["#022C22", "#FFFFFF", "#10B981", "#FCD34D"] },
+    { "name": "modern-violet",    "hexes": ["#1E1B4B", "#FAFAFA", "#8B5CF6", "#F472B6"] },
+    { "name": "trustworthy-navy", "hexes": ["#0C1E3F", "#FFFFFF", "#1E40AF", "#FBBF24"] }
+  ],
+  "section_library": ["title-slide", "big-statement-slide", "problem-slide", "solution-slide", "demo-screenshot", "market-size-chart", "traction-chart", "kpi-grid", "business-model-slide", "competitive-matrix", "team-grid", "founder-card", "financial-projection-chart", "use-of-funds-pie", "ask-slide", "thank-you-slide"],
+  "image_directives": "bold typography; product screenshots in device frames; minimal text per slide; high-contrast charts; founder portraits should be candid and confident",
+  "voice_pet_words": ["traction", "market", "moat", "scalable", "category", "we believe"],
+  "primary_keywords": ["pitch deck", "investor deck", "fundraising deck", "startup pitch"]
+}

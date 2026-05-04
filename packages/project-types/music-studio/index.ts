@@ -30,6 +30,8 @@ export const musicStudio: ProjectType = {
       'Stems labeled by role (kick, snare, hat, bass, melody, vocal)',
     ],
     multiPageStrategy: {
+      nicheManifestPath: 'types/music-studio/niches/',
+      detectFromPrompt:  true,
     },
     assetBudget: { images: 1, icons: 8 },
   },

@@ -1,0 +1,44 @@
+{
+  "niche": "hip-hop",
+  "label": "Hip-Hop Music Video",
+  "triggers": ["hip hop", "rap", "trap", "drill", "rap video", "hip-hop mv", "music video rap"],
+  "default_sitemap": [
+    { "slug": "intro",   "role": "song-intro",   "sections": [
+      { "slug": "establishing-shot",  "role": "set-the-world+location" },
+      { "slug": "artist-reveal",      "role": "first-artist-shot+attitude" }
+    ]},
+    { "slug": "verse-1", "role": "song-verse",   "sections": [
+      { "slug": "performance-A",      "role": "lipsync+swagger" },
+      { "slug": "narrative-cutaway-A","role": "story-or-flex-context" }
+    ]},
+    { "slug": "chorus",  "role": "song-chorus",  "sections": [
+      { "slug": "hook-performance",   "role": "wide-energy-shot+crew" },
+      { "slug": "iconic-imagery",     "role": "memorable-visual-motif" }
+    ]},
+    { "slug": "verse-2", "role": "song-verse",   "sections": [
+      { "slug": "performance-B",      "role": "second-location+wardrobe-change" },
+      { "slug": "narrative-cutaway-B","role": "elevate-stakes+entourage" }
+    ]},
+    { "slug": "bridge",  "role": "song-bridge",  "sections": [
+      { "slug": "tone-shift",         "role": "slower-emotive-imagery" }
+    ]},
+    { "slug": "outro",   "role": "song-outro",   "sections": [
+      { "slug": "final-chorus",       "role": "climax-energy-callback" },
+      { "slug": "fade-image",         "role": "lingering-iconic-frame" }
+    ]}
+  ],
+  "compliance_blocks": ["master-recording-license", "publishing-sync-license", "performer-likeness-releases", "location-permits", "weapon-prop-permits-if-applicable", "vehicle-permits", "minor-on-set-permits", "platform-content-policy-tiktok-yt-shorts", "explicit-lyrics-content-warning", "trademark-clearance-on-visible-brands"],
+  "schema_org_primary": "MusicVideoObject",
+  "voice_template": "swagger-driven, performance-forward; visuals should embody confidence, hometown, crew, and aesthetic capital",
+  "palettes": [
+    { "name": "noir-gold",     "hexes": ["#0A0A0A", "#FBBF24", "#FFFFFF", "#525252"] },
+    { "name": "midnight-violet","hexes": ["#1E1B4B", "#A855F7", "#FFFFFF", "#FBBF24"] },
+    { "name": "street-mono",   "hexes": ["#171717", "#FAFAFA", "#DC2626", "#A78F6E"] },
+    { "name": "trap-neon",     "hexes": ["#FE2C55", "#22D3EE", "#0A0A0A", "#FBBF24"] },
+    { "name": "luxury-cognac", "hexes": ["#78350F", "#FFFCF5", "#D4A574", "#1C0F04"] }
+  ],
+  "section_library": ["establishing-city-shot", "artist-singles-lipsync", "crew-wide-shot", "wardrobe-change-cut", "luxury-detail-insert", "low-angle-power-shot", "drone-aerial", "slow-motion-money-or-jewelry", "narrative-vignette-cutaway", "iconic-frame-motif", "outro-fade-shot"],
+  "image_directives": "high-contrast cinematography, deep blacks, gold or neon accents, anamorphic lens flares when appropriate. Lean into texture: chains, fabrics, cars, city. Practical lights at night. Avoid generic 'music video stock' clichés — pick a specific city, era, and aesthetic and commit.",
+  "voice_pet_words": ["energy", "vibe", "trap", "drip", "city", "crew"],
+  "primary_keywords": ["hip hop music video", "rap video", "official music video"]
+}

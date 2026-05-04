@@ -36,6 +36,8 @@ export const aiMovie: ProjectType = {
       'No likeness of real people without consent',
     ],
     multiPageStrategy: {
+      nicheManifestPath: 'types/ai-movie/niches/',
+      detectFromPrompt:  true,
     },
     assetBudget: { images: 0, icons: 8 },
   },

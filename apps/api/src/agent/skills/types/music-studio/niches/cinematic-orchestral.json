@@ -1,0 +1,27 @@
+{
+  "niche": "cinematic-orchestral",
+  "label": "Cinematic Orchestral",
+  "triggers": ["cinematic", "orchestral", "film score", "trailer music", "epic", "soundtrack", "strings", "brass", "hybrid orchestral"],
+  "default_sitemap": [
+    { "slug": "intro-mood",   "role": "ambient-tension+lone-piano" },
+    { "slug": "swell-build",  "role": "string-crescendo+timpani" },
+    { "slug": "first-statement","role": "theme-introduction" },
+    { "slug": "development",  "role": "harmonic-expansion" },
+    { "slug": "climax",       "role": "full-orchestra+choir" },
+    { "slug": "denouement",   "role": "resolution+release" },
+    { "slug": "outro",        "role": "tail+sustained-low-end" }
+  ],
+  "compliance_blocks": ["sync-licensing-note", "performing-rights-attribution", "sample-library-credits"],
+  "voice_template": "grand, emotional, narratively-driven orchestral storytelling",
+  "palettes": [
+    { "name": "epic-deep-blue",   "hexes": ["#0C1E3F", "#FCD34D", "#1E1B4B", "#FAFAFA"] },
+    { "name": "trailer-gold",     "hexes": ["#000000", "#D4AF37", "#451A03", "#FAFAF9"] },
+    { "name": "twilight-violet",  "hexes": ["#1E1B4B", "#8B5CF6", "#0C0A09", "#FAFAFA"] },
+    { "name": "battlefield-amber","hexes": ["#7F1D1D", "#F59E0B", "#0C0A09", "#FAFAF9"] },
+    { "name": "celestial",        "hexes": ["#0F172A", "#E0E7FF", "#3B82F6", "#FAFAFA"] }
+  ],
+  "section_library": ["lone-piano-motif", "string-pad-bed", "ostinato-figure", "timpani-hits", "brass-stab", "horn-call", "choir-aahs", "percussion-build", "snare-rolls", "low-brass-blast", "harp-glissando", "cymbal-swell", "sub-drone"],
+  "image_directives": "epic landscape photography; dramatic skies; golden-hour silhouettes; deep blues and metallic gold; orchestral hall imagery; avoid stock cliches",
+  "voice_pet_words": ["epic", "swell", "thematic", "motif", "build", "release"],
+  "primary_keywords": ["cinematic music", "orchestral score", "trailer music", "film score"]
+}

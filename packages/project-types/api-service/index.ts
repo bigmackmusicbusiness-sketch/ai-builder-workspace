@@ -139,6 +139,8 @@ describe('example route', () => {
       'pino structured logs, never log secrets or full request bodies with PII',
     ],
     multiPageStrategy: {
+      nicheManifestPath: 'types/api-service/niches/',
+      detectFromPrompt:  true,
     },
     assetBudget: { images: 0, icons: 8 },
   },

@@ -1,0 +1,28 @@
+{
+  "niche": "payment-gateway-integration",
+  "label": "Payment Gateway Integration",
+  "triggers": ["payment", "stripe", "checkout", "charge", "refund", "subscription", "billing api", "merchant", "card"],
+  "default_sitemap": [
+    { "slug": "checkout",     "role": "POST-create-payment-intent" },
+    { "slug": "confirm",      "role": "POST-confirm-charge" },
+    { "slug": "refund",       "role": "POST-refund-endpoint" },
+    { "slug": "subscriptions","role": "subscription-lifecycle" },
+    { "slug": "customers",    "role": "customer-payment-methods" },
+    { "slug": "webhooks",     "role": "payment-event-receiver" },
+    { "slug": "disputes",     "role": "chargeback-handling" }
+  ],
+  "compliance_blocks": ["pci-dss-compliance-required", "do-not-store-pan-cvv", "tokenization-mandatory", "tls-1-2-minimum", "sca-psd2-strong-customer-auth", "3ds-secure-flow", "pci-saq-attestation"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "exact, financial-grade clarity; no ambiguity in money-handling docs",
+  "palettes": [
+    { "name": "stripe-violet",    "hexes": ["#635BFF", "#FFFFFF", "#EDE9FE", "#0A2540"] },
+    { "name": "fintech-navy",     "hexes": ["#0C1E3F", "#FFFFFF", "#1E40AF", "#FCD34D"] },
+    { "name": "money-emerald",    "hexes": ["#047857", "#FFFFFF", "#D1FAE5", "#022C22"] },
+    { "name": "trust-graphite",   "hexes": ["#1F2937", "#F9FAFB", "#374151", "#10B981"] },
+    { "name": "premium-black",    "hexes": ["#0A0A0A", "#FAFAFA", "#D4AF37", "#262626"] }
+  ],
+  "section_library": ["endpoint-card", "payment-intent-schema", "card-token-schema", "currency-table", "webhook-event-list", "3ds-flow-diagram", "test-card-numbers", "code-sample-stripe-js", "code-sample-server", "error-codes-table", "compliance-callout-pci", "idempotency-key-block"],
+  "image_directives": "trust-signal imagery; padlock iconography; payment card mockups; clean fintech aesthetic; avoid stock cash photos",
+  "voice_pet_words": ["charge", "intent", "capture", "refund", "settlement", "tokenize"],
+  "primary_keywords": ["payment api", "payment gateway", "stripe integration", "checkout api"]
+}

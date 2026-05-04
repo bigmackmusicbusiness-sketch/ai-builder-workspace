@@ -1,0 +1,38 @@
+{
+  "niche": "interview",
+  "label": "Interview",
+  "triggers": ["interview", "long-form interview", "podcast video", "talk show", "Q&A interview", "founder interview"],
+  "default_sitemap": [
+    { "slug": "act-1", "role": "open", "sections": [
+      { "slug": "cold-open-quote",  "role": "best-line-from-conversation" },
+      { "slug": "title-card",       "role": "guest-name+show-title" },
+      { "slug": "intro",            "role": "host-intro+guest-bio" }
+    ]},
+    { "slug": "act-2", "role": "conversation", "sections": [
+      { "slug": "origin-story",       "role": "guest-background+early" },
+      { "slug": "core-thesis",        "role": "guest-main-idea-or-work" },
+      { "slug": "tension-questions",  "role": "challenge+disagreement" },
+      { "slug": "stories-and-anecdotes","role": "specific-illustrations" },
+      { "slug": "rapid-fire",         "role": "lighting-round-segment" }
+    ]},
+    { "slug": "act-3", "role": "close", "sections": [
+      { "slug": "advice-and-takeaway","role": "what-listener-should-do" },
+      { "slug": "where-to-find",      "role": "guest-links+plug" },
+      { "slug": "host-outro",         "role": "host-recap+CTA" }
+    ]}
+  ],
+  "compliance_blocks": ["interview-release-form", "guest-likeness-consent", "music-sync-license", "ftc-sponsored-disclosure", "accuracy-and-fact-check-claims", "defamation-review-of-guest-claims", "ada-captions-required"],
+  "schema_org_primary": "VideoObject",
+  "voice_template": "curious, prepared, present; great questions over hot takes; let silence do work",
+  "palettes": [
+    { "name": "studio-warm",   "hexes": ["#92400E", "#FEF3C7", "#F59E0B", "#1C1917"] },
+    { "name": "podcast-noir", "hexes": ["#0A0A0A", "#FAFAFA", "#D4A574", "#404040"] },
+    { "name": "modern-clean", "hexes": ["#F8FAFC", "#0F172A", "#3B82F6", "#94A3B8"] },
+    { "name": "cinema-teal",  "hexes": ["#134E4A", "#F0FDFA", "#0EA5A4", "#042F2E"] },
+    { "name": "library-cozy", "hexes": ["#78350F", "#FFF7ED", "#A78F6E", "#1C0F04"] }
+  ],
+  "section_library": ["cold-open-pull-quote", "title-card", "guest-bio-lower-third", "two-shot-host-guest", "guest-singles", "host-singles", "B-roll-cutaway", "archival-clip-overlay", "chapter-marker", "highlighted-quote-text", "rapid-fire-graphic", "outro-card", "subscribe-bug"],
+  "image_directives": "warm, intentional set design. Three-point lighting on each subject, paired wide and tight singles. Use B-roll of the guest's work to illustrate. Avoid corporate flat lighting.",
+  "voice_pet_words": ["walk me through", "what was it like", "and then what happened", "say more", "why does that matter"],
+  "primary_keywords": ["interview", "long-form interview", "conversation", "podcast"]
+}

@@ -1,0 +1,26 @@
+{
+  "niche": "behind-scenes",
+  "label": "Behind The Scenes Short",
+  "triggers": ["behind the scenes", "bts", "day at work", "process video", "studio tour", "making of", "factory tour"],
+  "default_sitemap": [
+    { "slug": "short", "role": "single-short", "duration": "20-60s", "sections": [
+      { "slug": "hook-1.5s",   "role": "tease-the-process",  "duration": "0-1.5s",  "purpose": "show-end-result-first" },
+      { "slug": "single-beat", "role": "process-montage",    "duration": "1.5-50s", "purpose": "rapid-cuts-of-the-craft" },
+      { "slug": "payoff",      "role": "finished-reveal",    "duration": "50-60s",  "purpose": "satisfaction-shot+follow-cta" }
+    ]}
+  ],
+  "compliance_blocks": ["coworker-likeness-consent", "trade-secret-redaction", "client-confidentiality-respect", "platform-community-guidelines", "music-license-platform-pool", "ip-clearance-for-visible-products", "safety-imagery-review"],
+  "schema_org_primary": "VideoObject",
+  "voice_template": "candid, proud, process-loving; let the craft speak; minimal narration",
+  "palettes": [
+    { "name": "workshop-warm","hexes": ["#92400E", "#FEF3C7", "#F59E0B", "#1C0F04"] },
+    { "name": "studio-mono", "hexes": ["#171717", "#FAFAFA", "#525252", "#E5E5E5"] },
+    { "name": "natural-sage","hexes": ["#65A30D", "#F7FEE7", "#D9F99D", "#1A2E05"] },
+    { "name": "atelier-neutral","hexes": ["#A78F6E", "#FFFCF5", "#F5EFE0", "#2A2418"] },
+    { "name": "factory-blue","hexes": ["#1E40AF", "#F1F5F9", "#FBBF24", "#0F172A"] }
+  ],
+  "section_library": ["finished-product-tease", "POV-of-process", "tool-detail-shot", "hands-at-work-close-up", "speed-ramp-time-lapse", "ambient-sync-sound", "subtle-text-label", "final-reveal-shot", "follow-cta"],
+  "image_directives": "vertical 9:16. Lean into texture, hands, tools, sparks, shavings, threads — whatever the craft is. Use ambient sync sound prominently. Avoid over-narration; let the process be the content.",
+  "voice_pet_words": ["this is how", "every piece", "from scratch", "by hand"],
+  "primary_keywords": ["behind the scenes", "bts", "process", "how it's made"]
+}

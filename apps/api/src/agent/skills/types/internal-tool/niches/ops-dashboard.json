@@ -1,0 +1,27 @@
+{
+  "niche": "ops-dashboard",
+  "label": "Operations Dashboard",
+  "triggers": ["ops", "operations", "dashboard", "kpi", "metrics", "monitoring", "real-time", "throughput", "incident"],
+  "default_sitemap": [
+    { "slug": "overview",     "role": "kpi-grid+summary" },
+    { "slug": "live",         "role": "real-time-monitor" },
+    { "slug": "incidents",    "role": "incident-list" },
+    { "slug": "alerts",       "role": "alert-rules" },
+    { "slug": "reports",      "role": "historical-charts" },
+    { "slug": "settings",     "role": "thresholds+integrations" }
+  ],
+  "compliance_blocks": ["data-retention-notice", "access-control-disclaimer"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "terse, data-first, status-driven operator language",
+  "palettes": [
+    { "name": "command-dark",   "hexes": ["#0B1220", "#E2E8F0", "#1E293B", "#22D3EE"] },
+    { "name": "ops-green",      "hexes": ["#10B981", "#0F172A", "#064E3B", "#ECFDF5"] },
+    { "name": "alert-amber",    "hexes": ["#F59E0B", "#0F172A", "#7C2D12", "#FEF3C7"] },
+    { "name": "signal-blue",    "hexes": ["#0EA5E9", "#0B1220", "#082F49", "#F0F9FF"] },
+    { "name": "graphite",       "hexes": ["#1F2937", "#F9FAFB", "#374151", "#9CA3AF"] }
+  ],
+  "section_library": ["app-shell", "kpi-grid", "kpi-card", "trend-spark", "live-feed", "service-status-grid", "incident-row", "severity-tag", "alert-rule-card", "time-range-picker", "chart-area", "chart-bar", "uptime-bar", "heatmap", "log-stream", "footer-status"],
+  "image_directives": "data visualization mockups; dark-mode dashboards preferred; charts with crisp gridlines; avoid decorative imagery",
+  "voice_pet_words": ["throughput", "latency", "incident", "uptime", "threshold", "trigger", "p95"],
+  "primary_keywords": ["operations dashboard", "real-time monitoring", "kpi tracking", "incident management"]
+}

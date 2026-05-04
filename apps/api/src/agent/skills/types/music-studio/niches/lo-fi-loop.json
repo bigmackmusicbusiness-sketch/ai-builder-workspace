@@ -1,0 +1,26 @@
+{
+  "niche": "lo-fi-loop",
+  "label": "Lo-Fi Loop",
+  "triggers": ["lofi", "lo-fi", "chillhop", "study beats", "jazzy", "vinyl crackle", "sleepy", "rainy day"],
+  "default_sitemap": [
+    { "slug": "intro",        "role": "vinyl-crackle+rhodes-pad" },
+    { "slug": "loop-a",       "role": "main-groove+jazz-chords" },
+    { "slug": "loop-b",       "role": "variation+texture-shift" },
+    { "slug": "bridge",       "role": "drop-out+ambient-swell" },
+    { "slug": "loop-a-reprise","role": "main-groove-return" },
+    { "slug": "outro",        "role": "tape-stop+silence" }
+  ],
+  "compliance_blocks": ["sample-clearance-disclaimer", "royalty-free-licensing-note"],
+  "voice_template": "warm, nostalgic, late-night study aesthetic; gentle and unhurried",
+  "palettes": [
+    { "name": "sepia-warm",       "hexes": ["#A16207", "#FFFBEB", "#FED7AA", "#451A03"] },
+    { "name": "rainy-window",     "hexes": ["#475569", "#F1F5F9", "#94A3B8", "#0F172A"] },
+    { "name": "dusty-pink",       "hexes": ["#DB2777", "#FDF2F8", "#FBCFE8", "#831843"] },
+    { "name": "matcha-cream",     "hexes": ["#65A30D", "#FAFAF9", "#D9F99D", "#1A2E05"] },
+    { "name": "vintage-tape",     "hexes": ["#92400E", "#FEF3C7", "#FCD34D", "#431407"] }
+  ],
+  "section_library": ["vinyl-crackle-layer", "rhodes-progression", "lazy-drum-loop", "tape-saturation", "jazz-sample", "sub-bass-walk", "found-sound-fx", "ambient-swell", "tape-stop-fx"],
+  "image_directives": "anime-inspired study scenes; soft warm lighting; vinyl records; rainy windows; cozy interiors; muted color grading; grainy texture",
+  "voice_pet_words": ["chill", "warm", "vibe", "study", "cozy", "tape"],
+  "primary_keywords": ["lofi beats", "lo-fi loop", "chillhop", "study music"]
+}

@@ -1,0 +1,32 @@
+{
+  "niche": "contract-template",
+  "label": "Contract Template",
+  "triggers": ["contract", "agreement", "terms", "msa", "nda", "service agreement", "sow", "indemnify", "warranty"],
+  "default_sitemap": [
+    { "slug": "header",       "role": "title+effective-date" },
+    { "slug": "parties",      "role": "party-identification" },
+    { "slug": "recitals",     "role": "background-whereas" },
+    { "slug": "definitions",  "role": "defined-terms" },
+    { "slug": "obligations",  "role": "scope-of-services" },
+    { "slug": "payment",      "role": "fees+payment-terms" },
+    { "slug": "term",         "role": "duration+termination" },
+    { "slug": "ip",           "role": "intellectual-property" },
+    { "slug": "confidentiality","role": "confidential-info" },
+    { "slug": "warranties",   "role": "representations" },
+    { "slug": "liability",    "role": "limitation-of-liability" },
+    { "slug": "general",      "role": "boilerplate" },
+    { "slug": "signatures",   "role": "execution-block" }
+  ],
+  "compliance_blocks": ["not-legal-advice", "consult-licensed-attorney", "jurisdiction-governing-law-clause", "electronic-signature-disclosure"],
+  "voice_template": "formal legal register, precise definitions, neutral third-person",
+  "palettes": [
+    { "name": "legal-cream",      "hexes": ["#1C1917", "#FAFAF9", "#E7E5E4", "#78716C"] },
+    { "name": "counsel-navy",     "hexes": ["#0C1E3F", "#FFFFFF", "#DBEAFE", "#1E1B4B"] },
+    { "name": "barrister-black",  "hexes": ["#000000", "#FFFFFF", "#E5E5E5", "#525252"] },
+    { "name": "chambers-burgundy","hexes": ["#7F1D1D", "#FEF2F2", "#FECACA", "#450A0A"] },
+    { "name": "parchment",        "hexes": ["#451A03", "#FFFBF5", "#FED7AA", "#1C0A02"] }
+  ],
+  "section_library": ["title-block", "preamble", "parties-block", "recitals-list", "definitions-list", "numbered-clause", "sub-clause", "schedule", "exhibit", "signature-block", "notary-block", "footer-page-number"],
+  "voice_pet_words": ["hereby", "shall", "party", "obligation", "term", "warrant", "indemnify"],
+  "primary_keywords": ["contract template", "service agreement", "legal contract", "msa template"]
+}

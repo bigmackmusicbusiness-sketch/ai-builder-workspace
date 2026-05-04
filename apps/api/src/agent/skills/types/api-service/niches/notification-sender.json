@@ -1,0 +1,27 @@
+{
+  "niche": "notification-sender",
+  "label": "Notification Sender API",
+  "triggers": ["send notification", "email api", "sms api", "push notification", "transactional email", "twilio", "sendgrid", "fcm"],
+  "default_sitemap": [
+    { "slug": "send",         "role": "POST-send-message" },
+    { "slug": "templates",    "role": "template-crud" },
+    { "slug": "channels",     "role": "email-sms-push-config" },
+    { "slug": "status",       "role": "GET-delivery-status" },
+    { "slug": "events",       "role": "delivery-event-webhooks" },
+    { "slug": "suppression",  "role": "bounce+unsubscribe-list" }
+  ],
+  "compliance_blocks": ["can-spam-compliance", "tcpa-sms-consent", "gdpr-consent-tracking", "unsubscribe-link-required", "suppression-list-honored", "10dlc-registration-sms"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "deliverability-focused, channel-aware developer voice",
+  "palettes": [
+    { "name": "send-blue",        "hexes": ["#3B82F6", "#FFFFFF", "#DBEAFE", "#1E3A8A"] },
+    { "name": "transactional-mono","hexes": ["#18181B", "#FAFAFA", "#71717A", "#10B981"] },
+    { "name": "channel-violet",   "hexes": ["#6D28D9", "#FAFAFF", "#EDE9FE", "#2E1065"] },
+    { "name": "delivery-green",   "hexes": ["#047857", "#FFFFFF", "#D1FAE5", "#022C22"] },
+    { "name": "alert-coral",      "hexes": ["#F97316", "#FFFFFF", "#FED7AA", "#7C2D12"] }
+  ],
+  "section_library": ["endpoint-card", "send-payload-schema", "template-variables-table", "channel-toggle-email", "channel-toggle-sms", "channel-toggle-push", "delivery-status-pill", "webhook-event-list", "suppression-list-block", "code-sample-curl", "code-sample-js", "rate-limit-headers", "compliance-callout-tcpa"],
+  "image_directives": "envelope and bell iconography; clean transactional UI mockups; multi-channel diagram",
+  "voice_pet_words": ["deliver", "channel", "template", "transactional", "bounce", "suppress"],
+  "primary_keywords": ["notification api", "transactional email api", "sms api", "push notification api"]
+}

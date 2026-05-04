@@ -1,0 +1,27 @@
+{
+  "niche": "case-study",
+  "label": "Case Study",
+  "triggers": ["case study", "customer story", "success story", "results", "outcome", "client win", "before and after"],
+  "default_sitemap": [
+    { "slug": "cover",        "role": "title+client-logo+headline-result" },
+    { "slug": "client",       "role": "client-overview" },
+    { "slug": "challenge",    "role": "problem-context" },
+    { "slug": "solution",     "role": "approach-narrative" },
+    { "slug": "results",      "role": "metrics+kpis" },
+    { "slug": "quote",        "role": "client-testimonial" },
+    { "slug": "cta",          "role": "talk-to-us" }
+  ],
+  "compliance_blocks": ["client-approval-attestation", "results-may-vary-disclaimer"],
+  "voice_template": "narrative, evidence-driven, third-person storytelling with concrete metrics",
+  "palettes": [
+    { "name": "story-blue",       "hexes": ["#2563EB", "#FFFFFF", "#DBEAFE", "#0F172A"] },
+    { "name": "results-green",    "hexes": ["#059669", "#FFFFFF", "#D1FAE5", "#022C22"] },
+    { "name": "premium-black",    "hexes": ["#0A0A0A", "#FAFAFA", "#E5E5E5", "#737373"] },
+    { "name": "editorial-cream",  "hexes": ["#92400E", "#FFFBEB", "#FEF3C7", "#451A03"] },
+    { "name": "data-violet",      "hexes": ["#6D28D9", "#FFFFFF", "#EDE9FE", "#2E1065"] }
+  ],
+  "section_library": ["cover-headline", "client-snapshot", "at-a-glance-stats", "challenge-narrative", "solution-narrative", "approach-timeline", "metrics-grid", "before-after-chart", "pull-quote", "client-portrait", "cta-block"],
+  "image_directives": "real client environments where possible; avoid stock; clean data visualizations of headline metrics; quote portraits in soft natural light",
+  "voice_pet_words": ["challenge", "approach", "result", "impact", "growth", "lift"],
+  "primary_keywords": ["case study", "customer success", "client results", "case study template"]
+}

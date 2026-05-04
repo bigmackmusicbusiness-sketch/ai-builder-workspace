@@ -1,0 +1,25 @@
+{
+  "niche": "invoice",
+  "label": "Invoice",
+  "triggers": ["invoice", "bill", "billing", "payment due", "remit", "receipt", "statement", "vat"],
+  "default_sitemap": [
+    { "slug": "header",       "role": "logo+invoice-number+date" },
+    { "slug": "parties",      "role": "from+bill-to" },
+    { "slug": "line-items",   "role": "itemized-charges" },
+    { "slug": "totals",       "role": "subtotal+tax+total" },
+    { "slug": "payment",      "role": "payment-instructions" },
+    { "slug": "footer",       "role": "terms+notes" }
+  ],
+  "compliance_blocks": ["business-tax-fields", "tax-id-vat-display", "late-payment-terms", "currency-disclosure"],
+  "voice_template": "neutral, professional, transactional accounting tone",
+  "palettes": [
+    { "name": "ledger-mono",      "hexes": ["#000000", "#FFFFFF", "#F4F4F5", "#71717A"] },
+    { "name": "billing-blue",     "hexes": ["#1D4ED8", "#FFFFFF", "#DBEAFE", "#172554"] },
+    { "name": "professional-slate","hexes": ["#334155", "#F8FAFC", "#E2E8F0", "#0F172A"] },
+    { "name": "warm-letterhead",  "hexes": ["#7C2D12", "#FFFBF5", "#FED7AA", "#431407"] },
+    { "name": "minimal-emerald",  "hexes": ["#047857", "#FFFFFF", "#D1FAE5", "#022C22"] }
+  ],
+  "section_library": ["letterhead", "invoice-meta", "from-block", "bill-to-block", "ship-to-block", "line-item-table", "subtotal-row", "tax-row", "discount-row", "total-row", "payment-instructions", "bank-details", "purchase-order-ref", "terms-footer", "thank-you-note"],
+  "voice_pet_words": ["due", "balance", "remit", "subtotal", "tax", "po", "terms"],
+  "primary_keywords": ["invoice template", "billing document", "professional invoice", "tax invoice"]
+}

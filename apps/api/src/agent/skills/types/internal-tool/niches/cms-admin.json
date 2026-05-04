@@ -1,0 +1,27 @@
+{
+  "niche": "cms-admin",
+  "label": "CMS Admin Panel",
+  "triggers": ["cms", "content management", "publish", "editor", "draft", "post", "page builder", "headless"],
+  "default_sitemap": [
+    { "slug": "dashboard",    "role": "publishing-overview" },
+    { "slug": "content",      "role": "content-list" },
+    { "slug": "editor",       "role": "rich-text-editor" },
+    { "slug": "media",        "role": "asset-library" },
+    { "slug": "users",        "role": "roles+permissions" },
+    { "slug": "settings",     "role": "site-config" }
+  ],
+  "compliance_blocks": ["role-based-access-disclaimer", "audit-log-trail", "draft-versioning-notice"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "professional editorial tone with clear publishing workflow language",
+  "palettes": [
+    { "name": "editorial-ink",  "hexes": ["#111827", "#FFFFFF", "#F3F4F6", "#6B7280"] },
+    { "name": "publish-blue",   "hexes": ["#1D4ED8", "#FFFFFF", "#DBEAFE", "#172554"] },
+    { "name": "warm-paper",     "hexes": ["#78350F", "#FFFBF5", "#FEF3C7", "#451A03"] },
+    { "name": "modern-neutral", "hexes": ["#18181B", "#FAFAFA", "#E4E4E7", "#71717A"] },
+    { "name": "studio-violet",  "hexes": ["#7C3AED", "#FAF5FF", "#EDE9FE", "#2E1065"] }
+  ],
+  "section_library": ["app-shell", "content-table", "status-tag-published", "status-tag-draft", "rich-text-editor", "block-toolbar", "sidebar-meta", "media-grid", "media-uploader", "tag-input", "category-tree", "author-picker", "schedule-publish", "preview-pane", "version-history", "user-list", "role-matrix"],
+  "image_directives": "clean editorial UI mockups; emphasize typography hierarchy in screenshots; show realistic article previews",
+  "voice_pet_words": ["publish", "draft", "schedule", "revision", "author", "category", "preview"],
+  "primary_keywords": ["content management system", "cms admin", "publishing tool", "editorial workflow"]
+}

@@ -28,6 +28,8 @@ export const document: ProjectType = {
       'Sanitize any user-supplied content for PDF rendering',
     ],
     multiPageStrategy: {
+      nicheManifestPath: 'types/document/niches/',
+      detectFromPrompt:  true,
     },
     assetBudget: { images: 4, icons: 8 },
   },

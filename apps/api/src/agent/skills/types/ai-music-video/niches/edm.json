@@ -1,0 +1,44 @@
+{
+  "niche": "edm",
+  "label": "EDM Music Video",
+  "triggers": ["edm", "electronic", "house", "techno", "dubstep", "festival", "rave", "club music video", "dance"],
+  "default_sitemap": [
+    { "slug": "intro",   "role": "song-intro",   "sections": [
+      { "slug": "build-tease",      "role": "anticipation+geometric-build" },
+      { "slug": "world-establish",  "role": "club-or-festival-setting" }
+    ]},
+    { "slug": "verse-1", "role": "song-verse",   "sections": [
+      { "slug": "groove-build",     "role": "rhythmic-cuts+motion" },
+      { "slug": "crowd-energy-A",   "role": "rave-bodies+lights" }
+    ]},
+    { "slug": "chorus",  "role": "song-drop",    "sections": [
+      { "slug": "the-drop",         "role": "explosive-cut+strobe-or-laser" },
+      { "slug": "iconic-loop-image","role": "shareable-loopable-frame" }
+    ]},
+    { "slug": "verse-2", "role": "song-verse",   "sections": [
+      { "slug": "second-build",     "role": "elevate+vary-locations" },
+      { "slug": "crowd-energy-B",   "role": "broader-festival-or-warehouse" }
+    ]},
+    { "slug": "bridge",  "role": "song-breakdown","sections": [
+      { "slug": "breakdown-tension","role": "slow-down+shadow-and-light" }
+    ]},
+    { "slug": "outro",   "role": "song-outro",   "sections": [
+      { "slug": "second-drop",      "role": "even-bigger-drop+release" },
+      { "slug": "fade-energy",      "role": "afterglow-fade" }
+    ]}
+  ],
+  "compliance_blocks": ["master-recording-license", "publishing-sync-license", "performer-likeness-releases", "festival-or-venue-permits", "crowd-likeness-blanket-release-signage", "strobe-and-laser-safety-warning", "drug-imagery-avoidance-policy", "minor-on-set-permits", "platform-content-policy-tiktok-yt-shorts"],
+  "schema_org_primary": "MusicVideoObject",
+  "voice_template": "kinetic, transcendent, tribal; visuals should pulse with the bpm and earn the drop",
+  "palettes": [
+    { "name": "neon-cyber",   "hexes": ["#22D3EE", "#0A0A0A", "#F472B6", "#FFFFFF"] },
+    { "name": "rave-magenta", "hexes": ["#EC4899", "#000000", "#22D3EE", "#FBBF24"] },
+    { "name": "laser-green",  "hexes": ["#22C55E", "#0A0A0A", "#FFFFFF", "#A855F7"] },
+    { "name": "industrial-strobe","hexes": ["#FFFFFF", "#000000", "#FE2C55", "#737373"] },
+    { "name": "uv-violet",    "hexes": ["#7C3AED", "#0A0A0A", "#22D3EE", "#FBBF24"] }
+  ],
+  "section_library": ["geometric-build-graphic", "club-establishing-wide", "strobe-cut-sequence", "drone-festival-pull-back", "crowd-jump-shot", "DJ-or-artist-booth-shot", "laser-haze-detail", "high-speed-camera-slo-mo", "led-screen-graphic", "bpm-synced-cut-pattern", "loopable-iconic-frame"],
+  "image_directives": "high-contrast, neon, smoke and haze, lasers, LED walls. Cuts on the beat. Don't fear oversaturation. Practical light sources preferred. Use chromatic aberration sparingly. Avoid muddy color grades — every frame should pop.",
+  "voice_pet_words": ["drop", "energy", "rave", "transcend", "pulse", "festival"],
+  "primary_keywords": ["edm music video", "festival video", "official video", "drop"]
+}

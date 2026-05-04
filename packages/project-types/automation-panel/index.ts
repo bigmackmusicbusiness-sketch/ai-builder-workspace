@@ -169,6 +169,8 @@ export interface AutomationHandler<I, O> {
       'Audit run history',
     ],
     multiPageStrategy: {
+      nicheManifestPath: 'types/automation-panel/niches/',
+      detectFromPrompt:  true,
     },
     assetBudget: { images: 0, icons: 8 },
   },

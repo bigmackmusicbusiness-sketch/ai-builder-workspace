@@ -1,0 +1,30 @@
+{
+  "niche": "employee-onboarding",
+  "label": "Employee Onboarding",
+  "triggers": ["employee onboarding", "new hire", "hr onboarding", "i-9", "w-4", "first day", "preboarding", "hris"],
+  "default_sitemap": [
+    { "slug": "welcome",          "step": 1, "role": "company-welcome+intro-video" },
+    { "slug": "personal-info",    "step": 2, "role": "contact+emergency" },
+    { "slug": "tax-forms",        "step": 3, "role": "w4+state-withholding" },
+    { "slug": "i9-eligibility",   "step": 4, "role": "i9-employment-eligibility" },
+    { "slug": "direct-deposit",   "step": 5, "role": "banking-payroll" },
+    { "slug": "benefits-election","step": 6, "role": "health+401k+pto" },
+    { "slug": "policies",         "step": 7, "role": "handbook+ack" },
+    { "slug": "equipment-request","step": 8, "role": "laptop+access" },
+    { "slug": "first-day",        "step": 9, "role": "schedule+contacts+map" }
+  ],
+  "compliance_blocks": ["i9-section-1-employee", "w4-federal-withholding", "state-tax-forms", "eeo-self-id-voluntary", "harassment-policy-acknowledgment", "data-privacy-employee-notice", "at-will-acknowledgment"],
+  "schema_org_primary": "JoinAction",
+  "voice_template": "warm, professional, welcoming; reinforce belonging and culture from day zero",
+  "palettes": [
+    { "name": "corporate-blue", "hexes": ["#1D4ED8", "#FFFFFF", "#EFF6FF", "#1E293B"] },
+    { "name": "people-warm",    "hexes": ["#EA580C", "#FFFBEB", "#FED7AA", "#431407"] },
+    { "name": "team-green",     "hexes": ["#059669", "#F0FDF4", "#A7F3D0", "#064E3B"] },
+    { "name": "modern-plum",    "hexes": ["#9333EA", "#FAF5FF", "#E9D5FF", "#3B0764"] },
+    { "name": "neutral-cream",  "hexes": ["#78716C", "#FAFAF9", "#E7E5E4", "#1C1917"] }
+  ],
+  "section_library": ["welcome-video", "stepper", "progress-bar", "personal-info-form", "emergency-contact", "w4-form", "state-tax-form", "i9-form", "direct-deposit-form", "benefits-comparison", "401k-elections", "pto-overview", "policy-acknowledgment", "handbook-link", "equipment-checklist", "first-day-schedule", "team-intro-cards", "buddy-assignment", "office-map"],
+  "image_directives": "authentic team photography or branded illustrations of diverse coworkers. Office spaces, collaborative moments, candid laughter. Avoid stock 'corporate handshake' clichés. Reflect the actual workplace culture.",
+  "voice_pet_words": ["welcome to the team", "we're excited", "your first", "team", "culture", "growth"],
+  "primary_keywords": ["employee onboarding", "new hire", "hr onboarding", "first day"]
+}

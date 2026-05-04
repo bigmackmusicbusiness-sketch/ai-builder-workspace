@@ -1,0 +1,26 @@
+{
+  "niche": "customer-support-workflow",
+  "label": "Customer Support Workflow",
+  "triggers": ["support workflow", "ticket routing", "auto-assign", "escalation", "macros", "sla automation", "triage"],
+  "default_sitemap": [
+    { "slug": "rules",        "role": "automation-rule-list" },
+    { "slug": "builder",      "role": "if-then-flow-builder" },
+    { "slug": "queue",        "role": "pending-actions" },
+    { "slug": "triggers",     "role": "event-listeners" },
+    { "slug": "history",      "role": "rule-execution-log" },
+    { "slug": "analytics",    "role": "rule-effectiveness" }
+  ],
+  "compliance_blocks": ["pii-handling-disclaimer", "audit-log-trail", "automated-decision-disclosure"],
+  "schema_org_primary": "SoftwareApplication",
+  "voice_template": "calm operator-friendly, rule-based logic, support-team voice",
+  "palettes": [
+    { "name": "support-blue",     "hexes": ["#2563EB", "#FFFFFF", "#EFF6FF", "#1E293B"] },
+    { "name": "trust-teal",       "hexes": ["#0D9488", "#FFFFFF", "#CCFBF1", "#134E4A"] },
+    { "name": "escalation-amber", "hexes": ["#F59E0B", "#FFFBEB", "#FEF3C7", "#7C2D12"] },
+    { "name": "calm-slate",       "hexes": ["#475569", "#F8FAFC", "#E2E8F0", "#0F172A"] },
+    { "name": "workflow-violet",  "hexes": ["#7C3AED", "#FAFAFF", "#EDE9FE", "#2E1065"] }
+  ],
+  "section_library": ["app-shell", "rule-table", "rule-card", "flow-canvas", "condition-block", "action-block", "trigger-card", "queue-row", "macro-picker", "sla-rule-card", "escalation-tree", "history-row", "kpi-card-time-saved"],
+  "voice_pet_words": ["assign", "route", "escalate", "macro", "sla", "trigger", "resolve"],
+  "primary_keywords": ["support automation", "ticket workflow", "helpdesk automation", "support routing"]
+}

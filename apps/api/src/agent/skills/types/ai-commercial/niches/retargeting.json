@@ -1,0 +1,27 @@
+{
+  "niche": "retargeting",
+  "label": "Retargeting Commercial",
+  "triggers": ["retargeting", "remarketing", "abandoned cart", "warm audience", "lower-funnel ad", "win-back"],
+  "default_sitemap": [
+    { "slug": "spot", "role": "single-spot", "durations": ["15s", "30s", "60s"], "sections": [
+      { "slug": "hook",     "role": "you-already-know",     "duration_15": "0-1.5s","duration_30": "0-3s",  "duration_60": "0-5s",  "purpose": "remind-of-product-they-saw" },
+      { "slug": "problem",  "role": "objection-named",      "duration_15": "1.5-4s","duration_30": "3-9s",  "duration_60": "5-18s", "purpose": "name-hesitation" },
+      { "slug": "solution", "role": "objection-overcome",   "duration_15": "4-11s", "duration_30": "9-23s", "duration_60": "18-50s","purpose": "social-proof+guarantee+urgency" },
+      { "slug": "cta",      "role": "incentive+complete",   "duration_15": "11-15s","duration_30": "23-30s","duration_60": "50-60s","purpose": "discount-code+complete-purchase" }
+    ]}
+  ],
+  "compliance_blocks": ["ftc-truth-in-advertising", "ftc-endorsement-disclosures", "ftc-roses-act-clear-disclosures", "claim-substantiation", "ad-platform-retargeting-disclosure", "gdpr-cookie-consent", "ccpa-do-not-sell-respect", "discount-terms-and-conditions"],
+  "schema_org_primary": "Product",
+  "voice_template": "direct, friendly, low-pressure; acknowledge the viewer has seen this before and address their hesitation",
+  "palettes": [
+    { "name": "conversion-orange","hexes": ["#F97316", "#FFFFFF", "#FFEDD5", "#7C2D12"] },
+    { "name": "trust-blue",      "hexes": ["#2563EB", "#FFFFFF", "#DBEAFE", "#172554"] },
+    { "name": "urgent-red",      "hexes": ["#DC2626", "#FFFFFF", "#FEE2E2", "#7F1D1D"] },
+    { "name": "premium-noir",    "hexes": ["#0A0A0A", "#FFFFFF", "#FBBF24", "#525252"] },
+    { "name": "fresh-mint",      "hexes": ["#10B981", "#F8FAFC", "#D1FAE5", "#064E3B"] }
+  ],
+  "section_library": ["product-reminder-shot", "review-stars-overlay", "testimonial-quote-card", "feature-comparison-strip", "guarantee-badge", "discount-code-card", "countdown-urgency", "cta-end-card-with-button-mock", "platform-disclaimer-fine-print"],
+  "image_directives": "product-forward visuals with social proof overlays. Use real review stars, real testimonial quotes, and visible discount codes. Don't be subtle — this is conversion media. Keep brand consistent with marketing site.",
+  "voice_pet_words": ["still thinking about", "use code", "free shipping", "30-day guarantee", "complete your order"],
+  "primary_keywords": ["retargeting", "abandoned cart", "discount", "complete your order"]
+}

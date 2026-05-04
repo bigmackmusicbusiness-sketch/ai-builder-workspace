@@ -176,6 +176,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); }
       'Role-based UI guards on sensitive actions',
     ],
     multiPageStrategy: {
+      nicheManifestPath: 'types/internal-tool/niches/',
+      detectFromPrompt:  true,
     },
     assetBudget: { images: 0, icons: 8 },
   },

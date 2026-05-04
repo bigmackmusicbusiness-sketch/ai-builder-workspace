@@ -1,0 +1,26 @@
+{
+  "niche": "transformation",
+  "label": "Transformation Short",
+  "triggers": ["transformation", "before after", "glow up", "makeover", "renovation reveal", "weight loss", "room makeover"],
+  "default_sitemap": [
+    { "slug": "short", "role": "single-short", "duration": "15-45s", "sections": [
+      { "slug": "hook-1.5s",   "role": "before-state",       "duration": "0-1.5s",  "purpose": "establish-starting-point" },
+      { "slug": "single-beat", "role": "process-montage",    "duration": "1.5-35s", "purpose": "rapid-progression+work-shown" },
+      { "slug": "payoff",      "role": "reveal-after",       "duration": "35-45s",  "purpose": "satisfying-final-reveal" }
+    ]}
+  ],
+  "compliance_blocks": ["ftc-truth-in-advertising", "ftc-typical-results-disclaimer", "before-after-photo-disclosure", "no-deceptive-edits-policy", "model-talent-release", "minor-on-camera-consent", "health-claim-substantiation-if-applicable", "music-license-platform-pool"],
+  "schema_org_primary": "VideoObject",
+  "voice_template": "satisfying, rhythmic, results-driven; let the visuals carry the emotion",
+  "palettes": [
+    { "name": "before-after-clean","hexes": ["#FFFFFF", "#0F172A", "#10B981", "#94A3B8"] },
+    { "name": "renovation-warm",  "hexes": ["#A78F6E", "#FFFCF5", "#F5EFE0", "#2A2418"] },
+    { "name": "fitness-bold",     "hexes": ["#DC2626", "#FFFFFF", "#0F172A", "#FBBF24"] },
+    { "name": "glow-up-rose",     "hexes": ["#F472B6", "#FFF1F2", "#FBCFE8", "#831843"] },
+    { "name": "minimal-mono",     "hexes": ["#171717", "#FAFAFA", "#525252", "#E5E5E5"] }
+  ],
+  "section_library": ["before-state-shot", "match-cut-progression", "speed-ramp-montage", "satisfying-detail-cuts", "music-drop-on-reveal", "after-shot-glamour", "before-after-split-card", "follow-cta"],
+  "image_directives": "vertical 9:16. Lock the camera angle for credible before/after. Use match-cuts on the same composition. Music drop should hit on the reveal frame. No deceptive lighting changes.",
+  "voice_pet_words": ["watch this", "wait for it", "the transformation", "from this to this"],
+  "primary_keywords": ["transformation", "before and after", "makeover", "glow up"]
+}

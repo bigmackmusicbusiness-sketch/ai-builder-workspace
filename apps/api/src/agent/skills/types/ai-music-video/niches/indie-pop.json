@@ -1,0 +1,44 @@
+{
+  "niche": "indie-pop",
+  "label": "Indie Pop Music Video",
+  "triggers": ["indie pop", "indie", "bedroom pop", "alt pop", "dream pop", "indie music video"],
+  "default_sitemap": [
+    { "slug": "intro",   "role": "song-intro",   "sections": [
+      { "slug": "vibe-establishing",  "role": "mood+texture-first-frame" },
+      { "slug": "artist-intro",       "role": "intimate-artist-shot" }
+    ]},
+    { "slug": "verse-1", "role": "song-verse",   "sections": [
+      { "slug": "performance-handheld","role": "lipsync-candid" },
+      { "slug": "vignette-A",          "role": "narrative-or-symbolic-cut" }
+    ]},
+    { "slug": "chorus",  "role": "song-chorus",  "sections": [
+      { "slug": "chorus-energy-shift", "role": "color-or-tempo-shift" },
+      { "slug": "memorable-image",     "role": "thumbnail-worthy-frame" }
+    ]},
+    { "slug": "verse-2", "role": "song-verse",   "sections": [
+      { "slug": "performance-second-loc","role": "new-location+layered-vibe" },
+      { "slug": "vignette-B",            "role": "deepen-emotional-arc" }
+    ]},
+    { "slug": "bridge",  "role": "song-bridge",  "sections": [
+      { "slug": "introspective-still", "role": "slow-tableau-or-dance" }
+    ]},
+    { "slug": "outro",   "role": "song-outro",   "sections": [
+      { "slug": "release",            "role": "catharsis-or-quiet-resolve" },
+      { "slug": "fade-out-frame",     "role": "lingering-image" }
+    ]}
+  ],
+  "compliance_blocks": ["master-recording-license", "publishing-sync-license", "performer-likeness-releases", "location-permits", "minor-on-set-permits", "music-license-fair-trade-credit", "platform-content-policy-tiktok-yt-shorts", "trademark-clearance-on-visible-brands"],
+  "schema_org_primary": "MusicVideoObject",
+  "voice_template": "intimate, dreamy, slightly off-kilter; embrace texture, imperfection, and emotional ambiguity",
+  "palettes": [
+    { "name": "pastel-dream",  "hexes": ["#FBCFE8", "#A7F3D0", "#FDE68A", "#1F2937"] },
+    { "name": "sunlit-warm",   "hexes": ["#F59E0B", "#FFFBEB", "#FED7AA", "#451A03"] },
+    { "name": "wash-blue",     "hexes": ["#7DD3FC", "#FFFFFF", "#E0F2FE", "#0C4A6E"] },
+    { "name": "vintage-rose",  "hexes": ["#F472B6", "#FFF1F2", "#FBCFE8", "#831843"] },
+    { "name": "forest-melancholy","hexes": ["#166534", "#F0FDF4", "#86EFAC", "#14532D"] }
+  ],
+  "section_library": ["analog-grain-frame", "handheld-vignette", "lipsync-singles", "natural-light-portrait", "symbolic-object-insert", "slow-motion-foliage", "Super-8-style-cutaway", "color-shift-on-chorus", "static-tableau", "fade-to-black"],
+  "image_directives": "natural light heavy, soft halation, optional film grain or 16mm look. Wardrobe and styling should feel personal and worn-in. Avoid glossy commercial polish. Embrace dust, hair-in-frame, and slight blurs.",
+  "voice_pet_words": ["intimate", "soft", "warm", "personal", "ambient"],
+  "primary_keywords": ["indie pop music video", "indie video", "official video"]
+}

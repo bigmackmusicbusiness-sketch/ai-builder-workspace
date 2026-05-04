@@ -1,0 +1,28 @@
+{
+  "niche": "survey-collection",
+  "label": "Survey Collection",
+  "triggers": ["survey", "questionnaire", "feedback form", "research survey", "nps", "csat", "panel"],
+  "default_sitemap": [
+    { "slug": "intro",           "step": 1, "role": "purpose+time-estimate" },
+    { "slug": "consent",         "step": 2, "role": "informed-consent" },
+    { "slug": "screener",        "step": 3, "role": "qualification-questions" },
+    { "slug": "demographics",    "step": 4, "role": "optional-demographics" },
+    { "slug": "core-questions",  "step": 5, "role": "main-survey-body" },
+    { "slug": "open-feedback",   "step": 6, "role": "free-response" },
+    { "slug": "thank-you",       "step": 7, "role": "incentive-claim+next" }
+  ],
+  "compliance_blocks": ["informed-consent-research", "irb-statement-if-academic", "gdpr-data-processing", "ccpa-rights-notice", "anonymization-policy", "incentive-disclosure"],
+  "schema_org_primary": "Question",
+  "voice_template": "neutral, respectful, concise; minimize bias and respondent fatigue",
+  "palettes": [
+    { "name": "research-slate","hexes": ["#475569", "#FFFFFF", "#F1F5F9", "#0F172A"] },
+    { "name": "civic-blue",   "hexes": ["#2563EB", "#FFFFFF", "#DBEAFE", "#172554"] },
+    { "name": "neutral-sage", "hexes": ["#65A30D", "#F7FEE7", "#D9F99D", "#1A2E05"] },
+    { "name": "panel-mauve",  "hexes": ["#8B5CF6", "#FAFAF9", "#EDE9FE", "#2E1065"] },
+    { "name": "minimal-paper","hexes": ["#171717", "#FAFAFA", "#E5E5E5", "#000000"] }
+  ],
+  "section_library": ["intro-card", "time-estimate-badge", "progress-bar", "consent-block", "skip-logic-branch", "single-select", "multi-select", "likert-scale", "nps-scale", "ranking-question", "matrix-question", "slider-input", "free-response-textarea", "save-and-continue", "thank-you-card", "incentive-claim"],
+  "image_directives": "minimal, abstract iconography. Avoid faces or specific demographics that could bias responses. Use neutral geometric shapes and a restrained palette.",
+  "voice_pet_words": ["your input", "anonymous", "voluntary", "honest", "thank you"],
+  "primary_keywords": ["survey", "questionnaire", "feedback", "research"]
+}

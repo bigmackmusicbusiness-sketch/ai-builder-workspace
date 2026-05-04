@@ -36,6 +36,8 @@ export const aiShort: ProjectType = {
       'Vertical safe zones (top 14% / bottom 18%)',
     ],
     multiPageStrategy: {
+      nicheManifestPath: 'types/ai-short/niches/',
+      detectFromPrompt:  true,
     },
     assetBudget: { images: 0, icons: 8 },
   },
