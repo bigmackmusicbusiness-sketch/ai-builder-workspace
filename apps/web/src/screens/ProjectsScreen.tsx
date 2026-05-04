@@ -85,10 +85,16 @@ export function ProjectsScreen() {
   );
 
   // Split into "mine" (you own them) and "shared with me" (others' shared projects).
-  // userId may be null briefly during auth hydration — fall back to "everything is mine"
-  // so we don't render an empty dashboard for the legitimate owner.
-  const myProjects = projectList.filter((p) => !userId || !p.createdBy || p.createdBy === userId);
-  const sharedWithMe = projectList.filter((p) => userId && p.createdBy && p.createdBy !== userId && p.isShared);
+  // The API already filters to only the projects this user can see, so we trust
+  // its response and just bucket: anything that's NOT explicitly shared by someone
+  // else is mine. This handles the case where the frontend's auth user.id doesn't
+  // exactly match the DB's created_by value (e.g., Supabase auth.users.id vs
+  // public.users.id) — the API filtered correctly server-side, we mirror that.
+  const sharedWithMe = projectList.filter(
+    (p) => p.isShared && p.createdBy && userId && p.createdBy !== userId,
+  );
+  const sharedIds = new Set(sharedWithMe.map((p) => p.id));
+  const myProjects = projectList.filter((p) => !sharedIds.has(p.id));
 
   // Recents = the 3 most recently active OWN projects. Shared section is separate.
   const recents = !search ? myProjects.slice(0, 3) : [];
@@ -276,7 +282,7 @@ export function ProjectsScreen() {
                 <ProjectCard
                   key={p.id}
                   project={p}
-                  isOwner={!userId || !p.createdBy || p.createdBy === userId}
+                  isOwner={!sharedIds.has(p.id)}
                   onOpen={handleOpen}
                   onDelete={handleDelete}
                   onToggleShare={handleToggleShare}
