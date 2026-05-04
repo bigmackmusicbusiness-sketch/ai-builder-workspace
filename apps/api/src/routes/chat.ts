@@ -453,7 +453,23 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
           const lastWasRefusal = !!lastToolMsg
             && typeof lastToolMsg.content === 'string'
             && /^Refused:|^Refused —/m.test(lastToolMsg.content);
-          if (lastWasRefusal && iter < MAX_ITERATIONS - 1) {
+
+          // Detect "narration without action" when a build plan was supplied:
+          // if planAvailable AND no write_file ever fired AND we still have
+          // iterations left, the model has read the plan or listed files but
+          // decided it's "done" without producing pages. Force a hard nudge.
+          let buildIncomplete = false;
+          if (!lastWasRefusal && toolsActive && planAvailable && iter < MAX_ITERATIONS - 1) {
+            const everWrote = history.some((m) => {
+              if (m.role !== 'assistant') return false;
+              const calls = (m as { tool_calls?: Array<{ function?: { name?: string } }> }).tool_calls;
+              return Array.isArray(calls)
+                && calls.some((tc) => tc.function?.name === 'write_file');
+            });
+            if (!everWrote) buildIncomplete = true;
+          }
+
+          if ((lastWasRefusal || buildIncomplete) && iter < MAX_ITERATIONS - 1) {
             // Push the assistant's narration into history so the next turn
             // sees it (avoid duplicate-narration loop), then add a system
             // nudge that forces tool action.
@@ -462,11 +478,16 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
             }
             history.push({
               role:    'system',
-              content:
-                'STOP NARRATING. Your previous tool call was refused with a clear ' +
-                'corrective instruction. You MUST now call the tool the refusal ' +
-                'told you to call (almost certainly write_file with path="index.html" ' +
-                'and complete HTML content). Do not respond with text. Call the tool.',
+              content: lastWasRefusal
+                ? 'STOP NARRATING. Your previous tool call was refused with a clear ' +
+                  'corrective instruction. You MUST now call the tool the refusal ' +
+                  'told you to call (almost certainly write_file with path="index.html" ' +
+                  'and complete HTML content). Do not respond with text. Call the tool.'
+                : 'STOP. You have not yet written any pages. The BUILD PLAN above ' +
+                  'lists every page to write — start with write_file path="index.html" ' +
+                  'and full HTML content for the homepage RIGHT NOW. Then write each ' +
+                  'subsequent page from the sitemap. No more reading. No more narration. ' +
+                  'No questions. WRITE THE FILES.',
             });
             continue; // skip the done/break, go back to top of for-loop
           }
