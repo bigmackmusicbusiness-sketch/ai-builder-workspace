@@ -93,13 +93,35 @@ export async function runMigrations(): Promise<void> {
   });
 
   try {
-    // Ensure tracker table exists.
+    // Ensure tracker table exists with the expected (id, applied_at) shape.
+    // CREATE TABLE IF NOT EXISTS is a no-op if the table is already there
+    // with a DIFFERENT schema — and we've seen that happen on this DB
+    // (probably a leftover from a prior migration runner). When the
+    // expected `id` column is missing, drop and recreate so the rest of
+    // the runner can proceed instead of erroring out at the first SELECT.
     await sql.unsafe(`
       CREATE TABLE IF NOT EXISTS "_migrations" (
         "id"          TEXT        PRIMARY KEY,
         "applied_at"  TIMESTAMPTZ NOT NULL DEFAULT now()
       )
     `);
+
+    const cols = await sql.unsafe(
+      `SELECT column_name FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = '_migrations'`,
+    ) as Array<{ column_name: string }>;
+    const colNames = new Set(cols.map((c) => c.column_name));
+    if (!colNames.has('id') || !colNames.has('applied_at')) {
+      // eslint-disable-next-line no-console
+      console.warn(`[migrations] _migrations table has unexpected schema (cols=${[...colNames].join(',')}) — recreating`);
+      await sql.unsafe(`ALTER TABLE "_migrations" RENAME TO "_migrations_broken_${Date.now()}"`);
+      await sql.unsafe(`
+        CREATE TABLE "_migrations" (
+          "id"          TEXT        PRIMARY KEY,
+          "applied_at"  TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `);
+    }
 
     // Find which migrations are already applied.
     const applied = await sql<{ id: string }[]>`SELECT id FROM "_migrations"`;
