@@ -4,11 +4,12 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { eq, and, desc } from 'drizzle-orm';
-import { getDb } from '../db/client';
+import { getDb, getRawSql } from '../db/client';
 import { schemas, migrations } from '@abw/db';
 import { authMiddleware, requireRole, type AuthContext } from '../security/authz';
 import { writeAuditEvent } from '../security/audit';
 import { validateApproval } from '../security/approvalMatrix';
+import { runMigrations, getLastMigrationsReport } from '../db/runMigrations';
 
 declare module 'fastify' {
   interface FastifyRequest { authCtx?: AuthContext; }
@@ -43,6 +44,71 @@ const ApplyMigrationSchema = z.object({
 
 export async function dbRoutes(app: FastifyInstance): Promise<void> {
   app.addHook('preHandler', authMiddleware);
+
+  // ── Admin: migration introspection + manual re-run ────────────────────────
+  // Surfaces the boot-time runMigrations() outcome + lets an admin re-run on
+  // demand without a redeploy. Designed to diagnose "why didn't column X
+  // exist" without scraping container logs.
+
+  /** GET /api/admin/migrations — return last runMigrations() report + key
+   *  schema probes (does is_shared exist on projects?). Admin-only. */
+  app.get('/api/admin/migrations', async (req, reply) => {
+    const ctx = req.authCtx!;
+    requireRole(ctx, 'admin');
+
+    const report = getLastMigrationsReport();
+    const sql = getRawSql();
+    let appliedRows: Array<{ id: string; applied_at: string }> = [];
+    let probeIsShared = 'unknown';
+    let probeMigrationsTable = 'unknown';
+    try {
+      appliedRows = await sql.unsafe(
+        `SELECT id, applied_at FROM "_migrations" ORDER BY applied_at`,
+      ) as Array<{ id: string; applied_at: string }>;
+      probeMigrationsTable = 'present';
+    } catch (err) {
+      probeMigrationsTable = `error: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    try {
+      const cols = await sql.unsafe(
+        `SELECT column_name FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = 'projects' AND column_name = 'is_shared'`,
+      ) as Array<{ column_name: string }>;
+      probeIsShared = cols.length > 0 ? 'present' : 'missing';
+    } catch (err) {
+      probeIsShared = `error: ${err instanceof Error ? err.message : String(err)}`;
+    }
+
+    return {
+      lastBootReport: report,
+      tracker:        { table: probeMigrationsTable, applied: appliedRows },
+      probes:         { 'projects.is_shared': probeIsShared },
+    };
+  });
+
+  /** POST /api/admin/migrations/run — re-run runMigrations() and return fresh
+   *  report. Idempotent (already-applied are skipped). Admin-only. */
+  app.post('/api/admin/migrations/run', async (req, reply) => {
+    const ctx = req.authCtx!;
+    requireRole(ctx, 'admin');
+
+    try {
+      await runMigrations();
+    } catch (err) {
+      // Don't fail the request — the report has the error too. Caller still
+      // wants to see the snapshot to diagnose.
+      // eslint-disable-next-line no-console
+      console.error('[admin/migrations/run] threw:', err instanceof Error ? err.message : String(err));
+    }
+
+    await writeAuditEvent({
+      actor: ctx.userId, tenantId: ctx.tenantId,
+      action: 'migrations.run', target: 'platform', targetId: undefined,
+      env: 'dev', ip: req.ip, ua: req.headers['user-agent'] ?? '',
+    });
+
+    return reply.send({ report: getLastMigrationsReport() });
+  });
 
   // ── Schema endpoints ──────────────────────────────────────────────────────
 
