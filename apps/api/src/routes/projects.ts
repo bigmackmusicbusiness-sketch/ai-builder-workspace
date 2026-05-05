@@ -224,9 +224,11 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
       console.warn(`[projects] drizzle update failed (${code} ${msg}) — falling back to raw SQL.`);
       const sql = getRawSql();
 
-      // Map only the columns we know exist pre-migration
+      // Map only the columns we know exist pre-migration. Vals are kept as
+      // primitive scalars (the schema is text/text/text/text|null/boolean) so
+      // postgres-js's ParameterOrJSON typing accepts them without a cast.
       const sets: string[] = [];
-      const vals: unknown[] = [];
+      const vals: Array<string | boolean | null> = [];
       let i = 1;
       if (parsed.data.name !== undefined)        { sets.push(`name = $${i++}`);        vals.push(parsed.data.name); }
       if (parsed.data.slug !== undefined)        { sets.push(`slug = $${i++}`);        vals.push(parsed.data.slug); }
