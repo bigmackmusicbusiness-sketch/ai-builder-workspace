@@ -110,6 +110,72 @@ export async function dbRoutes(app: FastifyInstance): Promise<void> {
     return reply.send({ report: getLastMigrationsReport() });
   });
 
+  /** POST /api/admin/migrate-workspace-bucket — one-shot data migration.
+   *  Copies any text-file objects under <tenantId>/workspaces/<slug>/ from
+   *  the legacy public `project-assets` bucket into the private
+   *  `workspace-backups` bucket, then deletes them from the public bucket.
+   *  Idempotent: safe to call multiple times.
+   *
+   *  Admin-only. Returns counts of what moved + any failures.
+   *
+   *  Surfaces the work that apps/api/scripts/migrate-workspace-bucket.ts
+   *  performs offline, but runnable from the browser (no Coolify exec
+   *  required). */
+  app.post('/api/admin/migrate-workspace-bucket', async (req, reply) => {
+    const ctx = req.authCtx!;
+    requireRole(ctx, 'admin');
+
+    const { createClient } = await import('@supabase/supabase-js');
+    const { env: appEnv }  = await import('../config/env');
+    const supabase = createClient(appEnv.SUPABASE_URL, appEnv.SUPABASE_SERVICE_ROLE_KEY);
+
+    const SRC = 'project-assets';
+    const DST = 'workspace-backups';
+
+    let copied  = 0;
+    let deleted = 0;
+    const failures: string[] = [];
+
+    // Walk SRC bucket: <tenantId>/workspaces/<slug>/<file>
+    const { data: tenantDirs, error: rootErr } = await supabase.storage.from(SRC).list('', { limit: 1000 });
+    if (rootErr) return reply.status(500).send({ error: `list root: ${rootErr.message}` });
+
+    for (const tenant of tenantDirs ?? []) {
+      if (!tenant.name) continue;
+      const wsPrefix = `${tenant.name}/workspaces`;
+      const { data: projectDirs } = await supabase.storage.from(SRC).list(wsPrefix, { limit: 1000 });
+      for (const project of projectDirs ?? []) {
+        if (!project.name) continue;
+        const projPrefix = `${wsPrefix}/${project.name}`;
+        const { data: files } = await supabase.storage.from(SRC).list(projPrefix, { limit: 1000 });
+        for (const f of files ?? []) {
+          if (!f.name || f.name.endsWith('/')) continue;
+          const path = `${projPrefix}/${f.name}`;
+          const { data: blob, error: dlErr } = await supabase.storage.from(SRC).download(path);
+          if (dlErr || !blob) { failures.push(`download ${path}: ${dlErr?.message ?? 'no blob'}`); continue; }
+          const { error: upErr } = await supabase.storage.from(DST).upload(path, blob, {
+            contentType: 'text/plain; charset=utf-8',
+            upsert:      true,
+          });
+          if (upErr) { failures.push(`upload ${path}: ${upErr.message}`); continue; }
+          copied++;
+          const { error: rmErr } = await supabase.storage.from(SRC).remove([path]);
+          if (rmErr) { failures.push(`delete ${path}: ${rmErr.message}`); continue; }
+          deleted++;
+        }
+      }
+    }
+
+    await writeAuditEvent({
+      actor: ctx.userId, tenantId: ctx.tenantId,
+      action: 'storage.migrate-workspace-bucket', target: 'platform',
+      after: { copied, deleted, failures: failures.length },
+      env: 'dev', ip: req.ip, ua: req.headers['user-agent'] ?? '',
+    });
+
+    return reply.send({ copied, deleted, failures: failures.slice(0, 20), total_failures: failures.length });
+  });
+
   // ── Schema endpoints ──────────────────────────────────────────────────────
 
   /** GET /api/schemas?projectId=… */
