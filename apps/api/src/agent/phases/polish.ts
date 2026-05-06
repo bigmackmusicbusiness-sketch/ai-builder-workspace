@@ -44,6 +44,78 @@ const COMPLIANCE_PATTERNS: RegExp[] = [
   /FINRA[- ]registered/i,
 ];
 
+/** Niche → required disclaimer phrases. When the workspace's `_plan.json`
+ *  identifies a regulated niche, the polish phase flags pages that don't
+ *  carry at least one phrase from each required category. The patterns are
+ *  permissive (match any wording variant) so the flag fires only when the
+ *  disclaimer is genuinely absent, not when phrasing is novel. */
+interface NicheRequirement {
+  /** A niche identifier substring (case-insensitive) — matched against plan.niche */
+  match:     RegExp;
+  /** Human-readable label of the regulatory regime. */
+  regime:    string;
+  /** Each entry: a label + at least one regex that satisfies the rule. */
+  required:  Array<{ label: string; anyOf: RegExp[] }>;
+}
+const NICHE_COMPLIANCE_RULES: NicheRequirement[] = [
+  {
+    match:    /real-?estate|realtor|broker/i,
+    regime:   'Fair Housing (HUD)',
+    required: [
+      { label: 'Equal Housing / Fair Housing Act notice', anyOf: [
+        /Federal Fair Housing Act/i, /Equal Housing Opportunity/i,
+      ]},
+    ],
+  },
+  {
+    match:    /medical|clinic|doctor|telehealth|telemedicine|physician|dentist|dental|chiropractor|therapist|psych|nurs/i,
+    regime:   'Medical (HIPAA + FDA)',
+    required: [
+      { label: 'Not-medical-advice disclaimer', anyOf: [
+        /not (?:intended as )?medical advice/i, /educational purposes only/i,
+        /consult (?:your|a) (?:physician|doctor|provider)/i,
+      ]},
+    ],
+  },
+  {
+    match:    /finance|fintech|investment|trading|crypto|wealth|advisor|bank/i,
+    regime:   'Financial (SEC / FINRA)',
+    required: [
+      { label: 'Not-investment-advice disclaimer', anyOf: [
+        /not (?:investment|financial) advice/i, /educational (?:purposes|material) only/i,
+        /consult (?:a|your) (?:financial )?(?:advisor|professional)/i,
+      ]},
+      { label: 'Past-performance / risk disclosure', anyOf: [
+        /past performance/i, /risk of loss/i, /investments? (?:carry|involve) risk/i,
+      ]},
+    ],
+  },
+  {
+    match:    /law|legal|attorney|lawyer|paralegal|barrister/i,
+    regime:   'Legal (Bar / Attorney Advertising)',
+    required: [
+      { label: 'Attorney advertising disclaimer', anyOf: [
+        /attorney advertising/i, /this (?:is|may be) (?:considered )?advertising/i,
+      ]},
+      { label: 'No legal-advice / no attorney-client relationship', anyOf: [
+        /not (?:intended as )?legal advice/i,
+        /no attorney[- ]client relationship/i,
+        /does not (?:create|form|establish) (?:an )?attorney[- ]client relationship/i,
+      ]},
+    ],
+  },
+  {
+    match:    /pharmacy|supplement|cbd|cannabis/i,
+    regime:   'FDA / DSHEA',
+    required: [
+      { label: 'FDA-not-evaluated disclaimer (supplement-style)', anyOf: [
+        /These statements have not been evaluated by the (?:Food and Drug Administration|FDA)/i,
+        /not intended to (?:diagnose|treat|cure|prevent)/i,
+      ]},
+    ],
+  },
+];
+
 /** Run inline polish auto-fixes over all HTML files in a workspace. */
 export async function runInlinePolish(ws: WorkspaceHandle): Promise<PolishResult> {
   const findings: AuditFinding[] = [];
@@ -53,6 +125,47 @@ export async function runInlinePolish(ws: WorkspaceHandle): Promise<PolishResult
   try {
     const files = await listWorkspaceFiles(ws);
     const htmlFiles = files.filter((p) => /\.html?$/i.test(p));
+
+    // ── Read the build plan to learn the niche ─────────────────────────────
+    // _plan.json lives at workspace root and is written by the planner phase.
+    // Missing on iteration prompts where the planner didn't fire — that's OK,
+    // we just skip niche-specific compliance audits in that case.
+    let planNiche = '';
+    try {
+      const planRaw = await readWorkspaceFile(ws, '_plan.json');
+      if (planRaw) {
+        const parsed = JSON.parse(planRaw) as { niche?: string };
+        planNiche = parsed.niche ?? '';
+      }
+    } catch { /* missing or malformed plan — skip niche check */ }
+
+    // ── A6: Niche-specific compliance audit ────────────────────────────────
+    // Concatenate the bodies of all HTML files; if a regulated niche matches,
+    // verify each required disclaimer appears at least once across the
+    // workspace. Per-page coverage is enforced separately by the regression
+    // check below (compliancePagesByPhrase).
+    if (planNiche) {
+      const matchingRule = NICHE_COMPLIANCE_RULES.find((r) => r.match.test(planNiche));
+      if (matchingRule) {
+        // Collect all html bodies once
+        const allBodies: string[] = [];
+        for (const p of htmlFiles) {
+          const c = await readWorkspaceFile(ws, p);
+          if (c) allBodies.push(c);
+        }
+        const corpus = allBodies.join('\n');
+        for (const req of matchingRule.required) {
+          const present = req.anyOf.some((pat) => pat.test(corpus));
+          if (!present) {
+            findings.push({
+              level:    'flag',
+              category: 'security',
+              message:  `${matchingRule.regime}: missing required "${req.label}" — required for niche \`${planNiche}\`. Add it to the footer of at least one page (typically every page).`,
+            });
+          }
+        }
+      }
+    }
 
     // Pre-scan for compliance phrases that appear on AT LEAST ONE page in the
     // workspace. Build a phrase→pages map so the per-page audit can spot
@@ -217,6 +330,56 @@ export async function runInlinePolish(ws: WorkspaceHandle): Promise<PolishResult
             page:     path,
             message:  `Compliance disclaimer "${phrase}…" appears on ${pagesWithIt.size} sibling page(s) but is missing here — likely stripped during a rewrite.`,
           });
+        }
+      }
+
+      // ── A7: Auto-inject baseline security meta tags ────────────────────────
+      // CSP, referrer-policy, and a proper viewport meta. We insert AFTER the
+      // <meta charset> if present, otherwise immediately after <head>. The
+      // CSP allows Tailwind CDN and Google Fonts because most generated sites
+      // use them; tightening to nonce-based CSP is a future hardening step.
+      if (/<head\b[^>]*>/i.test(updated)) {
+        const insertSafeMeta = (doc: string, metaTag: string, marker: RegExp): string => {
+          if (marker.test(doc)) return doc; // already present
+          // Insert after charset if present, otherwise after <head>
+          if (/<meta\s+charset=["']?[^"'>]+["']?[^>]*>/i.test(doc)) {
+            return doc.replace(/(<meta\s+charset=["']?[^"'>]+["']?[^>]*>)/i, `$1\n  ${metaTag}`);
+          }
+          return doc.replace(/(<head\b[^>]*>)/i, `$1\n  ${metaTag}`);
+        };
+
+        const cspMeta = `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src * data: blob:; media-src * blob:; connect-src *; frame-src https://js.stripe.com https://www.youtube.com https://player.vimeo.com; frame-ancestors 'self';">`;
+        const referrerMeta = `<meta name="referrer" content="strict-origin-when-cross-origin">`;
+        const viewportMeta = `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">`;
+
+        const cspBefore = updated;
+        updated = insertSafeMeta(
+          updated,
+          cspMeta,
+          /<meta\s+http-equiv=["']Content-Security-Policy["']/i,
+        );
+        if (cspBefore !== updated) {
+          findings.push({ level: 'auto-fixed', category: 'security', page: path, message: 'Added baseline Content-Security-Policy meta tag' });
+        }
+
+        const referrerBefore = updated;
+        updated = insertSafeMeta(
+          updated,
+          referrerMeta,
+          /<meta\s+name=["']referrer["']/i,
+        );
+        if (referrerBefore !== updated) {
+          findings.push({ level: 'auto-fixed', category: 'security', page: path, message: 'Added Referrer-Policy meta tag' });
+        }
+
+        const viewportBefore = updated;
+        updated = insertSafeMeta(
+          updated,
+          viewportMeta,
+          /<meta\s+name=["']viewport["']/i,
+        );
+        if (viewportBefore !== updated) {
+          findings.push({ level: 'auto-fixed', category: 'a11y', page: path, message: 'Added viewport meta tag' });
         }
       }
 

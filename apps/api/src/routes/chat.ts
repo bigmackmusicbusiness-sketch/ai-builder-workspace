@@ -337,6 +337,24 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
 
     if (toolsActive) {
       history.unshift({ role: 'system', content: toolHint(projectSlug!, hasImageGen) });
+
+      // ── Security teach-in (A2 of security plan) ──────────────────────────
+      // Load the OWASP-aligned security prelude and put it AT THE TOP of the
+      // history so it dominates context. Try multiple candidate paths so
+      // both dev (cwd=apps/api) and prod (cwd=/app monorepo root) resolve.
+      // Fail silently if the skill file isn't packaged — the post-write
+      // scanners still catch the worst things.
+      const preludeCandidates = [
+        resolve(process.cwd(), 'apps', 'api', 'src', 'agent', 'skills', 'security', 'owasp-prelude.md'),
+        resolve(process.cwd(), 'src', 'agent', 'skills', 'security', 'owasp-prelude.md'),
+      ];
+      for (const candidate of preludeCandidates) {
+        try {
+          const securityPrelude = await readFile(candidate, 'utf8');
+          history.unshift({ role: 'system', content: securityPrelude });
+          break;
+        } catch { /* try next */ }
+      }
     }
 
     // ── Phase A: Planner subagent (when projectType has agentInstructions) ──

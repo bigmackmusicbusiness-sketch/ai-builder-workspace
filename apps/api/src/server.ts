@@ -2,6 +2,9 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
+import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
+import { csrfGuard } from './security/csrfGuard';
 import { env } from './config/env';
 import { initDb }         from './db/client';
 import { runMigrations }  from './db/runMigrations';
@@ -29,6 +32,7 @@ import { higgsfieldRoutes } from './routes/higgsfield';
 import { videoRoutes }      from './routes/video';
 import { clipperRoutes }    from './routes/clipper';
 import { providersRoutes }  from './routes/providers';
+import { ensureWorkspaceBackupsBucket } from './preview/workspace';
 
 async function main(): Promise<void> {
   // Initialise DB before anything else so getDb() is ready for all route handlers.
@@ -41,6 +45,14 @@ async function main(): Promise<void> {
   await runMigrations().catch((err) => {
     // eslint-disable-next-line no-console
     console.warn('[migrations] runner errored, server continuing:', err instanceof Error ? err.message : String(err));
+  });
+
+  // Ensure the private workspace-backups bucket exists. Idempotent. The
+  // workspace.ts backup/restore writes here so tenant text files stay
+  // private (vs. the public project-assets bucket where they used to land).
+  await ensureWorkspaceBackupsBucket().catch((err) => {
+    // eslint-disable-next-line no-console
+    console.warn('[storage] ensureWorkspaceBackupsBucket errored, continuing:', err instanceof Error ? err.message : String(err));
   });
 
   const app = Fastify({ logger: { level: 'info' } });
@@ -79,6 +91,61 @@ async function main(): Promise<void> {
     },
     credentials: true,
   });
+
+  // ── B4: Helmet — security response headers ─────────────────────────────────
+  // Sets HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy,
+  // Cross-Origin-* defaults. Disable the global CSP — generated user pages
+  // served via /api/preview/serve/* need framework-permissive policies (CDN
+  // scripts, inline styles); the polish phase already injects an HTML-level
+  // CSP meta tag for those. For the JSON-only api surface we set a tight
+  // CSP via the per-route hook below.
+  await app.register(helmet, {
+    contentSecurityPolicy: false,                     // handled by HTML meta + per-route below
+    crossOriginEmbedderPolicy: false,                 // would block legitimate iframe embeds
+    crossOriginResourcePolicy: { policy: 'cross-origin' }, // SPA on different origin needs to fetch
+    crossOriginOpenerPolicy:   { policy: 'same-origin' },
+    referrerPolicy:            { policy: 'strict-origin-when-cross-origin' },
+    strictTransportSecurity:   { maxAge: 31536000, includeSubDomains: true, preload: true },
+    xFrameOptions:             { action: 'deny' },
+    xContentTypeOptions:       true,
+    xPoweredBy:                false,                 // hide framework banner
+  });
+
+  // Tight CSP only on /api/* (JSON responses don't need any inline scripts/styles).
+  // Route-served preview HTML (under /api/preview/serve/*) gets its CSP from the
+  // meta tag the polish phase injects, NOT this header.
+  app.addHook('onRequest', async (req, reply) => {
+    const url = req.url ?? '';
+    if (url.startsWith('/api/') && !url.startsWith('/api/preview/serve/')) {
+      reply.header('Content-Security-Policy', "default-src 'none'; connect-src 'self'; frame-ancestors 'none'");
+    }
+  });
+
+  // ── B3: Rate limiting ──────────────────────────────────────────────────────
+  // Global default: 300 req/min/IP. Per-route overrides via routeOptions.config.rateLimit.
+  // Route configs handle the tighter limits on /api/chat (model calls expensive)
+  // and /api/admin/* (sensitive actions).
+  await app.register(rateLimit, {
+    global:     true,
+    max:        300,
+    timeWindow: '1 minute',
+    // Use the verified tenant from JWT when available, otherwise fall back to IP.
+    keyGenerator: (req) => {
+      const ctx = (req as { authCtx?: { tenantId?: string } }).authCtx;
+      return ctx?.tenantId ?? req.ip;
+    },
+    errorResponseBuilder: (_req, ctx) => ({
+      error:      'rate_limited',
+      message:    `Too many requests. Try again in ${Math.ceil(ctx.ttl / 1000)}s.`,
+      statusCode: 429,
+    }),
+  });
+
+  // ── B5: CSRF guard ─────────────────────────────────────────────────────────
+  // Require X-Requested-With or Sec-Fetch-Site=same-origin on non-GET routes.
+  // SPA's apiFetch() already sends X-Requested-With; this rejects naive
+  // form-POST CSRF attempts that browsers won't send a custom header for.
+  app.addHook('preHandler', csrfGuard);
 
   // ── Health ──────────────────────────────────────────────────────────────────
   app.get('/healthz', async () => ({ ok: true, service: 'api', ts: Date.now() }));

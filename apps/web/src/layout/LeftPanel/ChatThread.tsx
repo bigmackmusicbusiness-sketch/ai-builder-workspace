@@ -366,8 +366,9 @@ export function ChatThread() {
       const res = await fetch(`${API_BASE}/api/chat`, {
         method:  'POST',
         headers: {
-          'Content-Type':  'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Content-Type':     'application/json',
+          'Authorization':    `Bearer ${token}`,
+          'X-Requested-With': 'fetch',
         },
         body: JSON.stringify({
           messages: [

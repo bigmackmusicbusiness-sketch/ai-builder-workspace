@@ -36,6 +36,37 @@ const MIGRATIONS: Array<{ id: string; sql: string }> = [
         ON projects (tenant_id, created_by, is_shared);
     `,
   },
+  {
+    // B2 of the security plan: enable RLS on the three tables that hold the
+    // most sensitive data and revoke direct access from anon/authenticated.
+    // The api uses service-role for legitimate access (bypasses RLS); this
+    // is defense-in-depth in case the service key leaks or a future code
+    // path forgets to filter by tenant_id.
+    id: '0010_rls_sensitive_tables',
+    sql: `
+      ALTER TABLE "audit_events" ENABLE ROW LEVEL SECURITY;
+      REVOKE ALL ON "audit_events" FROM anon, authenticated;
+      DROP POLICY IF EXISTS "audit_events_select_own_tenant" ON "audit_events";
+      CREATE POLICY "audit_events_select_own_tenant" ON "audit_events"
+        FOR SELECT
+        TO authenticated
+        USING (
+          tenant_id = (
+            coalesce(
+              current_setting('request.jwt.claims', true)::json
+                -> 'user_metadata' ->> 'tenant_id',
+              ''
+            )
+          )::uuid
+        );
+
+      ALTER TABLE "secret_metadata" ENABLE ROW LEVEL SECURITY;
+      REVOKE ALL ON "secret_metadata" FROM anon, authenticated;
+
+      ALTER TABLE "secret_values" ENABLE ROW LEVEL SECURITY;
+      REVOKE ALL ON "secret_values" FROM anon, authenticated;
+    `,
+  },
 ];
 
 /** Diagnostic snapshot from the most recent runMigrations() call.

@@ -150,11 +150,24 @@ export async function clearWorkspace(ws: WorkspaceHandle): Promise<void> {
 // Text workspace files are backed up to Supabase Storage so they survive
 // server restarts (Railway's container filesystem is ephemeral).
 // Binary files (images) are excluded — they're already stored as assets.
+//
+// IMPORTANT: this bucket MUST be private. Workspace files include tenant
+// source code, sometimes with leftover environment-style references, and
+// must not be exposed via public URL. Restore uses the service-role key
+// to download directly — no signed URLs needed for server-to-server reads.
+//
+// See B1 of the security plan: prior versions stored these in
+// `project-assets` (a public bucket) which leaked text files to anyone with
+// the path. The migration to `workspace-backups` is handled by
+// ensureWorkspaceBackupsBucket() below + a one-shot copy script.
 
-const BACKUP_BUCKET = 'project-assets';
+export const BACKUP_BUCKET = 'workspace-backups';
 const TEXT_EXTENSIONS = new Set([
   '.html', '.htm', '.css', '.js', '.jsx', '.ts', '.tsx', '.json',
-  '.md', '.txt', '.svg', '.xml', '.yaml', '.yml', '.toml', '.env',
+  '.md', '.txt', '.svg', '.xml', '.yaml', '.yml', '.toml',
+  // Note: '.env' deliberately removed — the agent's write_file gate refuses
+  // to write .env files in the first place; if one slips through some other
+  // path (manual upload), we don't want it backed up to storage.
 ]);
 
 function isTextFile(relPath: string): boolean {
@@ -191,28 +204,68 @@ export async function backupFileToStorage(
  * Restore all backed-up text files from Supabase Storage into the local workspace.
  * Called when the workspace exists but is empty (e.g. after a server restart).
  * Non-fatal: if storage has nothing, the function returns without error.
+ *
+ * Falls back to the legacy `project-assets` bucket if the new
+ * `workspace-backups` bucket has nothing — covers projects whose backups
+ * predate the security migration. Once those projects rewrite, the new
+ * upload goes to the private bucket and the legacy path quietly retires.
  */
 export async function restoreWorkspaceFromStorage(ws: WorkspaceHandle): Promise<void> {
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   const prefix   = `${ws.tenantId}/workspaces/${ws.projectSlug}/`;
 
-  // List all files under the prefix (paginate up to 200)
-  const { data, error } = await supabase.storage.from(BACKUP_BUCKET).list(prefix, {
-    limit: 200, sortBy: { column: 'name', order: 'asc' },
-  });
-  if (error || !data?.length) return;
+  const downloadFromBucket = async (bucket: string): Promise<number> => {
+    const { data, error } = await supabase.storage.from(bucket).list(prefix, {
+      limit: 200, sortBy: { column: 'name', order: 'asc' },
+    });
+    if (error || !data?.length) return 0;
+    let restored = 0;
+    await Promise.allSettled(
+      data
+        .filter((f) => f.name && !f.name.endsWith('/'))
+        .map(async (file) => {
+          const { data: blob, error: dlErr } = await supabase.storage
+            .from(bucket)
+            .download(`${prefix}${file.name}`);
+          if (dlErr || !blob) return;
+          const text = await blob.text();
+          await writeWorkspaceFile(ws, file.name, text);
+          restored++;
+        }),
+    );
+    return restored;
+  };
 
-  await Promise.allSettled(
-    data
-      .filter((f) => f.name && !f.name.endsWith('/'))
-      .map(async (file) => {
-        const { data: blob, error: dlErr } = await supabase.storage
-          .from(BACKUP_BUCKET)
-          .download(`${prefix}${file.name}`);
-        if (dlErr || !blob) return;
-        const text = await blob.text();
-        // Reconstruct relative path: file.name is the part after the prefix
-        await writeWorkspaceFile(ws, file.name, text);
-      }),
-  );
+  // Try the secure bucket first
+  const fromPrivate = await downloadFromBucket(BACKUP_BUCKET);
+  if (fromPrivate > 0) return;
+
+  // Legacy fallback: workspaces backed up before the bucket split
+  await downloadFromBucket('project-assets');
+}
+
+/**
+ * Ensure the private `workspace-backups` bucket exists. Idempotent — if the
+ * bucket is already there, the createBucket call returns an error which we
+ * swallow. Call this once at server boot. Failures are logged but the api
+ * still starts; existing backups in `project-assets` continue to be read
+ * via the legacy fallback in restoreWorkspaceFromStorage().
+ */
+export async function ensureWorkspaceBackupsBucket(): Promise<void> {
+  const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+  const { error } = await supabase.storage.createBucket(BACKUP_BUCKET, { public: false });
+  if (!error) {
+    // eslint-disable-next-line no-console
+    console.log(`[storage] created private bucket "${BACKUP_BUCKET}"`);
+    return;
+  }
+  // Common no-op errors when the bucket already exists — safe to swallow.
+  const msg = error.message ?? String(error);
+  if (/already exists|duplicate|409/i.test(msg)) {
+    // eslint-disable-next-line no-console
+    console.log(`[storage] bucket "${BACKUP_BUCKET}" already present`);
+    return;
+  }
+  // eslint-disable-next-line no-console
+  console.warn(`[storage] could not ensure bucket "${BACKUP_BUCKET}": ${msg}`);
 }

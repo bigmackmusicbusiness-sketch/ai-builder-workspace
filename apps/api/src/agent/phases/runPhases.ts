@@ -13,6 +13,8 @@
 // legacy loop completes. Inline regex-based rewrites — fast, deterministic,
 // no extra MiniMax calls.
 
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import type { ProviderAdapter, ChatMessage } from '@abw/providers';
 import type { ProjectType } from '@abw/project-types';
 import type { WorkspaceHandle } from '../../preview/workspace';
@@ -98,7 +100,7 @@ export async function runPrePhase(input: PrePhaseInput): Promise<PrePhaseResult>
     palette:     plan.palette,
   });
 
-  const enhancedSystemMessage = buildExecutionDirective(plan, projectSlug);
+  const enhancedSystemMessage = await buildExecutionDirective(plan, projectSlug, projectType.id);
 
   return {
     planAvailable: true,
@@ -138,10 +140,25 @@ export async function runPostPhase(input: PostPhaseInput): Promise<{
   return result;
 }
 
+/** Load the per-type security checklist if one exists. Returns empty string
+ *  when no checklist is shipped for the type (most types — only the 6 high-
+ *  risk types have one today: saas-app, api-service, full-stack-app,
+ *  dashboard, internal-tool, automation-panel). */
+async function loadTypeSecurityChecklist(typeId: string): Promise<string> {
+  const candidates = [
+    resolve(process.cwd(), 'apps', 'api', 'src', 'agent', 'skills', 'types', typeId, 'security_checklist.md'),
+    resolve(process.cwd(), 'src', 'agent', 'skills', 'types', typeId, 'security_checklist.md'),
+  ];
+  for (const path of candidates) {
+    try { return await readFile(path, 'utf8'); } catch { /* try next */ }
+  }
+  return '';
+}
+
 /** Build a focused execution directive from the plan. The legacy iteration
  *  loop sees this as a system message before its first turn — it tells the
  *  model exactly what files to write and what each should contain. */
-function buildExecutionDirective(plan: PlanType, projectSlug: string): string {
+async function buildExecutionDirective(plan: PlanType, projectSlug: string, projectTypeId: string): Promise<string> {
   const pagesPlan = plan.sitemap.map((p) => {
     const sectionsList = p.sections.map((s) => `\`${s}\``).join(', ');
     return `### \`${p.slug === 'index' ? 'index.html' : `${p.slug}.html`}\`
@@ -158,6 +175,19 @@ function buildExecutionDirective(plan: PlanType, projectSlug: string): string {
         `- \`/images/${a.id}.jpg\` (used in: ${a.used_in.join(', ')}) — prompt: "${a.prompt}"`,
       ).join('\n')
     : '(no shared assets)';
+
+  // Security guidance has 3 layers, each progressively more concrete:
+  //   1. The OWASP prelude (loaded by chat.ts as a separate system msg) —
+  //      universal principles, applied to every chat.
+  //   2. The plan.security_notes from the niche manifest — what the planner
+  //      decided this specific build needs (pulled in below).
+  //   3. The per-type checklist file — concrete, project-shape-specific
+  //      patterns the model must implement (loaded below for the 6 types
+  //      that have one).
+  const securityNotes = plan.security_notes.length > 0
+    ? plan.security_notes.map((n) => `- ${n}`).join('\n')
+    : '(none specified by planner)';
+  const typeChecklist = await loadTypeSecurityChecklist(projectTypeId);
 
   return [
     `## BUILD PLAN (follow exactly)`,
@@ -179,6 +209,12 @@ function buildExecutionDirective(plan: PlanType, projectSlug: string): string {
     `### Compliance blocks (include in footer):`,
     plan.compliance_blocks.length > 0 ? plan.compliance_blocks.map((b) => `- ${b}`).join('\n') : '(none)',
     ``,
+    `### Security notes from planner (must reflect in code):`,
+    securityNotes,
+    ``,
+    ...(typeChecklist
+      ? [`### Type-specific security checklist (\`${projectTypeId}\`)`, ``, typeChecklist, ``]
+      : []),
     `## EXECUTION ORDER`,
     `1. \`list_files\` to see what exists.`,
     `2. \`write_file\` for each page in the sitemap above. Each page must have:`,
@@ -187,11 +223,12 @@ function buildExecutionDirective(plan: PlanType, projectSlug: string): string {
     `   - The exact sections listed for that page`,
     `   - Required SEO meta tags + Schema.org JSON-LD`,
     `   - Compliance blocks in footer where applicable`,
+    `   - Security patterns from the checklist above (where applicable to a static or dynamic page)`,
     `3. \`gen_image\` for each shared asset, saving to \`/images/<asset-id>.jpg\``,
     `4. One short summary in chat (2-3 sentences max).`,
     ``,
     `Project slug: "${projectSlug}".`,
     ``,
-    `**DO NOT** re-plan. **DO NOT** ask clarifying questions. **DO NOT** write SPEC.md or any markdown plan. Build the pages.`,
+    `**DO NOT** re-plan. **DO NOT** ask clarifying questions. **DO NOT** write SPEC.md or any markdown plan. **DO NOT** inline real API keys. Build the pages.`,
   ].join('\n');
 }

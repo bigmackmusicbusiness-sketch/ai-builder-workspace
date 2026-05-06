@@ -26,8 +26,13 @@ export async function apiFetch<T = unknown>(
   const res = await fetch(`${BASE}${path}`, {
     ...init,
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      'Content-Type':     'application/json',
+      Authorization:      `Bearer ${token}`,
+      // Required by the api's csrfGuard for non-GET requests. Browsers won't
+      // send custom headers cross-origin without a CORS preflight, so this
+      // header (combined with the api's origin allowlist) blocks naive
+      // form-POST CSRF attacks.
+      'X-Requested-With': 'fetch',
       ...(init.headers ?? {}),
     },
   });
@@ -51,7 +56,10 @@ export async function apiFetchForm<T = unknown>(
   const token = await getToken();
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      Authorization:      `Bearer ${token}`,
+      'X-Requested-With': 'fetch',
+    },
     body,
   });
   if (!res.ok) {

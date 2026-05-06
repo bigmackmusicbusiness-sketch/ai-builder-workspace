@@ -20,6 +20,7 @@ import { renderEpub } from '../lib/epub';
 import { concatMp3WithCrossfade, mp3ToWav } from '../lib/ffmpeg';
 import { buildZip } from '../lib/zipper';
 import { vaultGet } from '../security/vault';
+import { scanForCredentials, stripCredentials } from './security';
 import { eq } from 'drizzle-orm';
 
 // ── Unsplash fallback image URLs ─────────────────────────────────────────────
@@ -444,14 +445,72 @@ export async function executeToolCall(
           }
         }
 
-        const { bytes } = await writeWorkspaceFile(ws, path, content);
+        // ── A8: Hard-gate .env file writes ───────────────────────────────────
+        // Env vars are configured at deploy time and never committed. If the
+        // agent wants to document them, it can write `.env.example` with
+        // placeholder values (KEY=your_key_here). Real .env files MUST NOT
+        // appear in source.
+        const baseName = path.split(/[\\/]/).pop() ?? '';
+        const isEnvFile = /^\.env(\.|$)/.test(baseName) && !/^\.env\.example$/i.test(baseName);
+        if (isEnvFile) {
+          return {
+            ok: false,
+            summary: `Refused to write ${path} — .env files must not be committed`,
+            result:
+              `Refused: ${path} looks like an environment file. Real env vars ` +
+              `are injected at deploy time, never committed to source. ` +
+              `If you want to document the variables this app needs, write ` +
+              `\`.env.example\` with placeholder values like:\n\n` +
+              `STRIPE_SECRET_KEY=your_stripe_secret_key\n` +
+              `DATABASE_URL=postgres://user:pass@host/db\n\n` +
+              `…then read them at runtime via process.env / import.meta.env.`,
+          };
+        }
+
+        // ── A1: Pre-write credential scan ────────────────────────────────────
+        // Scan content BEFORE it lands on disk + Supabase Storage. Block-
+        // severity findings (real secret keys) refuse the write entirely so
+        // the credential never leaves the in-memory request scope. Strip-
+        // severity findings (publishable keys, JWT-shaped tokens) are
+        // replaced inline with [REDACTED-…] markers and the write proceeds
+        // with a warning surfaced to the agent.
+        const credFindings = scanForCredentials(content);
+        const blockers = credFindings.filter((f) => f.severity === 'block');
+        if (blockers.length > 0) {
+          const providers = [...new Set(blockers.map((b) => b.provider))].join(', ');
+          return {
+            ok: false,
+            summary: `Refused — ${path} contains hardcoded secrets (${providers})`,
+            result:
+              `Refused to write ${path}: detected hardcoded credentials for ` +
+              `${providers}. Real secrets must NEVER be committed. Move them ` +
+              `to environment variables and reference them at runtime:\n\n` +
+              `  // server-side only — never expose to the client\n` +
+              `  const apiKey = process.env.${blockers[0]?.provider.toUpperCase().replace(/\W+/g, '_')}_KEY;\n\n` +
+              `Then write a placeholder reference in code (\`process.env.X_KEY\`) ` +
+              `and rerun write_file. The real value is configured at deploy ` +
+              `time, not in the file you're producing.`,
+          };
+        }
+
+        // Strip-severity → replace inline + report; proceed with the write.
+        const stripFindings = credFindings.filter((f) => f.severity === 'strip');
+        let safeContent = content;
+        let strippedNote = '';
+        if (stripFindings.length > 0) {
+          safeContent = stripCredentials(content, stripFindings);
+          const providers = [...new Set(stripFindings.map((s) => s.provider))].join(', ');
+          strippedNote = ` (stripped ${stripFindings.length} non-secret credential(s) — ${providers})`;
+        }
+
+        const { bytes } = await writeWorkspaceFile(ws, path, safeContent);
         // Fire-and-forget backup to Supabase Storage — survives server restarts
-        backupFileToStorage(ws, path, content).catch(() => {});
+        backupFileToStorage(ws, path, safeContent).catch(() => {});
         const kb = (bytes / 1024).toFixed(1);
         return {
           ok: true,
-          summary: `Wrote ${path} (${kb} KB)`,
-          result:  `File written: ${path} (${bytes} bytes)`,
+          summary: `Wrote ${path} (${kb} KB)${strippedNote}`,
+          result:  `File written: ${path} (${bytes} bytes)${strippedNote}`,
         };
       }
 

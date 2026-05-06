@@ -53,9 +53,52 @@ export async function assetsRoutes(app: FastifyInstance): Promise<void> {
         return reply.status(413).send({ error: `File too large (max ${MAX_FILE_BYTES / 1_048_576} MB)` });
       }
 
+      // ── B6: MIME sniff via magic-byte detection ─────────────────────────────
+      // Don't trust the client-supplied Content-Type. Sniff the first ~4100
+      // bytes via file-type and reject when:
+      //   • the detected type isn't in our whitelist (image/video/audio/pdf)
+      //   • the detected type contradicts the client's claim by media class
+      // For text-only types (CSV, JSON, plaintext) file-type returns null —
+      // we accept those when the client claim is also a text/* MIME.
+      const { fileTypeFromBuffer } = await import('file-type');
+      const sniffed = await fileTypeFromBuffer(buffer);
+      const claimed = (data.mimetype || '').toLowerCase();
+      const ALLOWED_PREFIXES = ['image/', 'video/', 'audio/', 'application/pdf'];
+      if (sniffed) {
+        const sniffedMime = sniffed.mime.toLowerCase();
+        const allowed = ALLOWED_PREFIXES.some((p) => sniffedMime.startsWith(p));
+        if (!allowed) {
+          return reply.status(400).send({
+            error: `Rejected file type "${sniffedMime}" — only images, video, audio, and PDF uploads are accepted.`,
+          });
+        }
+        // Cross-check the class (image/video/audio/pdf). Within a class we
+        // accept type drift (e.g., client says image/jpeg, sniffer says
+        // image/webp) — that's recoverable. Across classes is malicious.
+        const classOf = (m: string): string => m.split('/')[0] ?? '';
+        if (claimed && classOf(sniffedMime) !== classOf(claimed) && !claimed.startsWith('application/octet-stream')) {
+          return reply.status(400).send({
+            error: `MIME mismatch: declared "${claimed}" but bytes are "${sniffedMime}". Refusing upload.`,
+          });
+        }
+      } else {
+        // file-type couldn't recognise the bytes — allow only if the client
+        // claim is plain text or known-textual JSON/CSV. Anything else
+        // smells like obfuscated content; reject.
+        const isTextLike = /^(text\/|application\/(json|csv|xml|x-www-form-urlencoded)$)/.test(claimed);
+        if (!isTextLike) {
+          return reply.status(400).send({
+            error: `Could not recognise file type from bytes; refusing upload (client claimed "${claimed || '(none)'}")`,
+          });
+        }
+      }
+
       const safeFilename = data.filename.replace(/[^a-zA-Z0-9._-]/g, '_') || 'upload';
       const storagePath  = `${ctx.tenantId}/${projectId}/${Date.now()}-${safeFilename}`;
-      const mimeType     = data.mimetype || 'application/octet-stream';
+      // Prefer the SNIFFED MIME — never store the client-declared type when
+      // it disagrees with the bytes. Falls back to claim if sniff was nullish
+      // (text-like content).
+      const mimeType     = sniffed?.mime || claimed || 'application/octet-stream';
 
       const storage = getStorage();
       const { error: uploadErr } = await storage
