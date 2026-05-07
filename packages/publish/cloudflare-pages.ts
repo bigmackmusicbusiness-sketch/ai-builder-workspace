@@ -130,9 +130,11 @@ async function checkMissingHashes(
   return json.result ?? hashes;
 }
 
-/** Upload a batch of assets. Each payload entry: { key, value (base64), metadata: { contentType } }. */
+/** Upload a batch of assets. Each payload entry mirrors wrangler's:
+ *  { base64: true, key, value (base64), metadata: { contentType } }.
+ *  The base64 flag is REQUIRED — CF rejects with a 500 if absent. */
 async function uploadAssetBatch(
-  payload: Array<{ key: string; value: string; metadata: { contentType: string } }>,
+  payload: Array<{ base64: true; key: string; value: string; metadata: { contentType: string } }>,
   jwt: string,
 ): Promise<void> {
   const res = await fetch(`${CF_API}/pages/assets/upload`, {
@@ -143,11 +145,15 @@ async function uploadAssetBatch(
     },
     body: JSON.stringify({ payload }),
   });
+  // Read body once — may be JSON on success/managed errors, HTML on edge errors.
+  const text = await res.text().catch(() => '');
   if (!res.ok) {
-    const text = await res.text().catch(() => res.statusText);
     throw new Error(`CF Pages /assets/upload failed (${res.status}): ${text.slice(0, 300)}`);
   }
-  const json = (await res.json()) as { success: boolean; errors?: { message: string }[] };
+  let json: { success?: boolean; errors?: { message: string }[] };
+  try { json = JSON.parse(text); } catch {
+    throw new Error(`CF Pages /assets/upload returned non-JSON: ${text.slice(0, 200)}`);
+  }
   if (!json.success) {
     const msg = json.errors?.[0]?.message ?? 'unknown';
     throw new Error(`CF Pages /assets/upload error: ${msg}`);
@@ -187,14 +193,15 @@ export async function deployToCFPages(
   const missing = allHashes.length === 0 ? [] : await checkMissingHashes(allHashes, jwt);
 
   // 5. Batch + upload missing assets
-  let batch: Array<{ key: string; value: string; metadata: { contentType: string } }> = [];
+  let batch: Array<{ base64: true; key: string; value: string; metadata: { contentType: string } }> = [];
   let batchBytes = 0;
   for (const hash of missing) {
     const entry = byHash.get(hash);
     if (!entry) continue;
     const { path, bytes } = entry;
     const b64 = Buffer.from(bytes).toString('base64');
-    const item = {
+    const item: { base64: true; key: string; value: string; metadata: { contentType: string } } = {
+      base64:   true,
       key:      hash,
       value:    b64,
       metadata: { contentType: mimeFromPath(path) },
