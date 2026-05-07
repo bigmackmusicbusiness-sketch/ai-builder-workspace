@@ -71,7 +71,7 @@ export async function scaffoldHelloWorld(projectSlug: string): Promise<ScaffoldR
       Your project is live in the preview sandbox.<br />
       Ask the AI to build something and it will appear here.
     </p>
-    <span class="badge">AI Builder Workspace</span>
+    <span class="badge">SignalPoint IDE</span>
   </div>
 </body>
 </html>`,

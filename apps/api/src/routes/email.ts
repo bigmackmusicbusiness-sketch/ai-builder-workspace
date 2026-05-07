@@ -131,7 +131,7 @@ export async function emailRoutes(app: FastifyInstance): Promise<void> {
     // Normalise: support both new { to } and legacy { toEmail } fields
     const toAddr   = body.to ?? body.toEmail ?? '';
     const fromAddr = 'onboarding@resend.dev';
-    const fromName = body.fromName ?? 'AI Builder Workspace';
+    const fromName = body.fromName ?? 'SignalPoint IDE';
     const fromFull = `${fromName} <${fromAddr}>`;
 
     try {

@@ -105,8 +105,13 @@ export function TopBar() {
         aria-label={isBuilderMode ? 'Exit project — back to projects' : 'Projects'}
         title={isBuilderMode ? 'Back to projects' : 'Projects'}
       >
-        <span className="abw-topbar__logo-mark" aria-hidden>⬡</span>
-        {!isBuilderMode && <span className="abw-topbar__logo-word">AI Builder</span>}
+        <img
+          className="abw-topbar__logo-mark"
+          src="/signalpoint-logo-s.png"
+          alt=""
+          aria-hidden
+        />
+        {!isBuilderMode && <span className="abw-topbar__logo-word">SignalPoint IDE</span>}
       </button>
 
       {isBuilderMode ? (

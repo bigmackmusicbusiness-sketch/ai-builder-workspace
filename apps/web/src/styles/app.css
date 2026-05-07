@@ -983,10 +983,22 @@ html, body, #root {
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
-  font-size: 1.0625rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
   color: var(--text-primary);
+}
+/* Full SignalPoint Systems logo on the left brand panel — image carries
+ * its own wordmark so we don't need a sibling text node here. */
+.abw-login__brand-logo {
+  display: block;
+  width: 200px;
+  height: auto;
+  filter: drop-shadow(0 6px 22px rgba(7, 122, 122, 0.25));
+}
+/* Smaller S-only mark on the sign-in card (right panel) */
+.abw-login__card-logo {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
 }
 .abw-login__brand-hex {
   display: inline-flex;
@@ -1002,6 +1014,8 @@ html, body, #root {
 }
 .abw-login__brand-word {
   font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
 }
 .abw-login__brand-tagline {
   font-size: 1.5rem;
@@ -1602,15 +1616,10 @@ html, body, #root {
   box-shadow: 0 0 0 2px var(--accent-500);
 }
 .abw-topbar__logo-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, var(--accent-500), var(--accent-700));
-  color: #fff;
-  font-size: 0.75rem;
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 .abw-topbar__logo-word {

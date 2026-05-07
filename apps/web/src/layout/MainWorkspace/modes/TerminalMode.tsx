@@ -11,7 +11,7 @@ interface HistoryEntry {
 }
 
 const ALLOWED_HINT = 'Allowed: ls, cat, echo, pwd, node --version, npm --version, pnpm --version, git log, git status, git diff';
-const WELCOME = `AI Builder Terminal — sandboxed shell
+const WELCOME = `SignalPoint IDE Terminal — sandboxed shell
 ${ALLOWED_HINT}
 Type a command and press Enter. Commands run in the project sandbox.
 ──────────────────────────────────────────────────────────────────`;

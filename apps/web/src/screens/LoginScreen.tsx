@@ -33,13 +33,16 @@ export function LoginScreen() {
 
   return (
     <div className="abw-login">
-      {/* Brand panel — ambient violet wash, product mark, value prop */}
+      {/* Brand panel — ambient wash, product mark, value prop */}
       <aside className="abw-login__brand-panel" aria-hidden>
         <div className="abw-login__brand-glow" />
         <div className="abw-login__brand-content">
           <div className="abw-login__brand-mark">
-            <span className="abw-login__brand-hex">⬡</span>
-            <span className="abw-login__brand-word">AI Builder</span>
+            <img
+              className="abw-login__brand-logo"
+              src="/signalpoint-logo-full.png"
+              alt="SignalPoint Systems"
+            />
           </div>
 
           <p className="abw-login__brand-tagline">
@@ -62,8 +65,12 @@ export function LoginScreen() {
       <main className="abw-login__form-panel">
         <div className="abw-login__card">
           <div className="abw-login__card-mark" aria-hidden>
-            <span className="abw-login__brand-hex">⬡</span>
-            <span className="abw-login__brand-word">AI Builder</span>
+            <img
+              className="abw-login__card-logo"
+              src="/signalpoint-logo-s.png"
+              alt=""
+            />
+            <span className="abw-login__brand-word">SignalPoint IDE</span>
           </div>
 
           <h1 className="abw-login__heading">Welcome back</h1>
