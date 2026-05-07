@@ -30,7 +30,10 @@ export const PlanPage = z.object({
 
 export const PlanAsset = z.object({
   id:       z.string().min(1).max(64),
-  kind:     z.enum(['image', 'icon', 'illustration']),
+  // Includes 'video' so plans can declare a hero loop or background clip
+  // (replicate_video / wan-2-1-fast). Audio added too — music studio plans
+  // will eventually flow through the same shared-assets list.
+  kind:     z.enum(['image', 'icon', 'illustration', 'video', 'audio']),
   prompt:   z.string().min(4).max(600),
   used_in:  z.array(z.string()).min(1),
 });
