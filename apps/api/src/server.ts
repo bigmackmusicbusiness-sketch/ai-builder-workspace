@@ -21,6 +21,7 @@ import { testsRoutes }      from './routes/tests';
 import { approvalsRoutes }  from './routes/approvals';
 import { chatRoutes }       from './routes/chat';
 import { publishRoutes }    from './routes/publish';
+import { publishedRoutes }  from './routes/published';
 import { assetsRoutes }     from './routes/assets';
 import { integrationsRoutes } from './routes/integrations';
 import { ebooksRoutes }    from './routes/ebooks';
@@ -164,6 +165,7 @@ async function main(): Promise<void> {
   await app.register(approvalsRoutes);
   await app.register(chatRoutes);
   await app.register(publishRoutes);
+  await app.register(publishedRoutes);
   await app.register(assetsRoutes);
   await app.register(integrationsRoutes);
   await app.register(ebooksRoutes);

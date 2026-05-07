@@ -12,6 +12,8 @@ import { bundleProject } from '../preview/bundler';
 import { deployToCFPages } from '@abw/publish';
 import { getWorkspace, workspaceExists, restoreWorkspaceFromStorage } from '../preview/workspace';
 import { stat } from 'node:fs/promises';
+import { createClient } from '@supabase/supabase-js';
+import { env as appEnv } from '../config/env';
 
 declare module 'fastify' {
   interface FastifyRequest { authCtx?: AuthContext; }
@@ -203,18 +205,22 @@ export async function publishRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
-    // Only Cloudflare Pages is supported for live deploy; others are stubs
-    if (target.adapter !== 'cloudflare-pages') {
+    // Two adapter implementations:
+    //   • cloudflare-pages — pushes to Cloudflare Pages via the Direct Upload API
+    //   • static-export    — uploads bundled assets to Supabase Storage + serves
+    //                        them via /api/published/<slug>/*
+    // The 'supabase' adapter is reserved for a future Supabase-Hosting flow.
+    if (target.adapter !== 'cloudflare-pages' && target.adapter !== 'static-export') {
       return reply.status(400).send({
         error: `Adapter '${target.adapter}' is not yet supported for automated deploys.`,
       });
     }
 
-    // Cloudflare credentials — required for real deploys
+    // Cloudflare credentials — only needed for the cloudflare-pages adapter
     const accountId = process.env['CF_ACCOUNT_ID'] ?? (target.config as Record<string, string>)?.['accountId'];
     const apiToken  = process.env['CF_API_TOKEN'];
 
-    if (!accountId || !apiToken) {
+    if (target.adapter === 'cloudflare-pages' && (!accountId || !apiToken)) {
       return reply.status(422).send({
         error: 'Cloudflare credentials not configured. Set CF_ACCOUNT_ID and CF_API_TOKEN on the server.',
       });
@@ -278,13 +284,24 @@ export async function publishRoutes(app: FastifyInstance): Promise<void> {
         return reply.status(422).send({ error: errMsg });
       }
 
-      // Deploy to Cloudflare Pages
-      const deployResult = await deployToCFPages(
-        projectSlug,
-        bundleResult.assets,
-        accountId,
-        apiToken,
-      );
+      // Deploy via the chosen adapter
+      let deployResult: { url: string; durationMs: number; deploymentId?: string };
+      if (target.adapter === 'static-export') {
+        const { deployStaticExport } = await import('../publish/staticExport');
+        deployResult = await deployStaticExport({
+          tenantId:    ctx.tenantId,
+          projectSlug,
+          assets:      bundleResult.assets,
+          publicOrigin: process.env['PUBLIC_API_URL'] ?? `${req.protocol}://${req.headers.host}`,
+        });
+      } else {
+        deployResult = await deployToCFPages(
+          projectSlug,
+          bundleResult.assets,
+          accountId!,
+          apiToken!,
+        );
+      }
 
       // Update deployment row: success
       await db.update(deployments)
