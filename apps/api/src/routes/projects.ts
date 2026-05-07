@@ -126,6 +126,25 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
     if (!parsed.success) return reply.status(400).send({ error: 'Invalid body', detail: parsed.error.format() });
 
     const db = getDb();
+
+    // Application-level slug-uniqueness check. The DB schema doesn't enforce
+    // a (tenant_id, slug) unique index yet — caught two duplicate
+    // mountain-peak-bakery rows during the bug-test sweep, both pointing at
+    // the same workspace path. Reject duplicate creates with a clear 409.
+    {
+      const existing = await db
+        .select({ id: projects.id })
+        .from(projects)
+        .where(and(eq(projects.tenantId, ctx.tenantId), eq(projects.slug, parsed.data.slug)))
+        .limit(1);
+      if (existing[0]) {
+        return reply.status(409).send({
+          error:  `A project with slug "${parsed.data.slug}" already exists in this workspace.`,
+          detail: { existingProjectId: existing[0].id },
+        });
+      }
+    }
+
     let row: Record<string, unknown> | undefined;
     try {
       const inserted = await db.insert(projects).values({

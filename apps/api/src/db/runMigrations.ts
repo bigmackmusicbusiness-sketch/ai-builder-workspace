@@ -67,6 +67,37 @@ const MIGRATIONS: Array<{ id: string; sql: string }> = [
       REVOKE ALL ON "secret_values" FROM anon, authenticated;
     `,
   },
+  {
+    // Found during the bug-test sweep: two `mountain-peak-bakery` rows
+    // existed in the same tenant. Slug is used for routing
+    // (/api/published/<slug>/, the workspace path on disk, the customHost
+    // lookup) so duplicates create silent ambiguity. Enforce uniqueness
+    // per-tenant at the DB level. App-level check in POST /api/projects
+    // is the friendly 409 — this is defense-in-depth.
+    id: '0012_projects_slug_unique_per_tenant',
+    sql: `
+      -- Best-effort dedupe: if a tenant has multiple rows with the same
+      -- slug, soft-delete all but the OLDEST so the index can be created.
+      -- Rare in practice; was hit during testing only.
+      WITH ranked AS (
+        SELECT id,
+               ROW_NUMBER() OVER (
+                 PARTITION BY tenant_id, slug
+                 ORDER BY created_at ASC
+               ) AS rn
+        FROM projects
+        WHERE deleted_at IS NULL
+      )
+      UPDATE projects
+      SET deleted_at = now()
+      FROM ranked
+      WHERE projects.id = ranked.id AND ranked.rn > 1;
+
+      CREATE UNIQUE INDEX IF NOT EXISTS projects_tenant_slug_uniq_idx
+        ON projects (tenant_id, slug)
+        WHERE deleted_at IS NULL;
+    `,
+  },
 ];
 
 /** Diagnostic snapshot from the most recent runMigrations() call.
