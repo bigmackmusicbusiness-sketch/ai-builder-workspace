@@ -43,6 +43,18 @@ const DeploySchema = z.object({
   entryPoint:  z.string().default('src/main.tsx'),
   framework:   z.enum(['react-vite', 'vanilla', 'static']).default('react-vite'),
   commitMsg:   z.string().max(250).optional(),
+  /** Optional: when present, attach the static-export deploy to this
+   *  Cloudflare-managed hostname. Backend creates a CNAME in the user's
+   *  CF zone pointing to the api origin. The customHost route then
+   *  serves the deploy when traffic arrives with this Host header. */
+  customDomain: z.string()
+    .regex(/^([a-z0-9-]+\.)+[a-z]{2,}$/i, 'Must be a fully-qualified domain like halcyonestates.com or www.halcyonestates.com')
+    .max(253)
+    .optional(),
+  /** CF Zone ID where the CNAME should be created. Required iff customDomain
+   *  is set — the picker UI knows this from the /api/cf/zones response so
+   *  the backend doesn't have to look it up again. */
+  cfZoneId:     z.string().regex(/^[a-z0-9]{32}$/i).optional(),
 });
 
 const ListDeploymentsSchema = z.object({
@@ -84,6 +96,8 @@ export async function publishRoutes(app: FastifyInstance): Promise<void> {
         connected:  true,               // if it's in the DB it's connected
         url:        r.lastDeployUrl ?? undefined,
         lastDeploy: r.lastDeployAt?.toISOString() ?? undefined,
+        // Surface the bound custom domain on the picker / target card
+        customDomain: ((r.config as Record<string, unknown> | null)?.['customDomain'] as string | undefined) ?? undefined,
         config:     r.config,
       }));
 
@@ -177,7 +191,14 @@ export async function publishRoutes(app: FastifyInstance): Promise<void> {
     if (!parsed.success) {
       return reply.status(400).send({ error: 'Invalid body', detail: parsed.error.format() });
     }
-    const { targetId, projectId, projectSlug, rootDir, entryPoint, framework, commitMsg } = parsed.data;
+    const { targetId, projectId, projectSlug, rootDir, entryPoint, framework, commitMsg, customDomain, cfZoneId } = parsed.data;
+
+    // Validate co-required fields up front
+    if (customDomain && !cfZoneId) {
+      return reply.status(400).send({
+        error: 'cfZoneId is required when customDomain is set. Pick a zone via GET /api/cf/zones first.',
+      });
+    }
 
     const db = getDb();
 
@@ -301,6 +322,66 @@ export async function publishRoutes(app: FastifyInstance): Promise<void> {
           accountId!,
           apiToken!,
         );
+      }
+
+      // ── Custom-domain attach (static-export adapter only) ────────────────────
+      // After the upload succeeds, create the CNAME at the user's CF zone +
+      // persist the customDomain on the publishTarget. The customHost route
+      // then serves the deploy when traffic arrives with this Host header.
+      // CNAME failures are FATAL — the user expects the URL to work; we'd
+      // rather show them the error than silently leave them with a broken
+      // domain.
+      if (target.adapter === 'static-export' && customDomain && cfZoneId) {
+        const cfToken = process.env['CF_API_TOKEN'];
+        if (!cfToken) {
+          throw new Error('Custom domain requested but CF_API_TOKEN not configured. Set it in Env & Secrets.');
+        }
+
+        const cnameTarget = (process.env['PUBLIC_API_HOST'] ??
+          (process.env['PUBLIC_API_URL'] ? new URL(process.env['PUBLIC_API_URL']).host : null) ??
+          'api.40-160-3-10.sslip.io').toLowerCase();
+
+        const { cfFetch } = await import('@abw/publish');
+        try {
+          await cfFetch(
+            `/zones/${cfZoneId}/dns_records`,
+            cfToken,
+            {
+              method:  'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type:    'CNAME',
+                name:    customDomain,
+                content: cnameTarget,
+                ttl:     1,        // CF "Auto"
+                proxied: true,     // CF terminates TLS + caches at the edge
+                comment: `AI Builder Workspace — published ${projectSlug}`,
+              }),
+            },
+          );
+        } catch (cnameErr) {
+          const msg = cnameErr instanceof Error ? cnameErr.message : String(cnameErr);
+          // 81057/81058 = "already exists" — fine, we just re-attach
+          if (!/already exists|81057|81058/i.test(msg)) {
+            throw new Error(`Could not create CNAME for ${customDomain}: ${msg}`);
+          }
+        }
+
+        // Persist customDomain on the target (merging with existing config jsonb)
+        const existingConfig = (target.config ?? {}) as Record<string, unknown>;
+        await db.update(publishTargets)
+          .set({
+            config: { ...existingConfig, customDomain, cfZoneId, cnameTarget },
+            updatedAt: new Date(),
+          } as Record<string, unknown>)
+          .where(eq(publishTargets.id, targetId));
+
+        // Override the deploy URL to the user's domain
+        deployResult.url = `https://${customDomain}/`;
+
+        // Bust the customHost cache so the very next request resolves
+        const { invalidateHostCache } = await import('../routes/customHost');
+        invalidateHostCache(customDomain);
       }
 
       // Update deployment row: success

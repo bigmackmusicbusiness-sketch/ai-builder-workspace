@@ -25,8 +25,10 @@ const MAX_BATCH_BYTES = 100 * 1024 * 1024;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Fetch JSON from Cloudflare API with auth header. Throws on non-2xx. */
-async function cfFetch<T = unknown>(
+/** Fetch JSON from Cloudflare API with auth header. Throws on non-2xx.
+ *  Exported so other route modules (zones list, DNS create) can reuse it
+ *  without duplicating the auth + JSON-envelope handling. */
+export async function cfFetch<T = unknown>(
   path: string,
   token: string,
   init: RequestInit = {},

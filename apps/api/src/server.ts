@@ -22,6 +22,8 @@ import { approvalsRoutes }  from './routes/approvals';
 import { chatRoutes }       from './routes/chat';
 import { publishRoutes }    from './routes/publish';
 import { publishedRoutes }  from './routes/published';
+import { cloudflareRoutes } from './routes/cloudflare';
+import { customHostRoutes } from './routes/customHost';
 import { assetsRoutes }     from './routes/assets';
 import { integrationsRoutes } from './routes/integrations';
 import { ebooksRoutes }    from './routes/ebooks';
@@ -166,6 +168,7 @@ async function main(): Promise<void> {
   await app.register(chatRoutes);
   await app.register(publishRoutes);
   await app.register(publishedRoutes);
+  await app.register(cloudflareRoutes);
   await app.register(assetsRoutes);
   await app.register(integrationsRoutes);
   await app.register(ebooksRoutes);
@@ -177,6 +180,10 @@ async function main(): Promise<void> {
   await app.register(videoRoutes);
   await app.register(clipperRoutes);
   await app.register(providersRoutes);
+  // customHostRoutes is a Host-header preHandler — register LAST so the
+  // /api/* routes have already been matched first (the preHandler still
+  // fires per-request, but this keeps registration order tidy).
+  await app.register(customHostRoutes);
 
   // ── Start ───────────────────────────────────────────────────────────────────
   try {

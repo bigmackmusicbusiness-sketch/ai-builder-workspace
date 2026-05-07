@@ -19,6 +19,18 @@ interface PublishTarget {
   url?:        string;
   connected:   boolean;
   lastDeploy?: string;
+  /** Set when the target has a Cloudflare-managed custom domain attached.
+   *  After the first deploy with a domain, subsequent deploys default to
+   *  this host without the picker re-asking. */
+  customDomain?: string;
+}
+
+interface CfZone {
+  id:     string;
+  name:   string;
+  status: string;
+  paused: boolean;
+  type:   string;
 }
 
 interface Deployment {
@@ -90,6 +102,9 @@ export function PublishScreen() {
   const [error, setError]             = useState<string | null>(null);
   const [deployResult, setDeployResult] = useState<{ targetId: string; url: string } | null>(null);
   const [approvalRequired, setApprovalRequired] = useState<string | null>(null);
+  /** Open the Cloudflare-domain picker for one target. When set, the
+   *  DomainPickerDialog renders and runs the deploy on confirm. */
+  const [pickerTarget, setPickerTarget] = useState<PublishTarget | null>(null);
 
   // ── Load targets + deployments on mount / project change ─────────────────
   const loadData = useCallback(async () => {
@@ -113,7 +128,10 @@ export function PublishScreen() {
   useEffect(() => { void loadData(); }, [loadData]);
 
   // ── Deploy ────────────────────────────────────────────────────────────────
-  async function handleDeploy(target: PublishTarget) {
+  /** Top-level Deploy click handler. For static-export targets this opens
+   *  the Cloudflare-domain picker (which then calls runDeploy with the
+   *  chosen host). For other adapters it skips straight to runDeploy. */
+  function handleDeploy(target: PublishTarget) {
     if (!projectId || !projectSlug) {
       alert('No active project selected.');
       return;
@@ -122,12 +140,43 @@ export function PublishScreen() {
       setApprovalRequired(target.id);
       return;
     }
+    // Static-export targets open the picker so the user can choose which
+    // CF zone to attach. Cloudflare-pages targets skip the picker (they
+    // deploy to the CF Pages-issued .pages.dev URL).
+    if (target.provider === 'static-export') {
+      setPickerTarget(target);
+      return;
+    }
+    void runDeploy(target, null, null);
+  }
 
+  /** The actual deploy POST. Called by handleDeploy directly OR by the
+   *  DomainPicker's onConfirm with a chosen { customDomain, cfZoneId }
+   *  pair (or null + null for "skip — use platform URL"). */
+  async function runDeploy(
+    target: PublishTarget,
+    customDomain: string | null,
+    cfZoneId: string | null,
+  ) {
+    if (!projectId || !projectSlug) return;
+
+    setPickerTarget(null);
     setDeploying(target.id);
     setDeployResult(null);
     setApprovalRequired(null);
 
     try {
+      const body: Record<string, unknown> = {
+        targetId:    target.id,
+        projectId,
+        projectSlug,
+        framework:   'static',
+      };
+      if (customDomain && cfZoneId) {
+        body.customDomain = customDomain;
+        body.cfZoneId     = cfZoneId;
+      }
+
       const res = await apiFetch<{
         status: string;
         url?: string;
@@ -136,19 +185,15 @@ export function PublishScreen() {
         reason?: string;
       }>('/api/publish/deploy', {
         method: 'POST',
-        body: JSON.stringify({
-          targetId:    target.id,
-          projectId,
-          projectSlug,
-          framework:   'static',
-        }),
+        body: JSON.stringify(body),
       });
 
       if (res.requiresApproval) {
         setApprovalRequired(target.id);
       } else if (res.url) {
         setDeployResult({ targetId: target.id, url: res.url });
-        // Refresh deployment list so the new row appears
+        // Refresh both lists so the new row appears + the target shows the
+        // newly-bound customDomain on its card
         void loadData();
       }
     } catch (err) {
@@ -348,6 +393,13 @@ export function PublishScreen() {
                   </p>
                 )}
 
+                {/* Custom-domain badge */}
+                {t.customDomain && (
+                  <p style={{ marginTop: 'var(--space-2)', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                    🌐 Bound to <strong style={{ color: 'var(--text-primary)' }}>{t.customDomain}</strong>
+                  </p>
+                )}
+
                 {/* Approval gate banner */}
                 {(t.env === 'production' || approvalRequired === t.id) && (
                   <div className="abw-banner abw-banner--warning" style={{ marginTop: 'var(--space-3)' }}>
@@ -449,6 +501,15 @@ export function PublishScreen() {
         <AddTargetDialog
           onClose={() => setShowAdd(false)}
           onAdd={handleAddTarget}
+        />
+      )}
+
+      {/* Cloudflare-domain picker (only fires for static-export deploys) */}
+      {pickerTarget && (
+        <DomainPickerDialog
+          target={pickerTarget}
+          onClose={() => setPickerTarget(null)}
+          onConfirm={(customDomain, cfZoneId) => void runDeploy(pickerTarget, customDomain, cfZoneId)}
         />
       )}
     </div>
@@ -572,6 +633,166 @@ function AddTargetDialog({
             onClick={() => void handleSave()}
           >
             {saving ? 'Adding…' : 'Add target'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── DomainPickerDialog ────────────────────────────────────────────────────────
+
+/** Modal that lists the user's Cloudflare zones, lets them pick one + an
+ *  optional subdomain, and confirms the chosen FQDN. The Deploy actually
+ *  runs in the parent on confirm.
+ *
+ *  Includes a "Buy a domain on Cloudflare ↗" deep-link for users who don't
+ *  have one yet, and a "Skip — use platform URL" escape hatch. */
+function DomainPickerDialog({
+  target,
+  onClose,
+  onConfirm,
+}: {
+  target:    PublishTarget;
+  onClose:   () => void;
+  onConfirm: (customDomain: string | null, cfZoneId: string | null) => void;
+}) {
+  const [zones, setZones]           = useState<CfZone[]>([]);
+  const [zoneId, setZoneId]         = useState<string>('');
+  const [subdomain, setSubdomain]   = useState<string>('');
+  const [accountId, setAccountId]   = useState<string | null>(null);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState<string | null>(null);
+  const [helpHint, setHelpHint]     = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [zonesRes, acctRes] = await Promise.all([
+          apiFetch<{ zones: CfZone[]; helpHint?: string }>('/api/cf/zones'),
+          apiFetch<{ accountId: string }>('/api/cf/account').catch(() => ({ accountId: '' })),
+        ]);
+        if (cancelled) return;
+        setZones(zonesRes.zones);
+        setHelpHint(zonesRes.helpHint ?? null);
+        setAccountId(acctRes.accountId || null);
+        // Pre-select the target's existing customDomain's zone if there is one
+        if (target.customDomain) {
+          const matchedZone = zonesRes.zones.find((z) => target.customDomain!.endsWith(z.name));
+          if (matchedZone) {
+            setZoneId(matchedZone.id);
+            const sub = target.customDomain.slice(0, target.customDomain.length - matchedZone.name.length).replace(/\.$/, '');
+            setSubdomain(sub);
+          }
+        } else if (zonesRes.zones[0]) {
+          setZoneId(zonesRes.zones[0].id);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setError(err instanceof ApiError ? err.message : 'Could not load Cloudflare zones.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [target.customDomain]);
+
+  const selectedZone = zones.find((z) => z.id === zoneId);
+  const sub          = subdomain.trim().replace(/^\.+|\.+$/g, '').toLowerCase();
+  const fullHost     = selectedZone ? (sub ? `${sub}.${selectedZone.name}` : selectedZone.name) : '';
+
+  const buyHref = accountId
+    ? `https://dash.cloudflare.com/${accountId}/domains/register`
+    : 'https://dash.cloudflare.com/?to=/:account/domains/register';
+
+  return (
+    <div className="abw-dialog-backdrop" role="dialog" aria-modal aria-label="Pick a Cloudflare domain">
+      <div className="abw-dialog">
+        <div className="abw-dialog__header">
+          <h2 className="abw-dialog__title">Deploy {target.name}</h2>
+          <button className="abw-dialog__close" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+        <div className="abw-dialog__body" style={{ gap: 'var(--space-4)' }}>
+          {loading ? (
+            <p style={{ color: 'var(--text-secondary)' }}>Loading your Cloudflare zones…</p>
+          ) : error ? (
+            <div className="abw-banner abw-banner--error">
+              <strong>Could not load zones.</strong> {error}
+            </div>
+          ) : zones.length === 0 ? (
+            <div className="abw-callout">
+              <span className="abw-callout__icon" aria-hidden>🌐</span>
+              <span>
+                No Cloudflare zones found on your account. {helpHint
+                  ? <span style={{ color: 'var(--text-secondary)' }}>{helpHint}</span>
+                  : 'Buy or transfer a domain to Cloudflare to attach it here.'}
+              </span>
+            </div>
+          ) : (
+            <>
+              <div>
+                <label className="abw-field-label" htmlFor="picker-zone">Domain</label>
+                <select
+                  id="picker-zone"
+                  className="abw-select"
+                  value={zoneId}
+                  onChange={(e) => setZoneId(e.target.value)}
+                >
+                  {zones.map((z) => (
+                    <option key={z.id} value={z.id}>{z.name} {z.status !== 'active' ? `(${z.status})` : ''}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="abw-field-label" htmlFor="picker-sub">
+                  Subdomain <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>(optional — leave blank for apex)</span>
+                </label>
+                <input
+                  id="picker-sub"
+                  className="abw-input"
+                  type="text"
+                  placeholder="www"
+                  value={subdomain}
+                  onChange={(e) => setSubdomain(e.target.value)}
+                />
+              </div>
+
+              {fullHost && (
+                <div className="abw-callout">
+                  <span className="abw-callout__icon" aria-hidden>✨</span>
+                  <span>
+                    Site will live at <strong>https://{fullHost}/</strong> (CF Proxy + TLS, ~30s DNS propagation).
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+
+          <a
+            href={buyHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="abw-btn abw-btn--ghost abw-btn--sm"
+            style={{ alignSelf: 'flex-start' }}
+          >
+            🛒 Buy a new domain on Cloudflare ↗
+          </a>
+        </div>
+        <div className="abw-dialog__footer">
+          <button
+            className="abw-btn abw-btn--ghost"
+            onClick={() => onConfirm(null, null)}
+          >
+            Skip — use platform URL
+          </button>
+          <button
+            className="abw-btn abw-btn--primary"
+            disabled={!fullHost || !zoneId || loading}
+            onClick={() => onConfirm(fullHost, zoneId)}
+          >
+            {fullHost ? `Deploy to ${fullHost}` : 'Deploy'}
           </button>
         </div>
       </div>
