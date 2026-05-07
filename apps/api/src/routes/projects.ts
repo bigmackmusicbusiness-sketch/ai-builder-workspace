@@ -2,7 +2,7 @@
 // Tenants manage projects; all data is scoped by tenantId from the JWT.
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and, or, isNull } from 'drizzle-orm';
 import { getDb, getRawSql } from '../db/client';
 import { projects } from '@abw/db';
 import { authMiddleware, requireRole, type AuthContext } from '../security/authz';
@@ -45,6 +45,10 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
         .from(projects)
         .where(and(
           eq(projects.tenantId, ctx.tenantId),
+          // Hide soft-deleted rows. Migration 0012 soft-deletes
+          // duplicate-slug rows; this filter prevents them resurfacing
+          // in the dashboard.
+          isNull(projects.deletedAt),
           or(
             eq(projects.createdBy, ctx.userId),
             eq(projects.isShared, true),
@@ -70,6 +74,7 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
                   created_at AS "createdAt", updated_at AS "updatedAt"
              FROM projects
             WHERE tenant_id = $1
+              AND deleted_at IS NULL
             ORDER BY created_at`,
           [ctx.tenantId],
         ) as Array<Record<string, unknown>>;
