@@ -197,10 +197,26 @@ export async function deployToCFPages(
 
   // 3. Get a per-deployment JWT (for the asset bulk-upload endpoints)
   const jwt = await fetchUploadJwt(accountId, projectName, token);
+  // eslint-disable-next-line no-console
+  console.log(`[cf-pages] upload jwt prefix=${jwt.slice(0, 20)}… len=${jwt.length}`);
 
-  // 4. Ask CF which hashes are missing — only upload those
+  // 4. Ask CF which hashes are missing — only upload those.
+  //    If check-missing 5xxs (CF-side worker bug we've seen), we treat
+  //    the entire manifest as missing and try uploading everything.
   const allHashes = [...byHash.keys()];
-  const missing = allHashes.length === 0 ? [] : await checkMissingHashes(allHashes, jwt);
+  // eslint-disable-next-line no-console
+  console.log(`[cf-pages] manifest has ${allHashes.length} unique assets, slugs=${[...byHash.values()].map(v => v.path).slice(0,5).join(',')}`);
+  let missing: string[];
+  try {
+    missing = allHashes.length === 0 ? [] : await checkMissingHashes(allHashes, jwt);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // eslint-disable-next-line no-console
+    console.warn(`[cf-pages] check-missing failed (${msg.slice(0, 200)}) — assuming all assets missing.`);
+    missing = allHashes;
+  }
+  // eslint-disable-next-line no-console
+  console.log(`[cf-pages] cf reports ${missing.length} missing of ${allHashes.length}`);
 
   // 5. Batch + upload missing assets
   let batch: Array<{ base64: true; key: string; value: string; metadata: { contentType: string } }> = [];
