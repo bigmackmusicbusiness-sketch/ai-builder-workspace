@@ -147,9 +147,12 @@ export async function publishedRoutes(app: FastifyInstance): Promise<void> {
       .download(fileKey);
 
     if (fileErr || !fileBlob) {
-      // SPA fallback: if HTML extension wasn't in the request and we're
-      // missing, serve the index.html so client-side routers can take over.
-      if (file !== 'index.html' && !file.endsWith('.html')) {
+      // SPA fallback: only for paths the original request had NO extension on
+      // (i.e., the user typed `/about`, not `/missing.css`). The request
+      // path is what we should test — but we already mutated `file` to add
+      // `/index.html`. Use `relPath` for the original-request signal.
+      const requestHadExt = /\.[a-zA-Z0-9]+$/.test(relPath);
+      if (!requestHadExt) {
         const idxKey = `${proj.tenantId}/published/${slug}/${deployId}/index.html`;
         const { data: idxBlob } = await supabase.storage.from(PUBLISHED_BUCKET).download(idxKey);
         if (idxBlob) {
