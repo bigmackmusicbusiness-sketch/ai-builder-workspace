@@ -10,7 +10,7 @@ import { authMiddleware, requireRole, type AuthContext } from '../security/authz
 import { writeAuditEvent } from '../security/audit';
 import { bundleProject } from '../preview/bundler';
 import { deployToCFPages } from '@abw/publish';
-import { getWorkspace, workspaceExists } from '../preview/workspace';
+import { getWorkspace, workspaceExists, restoreWorkspaceFromStorage } from '../preview/workspace';
 import { stat } from 'node:fs/promises';
 
 declare module 'fastify' {
@@ -243,6 +243,12 @@ export async function publishRoutes(app: FastifyInstance): Promise<void> {
       let resolvedFramework = framework;
 
       const ws = await getWorkspace(ctx.tenantId, projectSlug);
+      // If the workspace is empty (typical right after a server redeploy
+      // wipes the ephemeral container disk), pull files back from Supabase
+      // Storage. Mirrors chat.ts so deploy is self-healing across restarts.
+      if (!(await workspaceExists(ws))) {
+        await restoreWorkspaceFromStorage(ws).catch(() => { /* non-fatal */ });
+      }
       const hasWorkspaceFiles = await workspaceExists(ws);
 
       if (hasWorkspaceFiles) {
