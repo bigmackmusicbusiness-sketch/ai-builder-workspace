@@ -106,12 +106,28 @@ function planPrompt(input: GenerateInput): string {
 
 // ── Music generation via MiniMax music-01 ────────────────────────────────────
 
+/** Try the same name+env fallback chain the chat-side getApiKey uses,
+ *  so music doesn't fail with "MINIMAX_API_KEY not found" when the vault
+ *  has the key under MINIMAX / MINIMAX_KEY / minimax.api_key instead. */
+const MINIMAX_KEY_NAMES = ['MINIMAX_API_KEY', 'MINIMAX', 'minimax.api_key', 'MINIMAX_KEY'];
+async function getMinimaxKey(tenantId: string): Promise<string> {
+  for (const name of MINIMAX_KEY_NAMES) {
+    try {
+      return await vaultGet({ name, env: 'dev', tenantId });
+    } catch { /* try next */ }
+  }
+  throw new Error(
+    `MiniMax API key not found in vault (tried ${MINIMAX_KEY_NAMES.join(', ')}). ` +
+    `Add it under Env & Secrets, then retry.`,
+  );
+}
+
 async function generateMp3Segment(opts: {
   prompt:     string;
   durationSec: number;
   tenantId:   string;
 }): Promise<Buffer> {
-  const apiKey = await vaultGet({ name: 'MINIMAX_API_KEY', env: 'dev', tenantId: opts.tenantId });
+  const apiKey = await getMinimaxKey(opts.tenantId);
   const res = await fetch('https://api.minimaxi.chat/v1/music_generation', {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
