@@ -51,6 +51,30 @@ services:
     labels:
       coolify.managed: "true"
       coolify.type: "application"
+      # ── Custom-domain catch-all ─────────────────────────────────────────────
+      # Required for the publish/static-export feature: when a user attaches
+      # their own Cloudflare-managed domain via the picker, CF proxies the
+      # request to api.40-160-3-10.sslip.io with the original Host header
+      # preserved. Traefik would normally 503 on the unknown host because
+      # only the platform's own host is bound to a router. These catch-all
+      # routers (priority=1, lower than Coolify's auto-generated specific
+      # Host() rule) accept ANY hostname and forward to the api container,
+      # where customHost.ts looks the host up and serves the deploy.
+      #
+      # CF's "Full" (non-strict) SSL mode accepts our default origin cert
+      # even when it doesn't match the visitor's hostname; visitors still
+      # see HTTPS at the edge.
+      traefik.enable: "true"
+      traefik.http.routers.abw-api-catchall-http.rule: "HostRegexp(`{any:.+}`)"
+      traefik.http.routers.abw-api-catchall-http.priority: "1"
+      traefik.http.routers.abw-api-catchall-http.entrypoints: "http"
+      traefik.http.routers.abw-api-catchall-http.service: "abw-api-catchall-svc"
+      traefik.http.routers.abw-api-catchall-https.rule: "HostRegexp(`{any:.+}`)"
+      traefik.http.routers.abw-api-catchall-https.priority: "1"
+      traefik.http.routers.abw-api-catchall-https.entrypoints: "https"
+      traefik.http.routers.abw-api-catchall-https.tls: "true"
+      traefik.http.routers.abw-api-catchall-https.service: "abw-api-catchall-svc"
+      traefik.http.services.abw-api-catchall-svc.loadbalancer.server.port: "3007"
 
   web:
     build:
