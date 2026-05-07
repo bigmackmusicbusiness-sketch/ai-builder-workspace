@@ -168,20 +168,51 @@ export async function runMigrations(): Promise<void> {
 
       // eslint-disable-next-line no-console
       console.log(`[migrations] applying ${m.id}…`);
+
+      // Two-phase apply so a permission-denied on the tracker INSERT
+      // doesn't spuriously mark a migration as failed when the actual
+      // DDL succeeded (we've seen 42501 on _migrations on this DB —
+      // service-role can run DDL but not INSERT into the renamed-broken
+      // table's namespace). Migration DDL is always idempotent
+      // (IF NOT EXISTS / IF EXISTS guards), so re-running on next boot
+      // is safe regardless of whether the tracker write lands.
+
+      // Phase 1 — DDL
+      let ddlError: { msg: string; code: string } | null = null;
       try {
         await sql.unsafe(m.sql);
-        await sql`INSERT INTO "_migrations" ("id") VALUES (${m.id})`;
+      } catch (err) {
+        ddlError = {
+          msg:  err instanceof Error ? err.message : String(err),
+          code: (err as { code?: string })?.code ?? '',
+        };
+      }
+      if (ddlError) {
+        // eslint-disable-next-line no-console
+        console.error(`[migrations] ✗ ${m.id} DDL FAILED (${ddlError.code}): ${ddlError.msg}`);
+        outcomes.push({ id: m.id, status: 'failed', errorCode: ddlError.code, errorMsg: ddlError.msg });
+        continue;
+      }
+
+      // Phase 2 — tracker INSERT (best-effort; permission denied is logged
+      // as a warning and the migration is still reported applied, since the
+      // DDL just succeeded)
+      try {
+        await sql`INSERT INTO "_migrations" ("id") VALUES (${m.id}) ON CONFLICT DO NOTHING`;
         // eslint-disable-next-line no-console
         console.log(`[migrations] ✓ ${m.id} applied`);
         outcomes.push({ id: m.id, status: 'applied' });
-      } catch (err) {
-        const msg  = err instanceof Error ? err.message : String(err);
-        const code = (err as { code?: string })?.code ?? '';
+      } catch (trackErr) {
+        const msg  = trackErr instanceof Error ? trackErr.message : String(trackErr);
+        const code = (trackErr as { code?: string })?.code ?? '';
         // eslint-disable-next-line no-console
-        console.error(`[migrations] ✗ ${m.id} FAILED (${code}): ${msg}`);
-        outcomes.push({ id: m.id, status: 'failed', errorCode: code, errorMsg: msg });
-        // Don't insert into _migrations on failure — next boot retries.
-        // Don't throw — let server start; defensive fallbacks in routes cover the gap.
+        console.warn(`[migrations] ✓ ${m.id} DDL applied — tracker INSERT skipped (${code}): ${msg}`);
+        outcomes.push({
+          id:        m.id,
+          status:    'applied',
+          errorCode: code,
+          errorMsg:  `DDL succeeded; tracker INSERT skipped (${msg}). Migration will re-run on next boot — DDL is idempotent.`,
+        });
       }
     }
     LAST_REPORT = { ranAt, outcomes };
