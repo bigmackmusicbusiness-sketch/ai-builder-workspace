@@ -90,19 +90,25 @@ function computeAssetKey(path: string, bytes: Uint8Array): string {
   return hash.digest('hex').slice(0, 32);
 }
 
-/** Get a per-deployment JWT for /pages/assets/* uploads. */
+/** Get a per-deployment JWT for /pages/assets/* uploads.
+ *  CF's upload-token endpoint returns either a plain string in `result`
+ *  or an object `{ jwt }` depending on API age. Handle both. */
 async function fetchUploadJwt(
   accountId: string,
   projectName: string,
   token: string,
 ): Promise<string> {
-  const result = await cfFetch<{ jwt?: string }>(
+  const result = await cfFetch<unknown>(
     `/accounts/${accountId}/pages/projects/${projectName}/upload-token`,
     token,
     { method: 'GET' },
   );
-  if (!result.jwt) throw new Error('CF Pages: upload-token endpoint returned no jwt');
-  return result.jwt;
+  if (typeof result === 'string') return result;
+  if (result && typeof result === 'object' && 'jwt' in result) {
+    const jwt = (result as { jwt?: unknown }).jwt;
+    if (typeof jwt === 'string') return jwt;
+  }
+  throw new Error(`CF Pages: upload-token endpoint returned unexpected shape: ${JSON.stringify(result).slice(0, 200)}`);
 }
 
 /** Ask CF which of these hashes it doesn't already have. */
@@ -148,7 +154,11 @@ async function uploadAssetBatch(
   // Read body once — may be JSON on success/managed errors, HTML on edge errors.
   const text = await res.text().catch(() => '');
   if (!res.ok) {
-    throw new Error(`CF Pages /assets/upload failed (${res.status}): ${text.slice(0, 300)}`);
+    // Pull just the visible error sentence(s) out of CF's HTML page if any.
+    const cleanLines = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    const cfRayMatch = text.match(/Cloudflare Ray ID: <strong>([^<]+)/);
+    const ray = cfRayMatch ? ` ray=${cfRayMatch[1]}` : '';
+    throw new Error(`CF Pages /assets/upload failed (${res.status})${ray}: ${cleanLines.slice(0, 600)}`);
   }
   let json: { success?: boolean; errors?: { message: string }[] };
   try { json = JSON.parse(text); } catch {
