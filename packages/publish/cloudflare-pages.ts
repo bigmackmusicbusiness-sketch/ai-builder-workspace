@@ -1,10 +1,27 @@
 // packages/publish/cloudflare-pages.ts — Cloudflare Pages deploy adapter.
-// Ensures the Pages project exists, then uploads files via the multipart deploy API.
-// Reuses bundleProject() from the API; no bundling logic is duplicated here.
+// Ensures the Pages project exists, then uploads files via Cloudflare's
+// 2-step Direct Upload API (the legacy single-multipart flow was retired
+// in 2024 — the deployment endpoint now requires a `manifest` field).
+//
+// Flow:
+//   1. ensurePagesProject() — create the project if not exists
+//   2. POST /pages/projects/<name>/upload-token  → JWT
+//   3. POST /pages/assets/check-missing with {hashes: [...]} (auth=JWT) → list of missing hashes
+//   4. POST /pages/assets/upload with batched payload of missing assets (auth=JWT)
+//   5. POST /accounts/<acct>/pages/projects/<name>/deployments multipart with `manifest` (auth=account token)
+//      The manifest is a JSON map of file path → 32-char hex hash key.
+//
+// Hash format: lowercase hex sha256(content + extension), truncated to 32 chars.
+// Files batched in groups of <= 5000 keys / <= 100 MiB per /pages/assets/upload call.
 
 import type { DeployResult, PublishAdapter } from './types';
+import { createHash } from 'node:crypto';
 
 const CF_API = 'https://api.cloudflare.com/client/v4';
+
+/** Per-batch limits for /pages/assets/upload (Cloudflare-imposed). */
+const MAX_BATCH_KEYS  = 5_000;
+const MAX_BATCH_BYTES = 100 * 1024 * 1024;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -62,9 +79,84 @@ export async function ensurePagesProject(
 
 // ── Deploy ────────────────────────────────────────────────────────────────────
 
+/** Compute a Cloudflare Pages asset key — lowercase hex SHA-256 of
+ *  (content || extension), truncated to 32 chars. Matches wrangler. */
+function computeAssetKey(path: string, bytes: Uint8Array): string {
+  const dot = path.lastIndexOf('.');
+  const ext = dot >= 0 ? path.slice(dot + 1).toLowerCase() : '';
+  const hash = createHash('sha256');
+  hash.update(bytes);
+  hash.update(ext);
+  return hash.digest('hex').slice(0, 32);
+}
+
+/** Get a per-deployment JWT for /pages/assets/* uploads. */
+async function fetchUploadJwt(
+  accountId: string,
+  projectName: string,
+  token: string,
+): Promise<string> {
+  const result = await cfFetch<{ jwt?: string }>(
+    `/accounts/${accountId}/pages/projects/${projectName}/upload-token`,
+    token,
+    { method: 'GET' },
+  );
+  if (!result.jwt) throw new Error('CF Pages: upload-token endpoint returned no jwt');
+  return result.jwt;
+}
+
+/** Ask CF which of these hashes it doesn't already have. */
+async function checkMissingHashes(
+  hashes: string[],
+  jwt: string,
+): Promise<string[]> {
+  const res = await fetch(`${CF_API}/pages/assets/check-missing`, {
+    method:  'POST',
+    headers: {
+      Authorization:  `Bearer ${jwt}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ hashes }),
+  });
+  const json = (await res.json()) as {
+    success: boolean;
+    result?: string[];
+    errors?: { message: string }[];
+  };
+  if (!res.ok || !json.success) {
+    const msg = json.errors?.[0]?.message ?? res.statusText;
+    throw new Error(`CF Pages check-missing failed (${res.status}): ${msg}`);
+  }
+  return json.result ?? hashes;
+}
+
+/** Upload a batch of assets. Each payload entry: { key, value (base64), metadata: { contentType } }. */
+async function uploadAssetBatch(
+  payload: Array<{ key: string; value: string; metadata: { contentType: string } }>,
+  jwt: string,
+): Promise<void> {
+  const res = await fetch(`${CF_API}/pages/assets/upload`, {
+    method:  'POST',
+    headers: {
+      Authorization:  `Bearer ${jwt}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ payload }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`CF Pages /assets/upload failed (${res.status}): ${text.slice(0, 300)}`);
+  }
+  const json = (await res.json()) as { success: boolean; errors?: { message: string }[] };
+  if (!json.success) {
+    const msg = json.errors?.[0]?.message ?? 'unknown';
+    throw new Error(`CF Pages /assets/upload error: ${msg}`);
+  }
+}
+
 /**
  * Push bundled assets to Cloudflare Pages using the Direct Upload API.
- * Each asset is appended as a separate multipart field named by its path.
+ * 2-step flow: hash + upload via JWT, then create deployment with manifest.
  */
 export async function deployToCFPages(
   projectSlug: string,
@@ -74,43 +166,68 @@ export async function deployToCFPages(
 ): Promise<DeployResult> {
   const t0 = Date.now();
 
-  // Step 1 — ensure the project exists
+  // 1. Ensure the project exists (or create it)
   const projectName = await ensurePagesProject(projectSlug, accountId, token);
 
-  // Step 2 — build FormData with every asset
-  const form = new FormData();
+  // 2. Build manifest: path → 32-char hex hash. Path always starts with '/'.
   const manifest: Record<string, string> = {};
-
+  const byHash = new Map<string, { path: string; bytes: Uint8Array }>();
   for (const [path, bytes] of assets.entries()) {
-    // Cloudflare Pages expects a trailing-slash-free, leading-slash-present path.
-    const key = path.startsWith('/') ? path : `/${path}`;
-    // Copy into a plain ArrayBuffer so TS is satisfied with BlobPart typing
-    const buf  = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-    const blob = new Blob([buf], { type: mimeFromPath(path) });
-    form.append(key, blob, key.slice(1)); // field name without leading /
-    manifest[key] = key;
+    const normPath = path.startsWith('/') ? path : `/${path}`;
+    const key = computeAssetKey(normPath, bytes);
+    manifest[normPath] = key;
+    if (!byHash.has(key)) byHash.set(key, { path: normPath, bytes });
   }
 
-  // Embed the manifest so CF knows which files belong to this deployment
-  form.append(
-    '/_headers',
-    new Blob(['# Auto-generated by AI Builder Workspace\n'], { type: 'text/plain' }),
-    '_headers',
-  );
+  // 3. Get a per-deployment JWT (for the asset bulk-upload endpoints)
+  const jwt = await fetchUploadJwt(accountId, projectName, token);
 
-  // Step 3 — POST the deployment
+  // 4. Ask CF which hashes are missing — only upload those
+  const allHashes = [...byHash.keys()];
+  const missing = allHashes.length === 0 ? [] : await checkMissingHashes(allHashes, jwt);
+
+  // 5. Batch + upload missing assets
+  let batch: Array<{ key: string; value: string; metadata: { contentType: string } }> = [];
+  let batchBytes = 0;
+  for (const hash of missing) {
+    const entry = byHash.get(hash);
+    if (!entry) continue;
+    const { path, bytes } = entry;
+    const b64 = Buffer.from(bytes).toString('base64');
+    const item = {
+      key:      hash,
+      value:    b64,
+      metadata: { contentType: mimeFromPath(path) },
+    };
+    const itemBytes = b64.length;
+    if (batch.length >= MAX_BATCH_KEYS || batchBytes + itemBytes > MAX_BATCH_BYTES) {
+      await uploadAssetBatch(batch, jwt);
+      batch = [];
+      batchBytes = 0;
+    }
+    batch.push(item);
+    batchBytes += itemBytes;
+  }
+  if (batch.length > 0) await uploadAssetBatch(batch, jwt);
+
+  // 6. Create the deployment with the manifest. multipart/form-data; the
+  //    manifest JSON travels in a single field of the same name. CF then
+  //    looks up each path's hash against the assets it has on file.
+  const form = new FormData();
+  form.append('manifest', JSON.stringify(manifest));
+
   const res = await fetch(
     `${CF_API}/accounts/${accountId}/pages/projects/${projectName}/deployments`,
     {
-      method: 'POST',
+      method:  'POST',
       headers: { Authorization: `Bearer ${token}` },
-      body: form,
+      body:    form,
     },
   );
 
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
-    throw new Error(`CF Pages deploy failed (${res.status}): ${text.slice(0, 300)}`);
+    throw new Error(`CF Pages deploy failed (${res.status}): ${text.slice(0, 400)}`);
   }
 
   const json = (await res.json()) as {
@@ -124,10 +241,7 @@ export async function deployToCFPages(
     throw new Error(`CF Pages deploy error: ${msg}`);
   }
 
-  const deployUrl =
-    json.result?.url ??
-    `https://${projectName}.pages.dev`;
-
+  const deployUrl = json.result?.url ?? `https://${projectName}.pages.dev`;
   return {
     url:          deployUrl,
     durationMs:   Date.now() - t0,
