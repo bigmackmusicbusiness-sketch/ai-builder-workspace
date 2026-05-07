@@ -418,29 +418,44 @@ export async function executeToolCall(
           };
         }
 
-        // Hard-gate planning-document writes when no index.html exists yet.
-        // The model has been observed writing SPEC.md / README.md / plan.md
-        // first and exhausting iteration budget before getting to actual
-        // code, leaving the user with a project that won't render. Reject
-        // those writes early so the agent's next tool call has to be the
-        // site itself. Once index.html exists, planning docs are fine.
+        // Hard-gate planning-document writes until a NON-STUB index.html
+        // exists. The model has been observed writing SPEC.md / README.md
+        // / plan.md first and exhausting iteration budget before producing
+        // actual code, leaving the user with a project that won't render.
+        // Atlas Analytics caught the previous-version bug: an index.html
+        // existed (the auto-scaffold stub), the gate let SPEC.md through,
+        // and the agent stopped after that one write. Tighten: require an
+        // index.html that's substantially BIGGER than a typical scaffold
+        // (>= 2 KB) — stubs are <1 KB so this comfortably distinguishes a
+        // real first-pass index.html.
+        const STUB_INDEX_BYTES = 2048;
         const isPlanningDoc = /^(spec|readme|plan|todo|roadmap|notes?)\.md$/i.test(
           path.split(/[\\/]/).pop() ?? '',
         );
         if (isPlanningDoc) {
           const existing = await listWorkspaceFiles(ws);
-          const hasEntry = existing.some((p) =>
-            /\/(index\.html?|main\.tsx|main\.jsx)$/i.test(p),
-          );
-          if (!hasEntry) {
+          let hasRealEntry = false;
+          for (const p of existing) {
+            if (!/\/(index\.html?|main\.tsx|main\.jsx)$/i.test(p)) continue;
+            // Probe size: the scaffold stub is ~500 bytes; a real first
+            // home page is typically 5-15 KB. 2 KB threshold is generous.
+            const txt = await readWorkspaceFile(ws, p);
+            if (txt && txt.length >= STUB_INDEX_BYTES) {
+              hasRealEntry = true;
+              break;
+            }
+          }
+          if (!hasRealEntry) {
             return {
               ok: false,
-              summary: `Refused to write ${path} — no index.html yet`,
+              summary: `Refused to write ${path} — no real index.html yet`,
               result:
                 `Refused: ${path} is a planning doc but the workspace has no ` +
-                `index.html or src/main.tsx yet. Per the agent rules, the FIRST ` +
-                `file you write must be index.html (or src/main.tsx for a Vite SPA). ` +
-                `Write that now, then come back to ${path} if you still need it.`,
+                `real index.html (an auto-scaffold stub doesn't count). The FIRST ` +
+                `file you write must be a fully-fleshed index.html (or src/main.tsx ` +
+                `for a Vite SPA). Write that now, then come back to ${path} if you ` +
+                `still need it. Plans and outlines belong in your head, not in the ` +
+                `workspace — the user sees orphan .md files in the IDE.`,
             };
           }
         }
