@@ -140,13 +140,34 @@ async function generateMp3Segment(opts: {
   });
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
-    throw new Error(`MiniMax music-01 HTTP ${res.status}: ${detail}`);
+    throw new Error(`MiniMax music-01 HTTP ${res.status}: ${detail.slice(0, 300)}`);
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const json = await res.json() as any;
-  const b64: string = json?.['data']?.['audio'] ?? json?.['audio'];
-  if (!b64) throw new Error('MiniMax music-01: no audio in response');
-  return Buffer.from(b64, 'base64');
+
+  // Try multiple response shapes — MiniMax has shipped at least three:
+  //   { data: { audio: <base64> } }
+  //   { audio: <base64> }
+  //   { data: { audio: <hex string> } }   ← newer; needs hex decode
+  //   { trace_id, base_resp: { status_code, status_msg }, audio }
+  // If all miss, surface the keys + a status_msg if present so the bug is
+  // diagnosable without code changes.
+  const b64Or  = json?.['data']?.['audio'] ?? json?.['audio'];
+  if (b64Or && typeof b64Or === 'string') {
+    // Heuristic: hex strings only contain [0-9a-f]; base64 has +, /, =, A-Z
+    const looksHex = /^[0-9a-fA-F]+$/.test(b64Or) && b64Or.length % 2 === 0;
+    return Buffer.from(b64Or, looksHex ? 'hex' : 'base64');
+  }
+  const statusMsg  = json?.['base_resp']?.['status_msg'];
+  const statusCode = json?.['base_resp']?.['status_code'];
+  const trace      = json?.['trace_id'];
+  const keys       = Object.keys(json ?? {}).join(',');
+  throw new Error(
+    `MiniMax music-01: no audio in response. ` +
+    (statusCode != null ? `status=${statusCode} msg="${statusMsg}" ` : '') +
+    (trace ? `trace=${trace} ` : '') +
+    `keys=[${keys}]`,
+  );
 }
 
 // Cost: 0.04 cents per second of audio
