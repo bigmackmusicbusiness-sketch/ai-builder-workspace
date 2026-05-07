@@ -472,12 +472,15 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
             && typeof lastToolMsg.content === 'string'
             && /^Refused:|^Refused —/m.test(lastToolMsg.content);
 
-          // Detect "narration without action" when a build plan was supplied:
-          // if planAvailable AND no write_file ever fired AND we still have
-          // iterations left, the model has read the plan or listed files but
-          // decided it's "done" without producing pages. Force a hard nudge.
+          // Detect "narration without action" — the model read files / listed
+          // them and decided it's "done" without producing any pages. Drop the
+          // planAvailable requirement that used to gate this: the bug also
+          // bites when the planner subagent fails (plan_failed event) but the
+          // user prompt clearly asked to build something. As long as tools are
+          // active and the agent never called write_file, force a hard nudge
+          // so the user gets a partial site instead of an empty workspace.
           let buildIncomplete = false;
-          if (!lastWasRefusal && toolsActive && planAvailable && iter < MAX_ITERATIONS - 1) {
+          if (!lastWasRefusal && toolsActive && iter < MAX_ITERATIONS - 1) {
             const everWrote = history.some((m) => {
               if (m.role !== 'assistant') return false;
               const calls = (m as { tool_calls?: Array<{ function?: { name?: string } }> }).tool_calls;
