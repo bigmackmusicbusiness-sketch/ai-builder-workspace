@@ -512,7 +512,7 @@ html, body, #root {
   content: '';
   width: 5px; height: 5px;
   border-radius: 50%;
-  background: var(--accent-base, #8b5cf6);
+  background: var(--accent-base, #1b8e8c);
   animation: abw-think-pulse 900ms ease-in-out infinite;
 }
 @keyframes abw-think-pulse {
@@ -952,7 +952,7 @@ html, body, #root {
   overflow: hidden;
 }
 
-/* Brand panel — left, ambient violet wash */
+/* Brand panel — left, ambient teal wash to echo the SignalPoint mark */
 .abw-login__brand-panel {
   position: relative;
   background: linear-gradient(180deg, #0c0c12 0%, #08080b 100%);
@@ -967,8 +967,8 @@ html, body, #root {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(900px circle at 12% 18%, rgba(139, 92, 246, 0.20), transparent 55%),
-    radial-gradient(700px circle at 80% 110%, rgba(139, 92, 246, 0.10), transparent 55%);
+    radial-gradient(900px circle at 12% 18%, rgba(27, 142, 140, 0.22), transparent 55%),
+    radial-gradient(700px circle at 80% 110%, rgba(27, 142, 140, 0.12), transparent 55%);
   pointer-events: none;
 }
 .abw-login__brand-content {
@@ -1703,7 +1703,7 @@ html, body, #root {
 /* Dark-friendly env badge tints (override the bright light-mode bgs from base) */
 .abw-topbar__env-badge--dev        { background: rgba(96, 165, 250, 0.12); color: #93c5fd; border-color: rgba(96, 165, 250, 0.30); }
 .abw-topbar__env-badge--staging    { background: rgba(217, 119, 6, 0.14);  color: #fbbf24; border-color: rgba(217, 119, 6, 0.32); }
-.abw-topbar__env-badge--preview    { background: rgba(139, 92, 246, 0.14); color: #c4b5fd; border-color: rgba(139, 92, 246, 0.32); }
+.abw-topbar__env-badge--preview    { background: rgba(27, 142, 140, 0.18); color: #5bc7c5; border-color: rgba(27, 142, 140, 0.36); }
 .abw-topbar__env-badge--production { background: rgba(220, 38, 38, 0.14);  color: #fca5a5; border-color: rgba(220, 38, 38, 0.32); }
 
 /* Active nav pill — calmer on dark */

@@ -30,17 +30,19 @@
   --neutral-900: #18181b;
   --neutral-950: #09090b;
 
-  /* Accent (violet — one accent only) */
-  --accent-50:  #f5f3ff;
-  --accent-100: #ede9fe;
-  --accent-200: #ddd6fe;
-  --accent-300: #c4b5fd;
-  --accent-400: #a78bfa;
-  --accent-500: #8b5cf6;
-  --accent-600: #7c3aed;
-  --accent-700: #6d28d9;
-  --accent-800: #5b21b6;
-  --accent-900: #4c1d95;
+  /* Accent — SignalPoint teal. Sampled off the brand mark (the
+   * mid-stroke teal sits around #1B8E8C). Scale extends symmetrically
+   * for tints/shades. Replaces the previous Tailwind violet-* scale. */
+  --accent-50:  #ecfafa;
+  --accent-100: #c9f0ef;
+  --accent-200: #97dedc;
+  --accent-300: #5bc7c5;
+  --accent-400: #29aba9;
+  --accent-500: #1b8e8c;
+  --accent-600: #137574;
+  --accent-700: #0e5b5b;
+  --accent-800: #0b4748;
+  --accent-900: #073535;
 
   /* Semantic */
   --color-success:        #16a34a;
