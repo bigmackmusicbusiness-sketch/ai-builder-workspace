@@ -22,6 +22,7 @@ import { Toggle } from '@abw/ui';
 import { MarkdownContent } from './MarkdownContent';
 import { ApprovalsQueue } from './ApprovalsQueue';
 import { StatusPill } from './StatusPill';
+import { PlatformMediaPicker, type LibraryAsset } from './PlatformMediaPicker';
 
 const API_BASE = import.meta.env['VITE_API_URL'] ?? 'http://localhost:3007';
 
@@ -172,6 +173,59 @@ function useAutoGrow(ref: React.RefObject<HTMLTextAreaElement>, value: string, m
   }, [ref, value, maxHeight]);
 }
 
+// ── Local upload tab (used inside the paperclip popover) ──────────────────────
+//
+// Big drop-zone CTA + a click-to-pick fallback. Drag/drop uses the file
+// list directly. Click delegates to the hidden <input type=file> in the
+// parent form.
+function LocalUploadTab({
+  onPick,
+  onFiles,
+}: {
+  onPick:  () => void;
+  onFiles: (files: FileList | null) => void;
+}) {
+  const [dragOver, setDragOver] = useState(false);
+  return (
+    <div
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragOver(false);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          onFiles(e.dataTransfer.files);
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      onClick={onPick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPick(); }
+      }}
+      style={{
+        margin: 'var(--space-2)',
+        padding: 'var(--space-4)',
+        border: `2px dashed ${dragOver ? 'var(--accent-500)' : 'var(--border-base)'}`,
+        borderRadius: 'var(--radius-card)',
+        background: dragOver ? 'var(--accent-50)' : 'var(--bg-subtle)',
+        textAlign: 'center',
+        cursor: 'pointer',
+        transition: 'background var(--duration-fast), border-color var(--duration-fast)',
+      }}
+      aria-label="Drop files here or click to browse"
+    >
+      <div style={{ fontSize: '1.5rem', marginBottom: 'var(--space-1)' }} aria-hidden>📤</div>
+      <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+        Drop files here or click to browse
+      </div>
+      <div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', marginTop: 4 }}>
+        Images, video, audio, or PDF · up to 5 files
+      </div>
+    </div>
+  );
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export function ChatThread() {
@@ -189,6 +243,10 @@ export function ChatThread() {
   const [sending, setSending]         = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [expanded, setExpanded]       = useState(false);
+  /** Paperclip popover open state. When true, render the 2-tab Local|Library picker.
+   *  When false, the paperclip is a plain icon. */
+  const [pickerOpen, setPickerOpen]   = useState(false);
+  const [pickerTab, setPickerTab]     = useState<'local' | 'library'>('local');
   const bottomRef                     = useRef<HTMLDivElement>(null);
   const textareaRef                   = useRef<HTMLTextAreaElement>(null);
   const expandedTextareaRef           = useRef<HTMLTextAreaElement>(null);
@@ -292,6 +350,29 @@ export function ChatThread() {
       return prev.filter((_, i) => i !== idx);
     });
   }
+
+  /** Pick an existing asset from the Library tab — synthesize a minimal File-like
+   *  attachment so the rest of the send pipeline doesn't have to know the
+   *  difference. The chat backend already accepts attachments by `assetId`, so
+   *  we don't re-upload — uploadedUrl is set up-front to skip the upload step. */
+  const addLibraryAsset = useCallback((asset: LibraryAsset) => {
+    if (attachments.length >= 5) return;
+    // Minimal File stand-in. The send pipeline only reads .name and .type from
+    // it (plus passes the buffer to /upload, which we skip via uploadedUrl).
+    const stub = new File([new Blob()], asset.name, { type: asset.mimeType });
+    const att: Attachment = {
+      file:        stub,
+      previewUrl:  asset.url,
+      isImage:     asset.mimeType.startsWith('image/'),
+      isLogo:      false,
+      colors:      [],
+      uploading:   false,
+      uploadedUrl: asset.url,
+      assetId:     asset.id,
+    };
+    setAttachments((prev) => [...prev, att]);
+    setPickerOpen(false);
+  }, [attachments.length]);
 
   // ── Upload attachments to API before sending ───────────────────────────────
 
@@ -683,36 +764,118 @@ export function ChatThread() {
 
       {/* Inline input row */}
       <form className="abw-chat__input-row" onSubmit={onSubmit} aria-label="Send message">
-        {/* Hidden file input */}
+        {/* Hidden file input — Local tab triggers it programmatically */}
         <input
           ref={fileInputRef}
           type="file"
           multiple
-          accept="image/*,application/pdf,.txt,.md,.csv,.json"
+          accept="image/*,video/*,audio/*,application/pdf,.txt,.md,.csv,.json"
           style={{ display: 'none' }}
-          onChange={(e) => void handleFiles(e.target.files)}
+          onChange={(e) => {
+            void handleFiles(e.target.files);
+            setPickerOpen(false);
+          }}
           aria-hidden
         />
 
-        {/* Paperclip */}
-        <button
-          type="button"
-          aria-label="Attach file"
-          title="Attach image or file"
-          disabled={isRunning || attachments.length >= 5}
-          onClick={() => fileInputRef.current?.click()}
-          style={{
-            background: 'none', border: 'none',
-            cursor: isRunning || attachments.length >= 5 ? 'default' : 'pointer',
-            color: attachments.length > 0 ? 'var(--accent-500)' : 'var(--text-tertiary)',
-            opacity: isRunning || attachments.length >= 5 ? 0.4 : 1,
-            padding: '0 var(--space-1)', fontSize: '1rem', lineHeight: 1,
-            flexShrink: 0,
-            transition: 'color var(--duration-fast) var(--ease-standard)',
-          }}
-        >
-          📎
-        </button>
+        {/* Paperclip + popover wrapper (relative for absolute popover positioning) */}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <button
+            type="button"
+            aria-label="Attach file"
+            aria-expanded={pickerOpen}
+            aria-haspopup="dialog"
+            title="Attach — local file or pick from library"
+            disabled={isRunning || attachments.length >= 5}
+            onClick={() => setPickerOpen((v) => !v)}
+            style={{
+              background: 'none', border: 'none',
+              cursor: isRunning || attachments.length >= 5 ? 'default' : 'pointer',
+              color: attachments.length > 0 ? 'var(--accent-500)' : 'var(--text-tertiary)',
+              opacity: isRunning || attachments.length >= 5 ? 0.4 : 1,
+              padding: '0 var(--space-1)', fontSize: '1rem', lineHeight: 1,
+              transition: 'color var(--duration-fast) var(--ease-standard)',
+            }}
+          >
+            📎
+          </button>
+
+          {pickerOpen && (
+            <div
+              role="dialog"
+              aria-label="Attach media"
+              style={{
+                position:     'absolute',
+                bottom:       'calc(100% + 4px)',
+                left:         0,
+                width:        420,
+                background:   'var(--surface-base)',
+                border:       '1px solid var(--border-base)',
+                borderRadius: 'var(--radius-card)',
+                boxShadow:    'var(--shadow-overlay)',
+                zIndex:       40,
+                overflow:     'hidden',
+              }}
+            >
+              {/* Tab bar */}
+              <div style={{
+                display: 'flex', borderBottom: '1px solid var(--border-base)',
+              }} role="tablist">
+                {(['local', 'library'] as const).map((tab) => {
+                  const active = pickerTab === tab;
+                  return (
+                    <button
+                      key={tab}
+                      role="tab"
+                      type="button"
+                      aria-selected={active}
+                      onClick={() => setPickerTab(tab)}
+                      style={{
+                        flex: 1,
+                        padding: 'var(--space-2)',
+                        background: active ? 'var(--surface-base)' : 'var(--bg-subtle)',
+                        border: 'none',
+                        borderBottom: active ? '2px solid var(--accent-500)' : '2px solid transparent',
+                        color: active ? 'var(--accent-600)' : 'var(--text-secondary)',
+                        cursor: 'pointer', fontWeight: active ? 600 : 500,
+                        fontSize: '0.75rem',
+                        textTransform: 'capitalize',
+                      }}
+                    >
+                      {tab === 'local' ? 'Local file' : 'Library'}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setPickerOpen(false)}
+                  aria-label="Close attach panel"
+                  style={{
+                    background: 'none', border: 'none', padding: '0 var(--space-2)',
+                    cursor: 'pointer', color: 'var(--text-tertiary)', fontSize: '0.875rem',
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Tab body */}
+              {pickerTab === 'local' ? (
+                <LocalUploadTab
+                  onPick={() => fileInputRef.current?.click()}
+                  onFiles={(files) => {
+                    void handleFiles(files);
+                    setPickerOpen(false);
+                  }}
+                />
+              ) : (
+                <div style={{ padding: 'var(--space-2)' }}>
+                  <PlatformMediaPicker onPick={addLibraryAsset} />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         <textarea
           ref={textareaRef}

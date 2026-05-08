@@ -7,8 +7,8 @@ import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 import { authMiddleware, type AuthContext } from '../security/authz';
 import { getDb } from '../db/client';
-import { assets } from '@abw/db';
-import { eq, and } from 'drizzle-orm';
+import { assets, projects } from '@abw/db';
+import { eq, and, or, like } from 'drizzle-orm';
 import { env } from '../config/env';
 
 declare module 'fastify' {
@@ -140,27 +140,107 @@ export async function assetsRoutes(app: FastifyInstance): Promise<void> {
 
   // ── List ───────────────────────────────────────────────────────────────────
   /**
-   * GET /api/assets?projectId=
-   * Returns: { assets: [{ id, name, mimeType, size, url, uploadedAt }] }
+   * GET /api/assets
+   *
+   * Query parameters:
+   *   - `projectId` (uuid, optional)  — filter to a single project's assets.
+   *   - `scope`     ('project' | 'tenant', default 'project')
+   *       'tenant' returns every asset in the tenant regardless of which project
+   *       it's attached to. Used by the chat composer's Platform Media picker
+   *       (cross-project asset reuse).
+   *   - `kinds`     (csv, optional)
+   *       Comma-separated MIME-prefix filter. Accepted values:
+   *         image, video, audio, pdf
+   *       Anything else is silently dropped. No `kinds` = no filter (all kinds).
+   *       PDF maps to the literal `application/pdf` MIME, not a prefix; the
+   *       others map to `<kind>/*` prefix matches.
+   *
+   * Either `projectId` OR `scope=tenant` is required so callers can't
+   * accidentally pull every tenant's asset surface (auth still scopes per-tenant
+   * but we want intent to be explicit).
+   *
+   * Response shape:
+   *   {
+   *     assets: [{
+   *       id, name, mimeType, size, url, uploadedAt,
+   *       projectId, projectName  // null projectId means "tenant-scoped, no project link"
+   *     }]
+   *   }
    */
-  app.get<{ Querystring: { projectId?: string } }>('/api/assets', async (req, reply) => {
+  app.get<{ Querystring: { projectId?: string; scope?: string; kinds?: string } }>('/api/assets', async (req, reply) => {
     const ctx = req.authCtx!;
-    const { projectId } = req.query;
-    if (!projectId) return reply.status(400).send({ error: 'projectId is required' });
+    const { projectId, scope = 'project', kinds } = req.query;
 
-    const db   = getDb();
-    const rows = await db.select()
+    if (scope !== 'project' && scope !== 'tenant') {
+      return reply.status(400).send({ error: `scope must be 'project' or 'tenant'` });
+    }
+    if (scope === 'project' && !projectId) {
+      return reply.status(400).send({ error: 'projectId is required when scope=project' });
+    }
+
+    // Parse and validate kinds filter. Drop unknown values silently to avoid
+    // accidentally returning an empty list when the SPA sends a future kind
+    // we don't recognise yet (forwards-compat).
+    const requestedKinds = (kinds ?? '')
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+      .filter((k): k is 'image' | 'video' | 'audio' | 'pdf' =>
+        k === 'image' || k === 'video' || k === 'audio' || k === 'pdf');
+
+    const db = getDb();
+
+    // Build where clauses defensively — the assets schema doesn't have a
+    // mimeType-prefix index, but the tenant scope keeps the row count
+    // bounded and Postgres handles the LIKEs fast enough for this use.
+    const tenantClause = eq(assets.tenantId, ctx.tenantId);
+    const projectClause = scope === 'project' && projectId
+      ? eq(assets.projectId, projectId)
+      : undefined;
+
+    const kindClauses = requestedKinds.length > 0
+      ? requestedKinds.map((k) =>
+          k === 'pdf' ? eq(assets.mimeType, 'application/pdf') : like(assets.mimeType, `${k}/%`),
+        )
+      : [];
+    const kindClause = kindClauses.length > 0 ? or(...kindClauses) : undefined;
+
+    const where = and(
+      tenantClause,
+      ...(projectClause ? [projectClause] : []),
+      ...(kindClause ? [kindClause] : []),
+    );
+
+    // LEFT JOIN to projects so tenant-scoped (projectId NULL) assets still
+    // come back with a friendly null projectName. The picker groups by
+    // projectName when it's set, and dumps null-project rows into a
+    // "Tenant library" bucket.
+    const rows = await db
+      .select({
+        id:           assets.id,
+        name:         assets.name,
+        mimeType:     assets.mimeType,
+        size:         assets.size,
+        publicUrl:    assets.publicUrl,
+        createdAt:    assets.createdAt,
+        projectId:    assets.projectId,
+        projectName:  projects.name,
+        projectSlug:  projects.slug,
+      })
       .from(assets)
-      .where(and(eq(assets.projectId, projectId), eq(assets.tenantId, ctx.tenantId)));
+      .leftJoin(projects, eq(projects.id, assets.projectId))
+      .where(where);
 
     return {
       assets: rows.map((r) => ({
-        id:         r.id,
-        name:       r.name,
-        mimeType:   r.mimeType,
-        size:       r.size,
-        url:        r.publicUrl ?? '',
-        uploadedAt: r.createdAt?.toISOString() ?? new Date().toISOString(),
+        id:          r.id,
+        name:        r.name,
+        mimeType:    r.mimeType,
+        size:        r.size,
+        url:         r.publicUrl ?? '',
+        uploadedAt:  r.createdAt?.toISOString() ?? new Date().toISOString(),
+        projectId:   r.projectId,
+        projectName: r.projectName,
+        projectSlug: r.projectSlug,
       })),
     };
   });
