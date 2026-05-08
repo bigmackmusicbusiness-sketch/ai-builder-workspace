@@ -33,11 +33,37 @@ html, body, #root {
 .abw-shell--browse .abw-shell__main {
   /* Allow scrolling inside browse routes (dashboard, templates, settings) */
   overflow-y: auto;
-  /* Reserve the scrollbar gutter at the right edge of the viewport so it
-   * always sits flush against the screen edge instead of floating in the
-   * middle when content is narrower than the viewport. `stable` keeps the
-   * gutter even when no scroll is needed (no layout jump on scroll-in). */
-  scrollbar-gutter: stable;
+}
+/* Custom thin scrollbar flush to the right edge — no Windows-default
+ * gutter padding around the thumb. Webkit (Chrome/Edge/Safari) takes the
+ * three pseudo-element rules; Firefox falls back to scrollbar-color and
+ * scrollbar-width. Both end up with a slim teal-tinted bar at the very
+ * right of .abw-shell__main, no margin to its right. */
+.abw-shell--browse .abw-shell__main {
+  scrollbar-width: thin;
+  scrollbar-color: var(--neutral-600) transparent;
+}
+.abw-shell--browse .abw-shell__main::-webkit-scrollbar {
+  width: 10px;
+  background: transparent;
+}
+.abw-shell--browse .abw-shell__main::-webkit-scrollbar-thumb {
+  background: var(--neutral-700);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.abw-shell--browse .abw-shell__main::-webkit-scrollbar-thumb:hover {
+  background: var(--neutral-500);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+.abw-shell--browse .abw-shell__main::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* Hide the up/down arrow buttons that Windows native scrollbar adds */
+.abw-shell--browse .abw-shell__main::-webkit-scrollbar-button {
+  display: none;
 }
 
 /* Top bar spans full width */
