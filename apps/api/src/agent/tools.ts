@@ -1028,13 +1028,19 @@ export async function executeToolCall(
 // just handles the design (Huashu) case.
 
 import { designRunHuashuToolDefinition } from './tools/design';
-import { HIGGSFIELD_TOOL_DEFINITIONS } from './tools/higgsfield';
+// HIGGSFIELD_TOOL_DEFINITIONS is intentionally NOT imported here. The
+// chat-side toggle was removed in the 2026-05 internal-live update —
+// we never confirmed an end-to-end successful gen against Higgsfield
+// during smoke + bug-test runs, so the agent no longer surfaces those
+// tools regardless of any flag. The provider files stay on disk
+// because lib/video/orchestrator.ts still imports from them; pulling
+// them out of the agent tool catalogue is enough to silence the
+// chat-side surface without breaking the dedicated /video screen.
 import { VIDEO_EDIT_TOOL_DEFINITIONS } from './tools/video-edit';
 import { REPLICATE_TOOL_DEFINITIONS, executeReplicateVideo } from './tools/replicate';
 
 export interface GetToolsOpts {
   designSkillsEnabled?: boolean;
-  higgsfieldEnabled?:   boolean;
   /** When the user is on the video editor screen, expose timeline ops. */
   videoEditEnabled?:    boolean;
   /** Replicate video generation. Gated by REPLICATE_API_TOKEN in vault. */
@@ -1044,7 +1050,6 @@ export interface GetToolsOpts {
 export function getAgentTools(opts: GetToolsOpts = {}): ToolDefinition[] {
   const tools: ToolDefinition[] = [...AGENT_TOOLS];
   if (opts.designSkillsEnabled) tools.push(designRunHuashuToolDefinition as ToolDefinition);
-  if (opts.higgsfieldEnabled)   tools.push(...HIGGSFIELD_TOOL_DEFINITIONS);
   if (opts.videoEditEnabled)    tools.push(...VIDEO_EDIT_TOOL_DEFINITIONS);
   if (opts.replicateEnabled)    tools.push(...REPLICATE_TOOL_DEFINITIONS);
   return tools;

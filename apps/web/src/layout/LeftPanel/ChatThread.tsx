@@ -183,7 +183,6 @@ export function ChatThread() {
     activeRun,
     selectedProvider, selectedModel,
     designSkillsEnabled, setDesignSkillsEnabled,
-    higgsfieldEnabled,   setHiggsfieldEnabled,
     replicateEnabled,    setReplicateEnabled,
   } = useRunStore();
   const [draft, setDraft]             = useState('');
@@ -383,7 +382,6 @@ export function ChatThread() {
           enableTools:         !!currentProject,
           projectEnv:          currentProject?.env ?? 'dev',
           designSkillsEnabled,
-          higgsfieldEnabled,
           replicateEnabled,
           ...(chatAttachments.length > 0 ? { attachments: chatAttachments } : {}),
         }),
@@ -658,20 +656,6 @@ export function ChatThread() {
         />
         <Toggle
           size="sm"
-          checked={higgsfieldEnabled}
-          onChange={setHiggsfieldEnabled}
-          ariaLabel="Toggle Higgsfield premium image/video generation"
-          label={
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              <span aria-hidden style={{ fontSize: '0.75rem', opacity: higgsfieldEnabled ? 1 : 0.55 }}>🎬</span>
-              <span style={{ fontSize: '0.75rem', color: higgsfieldEnabled ? 'var(--accent-600)' : 'var(--text-secondary)' }}>
-                Higgsfield
-              </span>
-            </span>
-          }
-        />
-        <Toggle
-          size="sm"
           checked={replicateEnabled}
           onChange={setReplicateEnabled}
           ariaLabel="Toggle Replicate video generation"
@@ -684,12 +668,12 @@ export function ChatThread() {
             </span>
           }
         />
-        {(designSkillsEnabled || higgsfieldEnabled || replicateEnabled) && (
+        {(designSkillsEnabled || replicateEnabled) && (
           <span
             style={{ fontSize: '0.625rem', color: 'var(--text-tertiary)', marginLeft: 'auto' }}
             title="Enabled capabilities consume credits or run extra tooling"
           >
-            {(higgsfieldEnabled || replicateEnabled) ? '⚡ uses credits' : ''}
+            {replicateEnabled ? '⚡ uses credits' : ''}
           </span>
         )}
       </div>

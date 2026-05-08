@@ -32,17 +32,22 @@ interface RunState {
   designSkillsEnabled: boolean;
   setDesignSkillsEnabled: (v: boolean) => void;
 
-  /** Higgsfield premium gen toggle — COST CONTROL. When OFF, the agent has no access
-   *  to Higgsfield image/video tools (which consume the user's paid credits). When ON,
-   *  the agent can call Higgsfield. Off by default. Dedicated screens (/video, music
-   *  studio) bypass this flag — the toggle gates the chat agent surface only. */
-  higgsfieldEnabled: boolean;
-  setHiggsfieldEnabled: (v: boolean) => void;
-
-  /** Replicate video gen toggle (curated cost-effective models). Off by default.
-   *  Same gating model as Higgsfield. Requires REPLICATE_API_TOKEN in vault. */
+  /** Replicate gen toggle (curated cost-effective models — video gen + Ideogram inpaint
+   *  for Ads Studio AI text edit). Off by default. Requires REPLICATE_API_TOKEN in vault.
+   *
+   *  Higgsfield was removed from the active surfaces in the 2026-05 internal-live
+   *  update — the provider files stay on disk (orchestrator imports them) but the
+   *  chat composer no longer offers a toggle and the agent tool registry no
+   *  longer registers higgsfield_* tools. Dedicated /video screen still works. */
   replicateEnabled: boolean;
   setReplicateEnabled: (v: boolean) => void;
+
+  /** AI text-edit toggle (gates Replicate Ideogram v2 inpainting in the Ads
+   *  Studio image editor). Off by default — same opt-in pattern as the
+   *  Replicate video toggle, since each call costs ~$0.08. Manual canvas
+   *  text editing is always available regardless of this flag. */
+  aiEditEnabled: boolean;
+  setAiEditEnabled: (v: boolean) => void;
 
   activeRun: ActiveRun | null;
   setActiveRun: (run: ActiveRun | null) => void;
@@ -73,11 +78,11 @@ export const useRunStore = create<RunState>()(
       designSkillsEnabled: false,
       setDesignSkillsEnabled: (v: boolean) => set({ designSkillsEnabled: v }),
 
-      higgsfieldEnabled: false,
-      setHiggsfieldEnabled: (v: boolean) => set({ higgsfieldEnabled: v }),
-
       replicateEnabled: false,
       setReplicateEnabled: (v: boolean) => set({ replicateEnabled: v }),
+
+      aiEditEnabled: false,
+      setAiEditEnabled: (v: boolean) => set({ aiEditEnabled: v }),
 
       activeRun: null,
       setActiveRun: (run: ActiveRun | null) => set({ activeRun: run }),
@@ -124,7 +129,8 @@ export const useRunStore = create<RunState>()(
           selectedModel:       s.selectedModel,
           fallbackEnabled:     s.fallbackEnabled,
           designSkillsEnabled: s.designSkillsEnabled,
-          higgsfieldEnabled:   s.higgsfieldEnabled,
+          replicateEnabled:    s.replicateEnabled,
+          aiEditEnabled:       s.aiEditEnabled,
           activeRun: null, // never persist active run across page loads
         } as RunState),
     },

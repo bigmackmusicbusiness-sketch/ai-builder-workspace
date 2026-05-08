@@ -54,12 +54,14 @@ const ChatBodySchema = z.object({
   /** Huashu Design skill toggle. When true, agent gets the design.run_huashu tool
    *  and a system prompt prelude that biases toward visual deliverables. */
   designSkillsEnabled: z.boolean().default(false),
-  /** Higgsfield premium image/video gen toggle (cost control). When false, the agent
-   *  has NO access to Higgsfield tools. When true, higgsfield.* tools are exposed
-   *  alongside a cost-conscious model-selection prelude. */
-  higgsfieldEnabled:   z.boolean().default(false),
-  /** Replicate video generation toggle (curated cost-effective models). Same gating model as Higgsfield. */
+  /** Replicate video generation toggle (curated cost-effective models).
+   *  Off by default. Gates Replicate tool registration in the agent loop. */
   replicateEnabled:    z.boolean().default(false),
+  /** Higgsfield was removed from active surfaces in the 2026-05 update. The
+   *  field is still accepted (with default false) for backwards compatibility
+   *  with any cached SPA bundle still sending it, but it is otherwise ignored —
+   *  the agent tool registry no longer registers higgsfield.* tools. */
+  higgsfieldEnabled:   z.boolean().default(false),
   /** Files attached by the user in the chat composer. */
   attachments: z.array(AttachmentSchema).optional(),
 });
@@ -411,23 +413,14 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
         history.unshift({ role: 'system', content: prelude });
       } catch { /* skill file not packaged — non-fatal, tool still callable */ }
     }
-    // Higgsfield: cost-aware prelude (only emitted when toggle is on; tools are
-    // registered in Phase B). Until Higgsfield tools exist, this is a no-op.
-    if (higgsfieldEnabled) {
-      history.unshift({
-        role: 'system',
-        content:
-          '## Premium image/video generation\n' +
-          'You have access to Higgsfield (higgsfield.* tools, registered separately). ' +
-          'These consume the user\'s paid credits — be cost-conscious:\n' +
-          '  • Prefer cheaper models (Hailuo 02, Flux) over premium (Sora 2, Veo) unless the user asked for top quality.\n' +
-          '  • Prefer one decisive call over multiple iterations.\n' +
-          '  • For static images, prefer Flux/Seedream over Soul/Cinema Studio.\n' +
-          '  • Mention the chosen model in your reply so the user can audit.',
-      });
-    }
-    // Compute the per-request tool list (gates Higgsfield + design tools by flag).
-    const toolList = getAgentTools({ designSkillsEnabled, higgsfieldEnabled, replicateEnabled });
+    // Higgsfield prelude removed in the 2026-05 internal-live update. The
+    // higgsfieldEnabled body field is still accepted for old SPA bundles
+    // but produces no system prompt and no tool registration — see the
+    // schema comment above and apps/api/src/agent/tools.ts.
+    void higgsfieldEnabled;
+
+    // Compute the per-request tool list (gates design + Replicate tools by flag).
+    const toolList = getAgentTools({ designSkillsEnabled, replicateEnabled });
 
     function send(obj: unknown): void {
       raw.write(`data: ${JSON.stringify(obj)}\n\n`);
