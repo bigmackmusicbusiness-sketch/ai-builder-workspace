@@ -46,6 +46,19 @@ html, body, #root {
   scrollbar-color: var(--neutral-600) transparent;
 }
 
+/* CRITICAL: in browse mode, force .abw-screen to NOT scroll itself.
+ * It defaults to overflow-y:auto + height:100% (defined in
+ * packages/ui/styles/screens.css for builder-mode tab content), which
+ * makes the .abw-dashboard / .abw-screen the actual scroller — and the
+ * scrollbar then sits at the right edge of the centered max-width
+ * dashboard, NOT the viewport edge. Override here so the scroll bubbles
+ * up to .abw-shell__main where our slim-scrollbar rule below fires AND
+ * the scrollbar lives at the actual viewport edge. */
+.abw-shell--browse .abw-screen {
+  overflow: visible;
+  height: auto;
+}
+
 /* Webkit (Chrome / Edge / Safari) slim scrollbar — thumb fills the gutter
  * edge-to-edge with no internal track padding so it visually sits flush
  * against the right side of the viewport on all DPI scales.            */
