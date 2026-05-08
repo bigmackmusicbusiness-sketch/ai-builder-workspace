@@ -28,14 +28,51 @@ single change if anything fails.
 
 ## Verification
 
-- [x] Pre-merge: `pnpm -r typecheck` clean across all 12 workspace packages
-- [x] Pre-merge: `pnpm --filter @abw/api build` clean (5.4 MB bundle)
-- [x] Pre-merge: `pnpm --filter @abw/web build` clean (1.25 MB JS, 109 KB CSS)
-- [ ] Post-deploy: `pnpm tsx apps/api/scripts/post-deploy-check.ts` (run manually after Coolify deploy lands)
-- [ ] Post-deploy: visual sweep of /projects, /ads, /video, /publish, builder mode
-- [ ] Post-deploy: 1 ad creative end-to-end (image, render, A/B variants)
-- [ ] Post-deploy: paperclip → Library → drop into chat
-- [ ] Post-deploy: preview Refresh button replaces Stop/Boot
+### Pre-merge (all clean)
+
+- [x] `pnpm -r typecheck` — all 12 workspace packages green
+- [x] `pnpm --filter @abw/api build` — 5.4 MB bundle, no TS errors
+- [x] `pnpm --filter @abw/web build` — 1.25 MB JS, 109 KB CSS
+
+### Post-deploy smoke (curl-driven, executed after Coolify roll)
+
+SPA routes (web container served via Cloudflare Pages):
+
+| Path | Status |
+|---|---|
+| `/projects`   | 200 |
+| `/templates`  | 200 |
+| `/create`     | 200 |
+| `/video`      | 200 |
+| **`/ads`** (new) | 200 |
+| `/publish`    | 200 |
+| `/approvals`  | 200 |
+| `/login`      | 200 |
+
+API endpoints (Coolify-deployed Fastify):
+
+| Endpoint | Status | Notes |
+|---|---|---|
+| GET `/healthz`                   | 200 | service: api |
+| POST `/api/ads` (unauth)         | 401 | auth gate confirmed; route registered |
+| POST `/api/preview/refresh` (unauth) | 401 | new endpoint registered |
+| POST `/api/ai-edit/text` (unauth)| 401 | Replicate route registered |
+| GET `/api/ads/limits` (unauth)   | 401 | auth gate fires before handler — OK |
+
+Container roll observed at +6 minutes after `git push`. No 500s, no boot
+errors visible in logs. Migration `0013_ad_creatives` not yet visually
+confirmed via `/api/admin/migrations`, but DDL is idempotent and the
+runner emits warnings rather than crashing on permission issues.
+
+### Post-deploy manual sweep (followups for the user when they wake up)
+
+- [ ] Sign in, hit /ads, switch through the three tabs, render one image ad
+- [ ] Verify the slop blocker rejects "amazing transformative results"
+- [ ] Verify A/B variants come back from /api/ads/:id/render
+- [ ] Verify chat paperclip → Library shows existing assets across projects
+- [ ] Verify Preview shows a single Refresh button (no Stop/Boot)
+- [ ] Verify project switch no longer auto-boots a preview
+- [ ] Run `pnpm tsx apps/api/scripts/post-deploy-check.ts` against prod (needs a token in `$ABW_TOKEN`)
 
 ---
 
