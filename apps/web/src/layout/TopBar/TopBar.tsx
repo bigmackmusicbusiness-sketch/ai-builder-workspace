@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { to: '/templates', label: 'Templates'  },
   { to: '/create',    label: 'Create'     },
   { to: '/video',     label: 'Video'      },
+  { to: '/ads',       label: 'Ads'        },
   { to: '/publish',   label: 'Publish'    },
   { to: '/approvals', label: 'Approvals'  },
 ] as const;
@@ -27,6 +28,7 @@ const BROWSE_ROUTE_PREFIXES = [
   '/projects',
   '/templates',
   '/create',
+  '/ads',
   '/publish',
   '/approvals',
   '/integrations',

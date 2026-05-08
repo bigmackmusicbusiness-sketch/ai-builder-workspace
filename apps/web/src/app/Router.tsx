@@ -38,6 +38,7 @@ import { MusicStudioScreen }          from '../screens/MusicStudioScreen';
 import { VideoStudioScreen }          from '../screens/VideoStudioScreen';
 import { VideoEditorScreen }          from '../screens/VideoEditorScreen';
 import { VisualEditorScreen }         from '../screens/VisualEditorScreen';
+import { AdsStudioScreen }            from '../screens/AdsStudioScreen';
 import { useAuthStore }               from '../lib/store/authStore';
 
 // ── Root — bare outlet, no layout ────────────────────────────────────
@@ -226,6 +227,12 @@ const createHubRoute = createRoute({
   component: CreateHubScreen,
 });
 
+const adsRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: '/ads',
+  component: AdsStudioScreen,
+});
+
 // ── Route tree ────────────────────────────────────────────────────────
 const routeTree = rootRoute.addChildren([
   loginRoute,
@@ -253,6 +260,7 @@ const routeTree = rootRoute.addChildren([
     videoEditorRoute,
     editorRoute,
     createHubRoute,
+    adsRoute,
   ]),
 ]);
 
