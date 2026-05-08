@@ -19,9 +19,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch, apiFetchForm, ApiError } from '../../lib/api';
 import { useProjectStore } from '../../lib/store/projectStore';
+import { useRunStore } from '../../lib/store/runStore';
+import { Toggle } from '@abw/ui';
 import { CopyFieldWithCounter } from '../../components/CopyFieldWithCounter';
 import { SafeZoneOverlay } from '../../components/SafeZoneOverlay';
 import { PlatformMediaPicker, type LibraryAsset } from '../../layout/LeftPanel/PlatformMediaPicker';
+import { AiTextEditModal } from './AiTextEditModal';
 import type { AdAspect, AdCreative, AdPlacement } from '../AdsStudioScreen';
 
 type Framework = 'specific-value-prop' | 'pattern-interrupt' | 'before-after';
@@ -55,6 +58,8 @@ interface SlopMatch { phrase: string; replacement: string; fields: string[]; }
 
 export function ImageAdEditor({ ad, onSaved, onClose }: Props) {
   const currentProject = useProjectStore((s) => s.projects[s.currentProjectId]);
+  const { aiEditEnabled, setAiEditEnabled } = useRunStore();
+  const [aiModalOpen, setAiModalOpen] = useState(false);
   const [bgUrl, setBgUrl]            = useState<string | null>(ad?.assetUrl ?? null);
   const [headline, setHeadline]      = useState(ad?.headline ?? '');
   const [primaryText, setPrimaryText] = useState(ad?.primaryText ?? '');
@@ -325,6 +330,47 @@ export function ImageAdEditor({ ad, onSaved, onClose }: Props) {
         <ToggleGroup label="Placement" value={placement} options={['feed', 'stories', 'reels', 'marketplace']} onChange={(v) => setPlacement(v as AdPlacement)} />
       </div>
 
+      {/* AI text-edit toggle (off by default, ~$0.08/click) */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
+        padding: 'var(--space-1) var(--space-2)',
+        marginBottom: 'var(--space-3)',
+        border: '1px solid var(--border-base)',
+        borderRadius: 'var(--radius-field)',
+        background: 'var(--bg-subtle)',
+      }}>
+        <Toggle
+          size="sm"
+          checked={aiEditEnabled}
+          onChange={setAiEditEnabled}
+          ariaLabel="Toggle AI text edit"
+          label={
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.75rem' }}>
+              <span aria-hidden>✦</span>
+              AI text edit
+            </span>
+          }
+        />
+        <span style={{ fontSize: '0.625rem', color: 'var(--text-tertiary)', flex: 1 }}>
+          Inpaints replacement text via Replicate Ideogram v2 — ~$0.08/edit. Off by default. Manual canvas always available.
+        </span>
+        <button
+          onClick={() => bgUrl && setAiModalOpen(true)}
+          disabled={!aiEditEnabled || !bgUrl}
+          title={!bgUrl ? 'Pick a background first' : !aiEditEnabled ? 'Toggle AI text edit on first' : 'Replace text on the background image'}
+          style={{
+            padding: '4px 8px', fontSize: '0.6875rem',
+            background: aiEditEnabled && bgUrl ? 'var(--accent-500)' : 'var(--bg-subtle)',
+            color: aiEditEnabled && bgUrl ? '#fff' : 'var(--text-tertiary)',
+            border: '1px solid var(--border-base)', borderRadius: 'var(--radius-field)',
+            cursor: aiEditEnabled && bgUrl ? 'pointer' : 'default',
+            fontWeight: 600,
+          }}
+        >
+          Edit text on image
+        </button>
+      </div>
+
       <div role="group" aria-label="Direct-response framework" style={{
         display: 'flex', gap: 4, marginBottom: 'var(--space-3)',
       }}>
@@ -561,6 +607,18 @@ export function ImageAdEditor({ ad, onSaved, onClose }: Props) {
           )}
         </div>
       </div>
+
+      {aiModalOpen && bgUrl && (
+        <AiTextEditModal
+          imageUrl={bgUrl}
+          projectId={currentProject?.id ?? null}
+          onComplete={(newUrl) => {
+            setBgUrl(newUrl);
+            setAiModalOpen(false);
+          }}
+          onCancel={() => setAiModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
