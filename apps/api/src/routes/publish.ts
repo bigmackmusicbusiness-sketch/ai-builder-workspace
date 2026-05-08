@@ -367,6 +367,36 @@ export async function publishRoutes(app: FastifyInstance): Promise<void> {
           }
         }
 
+        // Bind the host to the api app via Coolify so Traefik routes it.
+        // CNAME alone gets us to Cloudflare's edge → our origin, but
+        // Traefik 503s on unknown hosts. Coolify's API exposes the
+        // docker_compose_domains list — append our host, then restart so
+        // Traefik regenerates labels. Best-effort: if Coolify creds aren't
+        // configured, the domain still resolves but visitors hit 503 until
+        // someone manually adds it in the Coolify UI.
+        try {
+          const { getCoolifyConfig, ensureDomainBound, restartApplication } = await import('../publish/coolifyApi');
+          const coolifyCfg = await getCoolifyConfig(ctx.tenantId, target.env);
+          if (coolifyCfg) {
+            const changed = await ensureDomainBound(customDomain, coolifyCfg);
+            if (changed) {
+              await restartApplication(coolifyCfg);
+              // eslint-disable-next-line no-console
+              console.log(`[publish] bound ${customDomain} to Coolify api app + restart queued`);
+            } else {
+              // eslint-disable-next-line no-console
+              console.log(`[publish] ${customDomain} already bound in Coolify — no restart needed`);
+            }
+          } else {
+            // eslint-disable-next-line no-console
+            console.warn(`[publish] COOLIFY_API_TOKEN/COOLIFY_APP_UUID not in vault — skipping host bind. Add ${customDomain} manually in the Coolify UI under Domains for api.`);
+          }
+        } catch (coolifyErr) {
+          const msg = coolifyErr instanceof Error ? coolifyErr.message : String(coolifyErr);
+          // eslint-disable-next-line no-console
+          console.warn(`[publish] Coolify host-bind failed (non-fatal): ${msg}`);
+        }
+
         // Persist customDomain on the target (merging with existing config jsonb)
         const existingConfig = (target.config ?? {}) as Record<string, unknown>;
         await db.update(publishTargets)
