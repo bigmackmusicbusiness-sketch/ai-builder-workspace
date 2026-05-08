@@ -124,6 +124,32 @@ async function main(): Promise<void> {
     }
   });
 
+  // ── Iframe-friendly headers for routes the IDE legitimately embeds ──────────
+  // The Preview tab loads /api/preview/serve/<slug>/ inside an iframe; the
+  // public deploys at /api/published/<slug>/ are also iframe-able from the
+  // Visual QA tab + share previews. Helmet's global X-Frame-Options DENY
+  // would make Chrome show "refused to connect."
+  //
+  // IMPORTANT: api and IDE are on DIFFERENT origins (api.* vs app.*) so
+  // X-Frame-Options SAMEORIGIN won't help — that header only knows
+  // exact-origin match and has no allow-list mode in modern browsers.
+  // The fix is to (a) REMOVE X-Frame-Options on these routes entirely
+  // and (b) replace it with CSP frame-ancestors which DOES support an
+  // origin allow-list. Modern browsers prefer frame-ancestors anyway and
+  // will use it when both headers are present, but removing X-F-O avoids
+  // any ambiguity for older browsers.
+  app.addHook('onSend', async (req, reply, payload) => {
+    const url = req.url ?? '';
+    if (url.startsWith('/api/preview/serve/') || url.startsWith('/api/published/')) {
+      const ideOrigin = process.env['APP_URL'] ?? 'https://app.40-160-3-10.sslip.io';
+      // Strip helmet's X-Frame-Options DENY for these specific routes
+      reply.removeHeader('X-Frame-Options');
+      // Replace with frame-ancestors — accepts the IDE origin + same-origin
+      reply.header('Content-Security-Policy', `frame-ancestors 'self' ${ideOrigin}`);
+    }
+    return payload;
+  });
+
   // ── B3: Rate limiting ──────────────────────────────────────────────────────
   // Global default: 300 req/min/IP. Per-route overrides via routeOptions.config.rateLimit.
   // Route configs handle the tighter limits on /api/chat (model calls expensive)

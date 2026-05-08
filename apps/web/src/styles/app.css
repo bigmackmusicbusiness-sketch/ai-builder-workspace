@@ -33,6 +33,11 @@ html, body, #root {
 .abw-shell--browse .abw-shell__main {
   /* Allow scrolling inside browse routes (dashboard, templates, settings) */
   overflow-y: auto;
+  /* Reserve the scrollbar gutter at the right edge of the viewport so it
+   * always sits flush against the screen edge instead of floating in the
+   * middle when content is narrower than the viewport. `stable` keeps the
+   * gutter even when no scroll is needed (no layout jump on scroll-in). */
+  scrollbar-gutter: stable;
 }
 
 /* Top bar spans full width */
@@ -1210,7 +1215,10 @@ html, body, #root {
 
 /* ── Projects-as-dashboard ──────────────────────────────────────────── */
 .abw-dashboard {
-  max-width: 1280px;
+  /* Was 1280px — filling closer to the viewport edge keeps the cards
+   * adjacent to the right-edge scrollbar so the scrollbar reads as
+   * "glued to the cards" instead of floating in empty space. */
+  max-width: 1480px;
   margin: 0 auto;
   padding: var(--space-8) var(--space-6);
   display: flex;
