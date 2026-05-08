@@ -24,7 +24,7 @@ import { z } from 'zod';
 import { authMiddleware, requireRole, type AuthContext } from '../security/authz';
 import { getDb } from '../db/client';
 import { adCreatives, assets, projects } from '@abw/db';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '../config/env';
 import { checkAdCopyForSlop } from './ads/slopBlocker';
@@ -86,6 +86,10 @@ export async function adsRoutes(app: FastifyInstance): Promise<void> {
     const db = getDb();
     const where = and(
       eq(adCreatives.tenantId, ctx.tenantId),
+      // Filter out soft-deleted rows — DELETE /api/ads/:id sets deletedAt
+      // rather than dropping the row, so the list must explicitly exclude
+      // them or the Library would keep showing tombstones.
+      isNull(adCreatives.deletedAt),
       ...(parsed.data.projectId ? [eq(adCreatives.projectId, parsed.data.projectId)] : []),
       ...(parsed.data.kind ? [eq(adCreatives.kind, parsed.data.kind)] : []),
     );
@@ -190,7 +194,11 @@ export async function adsRoutes(app: FastifyInstance): Promise<void> {
 
     const db = getDb();
     const [existing] = await db.select().from(adCreatives)
-      .where(and(eq(adCreatives.id, req.params.id), eq(adCreatives.tenantId, ctx.tenantId)));
+      .where(and(
+        eq(adCreatives.id, req.params.id),
+        eq(adCreatives.tenantId, ctx.tenantId),
+        isNull(adCreatives.deletedAt),
+      ));
     if (!existing) return reply.status(404).send({ error: 'Not found' });
 
     const next = {
@@ -240,7 +248,11 @@ export async function adsRoutes(app: FastifyInstance): Promise<void> {
 
     const db = getDb();
     const [ad] = await db.select().from(adCreatives)
-      .where(and(eq(adCreatives.id, req.params.id), eq(adCreatives.tenantId, ctx.tenantId)));
+      .where(and(
+        eq(adCreatives.id, req.params.id),
+        eq(adCreatives.tenantId, ctx.tenantId),
+        isNull(adCreatives.deletedAt),
+      ));
     if (!ad) return reply.status(404).send({ error: 'Not found' });
 
     // ── Slop blocker ─────────────────────────────────────────────────────

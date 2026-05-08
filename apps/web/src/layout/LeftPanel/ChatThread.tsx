@@ -251,7 +251,33 @@ export function ChatThread() {
   const textareaRef                   = useRef<HTMLTextAreaElement>(null);
   const expandedTextareaRef           = useRef<HTMLTextAreaElement>(null);
   const fileInputRef                  = useRef<HTMLInputElement>(null);
+  /** Wraps both the paperclip button + the popover so the outside-click handler
+   *  can detect "click landed inside the picker tree" vs. "click landed elsewhere". */
+  const pickerWrapRef                 = useRef<HTMLDivElement>(null);
   const unsubRef                      = useRef<(() => void) | null>(null);
+
+  // Close paperclip popover on outside click + Escape. Without this, the only
+  // ways out were the ✕ button or successfully picking a file — both feel
+  // sticky compared to native popovers. Mirrors the pattern used in
+  // TopBar's project switcher and settings menu.
+  useEffect(() => {
+    if (!pickerOpen) return;
+    function onMouseDown(e: MouseEvent) {
+      const t = e.target as Node;
+      if (pickerWrapRef.current && !pickerWrapRef.current.contains(t)) {
+        setPickerOpen(false);
+      }
+    }
+    function onKey(e: globalThis.KeyboardEvent) {
+      if (e.key === 'Escape') setPickerOpen(false);
+    }
+    document.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [pickerOpen]);
 
   // Auto-grow the inline textarea up to 50vh (capped at 360px) — fixes the
   // "impossible to scroll your input" bug where the old hard 120px max trapped users.
@@ -779,7 +805,7 @@ export function ChatThread() {
         />
 
         {/* Paperclip + popover wrapper (relative for absolute popover positioning) */}
-        <div style={{ position: 'relative', flexShrink: 0 }}>
+        <div ref={pickerWrapRef} style={{ position: 'relative', flexShrink: 0 }}>
           <button
             type="button"
             aria-label="Attach file"

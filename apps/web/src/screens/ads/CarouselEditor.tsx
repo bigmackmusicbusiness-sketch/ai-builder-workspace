@@ -86,7 +86,12 @@ export function CarouselEditor({ ad, onSaved, onClose }: Props) {
   }
 
   async function handleSave() {
-    if (!currentProject && !ad) { setErr('Pick a project from the top bar first.'); return; }
+    // Tenant-scoped (no project) carousels are supported by the backend —
+    // ad_creatives.project_id is nullable. Only block when every card is empty.
+    if (cards.every((c) => !c.headline && !c.bgUrl)) {
+      setErr('Fill in at least one card first.');
+      return;
+    }
     setBusy(true); setErr(null);
     try {
       let id = ad?.id;

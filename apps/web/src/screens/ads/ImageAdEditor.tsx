@@ -258,8 +258,11 @@ export function ImageAdEditor({ ad, onSaved, onClose }: Props) {
 
   // ── Render (Save + composite + upload) ────────────────────────────────────
   async function handleRender(force = false) {
-    if (!currentProject && !ad) {
-      setErr('Pick a project from the top bar first.');
+    // Tenant-scoped ads (no project) are explicitly supported by the
+    // backend — projectId is nullable on ad_creatives. Only block when
+    // there's literally nothing to render (no copy AND no background).
+    if (!headline.trim() && !primaryText.trim() && !bgUrl) {
+      setErr('Add a headline, primary text, or background image first.');
       return;
     }
     setBusy(true); setErr(null); setSlop(null);
