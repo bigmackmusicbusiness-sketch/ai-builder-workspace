@@ -18,7 +18,7 @@ import {
 } from '../preview/sessionManager';
 import { bundleProject } from '../preview/bundler';
 import { scaffoldHelloWorld } from '../preview/scaffold';
-import { getWorkspace, workspaceExists } from '../preview/workspace';
+import { getWorkspace, workspaceExists, restoreWorkspaceFromStorage } from '../preview/workspace';
 import { subscribe as subscribePreview } from '../preview/eventBus';
 
 declare module 'fastify' {
@@ -94,6 +94,17 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
         let resolvedFramework = framework;
 
         const ws = await getWorkspace(ctx.tenantId, projectSlug);
+        // If the local workspace dir is empty (typical right after a Coolify
+        // redeploy wipes the ephemeral container disk), pull files back
+        // from Supabase Storage. Mirrors chat.ts / publish.ts so Preview
+        // is self-healing across restarts. Without this the iframe shows
+        // "Preview not booted" until the user happens to send a chat.
+        if (!(await workspaceExists(ws))) {
+          appendLog(sessionId, { level: 'info', source: 'bundler', message: 'Workspace empty — restoring from Storage…' });
+          await restoreWorkspaceFromStorage(ws).catch((err) => {
+            appendLog(sessionId, { level: 'warn', source: 'bundler', message: `Storage restore failed (non-fatal): ${err instanceof Error ? err.message : String(err)}` });
+          });
+        }
         const hasWorkspaceFiles = await workspaceExists(ws);
 
         if (hasWorkspaceFiles) {
