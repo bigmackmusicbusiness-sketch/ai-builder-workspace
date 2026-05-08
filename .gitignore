@@ -64,6 +64,9 @@ _migrate.*.mjs
 .smoke-out/
 apps/*/.smoke-out/
 
+# post-deploy script state (project-list snapshot for the lifecycle invariant check)
+.post-deploy-state/
+
 # personal handoff notes
 HANDOFF_*.md
 

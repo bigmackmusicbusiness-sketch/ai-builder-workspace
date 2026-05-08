@@ -116,7 +116,10 @@ export async function adsRoutes(app: FastifyInstance): Promise<void> {
       })
       .from(adCreatives)
       .leftJoin(assets,   eq(assets.id, adCreatives.assetId))
-      .leftJoin(projects, eq(projects.id, adCreatives.projectId))
+      // Soft-deleted projects shouldn't leak their names through the join.
+      // ad.projectId still appears in the row, the SPA can decide what to
+      // do with an orphaned-but-not-null projectId (treat as tenant-scoped).
+      .leftJoin(projects, and(eq(projects.id, adCreatives.projectId), isNull(projects.deletedAt)))
       .where(where)
       .orderBy(desc(adCreatives.updatedAt));
 
@@ -168,6 +171,28 @@ export async function adsRoutes(app: FastifyInstance): Promise<void> {
     const warnings = checkCharLimits({ placement, headline, primaryText, description });
 
     const db = getDb();
+
+    // Same tenant boundary check as PATCH — refuse to seed a carousel with
+    // cards that reference asset uuids not in the caller's tenant.
+    if (kind === 'carousel' && cards && cards.length > 0) {
+      const referencedIds = cards
+        .map((c) => c.assetId)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0);
+      if (referencedIds.length > 0) {
+        const owned = await db.select({ id: assets.id })
+          .from(assets)
+          .where(and(eq(assets.tenantId, ctx.tenantId)));
+        const ownedSet = new Set(owned.map((r) => r.id));
+        const foreign  = referencedIds.filter((id) => !ownedSet.has(id));
+        if (foreign.length > 0) {
+          return reply.status(403).send({
+            error: 'foreign_asset_in_carousel',
+            detail: `Card asset(s) not in your tenant: ${foreign.join(', ')}`,
+          });
+        }
+      }
+    }
+
     const [row] = await db.insert(adCreatives).values({
       tenantId:     ctx.tenantId,
       projectId:    projectId ?? null,
@@ -200,6 +225,33 @@ export async function adsRoutes(app: FastifyInstance): Promise<void> {
         isNull(adCreatives.deletedAt),
       ));
     if (!existing) return reply.status(404).send({ error: 'Not found' });
+
+    // ── Tenant boundary on carousel cards ──────────────────────────────
+    // cards[].assetId lives in the JSONB `extra` column, which means it
+    // is NOT subject to the foreign-key tenant scoping that the row-level
+    // assetId column gets. Without this guard, a malicious PATCH could
+    // smuggle an asset uuid from another tenant into extra.cards and the
+    // SPA would happily render it (or worse, Library would expose its
+    // public URL via the JOIN). Validate every supplied assetId belongs
+    // to ctx.tenantId BEFORE writing.
+    if (parsed.data.cards && parsed.data.cards.length > 0) {
+      const referencedIds = parsed.data.cards
+        .map((c) => c.assetId)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0);
+      if (referencedIds.length > 0) {
+        const owned = await db.select({ id: assets.id })
+          .from(assets)
+          .where(and(eq(assets.tenantId, ctx.tenantId)));
+        const ownedSet = new Set(owned.map((r) => r.id));
+        const foreign  = referencedIds.filter((id) => !ownedSet.has(id));
+        if (foreign.length > 0) {
+          return reply.status(403).send({
+            error: 'foreign_asset_in_carousel',
+            detail: `Card asset(s) not in your tenant: ${foreign.join(', ')}`,
+          });
+        }
+      }
+    }
 
     const next = {
       ...(parsed.data.placement    && { placement: parsed.data.placement }),
@@ -317,8 +369,13 @@ export async function adsRoutes(app: FastifyInstance): Promise<void> {
     }
 
     // ── Storage upload ────────────────────────────────────────────────────
+    // Storage path includes a random UUID slice so concurrent renders of
+    // the same ad (e.g. the SPA's auto A/B variant fan-out) can't produce
+    // identical paths and collide on Storage.upload({upsert:false}).
+    const { randomUUID } = await import('node:crypto');
     const safeName    = (filePart.filename || `ad-${ad.id}.${ad.kind === 'video' ? 'mp4' : 'png'}`).replace(/[^a-zA-Z0-9._-]/g, '_');
-    const storagePath = `${ctx.tenantId}/${ad.projectId ?? 'tenant-library'}/ads/${Date.now()}-${safeName}`;
+    const collisionSuffix = randomUUID().slice(0, 8);
+    const storagePath = `${ctx.tenantId}/${ad.projectId ?? 'tenant-library'}/ads/${Date.now()}-${collisionSuffix}-${safeName}`;
     const storage = getStorage();
     const { error: upErr } = await storage.from(BUCKET).upload(storagePath, filePart.buffer, {
       contentType: filePart.mimetype, upsert: false,

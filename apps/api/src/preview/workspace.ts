@@ -209,8 +209,29 @@ export async function backupFileToStorage(
  * `workspace-backups` bucket has nothing — covers projects whose backups
  * predate the security migration. Once those projects rewrite, the new
  * upload goes to the private bucket and the legacy path quietly retires.
+ *
+ * Concurrency: callers from chat / publish / preview / files routes can
+ * fire this simultaneously when the FS is empty. Without a per-(tenant,
+ * slug) mutex, two restores would race on the same Storage list and
+ * write the same files in interleaved order — fine in the common case
+ * (idempotent writes), but a brief window can serve a half-restored
+ * tree to the bundler. We dedupe via an in-memory promise cache so
+ * concurrent callers all await the same restore.
  */
-export async function restoreWorkspaceFromStorage(ws: WorkspaceHandle): Promise<void> {
+const inflightRestores = new Map<string, Promise<void>>();
+
+export function restoreWorkspaceFromStorage(ws: WorkspaceHandle): Promise<void> {
+  const key = `${ws.tenantId}/${ws.projectSlug}`;
+  const existing = inflightRestores.get(key);
+  if (existing) return existing;
+  const p = doRestoreWorkspaceFromStorage(ws).finally(() => {
+    inflightRestores.delete(key);
+  });
+  inflightRestores.set(key, p);
+  return p;
+}
+
+async function doRestoreWorkspaceFromStorage(ws: WorkspaceHandle): Promise<void> {
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   const prefix   = `${ws.tenantId}/workspaces/${ws.projectSlug}/`;
 

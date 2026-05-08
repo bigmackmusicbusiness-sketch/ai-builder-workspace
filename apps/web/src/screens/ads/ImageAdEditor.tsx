@@ -181,6 +181,10 @@ export function ImageAdEditor({ ad, onSaved, onClose }: Props) {
   useEffect(() => { lintHierarchy(); }, [headline, primaryText, description, callToAction]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Canvas draw ───────────────────────────────────────────────────────────
+  // The effect must abort cleanly when its dependencies change while a
+  // previous Image() is still loading. Without the `aborted` guard, two
+  // back-to-back bgUrl changes can race: image #1 loads after image #2
+  // already drew, and bakes stale text on top of the wrong canvas.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -189,6 +193,8 @@ export function ImageAdEditor({ ad, onSaved, onClose }: Props) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    let aborted = false;
+
     ctx.fillStyle = '#0e2c2b';  // SignalPoint deep teal as a forgiving default
     ctx.fillRect(0, 0, dims.w, dims.h);
 
@@ -196,6 +202,7 @@ export function ImageAdEditor({ ad, onSaved, onClose }: Props) {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
+        if (aborted) return;
         // Cover-style fill
         const imgRatio    = img.width / img.height;
         const canvasRatio = dims.w / dims.h;
@@ -208,11 +215,13 @@ export function ImageAdEditor({ ad, onSaved, onClose }: Props) {
         ctx.drawImage(img, drawX, drawY, drawW, drawH);
         drawText(ctx);
       };
-      img.onerror = () => drawText(ctx);
+      img.onerror = () => { if (!aborted) drawText(ctx); };
       img.src = bgUrl;
     } else {
       drawText(ctx);
     }
+
+    return () => { aborted = true; };
   }, [bgUrl, headline, primaryText, description, callToAction, aspect]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function drawText(ctx: CanvasRenderingContext2D) {
@@ -308,12 +317,13 @@ export function ImageAdEditor({ ad, onSaved, onClose }: Props) {
       setVariants(renderRes.variants ?? []);
       onSaved();
     } catch (e) {
-      // Slop blocker → 422 with flags
+      // Slop blocker → 422 with structured flags. ApiError now carries the
+      // parsed JSON body in `.data` so we don't have to regex-extract it
+      // from the message any more — that path was fragile when the
+      // summary contained literal `{` characters.
       if (e instanceof ApiError && e.status === 422) {
-        try {
-          const detail = JSON.parse((e.message ?? '').replace(/^.*?{/, '{')) as { slopFlags?: SlopMatch[] };
-          setSlop(detail.slopFlags ?? []);
-        } catch { setErr(e.message); }
+        const flags = (e.data?.['slopFlags'] as SlopMatch[] | undefined) ?? [];
+        setSlop(flags);
       } else {
         setErr(e instanceof ApiError ? e.message : 'Render failed');
       }

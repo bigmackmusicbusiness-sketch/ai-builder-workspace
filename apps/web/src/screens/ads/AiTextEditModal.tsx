@@ -142,9 +142,16 @@ export function AiTextEditModal({ imageUrl, projectId, onComplete, onCancel }: P
         mask.toBlob((b) => b ? resolve(b) : reject(new Error('Mask toBlob failed')), 'image/png');
       });
 
-      // Re-render the source image to a blob (skip the round-trip-from-URL
-      // for cleanliness)
-      const imgBlob = await fetch(imageUrl).then((r) => r.blob());
+      // Pull the source image bytes directly from the canvas we already
+      // loaded — re-fetching imageUrl would CORS-fail for any host that
+      // serves images with no Access-Control-Allow-Origin (Replicate
+      // outputs occasionally fall in this bucket). The canvas was loaded
+      // with crossOrigin='anonymous' so toBlob() succeeds.
+      const sourceCanvas = canvasRef.current;
+      if (!sourceCanvas) throw new Error('Canvas not ready');
+      const imgBlob = await new Promise<Blob>((resolve, reject) => {
+        sourceCanvas.toBlob((b) => b ? resolve(b) : reject(new Error('Canvas toBlob failed (tainted by CORS?)')), 'image/png');
+      });
 
       // POST multipart
       const form = new FormData();

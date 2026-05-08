@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import { authMiddleware, type AuthContext } from '../security/authz';
 import { getDb } from '../db/client';
 import { assets, projects } from '@abw/db';
-import { eq, and, or, like } from 'drizzle-orm';
+import { eq, and, or, like, isNull } from 'drizzle-orm';
 import { env } from '../config/env';
 
 declare module 'fastify' {
@@ -214,6 +214,11 @@ export async function assetsRoutes(app: FastifyInstance): Promise<void> {
     // come back with a friendly null projectName. The picker groups by
     // projectName when it's set, and dumps null-project rows into a
     // "Tenant library" bucket.
+    //
+    // The join's ON clause includes `isNull(projects.deletedAt)` so soft-
+    // deleted projects don't leak their names into the picker. The asset
+    // row still appears (LEFT JOIN), it just shows up as null-project,
+    // which the SPA buckets under "Tenant library".
     const rows = await db
       .select({
         id:           assets.id,
@@ -227,7 +232,7 @@ export async function assetsRoutes(app: FastifyInstance): Promise<void> {
         projectSlug:  projects.slug,
       })
       .from(assets)
-      .leftJoin(projects, eq(projects.id, assets.projectId))
+      .leftJoin(projects, and(eq(projects.id, assets.projectId), isNull(projects.deletedAt)))
       .where(where);
 
     return {

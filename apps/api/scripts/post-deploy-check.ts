@@ -15,24 +15,25 @@
 //   pnpm tsx apps/api/scripts/post-deploy-check.ts
 //
 // Reads:
-//   - $ABW_TOKEN env var (a fresh access token), OR halcyon-token.txt at the
-//     desktop path used during dev sessions
+//   - $ABW_TOKEN env var (a fresh access token).
 //
 // Exits 0 on full pass, 1 on any failure. Prints a clear table to stdout
 // and writes a markdown summary to docs/post-deploy/<timestamp>.md.
+//
+// Note on the snapshot file: we keep the project-list invariant snapshot
+// inside the repo's .post-deploy-state directory rather than /tmp so the
+// path is per-developer-machine and isolated from world-readable space.
+// On CI/Coolify, set ABW_STATE_DIR to a non-world-readable directory.
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const API   = process.env['ABW_API_URL'] ?? 'https://api.40-160-3-10.sslip.io';
 const APP   = process.env['ABW_APP_URL'] ?? 'https://app.40-160-3-10.sslip.io';
-const TOKEN = process.env['ABW_TOKEN']
-  ?? (existsSync(resolve(process.cwd(), 'C:/Users/telly/OneDrive/Desktop/halcyon-token.txt'))
-        ? readFileSync(resolve(process.cwd(), 'C:/Users/telly/OneDrive/Desktop/halcyon-token.txt'), 'utf8').trim()
-        : '');
+const TOKEN = process.env['ABW_TOKEN'] ?? '';
 
 if (!TOKEN) {
-  console.error('No token available. Set $ABW_TOKEN or save it to halcyon-token.txt on the desktop.');
+  console.error('Set $ABW_TOKEN before running this script (a fresh Supabase access token).');
   process.exit(1);
 }
 
@@ -75,7 +76,15 @@ async function checkHealth(): Promise<void> {
 }
 
 // ── Check 2: Project lifecycle invariant ─────────────────────────────────────
-const SNAPSHOT_FILE = '/tmp/abw-pre-deploy-projects.json';
+// Snapshot location: prefer $ABW_STATE_DIR (set in CI/Coolify to a
+// non-world-readable dir). Fall back to a repo-local hidden dir which we
+// gitignore at the top level. The previous implementation wrote to /tmp,
+// which is world-readable on multi-tenant hosts — slugs are mildly
+// sensitive (they reveal active tenant projects).
+const STATE_DIR = process.env['ABW_STATE_DIR']
+  ?? resolve(process.cwd(), '.post-deploy-state');
+mkdirSync(STATE_DIR, { recursive: true, mode: 0o700 });
+const SNAPSHOT_FILE = join(STATE_DIR, 'pre-deploy-projects.json');
 
 async function checkProjectInvariant(): Promise<void> {
   try {
@@ -168,6 +177,11 @@ async function checkApiSurface(): Promise<void> {
 }
 
 // ── Check 6: Workspace restore probe ─────────────────────────────────────────
+// Uses GET /api/files/workspace which now self-heals from Storage when the
+// FS is empty (added in the 2026-05 update). Previously this fired a real
+// /api/chat with `list_files` to trigger the restore — that consumed
+// MiniMax credits AND wrote a literal "list_files" message into the user's
+// visible chat history. The new endpoint is read-only and idempotent.
 async function checkWorkspaceRestore(): Promise<void> {
   try {
     const pr = await authedFetch('/api/projects');
@@ -178,19 +192,8 @@ async function checkWorkspaceRestore(): Promise<void> {
 
     let withFiles = 0;
     for (const site of sites) {
-      // Fire a chat with list_files to trigger restore-from-Storage
-      await authedFetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [{ role: 'user', content: 'list_files' }],
-          provider: 'minimax', model: 'MiniMax-M2.7',
-          projectEnv: 'dev', projectSlug: site.slug, enableTools: true,
-        }),
-      }).catch(() => null);
-
-      // small delay then check files
-      await new Promise((r) => setTimeout(r, 3_000));
+      // /api/files/workspace's self-heal triggers restoreWorkspaceFromStorage
+      // when the local FS is empty. No chat-fire side effects.
       const fr = await authedFetch(`/api/files/workspace?slug=${site.slug}`).catch(() => null);
       if (fr?.ok) {
         const { files } = await fr.json() as { files: string[] };

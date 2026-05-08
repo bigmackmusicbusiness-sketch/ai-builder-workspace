@@ -268,7 +268,18 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
       },
     });
 
-    return reply.status(bootRes.statusCode).send(bootRes.json());
+    // bootRes.json() throws on non-JSON bodies. /boot normally returns
+    // JSON but if Fastify itself errors out (timeout, 5xx with HTML),
+    // we still want to surface a structured response to the client.
+    const bootCT = bootRes.headers['content-type'];
+    const ctValue = Array.isArray(bootCT) ? bootCT[0] : bootCT;
+    if (typeof ctValue === 'string' && ctValue.includes('application/json')) {
+      return reply.status(bootRes.statusCode).send(bootRes.json());
+    }
+    return reply.status(bootRes.statusCode).send({
+      error: 'boot_returned_non_json',
+      detail: bootRes.body.toString().slice(0, 200),
+    });
   });
 
   /** GET /api/preview/sessions — list active sessions for tenant */

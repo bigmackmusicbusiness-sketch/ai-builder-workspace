@@ -229,7 +229,14 @@ export async function runMigrations(): Promise<void> {
     const applied = await sql<{ id: string }[]>`SELECT id FROM "_migrations"`;
     const appliedSet = new Set(applied.map((r) => r.id));
 
-    for (const m of MIGRATIONS) {
+    // Sort by id so the runner respects numeric order regardless of how
+    // contributors append new entries to the MIGRATIONS array. Without
+    // this, a future migration that depends on an earlier one (FK, index
+    // referencing a column added by a prior id) would fail when someone
+    // pastes a higher-numbered entry above a lower-numbered one.
+    const sortedMigrations = [...MIGRATIONS].sort((a, b) => a.id.localeCompare(b.id));
+
+    for (const m of sortedMigrations) {
       if (appliedSet.has(m.id)) {
         // eslint-disable-next-line no-console
         console.log(`[migrations] ${m.id} already applied, skipping`);

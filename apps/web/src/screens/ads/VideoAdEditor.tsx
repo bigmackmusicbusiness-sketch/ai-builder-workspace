@@ -138,10 +138,8 @@ export function VideoAdEditor({ ad, onSaved, onClose }: Props) {
       onSaved();
     } catch (e) {
       if (e instanceof ApiError && e.status === 422) {
-        try {
-          const detail = JSON.parse((e.message ?? '').replace(/^.*?{/, '{')) as { slopFlags?: { phrase: string }[] };
-          setErr(`Generic-AI phrases: ${detail.slopFlags?.map((s) => s.phrase).join(', ')}. Edit copy and retry, or click Render anyway.`);
-        } catch { setErr(e.message); }
+        const flags = (e.data?.['slopFlags'] as { phrase: string }[] | undefined) ?? [];
+        setErr(`Generic-AI phrases: ${flags.map((s) => s.phrase).join(', ')}. Edit copy and retry, or click Render anyway.`);
       } else {
         setErr(e instanceof ApiError ? e.message : 'Render failed');
       }

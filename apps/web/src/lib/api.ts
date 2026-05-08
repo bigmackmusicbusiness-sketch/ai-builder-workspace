@@ -5,9 +5,15 @@ import { supabase } from './supabase';
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  /** Parsed JSON body of the failure response, when one was present. Lets
+   *  callers reach for structured fields like `slopFlags` directly instead
+   *  of regex-extracting them from `.message`. */
+  public data: Record<string, unknown> | null;
+
+  constructor(public status: number, message: string, data: Record<string, unknown> | null = null) {
     super(message);
     this.name = 'ApiError';
+    this.data = data;
   }
 }
 
@@ -37,8 +43,9 @@ export async function apiFetch<T = unknown>(
     },
   });
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: res.statusText })) as { error?: string };
-    throw new ApiError(res.status, body.error ?? res.statusText);
+    const body = await res.json().catch(() => null) as Record<string, unknown> | null;
+    const msg = (body && typeof body['error'] === 'string') ? body['error'] as string : res.statusText;
+    throw new ApiError(res.status, msg, body);
   }
   // 204 / empty body
   const text = await res.text();
@@ -63,8 +70,9 @@ export async function apiFetchForm<T = unknown>(
     body,
   });
   if (!res.ok) {
-    const errBody = await res.json().catch(() => ({ error: res.statusText })) as { error?: string };
-    throw new ApiError(res.status, errBody.error ?? res.statusText);
+    const errBody = await res.json().catch(() => null) as Record<string, unknown> | null;
+    const msg = (errBody && typeof errBody['error'] === 'string') ? errBody['error'] as string : res.statusText;
+    throw new ApiError(res.status, msg, errBody);
   }
   const text = await res.text();
   return (text ? JSON.parse(text) : undefined) as T;

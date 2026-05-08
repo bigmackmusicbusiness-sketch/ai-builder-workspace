@@ -101,8 +101,14 @@ export async function aiEditRoutes(app: FastifyInstance): Promise<void> {
         replicateToken,
       });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return reply.status(502).send({ error: 'replicate_failed', message: msg });
+      const raw = err instanceof Error ? err.message : String(err);
+      // Defense-in-depth — even though the provider already redacts, this
+      // route is the final escape hatch for whatever the agent returns.
+      const safe = raw
+        .replace(/r8_[A-Za-z0-9_]{20,}/g, 'r8_<redacted>')
+        .replace(/Token\s+\S+/gi, 'Token <redacted>')
+        .replace(/Bearer\s+\S+/gi, 'Bearer <redacted>');
+      return reply.status(502).send({ error: 'replicate_failed', message: safe });
     }
 
     // Download the inpainted PNG and upload to our Storage so we own the URL

@@ -26,7 +26,13 @@ interface ReplicateRunResponse {
   error?:  string;
 }
 
-const IDEOGRAM_INPAINT_MODEL = 'ideogram-ai/ideogram-v2';
+// Ideogram v2 inpaint via Replicate's slug-routed predictions endpoint.
+// We deliberately use the model-by-slug path
+//   POST /v1/models/<owner>/<name>/predictions
+// instead of the generic /v1/predictions + version-SHA path. The latter
+// would require us to hard-code (and update) a 40-hex version SHA — a
+// release maintenance burden we don't need for an internal-live tool.
+const IDEOGRAM_PREDICTIONS_URL = 'https://api.replicate.com/v1/models/ideogram-ai/ideogram-v2/predictions';
 
 export interface AiEditInput {
   /** PNG/JPEG bytes of the source image. */
@@ -66,15 +72,14 @@ export async function aiEditText(input: AiEditInput): Promise<AiEditResult> {
 
   const prompt = `the text reads: "${input.replacementText.replace(/"/g, '\\"')}"`;
 
-  // Step 1 — start prediction
-  const startRes = await fetch('https://api.replicate.com/v1/predictions', {
+  // Step 1 — start prediction (slug-routed, no version SHA required)
+  const startRes = await fetch(IDEOGRAM_PREDICTIONS_URL, {
     method:  'POST',
     headers: {
       'Authorization': `Token ${token}`,
       'Content-Type':  'application/json',
     },
     body: JSON.stringify({
-      version: IDEOGRAM_INPAINT_MODEL,
       input: {
         image:  imageDataUri,
         mask:   maskDataUri,
@@ -85,7 +90,10 @@ export async function aiEditText(input: AiEditInput): Promise<AiEditResult> {
   });
   if (!startRes.ok) {
     const detail = await startRes.text();
-    throw new Error(`Replicate start failed (${startRes.status}): ${detail.slice(0, 200)}`);
+    // Strip any echoed Replicate token from the error body before bubbling
+    // up so the route's 502 response can't leak credentials in any code
+    // path Replicate might add later.
+    throw new Error(`Replicate start failed (${startRes.status}): ${redactSecrets(detail).slice(0, 200)}`);
   }
   const startBody = await startRes.json() as ReplicateRunResponse;
 
@@ -105,14 +113,38 @@ export async function aiEditText(input: AiEditInput): Promise<AiEditResult> {
   }
 
   if (prediction.status !== 'succeeded') {
-    throw new Error(`Replicate inpaint ${prediction.status}: ${prediction.error ?? 'unknown error'}`);
+    throw new Error(`Replicate inpaint ${prediction.status}: ${redactSecrets(prediction.error ?? 'unknown error')}`);
   }
 
   // Output shape: usually a string URL or array of URLs depending on the model.
   const url = Array.isArray(prediction.output) ? String(prediction.output[0] ?? '') : String(prediction.output ?? '');
   if (!url) throw new Error('Replicate succeeded but returned no output URL');
 
+  // SSRF guard — pin output URL host to Replicate's CDN. A compromised /
+  // future-changed model could in theory return an arbitrary URL; the
+  // route handler then fetches that URL server-side. Without this guard
+  // an attacker who could influence the prediction output could probe
+  // the Coolify VPS internal network. Replicate-hosted artifacts always
+  // live under *.replicate.delivery (per their docs).
+  let host = '';
+  try { host = new URL(url).hostname; } catch { /* fall through to throw */ }
+  if (!host.endsWith('.replicate.delivery') && host !== 'replicate.delivery') {
+    throw new Error(`Refusing to fetch non-Replicate output host: ${host || '(unparseable)'}`);
+  }
+
   return { url, predictionId: prediction.id };
+}
+
+/** Redact bearer / token-shaped substrings from arbitrary strings. Used on
+ *  upstream error bodies before they bubble out to the API client so we
+ *  never echo credentials in 5xx responses. The Replicate token format is
+ *  `r8_<48 alphanum>`, but we also catch `Token <…>` and bearer headers
+ *  for defense-in-depth. */
+function redactSecrets(s: string): string {
+  return s
+    .replace(/r8_[A-Za-z0-9_]{20,}/g, 'r8_<redacted>')
+    .replace(/Token\s+\S+/gi, 'Token <redacted>')
+    .replace(/Bearer\s+\S+/gi, 'Bearer <redacted>');
 }
 
 function sleep(ms: number): Promise<void> {

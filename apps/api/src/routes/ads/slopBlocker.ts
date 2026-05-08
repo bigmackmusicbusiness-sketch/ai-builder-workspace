@@ -62,6 +62,25 @@ export interface SlopCheckResult {
 }
 
 /**
+ * Normalize a string before slop matching. Defends against trivial bypass:
+ *   • NFKC unicode normalization folds confusable variants
+ *   • Curly apostrophes/quotes mapped to ASCII so "don't" matches "don't"
+ *   • Zero-width characters (joiners, non-joiners, BOM) stripped
+ *   • Non-breaking spaces normalized to regular spaces so "next level"
+ *     still matches "next level"
+ *   • Lowercase fold for case-insensitive comparison
+ */
+function normalize(s: string): string {
+  return s
+    .normalize('NFKC')
+    .replace(/[‘’‚‛]/g, "'")
+    .replace(/[“”„‟]/g, '"')
+    .replace(/[​-‍﻿]/g, '')
+    .replace(/[  ]/g, ' ')
+    .toLowerCase();
+}
+
+/**
  * Run all slop phrases against the four copy fields. Returns a structured
  * report; if matches.length > 0 and force=false, the route should respond 422.
  */
@@ -80,10 +99,10 @@ export function checkAdCopyForSlop(input: {
 
   const matches: SlopMatch[] = [];
   for (const { phrase, replacement } of SLOP_PHRASES) {
-    const lowered = phrase.toLowerCase();
+    const normalizedPhrase = normalize(phrase);
     const fieldsHit: SlopMatch['fields'] = [];
     for (const [field, val] of Object.entries(fieldMap)) {
-      if (typeof val === 'string' && val.toLowerCase().includes(lowered)) {
+      if (typeof val === 'string' && normalize(val).includes(normalizedPhrase)) {
         fieldsHit.push(field as SlopMatch['fields'][number]);
       }
     }
