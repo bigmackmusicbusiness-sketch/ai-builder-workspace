@@ -362,6 +362,11 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     // gets injected as a system message + plan.json file. Falls back silently
     // to the unenhanced loop if the type has no agentInstructions or planner fails.
     let planAvailable = false;
+    /** Slugs of every page the planner committed to building (e.g.
+     *  ['index','listings','contact']). Empty when the planner skipped /
+     *  failed. Used by the nudge logic so the agent can't silently exit
+     *  after writing one page when the plan calls for more. */
+    let plannedPageSlugs: string[] = [];
     if (toolsActive && projectTypeId) {
       const projectType = listProjectTypes().find((pt) => pt.id === (projectTypeId as ProjectTypeId));
       if (projectType?.agentInstructions) {
@@ -390,6 +395,9 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
             if (ws) {
               await writeWorkspaceFile(ws, '_plan.json', JSON.stringify(preResult.plan, null, 2)).catch(() => { /* non-fatal */ });
             }
+            // Capture the sitemap slugs so the nudge logic can detect
+            // partial completion (agent emits done after writing 1 of N pages).
+            plannedPageSlugs = (preResult.plan.sitemap ?? []).map((p) => p.slug);
           }
         }
       }
@@ -472,22 +480,57 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
             && typeof lastToolMsg.content === 'string'
             && /^Refused:|^Refused —/m.test(lastToolMsg.content);
 
-          // Detect "narration without action" — the model read files / listed
-          // them and decided it's "done" without producing any pages. Drop the
-          // planAvailable requirement that used to gate this: the bug also
-          // bites when the planner subagent fails (plan_failed event) but the
-          // user prompt clearly asked to build something. As long as tools are
-          // active and the agent never called write_file, force a hard nudge
-          // so the user gets a partial site instead of an empty workspace.
+          // Detect three kinds of premature exit:
+          //   (a) "narration without action" — model read/listed and quit
+          //       without ANY write_file (closed in 46c69e6)
+          //   (b) "partial sitemap" — planner committed to N pages, agent
+          //       wrote fewer (caught Apex 1/4 + Driftwood stub-only in
+          //       the bug-test sweep). Compare planned slugs to the slugs
+          //       actually written via write_file.
+          // Both nudge with a directive that names the missing files so
+          // the model can't claim "I'm done" plausibly.
           let buildIncomplete = false;
+          let missingPagesMsg = '';
           if (!lastWasRefusal && toolsActive && iter < MAX_ITERATIONS - 1) {
-            const everWrote = history.some((m) => {
-              if (m.role !== 'assistant') return false;
-              const calls = (m as { tool_calls?: Array<{ function?: { name?: string } }> }).tool_calls;
-              return Array.isArray(calls)
-                && calls.some((tc) => tc.function?.name === 'write_file');
-            });
+            // Collect the basenames of every path the agent passed to
+            // write_file across the whole conversation.
+            const writtenPaths = new Set<string>();
+            for (const m of history) {
+              if (m.role !== 'assistant') continue;
+              const calls = (m as { tool_calls?: Array<{ function?: { name?: string; arguments?: string } }> }).tool_calls;
+              if (!Array.isArray(calls)) continue;
+              for (const tc of calls) {
+                if (tc.function?.name !== 'write_file') continue;
+                try {
+                  const parsed = JSON.parse(tc.function.arguments ?? '{}') as { path?: string; file?: string; filename?: string; filepath?: string };
+                  const p = parsed.path ?? parsed.file ?? parsed.filename ?? parsed.filepath;
+                  if (typeof p === 'string') writtenPaths.add(p.replace(/^\/+/, '').toLowerCase());
+                } catch { /* malformed — counted as no path */ }
+              }
+            }
+            const everWrote = writtenPaths.size > 0;
+
+            // (a) zero writes
             if (!everWrote) buildIncomplete = true;
+
+            // (b) partial sitemap: planner had a plan + we wrote fewer html
+            // files than planned. Match by slug — `index` matches index.html,
+            // `listings` matches listings.html or listings/index.html, etc.
+            if (everWrote && plannedPageSlugs.length > 0) {
+              const missing = plannedPageSlugs.filter((slug) => {
+                const candidates = [
+                  `${slug}.html`,
+                  `${slug}.htm`,
+                  `${slug}/index.html`,
+                  `pages/${slug}.html`,
+                ].map((c) => c.toLowerCase());
+                return !candidates.some((c) => writtenPaths.has(c));
+              });
+              if (missing.length > 0) {
+                buildIncomplete = true;
+                missingPagesMsg = missing.map((s) => `${s}.html`).join(', ');
+              }
+            }
           }
 
           if ((lastWasRefusal || buildIncomplete) && iter < MAX_ITERATIONS - 1) {
@@ -497,19 +540,30 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
             if (assistantText) {
               history.push({ role: 'assistant', content: assistantText });
             }
-            history.push({
-              role:    'system',
-              content: lastWasRefusal
-                ? 'STOP NARRATING. Your previous tool call was refused with a clear ' +
-                  'corrective instruction. You MUST now call the tool the refusal ' +
-                  'told you to call (almost certainly write_file with path="index.html" ' +
-                  'and complete HTML content). Do not respond with text. Call the tool.'
-                : 'STOP. You have not yet written any pages. The BUILD PLAN above ' +
-                  'lists every page to write — start with write_file path="index.html" ' +
-                  'and full HTML content for the homepage RIGHT NOW. Then write each ' +
-                  'subsequent page from the sitemap. No more reading. No more narration. ' +
-                  'No questions. WRITE THE FILES.',
-            });
+            let nudgeContent: string;
+            if (lastWasRefusal) {
+              nudgeContent =
+                'STOP NARRATING. Your previous tool call was refused with a clear ' +
+                'corrective instruction. You MUST now call the tool the refusal ' +
+                'told you to call (almost certainly write_file with path="index.html" ' +
+                'and complete HTML content). Do not respond with text. Call the tool.';
+            } else if (missingPagesMsg) {
+              nudgeContent =
+                `STOP. The build is INCOMPLETE — the plan committed to pages that ` +
+                `aren't in the workspace yet. MISSING: ${missingPagesMsg}. Write each ` +
+                `one now via write_file with the same layout/styling as the pages you ` +
+                `already produced. No reading existing files unnecessarily, no ` +
+                `re-planning, no narration — call write_file for ${(missingPagesMsg.split(',')[0] ?? '').trim() || 'the next missing page'} ` +
+                `as your very next action, then continue through the rest.`;
+            } else {
+              nudgeContent =
+                'STOP. You have not yet written any pages. The BUILD PLAN above ' +
+                'lists every page to write — start with write_file path="index.html" ' +
+                'and full HTML content for the homepage RIGHT NOW. Then write each ' +
+                'subsequent page from the sitemap. No more reading. No more narration. ' +
+                'No questions. WRITE THE FILES.';
+            }
+            history.push({ role: 'system', content: nudgeContent });
             continue; // skip the done/break, go back to top of for-loop
           }
           send({ type: 'done', ...(finalUsage ? { usage: finalUsage } : {}) });
