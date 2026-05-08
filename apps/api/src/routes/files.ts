@@ -8,7 +8,7 @@ import { projects } from '@abw/db';
 import { authMiddleware, requireRole, type AuthContext } from '../security/authz';
 import { writeAuditEvent } from '../security/audit';
 import * as previewBus from '../preview/eventBus';
-import { getWorkspace, listWorkspaceFiles, readWorkspaceFile } from '../preview/workspace';
+import { getWorkspace, listWorkspaceFiles, readWorkspaceFile, workspaceExists, restoreWorkspaceFromStorage } from '../preview/workspace';
 import {
   listFiles, getFileContent, saveFile, searchFiles,
   saveFileByPath, getFileContentByPath,
@@ -192,7 +192,12 @@ export async function filesRoutes(app: FastifyInstance): Promise<void> {
    *  written into the per-tenant workspace directory. The Files panel uses
    *  this so the IDE shows what the agent actually built (the legacy DB
    *  -listing only knows about files saved through the editor). Returns
-   *  flat relative paths; the frontend builds the dir tree client-side. */
+   *  flat relative paths; the frontend builds the dir tree client-side.
+   *
+   *  Self-heal: if the local FS is empty (typical right after a Coolify
+   *  redeploy wiped the ephemeral disk) we restore from Supabase Storage
+   *  before listing. Mirrors chat.ts / publish.ts / preview.ts so the IDE
+   *  Files panel doesn't go blank between deploys. */
   app.get<{ Querystring: { slug?: string } }>('/api/files/workspace', async (req, reply) => {
     const ctx = req.authCtx!;
     const { slug } = req.query;
@@ -200,7 +205,15 @@ export async function filesRoutes(app: FastifyInstance): Promise<void> {
       return reply.status(400).send({ error: 'slug required (lowercase alphanumeric + dash)' });
     }
     try {
-      const ws    = await getWorkspace(ctx.tenantId, slug);
+      const ws = await getWorkspace(ctx.tenantId, slug);
+      if (!(await workspaceExists(ws))) {
+        // eslint-disable-next-line no-console
+        console.log(`[files/workspace] empty FS for ${slug} — restoring from Storage`);
+        await restoreWorkspaceFromStorage(ws).catch((err) => {
+          // eslint-disable-next-line no-console
+          console.warn(`[files/workspace] restore failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`);
+        });
+      }
       const files = await listWorkspaceFiles(ws);
       return { files };
     } catch (err) {
@@ -211,7 +224,11 @@ export async function filesRoutes(app: FastifyInstance): Promise<void> {
   /** GET /api/files/workspace/content?slug=…&path=… — read one file from
    *  the workspace by relative path. Used when the user clicks a file in the
    *  IDE Files panel to open it. Returns 404 when the file doesn't exist
-   *  (newly-listed but unread, race conditions, etc.). */
+   *  (newly-listed but unread, race conditions, etc.).
+   *
+   *  Self-heal: same as the list endpoint above — empty FS triggers a
+   *  restore-from-Storage before the read attempt so freshly-redeployed
+   *  containers don't 404 on previously-saved files. */
   app.get<{ Querystring: { slug?: string; path?: string } }>(
     '/api/files/workspace/content',
     async (req, reply) => {
@@ -221,7 +238,15 @@ export async function filesRoutes(app: FastifyInstance): Promise<void> {
         return reply.status(400).send({ error: 'slug and path required' });
       }
       try {
-        const ws      = await getWorkspace(ctx.tenantId, slug);
+        const ws = await getWorkspace(ctx.tenantId, slug);
+        if (!(await workspaceExists(ws))) {
+          // eslint-disable-next-line no-console
+          console.log(`[files/workspace/content] empty FS for ${slug} — restoring from Storage`);
+          await restoreWorkspaceFromStorage(ws).catch((err) => {
+            // eslint-disable-next-line no-console
+            console.warn(`[files/workspace/content] restore failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`);
+          });
+        }
         const content = await readWorkspaceFile(ws, path);
         if (content === null) return reply.status(404).send({ error: 'File not found in workspace' });
         return { content, path };
