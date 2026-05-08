@@ -90,6 +90,38 @@ export const assets = pgTable('assets', {
   ...timestamps,
 });
 
+// ── Ad creatives (Ads Studio) ──────────────────────────────────────
+//
+// Models a single export-ready ad: the rendered asset, the copy, the
+// placement (Feed / Stories / Reels / Marketplace) and the kind
+// (image / video / carousel). carouselExtra holds the per-card list
+// for kind='carousel' (an array of { headline, description, assetId }
+// objects). All other kinds leave it null. projectId is nullable so a
+// user can produce an ad without first creating a website project.
+export const adKindEnum = pgEnum('ad_kind', ['image', 'video', 'carousel']);
+export const adPlacementEnum = pgEnum('ad_placement', ['feed', 'stories', 'reels', 'marketplace']);
+
+export const adCreatives = pgTable('ad_creatives', {
+  id:           uuid('id').primaryKey().defaultRandom(),
+  tenantId:     uuid('tenant_id').notNull().references(() => tenants.id),
+  /** Optional project link. NULL = "tenant library" ad, attachable to any
+   *  project later via the Platform Media picker. */
+  projectId:    uuid('project_id').references(() => projects.id),
+  kind:         adKindEnum('kind').notNull(),
+  placement:    adPlacementEnum('placement').notNull().default('feed'),
+  aspectRatio:  text('aspect_ratio').notNull(),    // '1:1' | '4:5' | '9:16'
+  headline:     text('headline').notNull().default(''),
+  primaryText:  text('primary_text').notNull().default(''),
+  description:  text('description').notNull().default(''),
+  callToAction: text('call_to_action').notNull().default('Learn More'),
+  /** FK to the rendered asset (PNG for image+carousel, MP4 for video). NULL
+   *  until POST /api/ads/:id/render successfully composites + uploads. */
+  assetId:      uuid('asset_id').references(() => assets.id),
+  /** kind='carousel' only — array of { headline, description, assetId, primaryText? }. */
+  extra:        jsonb('extra').notNull().default({}),
+  ...timestamps,
+});
+
 // ── Brand kits ─────────────────────────────────────────────────────
 export const brandKits = pgTable('brand_kits', {
   id:        uuid('id').primaryKey().defaultRandom(),

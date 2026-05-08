@@ -68,6 +68,46 @@ const MIGRATIONS: Array<{ id: string; sql: string }> = [
     `,
   },
   {
+    // 2026-05 Ads Studio launch: backing table for image/video/carousel
+    // ad creatives + the placement & kind enums. Schema mirrors
+    // packages/db/schema/backend.ts (adCreatives). The table is intentionally
+    // tenant-scoped with a nullable project_id so a user can produce a
+    // "library" ad before scaffolding a target project — same pattern as
+    // assets (assets.project_id was made nullable in migration 0006).
+    id: '0013_ad_creatives',
+    sql: `
+      DO $$ BEGIN
+        CREATE TYPE "ad_kind" AS ENUM ('image', 'video', 'carousel');
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+      DO $$ BEGIN
+        CREATE TYPE "ad_placement" AS ENUM ('feed', 'stories', 'reels', 'marketplace');
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+      CREATE TABLE IF NOT EXISTS "ad_creatives" (
+        "id"             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "tenant_id"      UUID NOT NULL REFERENCES "tenants"("id"),
+        "project_id"     UUID REFERENCES "projects"("id"),
+        "kind"           ad_kind NOT NULL,
+        "placement"      ad_placement NOT NULL DEFAULT 'feed',
+        "aspect_ratio"   TEXT NOT NULL,
+        "headline"       TEXT NOT NULL DEFAULT '',
+        "primary_text"   TEXT NOT NULL DEFAULT '',
+        "description"    TEXT NOT NULL DEFAULT '',
+        "call_to_action" TEXT NOT NULL DEFAULT 'Learn More',
+        "asset_id"       UUID REFERENCES "assets"("id"),
+        "extra"          JSONB NOT NULL DEFAULT '{}'::jsonb,
+        "created_at"     TIMESTAMPTZ NOT NULL DEFAULT now(),
+        "updated_at"     TIMESTAMPTZ NOT NULL DEFAULT now(),
+        "deleted_at"     TIMESTAMPTZ
+      );
+
+      CREATE INDEX IF NOT EXISTS "ad_creatives_tenant_idx"  ON "ad_creatives" ("tenant_id");
+      CREATE INDEX IF NOT EXISTS "ad_creatives_project_idx" ON "ad_creatives" ("project_id");
+      CREATE INDEX IF NOT EXISTS "ad_creatives_kind_idx"    ON "ad_creatives" ("kind");
+    `,
+  },
+  {
     // Found during the bug-test sweep: two `mountain-peak-bakery` rows
     // existed in the same tenant. Slug is used for routing
     // (/api/published/<slug>/, the workspace path on disk, the customHost

@@ -35,6 +35,8 @@ import { higgsfieldRoutes } from './routes/higgsfield';
 import { videoRoutes }      from './routes/video';
 import { clipperRoutes }    from './routes/clipper';
 import { providersRoutes }  from './routes/providers';
+import { adsRoutes }        from './routes/ads';
+import { aiEditRoutes }     from './routes/ai-edit';
 import { ensureWorkspaceBackupsBucket } from './preview/workspace';
 
 async function main(): Promise<void> {
@@ -206,6 +208,8 @@ async function main(): Promise<void> {
   await app.register(videoRoutes);
   await app.register(clipperRoutes);
   await app.register(providersRoutes);
+  await app.register(adsRoutes);
+  await app.register(aiEditRoutes);
   // customHostRoutes is a Host-header preHandler — register LAST so the
   // /api/* routes have already been matched first (the preHandler still
   // fires per-request, but this keeps registration order tidy).
