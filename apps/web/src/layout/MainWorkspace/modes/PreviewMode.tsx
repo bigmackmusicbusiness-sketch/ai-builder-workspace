@@ -1,17 +1,20 @@
 // apps/web/src/layout/MainWorkspace/modes/PreviewMode.tsx — preview iframe mode.
 //
-// Phase C "retail vibe" upgrades:
-//   * Auto-reboot when the active project changes (stops the previous, boots the new).
-//   * SSE listener at /api/preview/watch/:slug — server emits `file-changed` whenever
-//     the agent (or any code) writes to the workspace. Debounced 250ms → re-bundle
-//     via /api/preview/rebundle and reload the iframe with a cache-buster.
-//   * Project-isolation guard: empty state when no project is selected.
-//   * Screenshot button POSTs /api/preview/screenshot (Playwright on the server).
-//
-// Boot/Stop/Reload remain user-controllable. Auto-reload only fires when a session
-// is already booted — it never starts one out of nowhere.
+// 2026-05 internal-live update — UX overhaul:
+//   * Single "Refresh" button replaces the old Stop / Boot / Reload trio.
+//     Calls POST /api/preview/refresh which orchestrates stop+boot in one
+//     hop on the server side.
+//   * Auto-boot on project switch is removed. Switching to a project that
+//     has no live session shows an empty state with a Refresh CTA, instead
+//     of silently spinning up a multi-second bundling job.
+//   * A booted session for one project is preserved when the user switches
+//     to another project — coming back to it shows the cached preview unchanged
+//     until the user explicitly hits Refresh.
+//   * The SSE file-changed listener still hot-reloads the iframe with a cache
+//     buster after agent writes; that's a different code path from the manual
+//     Refresh button.
 import { useRef, useCallback, useEffect, useState } from 'react';
-import { usePreviewStore } from '../../../lib/store/previewStore';
+import { usePreviewStore, type LogEntry } from '../../../lib/store/previewStore';
 import { useProjectStore } from '../../../lib/store/projectStore';
 import { useAuthStore } from '../../../lib/store/authStore';
 import { ProcessManager } from '../../../features/preview/ProcessManager';
@@ -31,18 +34,20 @@ const VIEWPORT_SIZES: { label: string; w: number }[] = [
 export function PreviewMode() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const {
-    session, logs, viewportWidth, currentRoute,
+    session, viewportWidth, currentRoute,
     setSession, updateSession, appendLogs, setViewportWidth, setCurrentRoute,
   } = usePreviewStore();
   const currentProject = useProjectStore((s) => s.projects[s.currentProjectId]);
   const [autoReloadAt, setAutoReloadAt] = useState<number | null>(null);
   const [shotMsg, setShotMsg]           = useState<string | null>(null);
+  const [refreshing, setRefreshing]     = useState(false);
 
   const sessionStatus = session?.status ?? 'idle';
 
-  // ── Boot ───────────────────────────────────────────────────────────────────
-  const handleBoot = useCallback(async () => {
-    if (!currentProject) return;
+  // ── Refresh (single button: stop-then-boot in one server-side hop) ─────────
+  const handleRefresh = useCallback(async () => {
+    if (!currentProject || refreshing) return;
+    setRefreshing(true);
 
     const body = {
       projectId:   currentProject.id,
@@ -53,16 +58,18 @@ export function PreviewMode() {
     };
 
     try {
+      // Optimistic placeholder so the UI flips into "bundling" immediately
+      // and the empty-state CTA disappears.
       setSession({
         sessionId:   'pending',
         projectSlug: currentProject.slug,
         previewUrl:  '',
         status:      'queued',
-        processes:   [],
+        processes:   [{ name: 'dev-server', status: 'running', startedAt: Date.now() }],
       });
 
       const data = await apiFetch<{ sessionId: string; previewUrl: string }>(
-        '/api/preview/boot',
+        '/api/preview/refresh',
         { method: 'POST', body: JSON.stringify(body) },
       );
 
@@ -74,11 +81,14 @@ export function PreviewMode() {
         processes:   [{ name: 'dev-server', status: 'running', startedAt: Date.now() }],
       });
 
+      // Poll status until 'booted' or terminal — same as old /boot flow
       void pollSession(data.sessionId, data.previewUrl);
     } catch (err) {
       updateSession({ status: 'error', error: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setRefreshing(false);
     }
-  }, [currentProject, setSession, updateSession]);
+  }, [currentProject, refreshing, setSession, updateSession]);
 
   // Poll logs every 2s; once 'booted', set the real previewUrl so the iframe loads.
   const pollSession = useCallback(async (sessionId: string, previewUrl: string) => {
@@ -87,7 +97,7 @@ export function PreviewMode() {
       await sleep(2000);
       attempts++;
       try {
-        const data = await apiFetch<{ logs: typeof logs; sessionStatus: string }>(
+        const data = await apiFetch<{ logs: LogEntry[]; sessionStatus: string }>(
           `/api/preview/logs?sessionId=${sessionId}`,
         );
         if (data.logs.length > 0) appendLogs(data.logs);
@@ -104,28 +114,15 @@ export function PreviewMode() {
     }
   }, [appendLogs, updateSession]);
 
-  // ── Stop ───────────────────────────────────────────────────────────────────
-  const handleStop = useCallback(async () => {
-    if (!session?.sessionId || session.sessionId === 'pending') return;
-    try {
-      await apiFetch('/api/preview/stop', {
-        method: 'POST',
-        body: JSON.stringify({ sessionId: session.sessionId }),
-      });
-    } catch { /* ignore stop errors */ }
-    updateSession({ status: 'stopped' });
-  }, [session, updateSession]);
-
-  // ── Reload ─────────────────────────────────────────────────────────────────
-  const handleReload = useCallback(() => {
+  // ── Manual reload (re-assign iframe src) ──────────────────────────────────
+  const handleManualReload = useCallback(() => {
     if (iframeRef.current) {
-      // Force a hard reload by re-assigning the same src
       // eslint-disable-next-line no-self-assign
       iframeRef.current.src = iframeRef.current.src;
     }
   }, []);
 
-  // ── Hot reload after rebundle ─────────────────────────────────────────────
+  // ── Hot reload after a server-side rebundle ────────────────────────────────
   const reloadIframeWithBuster = useCallback(() => {
     if (!session?.previewUrl || !iframeRef.current) return;
     const url = new URL(session.previewUrl);
@@ -134,51 +131,14 @@ export function PreviewMode() {
     setAutoReloadAt(Date.now());
   }, [session?.previewUrl, currentRoute]);
 
-  // ── Auto-reboot on project switch / first load ───────────────────────────
-  // Stop any running session for the previous project, then auto-boot for
-  // the new one. This is the "feels like a real IDE" behavior — opening a
-  // project should immediately try to render it.
-  //
-  // Critical: only auto-boot ONCE per slug. If the bundler errors, the
-  // session goes to status=error with session=null, which would otherwise
-  // re-trigger this effect forever (a refresh loop the user reported).
-  // The user can manually re-boot via the Boot button after fixing files.
-  const lastBootedSlugRef    = useRef<string | null>(null);
-  const attemptedBootSlugRef = useRef<string | null>(null);
-  useEffect(() => {
-    const newSlug = currentProject?.slug ?? null;
-    const prev    = lastBootedSlugRef.current;
-
-    if (prev !== null && newSlug !== prev) {
-      // Project changed — stop the old session and reset the boot attempt
-      // flag so the new project gets one (and only one) auto-boot try.
-      if (session) void handleStop();
-      attemptedBootSlugRef.current = null;
-    }
-    lastBootedSlugRef.current = newSlug;
-
-    // Auto-boot exactly once per slug, when no session and no in-flight bundle.
-    if (
-      newSlug &&
-      !session &&
-      sessionStatus !== 'bundling' &&
-      sessionStatus !== 'booted' &&
-      attemptedBootSlugRef.current !== newSlug
-    ) {
-      attemptedBootSlugRef.current = newSlug;
-      void handleBoot();
-    }
-  }, [currentProject?.slug, session, sessionStatus, handleStop, handleBoot]);
-
-  // ── SSE auto-reload ─ subscribe once we have a booted session ─────────────
+  // ── SSE auto-reload — only fires when there's already a booted session ────
+  // Note: this listens for agent-driven file writes and does NOT auto-boot.
+  // If the user hasn't clicked Refresh yet, no SSE subscription exists.
   useEffect(() => {
     if (sessionStatus !== 'booted' || !currentProject?.slug) return;
     const token = useAuthStore.getState().session?.access_token;
     if (!token) return;
 
-    // EventSource doesn't support auth headers; pass token as a query param if needed.
-    // Most setups gate watch with the same JWT cookie/token via authMiddleware.
-    // We send via header here using fetch + ReadableStream so we can attach the token.
     const ctrl = new AbortController();
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -205,9 +165,7 @@ export function PreviewMode() {
           buf = events.pop() ?? '';
 
           for (const ev of events) {
-            // Look for "event: file-changed\ndata: {...}"
             if (!ev.includes('event: file-changed')) continue;
-            // Debounce so a flurry of writes triggers one rebundle
             if (debounceTimer) clearTimeout(debounceTimer);
             debounceTimer = setTimeout(async () => {
               try {
@@ -227,7 +185,6 @@ export function PreviewMode() {
         }
       } catch (err) {
         if ((err as Error).name === 'AbortError') return;
-        // Reconnect in 3s
         reconnectTimer = setTimeout(start, 3000);
       }
     }
@@ -238,7 +195,6 @@ export function PreviewMode() {
       if (reconnectTimer) clearTimeout(reconnectTimer);
       if (debounceTimer)  clearTimeout(debounceTimer);
     };
-    // session.sessionId only — re-subscribe when session changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionStatus, currentProject?.slug, session?.sessionId]);
 
@@ -277,7 +233,6 @@ export function PreviewMode() {
   const frameWidth = viewportWidth === 0 ? '100%' : `${viewportWidth}px`;
 
   // ── Project-isolation guard ────────────────────────────────────────────────
-  // No selected project → don't show preview chrome at all.
   if (!currentProject) {
     return (
       <div className="abw-preview">
@@ -292,24 +247,45 @@ export function PreviewMode() {
     );
   }
 
+  const isBundling = sessionStatus === 'bundling' || sessionStatus === 'syncing' || sessionStatus === 'queued';
+
   return (
     <div className="abw-preview">
-      {/* Process manager row */}
+      {/* Process manager row — kept for status visibility, but Boot/Stop are gone */}
       <ProcessManager
         sessionStatus={sessionStatus}
         processes={session?.processes ?? []}
-        onBoot={handleBoot}
-        onStop={handleStop}
+        onBoot={handleRefresh}     /* legacy prop name, now points at refresh */
+        onStop={() => { /* no-op: Refresh subsumes Stop */ }}
       />
 
-      {/* Toolbar: reload, URL bar, viewport picker, screenshot */}
+      {/* Toolbar: Refresh (the only button), reload icon, URL bar, viewport picker, screenshot */}
       <div className="abw-preview__toolbar">
         <button
+          onClick={() => void handleRefresh()}
+          disabled={refreshing || isBundling}
+          aria-label="Refresh preview"
+          title="Refresh — stop and re-bundle in one click"
+          style={{
+            height: 26, padding: '0 var(--space-3)', border: '1px solid var(--accent-500)',
+            borderRadius: 'var(--radius-field)', background: 'var(--accent-500)',
+            color: '#fff',
+            cursor: refreshing || isBundling ? 'default' : 'pointer',
+            opacity: refreshing || isBundling ? 0.6 : 1,
+            fontSize: '0.75rem', fontWeight: 600,
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+          }}
+        >
+          <span aria-hidden style={{ fontSize: '0.875rem', lineHeight: 1 }}>↻</span>
+          {isBundling ? 'Bundling…' : 'Refresh'}
+        </button>
+
+        <button
           className="abw-preview__toolbar-btn"
-          onClick={handleReload}
+          onClick={handleManualReload}
           disabled={!previewSrc}
-          aria-label="Reload preview"
-          title="Reload"
+          aria-label="Hard-reload iframe"
+          title="Reload current page"
           style={{
             height: 26, padding: '0 var(--space-2)', border: '1px solid var(--border-base)',
             borderRadius: 'var(--radius-field)', background: 'var(--bg-subtle)',
@@ -317,7 +293,7 @@ export function PreviewMode() {
             color: 'var(--text-secondary)', opacity: previewSrc ? 1 : 0.4,
           }}
         >
-          ↺
+          ⟳
         </button>
 
         <input
@@ -333,7 +309,6 @@ export function PreviewMode() {
           readOnly={!previewSrc}
         />
 
-        {/* Auto-reload pulse (visible briefly after each hot reload) */}
         {autoReloadAt && (
           <span
             aria-live="polite"
@@ -418,7 +393,7 @@ export function PreviewMode() {
           <EmptyState
             status={sessionStatus}
             error={session?.error}
-            onBoot={handleBoot}
+            onRefresh={handleRefresh}
             projectName={currentProject.name}
           />
         )}
@@ -430,11 +405,11 @@ export function PreviewMode() {
 // ── Empty / error states ─────────────────────────────────────────────────────
 
 function EmptyState({
-  status, error, onBoot, projectName,
+  status, error, onRefresh, projectName,
 }: {
   status:      string;
   error?:      string;
-  onBoot:      () => void;
+  onRefresh:   () => void;
   projectName: string;
 }) {
   if (status === 'bundling' || status === 'syncing' || status === 'queued') {
@@ -466,7 +441,7 @@ function EmptyState({
           {error ?? 'An error occurred during bundling.'}
         </span>
         <button
-          onClick={onBoot}
+          onClick={onRefresh}
           style={{
             marginTop: 'var(--space-3)', padding: 'var(--space-2) var(--space-4)',
             background: 'var(--accent-500)', color: '#fff', border: 'none',
@@ -474,33 +449,34 @@ function EmptyState({
             fontWeight: 600, fontSize: '0.875rem',
           }}
         >
-          Retry
+          Refresh
         </button>
       </div>
     );
   }
 
-  // Idle / stopped — show Boot button
+  // Idle / stopped — explicit "click Refresh to boot" empty state. This is
+  // the new default for project switches: no auto-boot, the user picks when.
   return (
     <div className="abw-mode-placeholder" style={{ height: '100%' }}>
       <span className="abw-mode-placeholder__icon" aria-hidden>🖥</span>
       <span className="abw-mode-placeholder__label">
-        {status === 'stopped' ? 'Preview stopped' : 'Ready to preview'}
+        {status === 'stopped' ? 'Preview stopped' : `Ready to preview ${projectName}`}
       </span>
       <span className="abw-mode-placeholder__sub">
-        Boot the preview server to see {projectName} here. Files auto-reload as the agent edits.
+        Click Refresh to boot the preview server. Files auto-reload as the agent edits.
       </span>
       <button
-        onClick={onBoot}
+        onClick={onRefresh}
         style={{
           marginTop: 'var(--space-3)', padding: 'var(--space-2) var(--space-4)',
           background: 'var(--accent-500)', color: '#fff', border: 'none',
           borderRadius: 'var(--radius-button)', cursor: 'pointer',
           fontWeight: 600, fontSize: '0.875rem',
         }}
-        aria-label="Boot preview server"
+        aria-label="Refresh preview"
       >
-        ⚡ Boot preview
+        ↻ Refresh
       </button>
     </div>
   );

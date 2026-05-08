@@ -230,6 +230,47 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
     return reply.send({ ok: true });
   });
 
+  /** POST /api/preview/refresh — single-button stop+boot.
+   *
+   *  Replaces the old IDE Stop/Boot/Reload trio. Any pre-existing session
+   *  for this slug is evicted first, then a fresh boot starts. Body shape
+   *  matches /boot so callers can swap without changing payloads.
+   *
+   *  Implementation note: we delegate to the same internal request that
+   *  /boot uses (Fastify .inject) so the bundler logic stays in one place
+   *  and never drifts between the two routes. /inject is the standard
+   *  Fastify pattern for internal calls and is already used elsewhere in
+   *  this codebase. */
+  app.post<{ Body: unknown }>('/api/preview/refresh', async (req, reply) => {
+    const ctx = req.authCtx!;
+    requireRole(ctx, 'member');
+
+    const parsed = BootBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Invalid body', detail: parsed.error.format() });
+    }
+
+    // Step 1: evict any existing session for this slug+tenant. This is
+    // idempotent — if there's nothing to stop, it's a no-op.
+    evictSessionsBySlug(parsed.data.projectSlug, ctx.tenantId);
+
+    // Step 2: forward to /boot via Fastify's internal injector so the
+    // bundler logic (workspace restore, framework detection, KV sync,
+    // synthesized fallbacks) stays single-sourced. Forward auth headers.
+    const bootRes = await app.inject({
+      method:  'POST',
+      url:     '/api/preview/boot',
+      payload: parsed.data,
+      headers: {
+        'authorization':    req.headers['authorization'] ?? '',
+        'content-type':     'application/json',
+        'x-requested-with': 'fetch',
+      },
+    });
+
+    return reply.status(bootRes.statusCode).send(bootRes.json());
+  });
+
   /** GET /api/preview/sessions — list active sessions for tenant */
   app.get('/api/preview/sessions', async (req) => {
     const ctx = req.authCtx!;
