@@ -7,7 +7,7 @@
 
 ---
 
-## Current state (2026-05-09): Niche expansion Phase 1 — 4/12 batches shipped
+## Current state (2026-05-09): Niche expansion Phase 1 — 5/12 batches shipped
 
 The active multi-phase plan lives at `~/.claude/plans/eventual-leaping-petal.md`.
 We're mid-Phase-1 (niche library expansion: 10 → 111 manifests).
@@ -18,23 +18,22 @@ We're mid-Phase-1 (niche library expansion: 10 → 111 manifests).
   session-start INBOX rule; `notify-handoff.ps1` PowerShell toast script
   added at `C:/Users/telly/OneDrive/Desktop/AI Ops/scripts/`. Manifest-author
   prompt template at `apps/api/scripts/manifest-author-prompt.md`.
-- **Batches 1-4 shipped:** 42 net-new niches. Commits: `ac7ab05` (batch 1),
-  `6969cc0` (batch 2), `6f3172d` (batch 3), `900648b` (batch 4). Day 0 was
-  `2e741ba`. Plus `0268e03` from the prior copy-pattern alignment fix.
-- **Total niches on disk: 52** (10 original + 42 new). Catalog grows to 111
-  when the remaining 8 batches land.
+- **Batches 1-5 shipped:** 48 net-new niches. Commits: `ac7ab05` (batch 1),
+  `6969cc0` (batch 2), `6f3172d` (batch 3), `900648b` (batch 4),
+  `180b922` (batch 5). Day 0 was `2e741ba`. Checkpoint at `9a39374`.
+- **Total niches on disk: 58** (10 original + 48 new). Catalog grows to 111
+  when the remaining 7 batches land.
 - **Validation tooling:** `apps/api/scripts/validate-niche-batch.mjs` gates
   every batch — runs Zod against each manifest, slop-blocker against
   voice/image_directives + the matching ad-copy block, and hex-format check
   on palettes. Used per batch before commit.
-- **All builds + typechecks green** through 4 batches; production deploy
+- **All builds + typechecks green** through 5 batches; production deploy
   rolled cleanly each commit (api at `https://api.40-160-3-10.sslip.io`).
 
-### What's left in Phase 1 — 8 batches, 59 niches
+### What's left in Phase 1 — 7 batches, 53 niches
 
 | Batch | Category | Slug count | Status |
 |---|---|---|---|
-| 5 | Food | 6 | pending |
 | 6 | Fitness | 7 | pending |
 | 7 | Health (trimmed) | 5 | pending |
 | 8 | Beauty | 10 | pending |
@@ -42,6 +41,15 @@ We're mid-Phase-1 (niche library expansion: 10 → 111 manifests).
 | 10 | Events | 6 | pending |
 | 11 | Retail | 9 | pending |
 | 12 | Education + Professional | 11 | pending |
+
+**Locked slug list per batch (from plan §1.1):**
+- Batch 6: yoga-studio, pilates-studio, crossfit-box, personal-training, dance-studio, martial-arts-school, climbing-gym
+- Batch 7: chiropractor, physical-therapy, veterinary-clinic, optometry-eye-doctor, counseling-therapy
+- Batch 8: barbershop, hair-salon, nail-salon, med-spa, tattoo-studio, day-spa-massage, waxing-studio, lash-brow-studio, makeup-artist, skincare-esthetician
+- Batch 9: pet-grooming, mobile-pet-grooming, pet-boarding-daycare, dog-trainer, pet-sitter-walker
+- Batch 10: wedding-venue, wedding-planner, photography-studio, videography-events, dj-services, event-rental
+- Batch 11: bookstore-independent, bike-shop, outdoor-outfitter, consignment-resale, jewelry-store, furniture-store, vape-smoke-shop, florist, comic-game-shop
+- Batch 12: music-lessons-school, tutoring-service, driving-school, daycare-preschool, art-class-school, language-school, accounting-bookkeeping, insurance-agent, mortgage-broker, home-inspector, acupuncture-clinic
 
 Plus end-of-Phase-1 user-guide work: trim §12 cookbook to 4-5 representative
 prompts, add new §13 "Niche catalogue" (compact table of all 111 niches),
