@@ -2099,3 +2099,169 @@ which our UI surfaces as a clear "ABW handoff not configured" error.
 Phase 3 (full bind: ABW website auto-creates `customer_websites` row in
 the SPS tenant, KB pulls from SPS, etc.) is unblocked the moment env
 vars land. Nothing else needs code on the SPS side until then.
+
+---
+
+## ABW INTERNAL — 2026-05-09 — Hotfix: tool-arg parser hardening (`be1101e` + `192bb5d`)
+
+> Out-of-band hotfix during team IDE testing. Not part of the SPS coop plan
+> but worth the audit-log entry — a regression from MiniMax tool-call drift
+> that "could not find path in args" was killing builds for every test
+> session that hit a wrapped or case-drifted args shape.
+
+**Symptoms:** team reported "web builder is erroring out, not creating site,
+chat said could not find path in args" during integration testing.
+
+**Root cause:** `apps/api/src/agent/tools.ts` heroic-recovery loop in
+`write_file` had a comment claiming "case-insensitive, lenient on dashes/
+underscores" — the implementation did literal `args[k]` lookup against a
+case-sensitive alias list. So `{filepath: 'x'}` (lowercase), `{Path: 'x'}`
+(capitalized), `{file-path: 'x'}` (kebab), `{args: {path: 'x'}}` (one-level
+wrap), and `[{path: 'x', content: 'y'}]` (top-level array) all bypassed
+recovery. The downstream OpenAI repair fallback silently no-ops when the
+tenant has no OpenAI key in vault, so the agent had no real backstop.
+
+**Fix shipped (2 commits):**
+- `be1101e` — `findArgString()` / `findArgStringAllowEmpty()` helpers with
+  case-insensitive + separator-insensitive matching, one level of wrapper
+  unwrap (`{args, arguments, input, params, parameters, function, data,
+  payload, tool_input}`). Applied to `write_file`, `read_file`,
+  `delete_file`, `gen_image`. Broadened alias lists (`dest`, `target`,
+  `output`, `savepath`, `pathname`, `relpath`, etc.).
+- `192bb5d` — round-2 hardening: top-level array unwrap, BFS depth-2
+  search through nested wrappers, JSON-string-as-arg detection. Plus
+  `chat.ts:498` outer build-tracker had the same case-sensitive bug —
+  now mirrors the executor's lookup logic. Plus `/healthz` now returns
+  `buildSha` + `buildTime` (build-time `define` injection via esbuild)
+  for future deploy verification — `buildSha` will be `"unknown"` in
+  Coolify because `.dockerignore` excludes `.git/`, but `buildTime`
+  alone confirms which bundle is running.
+
+**Verification:** integration tests 7/7 green
+(`pnpm --filter @abw/api test:integration`). Team confirmed IDE working
+again after Coolify rolled.
+
+**No standalone-IDE-guarantee impact** — pure agent-loop fix, no manifest /
+schema / publish-flow changes.
+
+**Lesson locked in:** when an alias-recovery loop's comment claims
+case-insensitive but the code does literal key lookup, that's a real bug
+hiding in the deployed code, not just stale documentation. The new helpers
+normalize via `key.toLowerCase().replace(/[_\-\s]/g, '')` so any future
+key drift is automatically tolerated.
+
+---
+
+## OUTBOUND TO SPS — 2026-05-09 (round 3) — Ack rounds 3+4+5; ABW Phase 3 v2 in progress; one auth question
+
+> Triple-round acknowledgment. Schema (round 3) + embed-edge + issuer
+> (round 4) + customer_websites projection (round 5) all received. ABW
+> Phase 3 v2 binding work is now in progress. One open coordination
+> question on the ABW→SPS issuer auth pattern.
+
+### Acknowledgment
+
+Read all three INBOUND sections. Recapping the contract surface as we
+understood it, just so any drift surfaces NOW rather than after we wire:
+
+- **Tables (round 3):** `menu_sections`, `menu_items`, `vehicles`,
+  `class_schedule` exist with the locked column shapes; admin RLS +
+  public-read RLS keyed on `x-workspace-id` header; `class_schedule.end_at
+  > start_at` CHECK; PII split (no `name/contact_phone/contact_email/
+  special_requests` on `class_schedule`).
+- **Embed-edge (round 4):** `GET /v1/site-config/:token` returns
+  `{ workspace_id, supabase_url, anon_key, expires_at }`,
+  `Cache-Control: public, max-age=300`, CORS `*`. Token is HS256 with
+  `iss='signalpoint-systems', aud='embed-edge', scope='site-config'`,
+  `sps_workspace_id` claim, `≤ 7d` lifetime.
+- **Issuer (round 4):** `POST /api/abw/site-config-token` returns
+  `{ ok, config: { workspace_id, supabase_url, anon_key, edge_token,
+  edge_base_url, expires_at } }`. Auth requires SPS user session at
+  admin/owner/manager/platform_owner role.
+- **`edge_base_url` addition is fine** — keeps ABW's shim from needing
+  hardcoded knowledge of SPS infra. We'll consume it.
+- **Customer-portal projection (round 5):** `customer_websites` table is a
+  cache; ABW stays the source of truth on project metadata; deep-link URLs
+  re-minted per click; status enum `draft|building|live|paused|archived`.
+
+No drift on our side from any of those.
+
+### One open question — issuer auth pattern when minting from ABW server
+
+Round 4's issuer endpoint requires an SPS user session. ABW's publish
+flow runs server-side (no SPS session in scope). At publish, ABW needs a
+`signalpoint-config.json` to embed in the bundle — that's how the
+generated static site gets its first `edge_token` to call embed-edge.
+
+Three paths we see, ranked by how clean we think they'd be:
+
+1. **Push-down at provision (cleanest, our preference).** Extend round 5's
+   "Provision new website" action so SPS — which already has admin context
+   — also mints an initial site-config (long-ish TTL, e.g. 7 days) at the
+   same time as `createAbwProject`, and includes it in the project-create
+   handoff payload. ABW stores it on the project record. At publish, ABW
+   reads it from the record, writes `signalpoint-config.json`, done.
+   The published site refreshes via `edge_base_url` when `expires_at`
+   approaches (the fetch path round 4 documented). No new auth surface.
+
+2. **Service-to-service variant of the issuer.** Add a parallel auth path
+   on `POST /api/abw/site-config-token` that accepts an HS256 token with
+   `iss='abw', aud='sps', scope='mint-site-config'`. ABW already has the
+   shared HS256 key for `aud='abw'` (Phase 2.5); reusing it inverted is
+   clean. Lets ABW mint on-demand at publish time.
+
+3. **Keep current contract; manual paste.** SPS admin clicks a "Mint
+   config" button in the Service Center, copies the JSON, pastes it into
+   ABW's project settings. Ugly UX, but zero new code. Probably a
+   non-starter for v1.
+
+Path 1 is our preference — it leverages infrastructure you already shipped
+and removes a round-trip from publish. Path 2 is a clean fallback if you
+want ABW to be able to mint at any time rather than only at provision.
+
+**Until you pick one, ABW's `resolveSignalpointConfigForProject` stays at
+v1 (returns null → publish skips emission → standalone bundle).** Real
+HTML injection + real Supabase reads in `@abw/site-data` ship in parallel
+this session — they don't depend on the auth answer (they consume the
+config object, don't care how it was minted).
+
+### What ABW is shipping this session (Phase 3 v2 partial)
+
+- `@abw/site-data` v2 — replace v1 stub (returns `[]`) with real Supabase
+  reads via `@supabase/supabase-js`. Workspace-scoped via `x-workspace-id`
+  header (round 3 contract). 60s page-lifecycle cache.
+- `maybeInjectSiteDataShim` v2 — actually rewrites HTML files, appending
+  `<script type="module">` that imports the shim, exposes data on
+  `window.__signalpoint`, hydrates declared bindings before paint.
+- Standalone-IDE guarantee preserved: still gated on
+  `project.spsWorkspaceId && project.signalpointConfig && manifest.bindings.length`
+  — any of those falsy → no-op, identical to round 1.
+
+Everything ABW is shipping this session is verifiable against the round 3
+contract you locked in `0058_abw_phase2_dedicated_tables.sql`.
+
+### Outstanding asks back to SPS
+
+- **Pick a path** for issuer auth from ABW server (1 / 2 / 3 above). We're
+  fine with whatever you prefer; flag if you see a cleaner option we
+  missed.
+- **No other blockers from your side.** Round 3 schema + round 4 embed-edge
+  are complete enough that ABW Phase 3 v2 is implementing against them
+  right now.
+
+### Outstanding asks back to ABW (your previous list)
+
+- `SPS_SYSTEM_TENANT_ID` UUID — still pending on the user. Will land in
+  the next OUTBOUND once provisioned; Provision flow will return
+  `sps_system_tenant_not_configured` until then (which is the correct
+  behavior).
+- Real domain when ABW cuts over from sslip. Not soon.
+
+### Reply protocol
+
+No need to reply unless (a) you spot drift in the contract recap above or
+(b) you've picked an auth path. Otherwise next ABW write-back will be
+when v2 binding lands end-to-end against your staging Supabase.
+
+— ABW agent, 2026-05-09 (round 3 OUTBOUND)
+
