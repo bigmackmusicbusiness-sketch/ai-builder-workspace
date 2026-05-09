@@ -2265,3 +2265,63 @@ when v2 binding lands end-to-end against your staging Supabase.
 
 — ABW agent, 2026-05-09 (round 3 OUTBOUND)
 
+---
+
+## Phase 3 v2 partial shipped — 2026-05-09
+
+> Three commits this session land the parts of Phase 3 v2 that don't depend
+> on the open SPS-auth-path question (round 3 OUTBOUND). The remaining
+> piece (`resolveSignalpointConfigForProject` v2) is gated on SPS picking
+> path 1 / 2 / 3.
+
+### What's now real
+
+| Layer | v1 (before) | v2 (now) | Commit |
+|---|---|---|---|
+| `SignalPointConfig` schema | 5 fields | 6 fields incl. `edge_base_url` (round 4) | `ff51b6d` |
+| `serializeSignalpointConfig` | 5-key ordered output | 6-key ordered output, byte-identical to round-4 issuer response | `ff51b6d` |
+| `@abw/site-data` `readTable` | returned `[]` | real PostgREST `GET ${supabase_url}/rest/v1/${table}?select=*` with `apikey` + `Authorization` + `x-workspace-id` headers; graceful empty-array fallback on every failure mode; 60s page-lifecycle cache | `e3150cd` |
+| `@abw/site-data` refresh path | n/a | `isConfigExpiringSoon()` (24h threshold) + `refreshConfig()` (hits `${edge_base_url}/v1/site-config/${edge_token}` per round-4 contract) + `mergeRefreshedConfig()` (preserves edge_token + edge_base_url from base) | `e3150cd` |
+| `maybeInjectSiteDataShim` | logged intent, no HTML mutation | real injection: walks ws, finds `*.html` + `*.htm`, inserts `<script>` before LAST `</body>`; idempotent via `<!-- abw:signalpoint-shim:v1 -->` marker; injected script is self-contained (~30 lines minified, no SDK), hydrates `window.__signalpoint`, dispatches `signalpoint:ready` | `84575f9` |
+| `runPhases.runPostPhase` | called shim with no `ws` (nothing to inject into) | passes `ws` through so the gate can actually rewrite | `84575f9` |
+| Skills-dir resolver in `plan.ts` | returned candidate[0] blind | `existsSync()` probe, picks first dir that exists; fixes a path bug that bit when running tests from `cwd=apps/api` | `84575f9` |
+
+### Test surface
+
+- `apps/api/tests/integration/standalone-regression.test.ts` — 5 tests, still green. Source-grep guarantee held.
+- `apps/api/tests/integration/standalone-bundle.test.ts` — 2 tests, still green. No SPS strings in standalone bundle.
+- `apps/api/tests/integration/shim-injection.test.ts` — **NEW**, 11 tests. Pure helpers (`buildShimScript`, `injectShimIntoHtml`) + workspace-level injection (3 gate states + idempotency + non-html files untouched + would-inject report when ws omitted).
+- `packages/site-data/index.test.ts` — **NEW**, 20 tests with mocked `globalThis.fetch`. Header shape, all four fetch failure modes, cache hit + per-(table, workspace) key, public-getter contract sort/filter, refresh path.
+
+**Total green:** API integration 18/18 (5+2+11). Site-data unit 20/20. Typecheck + build clean across both packages.
+
+### Standalone-IDE guarantee — held
+
+Every gate function still returns early when:
+1. `project.spsWorkspaceId` is null/undefined → standalone path, no-op.
+2. `project.signalpointConfig` is null → no-op (issuer not yet wired — Phase 3 v2's `resolveSignalpointConfigForProject` is still v1 stub returning null).
+3. matched niche manifest has no `site_data_bindings` → no-op.
+
+In production today, gate 2 ALWAYS triggers the no-op (because the resolver is still v1). So the new injection code is dormant until SPS picks an auth path and the resolver lands.
+
+### What's still v1 (gated work)
+
+- `apps/api/src/security/signalpointConfig.ts` — `resolveSignalpointConfigForProject` returns null. Will land when SPS picks an auth path (round 3 OUTBOUND §"open question"). Once resolved, the publish flow's existing wiring (commit `37324ad`) starts emitting `signalpoint-config.json` and the injection above starts firing on real builds.
+- No code is hot-paths-blocked on the `SPS_SYSTEM_TENANT_ID` UUID — it gates SPS's `createCustomerWebsite` flow, not ABW's binding code.
+
+### Polling
+
+The 20-min `phase3-readiness-check` poller is re-enabled with updated triggers:
+- **Trigger A:** new `## INBOUND FROM SPS — <date> (round 6+)` with auth-path decision → poller implements `resolveSignalpointConfigForProject` v2.
+- **Trigger B:** user pastes `SPS_SYSTEM_TENANT_ID = <uuid>` anywhere in HANDOFF_NOTES.md → poller drafts the round-4 OUTBOUND with the UUID.
+- **Trigger C:** Both fire → A first.
+
+When all three v2 deps land (auth answer + UUID + landed code), a final commit will append `## Phase 3 v2 shipped — <date>` here and the poller self-disables.
+
+### Commits this session
+
+1. `f000e28` docs(handoff): bug-fix audit + round 3 OUTBOUND
+2. `ff51b6d` feat(phase3-v2): SignalPointConfig schema gains edge_base_url
+3. `e3150cd` feat(phase3-v2): @abw/site-data v2 — real PostgREST fetch + refresh helpers
+4. `84575f9` feat(phase3-v2): real HTML shim injection + 11-test integration coverage
+
