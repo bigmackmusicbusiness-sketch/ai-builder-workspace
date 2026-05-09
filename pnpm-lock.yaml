@@ -99,6 +99,9 @@ importers:
       '@abw/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@abw/site-data':
+        specifier: workspace:*
+        version: link:../../packages/site-data
       '@abw/verify':
         specifier: workspace:*
         version: link:../../packages/verify
@@ -374,6 +377,19 @@ importers:
         version: 1.6.1(@types/node@20.19.39)(jsdom@24.1.3)
 
   packages/shared:
+    dependencies:
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@20.19.39)(jsdom@24.1.3)
+
+  packages/site-data:
     dependencies:
       zod:
         specifier: ^3.23.8

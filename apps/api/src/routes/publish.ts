@@ -14,6 +14,8 @@ import { getWorkspace, workspaceExists, restoreWorkspaceFromStorage } from '../p
 import { stat } from 'node:fs/promises';
 import { createClient } from '@supabase/supabase-js';
 import { env as appEnv } from '../config/env';
+import { resolveSignalpointConfigForProject, serializeSignalpointConfig } from '../security/signalpointConfig';
+import { getRawSql } from '../db/client';
 
 declare module 'fastify' {
   interface FastifyRequest { authCtx?: AuthContext; }
@@ -303,6 +305,40 @@ export async function publishRoutes(app: FastifyInstance): Promise<void> {
           .set({ status: 'failed', error: errMsg.slice(0, 1000), updatedAt: new Date() })
           .where(eq(deployments.id, deployId));
         return reply.status(422).send({ error: errMsg });
+      }
+
+      // ── Phase 3: optional signalpoint-config.json emission ────────────────
+      // When the project is tagged with sps_workspace_id (Phase 2.5 column)
+      // AND SPS's issuer endpoint is live (v2), embed signalpoint-config.json
+      // alongside the HTML so the @abw/site-data shim can fetch live data.
+      // v1 always returns null from the resolver — emission is dormant for
+      // every project until SPS ships. Standalone-IDE guarantee preserved:
+      // projects without sps_workspace_id never enter this branch.
+      let projectSpsWorkspaceId: string | null = null;
+      try {
+        const rawSql = getRawSql();
+        const rows = await rawSql.unsafe(
+          `SELECT sps_workspace_id FROM projects WHERE id = $1 AND tenant_id = $2 LIMIT 1`,
+          [projectId, ctx.tenantId],
+        ) as Array<{ sps_workspace_id: string | null }>;
+        projectSpsWorkspaceId = rows[0]?.sps_workspace_id ?? null;
+      } catch {
+        // Migration 0014 not yet applied OR column doesn't exist — treat as standalone.
+        projectSpsWorkspaceId = null;
+      }
+      if (projectSpsWorkspaceId) {
+        const signalpointConfig = await resolveSignalpointConfigForProject({
+          projectId,
+          tenantId:        ctx.tenantId,
+          spsWorkspaceId:  projectSpsWorkspaceId,
+        });
+        if (signalpointConfig) {
+          bundleResult.assets.set('signalpoint-config.json', serializeSignalpointConfig(signalpointConfig));
+        }
+        // Note: resolver returning null here means SPS isn't reachable / not
+        // yet wired. We don't fail the deploy — the bundle just publishes
+        // without the config, and the shim's runtime fetch fallback handles
+        // the absence (returns empty data, template renders fallback copy).
       }
 
       // Deploy via the chosen adapter
