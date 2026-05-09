@@ -265,6 +265,81 @@ export interface ToolExecutionResult {
   result:  string;   // full result fed back to the model
 }
 
+// ── Args lookup helpers (model-shape-tolerant) ──────────────────────────────
+//
+// Background: the IDE has been observed receiving tool_calls in argument
+// shapes the schema doesn't match. Common drift (caught in prod by team
+// testing on 2026-05-09):
+//   - Case mismatch:        { Path: 'x' }, { PATH: 'x' }, { filepath: 'x' }
+//   - Underscore/dash drift: { file-path: 'x' }, { file_path: 'x' }
+//   - One-level wrap:       { args: { path: 'x' } }, { input: {...} }, etc.
+//   - Unconventional names: { dest: 'x' }, { target: 'x' }, { pathname: 'x' }
+//
+// Approach: a forgiving lookup helper that any tool with arg-driven inputs
+// can call. Case-insensitive, separator-insensitive, peeks inside one level
+// of wrapper-object if the top level has no match. Used by every tool that
+// reads a "path" / "prompt" / "filename" / etc. so the recovery logic is
+// uniform and the error budget is spent at the model layer, not here.
+
+/** Wrapper keys we'll peek inside if a direct lookup fails. */
+const WRAPPER_KEYS = ['args', 'arguments', 'input', 'params', 'parameters', 'function', 'data', 'payload', 'tool_input', 'toolInput'];
+
+function normKey(k: string): string {
+  return k.toLowerCase().replace(/[_\-\s]/g, '');
+}
+
+/** Find the first non-empty string value at `args[alias]` for any alias,
+ *  case-insensitive and ignoring separators. Falls back to one level of
+ *  wrapper-object unwrap if no top-level match is found. */
+function findArgString(
+  args: Record<string, unknown>,
+  aliases: string[],
+): string | undefined {
+  const lowered = new Set(aliases.map(normKey));
+  const lookup = (obj: Record<string, unknown>): string | undefined => {
+    for (const [k, v] of Object.entries(obj)) {
+      if (typeof v !== 'string' || !v.trim()) continue;
+      if (lowered.has(normKey(k))) return v.trim();
+    }
+    return undefined;
+  };
+  const top = lookup(args);
+  if (top !== undefined) return top;
+  for (const wrapKey of WRAPPER_KEYS) {
+    const wrapped = args[wrapKey];
+    if (wrapped && typeof wrapped === 'object' && !Array.isArray(wrapped)) {
+      const inner = lookup(wrapped as Record<string, unknown>);
+      if (inner !== undefined) return inner;
+    }
+  }
+  return undefined;
+}
+
+/** Like findArgString, but allows empty strings (e.g. legitimately empty content). */
+function findArgStringAllowEmpty(
+  args: Record<string, unknown>,
+  aliases: string[],
+): string | undefined {
+  const lowered = new Set(aliases.map(normKey));
+  const lookup = (obj: Record<string, unknown>): string | undefined => {
+    for (const [k, v] of Object.entries(obj)) {
+      if (typeof v !== 'string') continue;
+      if (lowered.has(normKey(k))) return v;
+    }
+    return undefined;
+  };
+  const top = lookup(args);
+  if (top !== undefined) return top;
+  for (const wrapKey of WRAPPER_KEYS) {
+    const wrapped = args[wrapKey];
+    if (wrapped && typeof wrapped === 'object' && !Array.isArray(wrapped)) {
+      const inner = lookup(wrapped as Record<string, unknown>);
+      if (inner !== undefined) return inner;
+    }
+  }
+  return undefined;
+}
+
 /**
  * Execute a single tool call against the workspace.
  * `argsJson` is the raw JSON string from the model.
@@ -311,30 +386,39 @@ export async function executeToolCall(
       case 'write_file': {
         // Heroic argument recovery for MiniMax M2.7 — observed failure modes:
         //   1. Right schema:               { path: "x", content: "y" }
-        //   2. Alias keys:                 { filename: "x", body: "y" }
-        //   3. Path AS the key:            { "index.html": "<!DOCTYPE...>" }
-        //   4. Array-wrapped:              [{ path: "x", content: "y" }]
-        //   5. Empty / no args:            {} — model just emits the call name
-        // Try them all in order. Log the raw args when nothing works so the
-        // next test can be debugged from container logs.
+        //   2. Alias keys (any case):      { Filename: "x", BODY: "y" }
+        //   3. Underscore/dash drift:      { file-path: "x", file_content: "y" }
+        //   4. Path AS the key:            { "index.html": "<!DOCTYPE...>" }
+        //   5. Wrapped one level:          { args: { path: "x", content: "y" } }
+        //   6. Array-wrapped:              [{ path: "x", content: "y" }]
+        //   7. Empty / no args:            {} — model just emits the call name
+        // findArgString handles 1-3 + 5 uniformly (case-insensitive, separator-
+        // insensitive, peeks into common wrappers). Modes 4/6/7 still fall
+        // through to the dedicated branches below.
         let path    = '';
         let content = '';
 
-        const aliasKeys     = ['path', 'filename', 'filePath', 'file', 'relPath', 'name', 'fileName', 'file_path', 'file_name'];
-        const contentKeys   = ['content', 'body', 'text', 'html', 'data', 'source', 'fileContent', 'file_content'];
-        const pathExtRegex  = /\.(html?|css|jsx?|tsx?|mjs|cjs|json|md|txt|svg|xml|yml|yaml|toml|env)$/i;
+        // Aliases are case-insensitive + separator-insensitive thanks to normKey,
+        // so e.g. 'filepath' matches { filePath, file-path, FILE_PATH, FilePath }.
+        const pathAliases = [
+          'path', 'filepath', 'file', 'filename', 'pathname', 'name',
+          'relpath', 'relativepath', 'dest', 'destination', 'target', 'to',
+          'out', 'output', 'outputpath', 'savepath', 'savedas', 'where',
+        ];
+        const contentAliases = [
+          'content', 'body', 'text', 'html', 'data', 'source', 'src',
+          'filecontent', 'code', 'value', 'string', 'str', 'markup',
+          'payload', 'rawcontent',
+        ];
+        const pathExtRegex = /\.(html?|css|jsx?|tsx?|mjs|cjs|json|md|txt|svg|xml|yml|yaml|toml|env)$/i;
 
-        // Mode 1+2: known keys (case-insensitive, lenient on dashes/underscores)
-        for (const k of aliasKeys) {
-          const v = args[k];
-          if (typeof v === 'string' && v.trim()) { path = v.trim(); break; }
-        }
-        for (const k of contentKeys) {
-          const v = args[k];
-          if (typeof v === 'string') { content = v; break; }
-        }
+        // Mode 1+2+3+5: tolerant alias lookup (also peeks one wrapper level).
+        const foundPath    = findArgString(args, pathAliases);
+        const foundContent = findArgStringAllowEmpty(args, contentAliases);
+        if (foundPath !== undefined)    path    = foundPath;
+        if (foundContent !== undefined) content = foundContent;
 
-        // Mode 3: object key IS a filename, value IS the content
+        // Mode 4: object key IS a filename, value IS the content
         if (!path) {
           for (const [k, v] of Object.entries(args)) {
             if (typeof v === 'string' && pathExtRegex.test(k)) {
@@ -342,6 +426,21 @@ export async function executeToolCall(
               content = v;
               break;
             }
+          }
+        }
+        // Same trick one level down (e.g. { args: { "index.html": "..." } })
+        if (!path) {
+          for (const wrapKey of WRAPPER_KEYS) {
+            const wrapped = args[wrapKey];
+            if (!wrapped || typeof wrapped !== 'object' || Array.isArray(wrapped)) continue;
+            for (const [k, v] of Object.entries(wrapped as Record<string, unknown>)) {
+              if (typeof v === 'string' && pathExtRegex.test(k)) {
+                path    = k;
+                content = v;
+                break;
+              }
+            }
+            if (path) break;
           }
         }
 
@@ -359,6 +458,17 @@ export async function executeToolCall(
         if (!content) {
           for (const v of Object.values(args)) {
             if (typeof v === 'string' && v.length >= 50) { content = v; break; }
+          }
+        }
+        // Same heuristic one level down for content
+        if (!content) {
+          for (const wrapKey of WRAPPER_KEYS) {
+            const wrapped = args[wrapKey];
+            if (!wrapped || typeof wrapped !== 'object' || Array.isArray(wrapped)) continue;
+            for (const v of Object.values(wrapped as Record<string, unknown>)) {
+              if (typeof v === 'string' && v.length >= 50) { content = v; break; }
+            }
+            if (content) break;
           }
         }
 
@@ -392,20 +502,24 @@ export async function executeToolCall(
         }
 
         if (!path) {
-          // Log so we can fix targeted next round.
+          // Heroic recovery exhausted AND OpenAI repair fallback failed.
+          // Log the FULL raw args (not just keys) so we can see what shape
+          // the model sent and add a recovery branch in the next round.
           // eslint-disable-next-line no-console
-          console.error('[write_file] no path found in args. Raw args keys:', Object.keys(args), 'sample values:',
-            Object.fromEntries(Object.entries(args).slice(0, 5).map(([k, v]) =>
-              [k, typeof v === 'string' ? v.slice(0, 80) : typeof v])));
+          console.error(
+            '[write_file] no path found after all recovery passes. ' +
+            `Raw args (full): ${argsJson.slice(0, 1000)}${argsJson.length > 1000 ? `…(+${argsJson.length - 1000}c)` : ''}`,
+          );
           return {
             ok: false,
             summary: 'write_file refused — could not find a path in the args',
             result:
-              `Error: write_file needs a path argument but none of these keys carried one: ` +
-              `${aliasKeys.join(', ')}. The args object had keys: [${Object.keys(args).join(', ') || '(empty)'}]. ` +
+              `Error: write_file needs a path argument but the args you sent had no recognizable path field. ` +
+              `The args object had top-level keys: [${Object.keys(args).join(', ') || '(empty)'}]. ` +
               `RETRY using THIS EXACT format:\n` +
               `{"path": "index.html", "content": "<!DOCTYPE html>...full content..."}\n` +
-              `The first arg is the relative file path. The second is the full file content as a string.`,
+              `The first arg is the relative file path. The second is the full file content as a string. ` +
+              `Do NOT wrap them in {args:...}, {input:...}, etc. — emit them as direct top-level keys.`,
           };
         }
         if (!content) {
@@ -530,8 +644,20 @@ export async function executeToolCall(
       }
 
       case 'read_file': {
-        const path = String(args['path'] ?? '');
-        if (!path) throw new Error('"path" is required');
+        const path = findArgString(args, [
+          'path', 'filepath', 'file', 'filename', 'pathname', 'name',
+          'relpath', 'relativepath', 'target',
+        ]) ?? '';
+        if (!path) {
+          return {
+            ok: false,
+            summary: 'read_file refused — no path in args',
+            result:
+              `Error: read_file needs a path argument. Top-level keys received: ` +
+              `[${Object.keys(args).join(', ') || '(empty)'}]. ` +
+              `Retry with {"path": "index.html"}.`,
+          };
+        }
         const content = await readWorkspaceFile(ws, path);
         if (content === null) {
           return {
@@ -562,8 +688,20 @@ export async function executeToolCall(
       }
 
       case 'delete_file': {
-        const path = String(args['path'] ?? '');
-        if (!path) throw new Error('"path" is required');
+        const path = findArgString(args, [
+          'path', 'filepath', 'file', 'filename', 'pathname', 'name',
+          'relpath', 'relativepath', 'target',
+        ]) ?? '';
+        if (!path) {
+          return {
+            ok: false,
+            summary: 'delete_file refused — no path in args',
+            result:
+              `Error: delete_file needs a path argument. Top-level keys received: ` +
+              `[${Object.keys(args).join(', ') || '(empty)'}]. ` +
+              `Retry with {"path": "old-file.html"}.`,
+          };
+        }
         await deleteWorkspaceFile(ws, path);
         return {
           ok: true,
@@ -573,9 +711,22 @@ export async function executeToolCall(
       }
 
       case 'gen_image': {
-        const prompt   = String(args['prompt'] ?? '');
-        const filename = String(args['filename'] ?? 'image.jpg');
-        if (!prompt) throw new Error('"prompt" is required');
+        const prompt = findArgString(args, [
+          'prompt', 'description', 'query', 'text', 'image_prompt', 'imagedescription',
+        ]) ?? '';
+        const filename = findArgString(args, [
+          'filename', 'name', 'file', 'filepath', 'path', 'pathname', 'output', 'savedas', 'savepath',
+        ]) ?? 'image.jpg';
+        if (!prompt) {
+          return {
+            ok: false,
+            summary: 'gen_image refused — no prompt in args',
+            result:
+              `Error: gen_image needs a "prompt" argument. Top-level keys received: ` +
+              `[${Object.keys(args).join(', ') || '(empty)'}]. ` +
+              `Retry with {"prompt": "<image description>", "filename": "hero.jpg"}.`,
+          };
+        }
 
         // Hard-gate: refuse image gen until index.html (or src/main.tsx)
         // exists. The model has been observed burning iteration budget on
