@@ -155,6 +155,7 @@ export async function runPostPhase(input: PostPhaseInput): Promise<{
   // workspaces without project.signalpointConfig set.
   if (plan && project) {
     const shimRes = await maybeInjectSiteDataShim({
+      ws,                               // v2: actually rewrite HTML files
       projectTypeId: projectTypeId ?? 'website',
       plan,
       project,

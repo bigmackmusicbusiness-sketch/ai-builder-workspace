@@ -7,6 +7,7 @@
 
 import { z } from 'zod';
 import { readdir, readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ProviderAdapter, ChatMessage, ToolDefinition } from '@abw/providers';
@@ -103,9 +104,14 @@ export type NicheManifestType = z.infer<typeof NicheManifest>;
 
 // ── Skills directory resolver ─────────────────────────────────────────────────
 
-/** Find the apps/api/src/agent/skills directory at runtime. Works in both
- *  bundled prod (cwd=/app, file at /app/apps/api/dist/server.js) and dev
- *  (cwd=/app/apps/api). */
+/** Find the apps/api/src/agent/skills directory at runtime. Works in:
+ *  - bundled prod (cwd=/app, file at /app/apps/api/dist/server.js)
+ *  - dev / vitest (cwd=/app/apps/api)
+ *  - turbo from repo root (cwd=/app)
+ *
+ *  Probes each candidate via existsSync and returns the first that exists.
+ *  Falls back to the most-likely candidate if none exist (downstream
+ *  readFile then fails loudly with a path that's at least diagnosable). */
 function resolveSkillsDir(): string {
   const candidates = [
     resolve(process.cwd(), 'apps', 'api', 'src', 'agent', 'skills'),
@@ -113,8 +119,11 @@ function resolveSkillsDir(): string {
     // Bundled dist path: try dirname-relative.
     typeof __dirname !== 'undefined' ? resolve(__dirname, '..', 'agent', 'skills') : '',
   ].filter(Boolean) as string[];
-  // Return the first one that exists (sync check via require would block at top level;
-  // we just return the first candidate and let downstream readFile fail loudly).
+  for (const candidate of candidates) {
+    try {
+      if (existsSync(candidate)) return candidate;
+    } catch { /* try next */ }
+  }
   return candidates[0] ?? '';
 }
 
