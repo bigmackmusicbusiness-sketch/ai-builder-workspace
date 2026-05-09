@@ -1,0 +1,28 @@
+{
+  "niche": "hair-salon",
+  "label": "Hair Salon",
+  "triggers": ["hair salon", "hairdresser", "hair stylist", "balayage", "highlights", "hair color", "color correction", "extensions", "smoothing treatment", "keratin treatment", "blowout", "women's haircut", "color salon"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+signature-services+book" },
+    { "slug": "services", "role": "cuts+color+treatments+pricing" },
+    { "slug": "gallery",  "role": "color-and-cut-portfolio" },
+    { "slug": "team",     "role": "stylist-bios+specialties" },
+    { "slug": "book",     "role": "consultation+online-booking" },
+    { "slug": "contact",  "role": "address+hours+phone" }
+  ],
+  "compliance_blocks": ["cosmetology-license-footer", "allergy-disclosure-form", "cancellation-policy", "no-show-fee-policy", "gratuity-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "HairSalon",
+  "voice_template": "consultative, color-trained, talks formula and tone in plain English, calm chair-side energy",
+  "palettes": [
+    { "name": "warm-gold-cream",  "hexes": ["#B98A3D", "#FBF6EC", "#F0DEB6", "#241808"] },
+    { "name": "dusty-rose-smoke", "hexes": ["#B07A7A", "#FAF1EE", "#E5CFCB", "#22151A"] },
+    { "name": "ash-cream",        "hexes": ["#7B7873", "#FBF8F2", "#E2DDD3", "#161514"] },
+    { "name": "champagne-mauve",  "hexes": ["#A78A6D", "#FBF6EE", "#EBD9C2", "#1E140C"] },
+    { "name": "espresso-pearl",   "hexes": ["#3B2A1E", "#F6EFE5", "#E0CFB8", "#15100B"] },
+    { "name": "smoked-rose",      "hexes": ["#8E6168", "#FAF2EF", "#E8CFD0", "#1A0E12"] }
+  ],
+  "section_library": ["hero", "page-hero", "service-grid", "color-menu", "cut-menu", "treatment-card", "stylist-card", "consultation-cta", "appointment-cta", "phone-cta", "gallery-grid", "before-after-gallery", "salon-story", "address-card", "hours-strip", "review-strip", "faq-accordion", "footer"],
+  "image_directives": "in-chair color and cut photography. Foils being placed, color in a glass bowl, a brush mid-stroke, a stylist sectioning with a tail comb. Show the actual work — wet hair after a glaze, the towel wrap, mirror angles in the chair. Avoid brushed-out wig-photo glamour shots, glossy catalog hair, and fake-laughing client clichés. Soft daylight, real product on the station, hands and hair in focus.",
+  "voice_pet_words": ["formula", "tone", "lift", "balayage", "consultation", "section", "glaze", "maintenance"],
+  "primary_keywords": ["hair salon", "balayage", "hair color", "haircut"]
+}

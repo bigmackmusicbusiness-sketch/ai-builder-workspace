@@ -1,0 +1,27 @@
+{
+  "niche": "makeup-artist",
+  "label": "Makeup Artist",
+  "triggers": ["makeup artist", "bridal makeup", "wedding makeup", "editorial makeup", "special occasion makeup", "mua", "on-location makeup", "trial makeup", "airbrush makeup", "makeup portfolio", "freelance makeup artist", "mobile makeup"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+portfolio-preview+inquire" },
+    { "slug": "work",     "role": "portfolio-by-category" },
+    { "slug": "services", "role": "bridal+editorial+rates" },
+    { "slug": "about",    "role": "story+training+kit-notes" },
+    { "slug": "contact",  "role": "inquiry-form+booking-window" }
+  ],
+  "compliance_blocks": ["allergy-disclosure-form", "patch-test-policy", "cancellation-policy", "deposit-and-retainer-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "BeautySalon",
+  "voice_template": "portfolio-led, taste-driven, technical about products, low-key with brides, no Instagram-glow promises",
+  "palettes": [
+    { "name": "editorial-neutral", "hexes": ["#9C8A78", "#FBF8F4", "#E5D9CA", "#13100C"] },
+    { "name": "blush-charcoal",    "hexes": ["#D9A99C", "#FAF2EE", "#E9C7BE", "#1A1011"] },
+    { "name": "studio-paper",      "hexes": ["#7A6E62", "#FFFEFB", "#E2D8C9", "#0F0D0A"] },
+    { "name": "warm-bone",         "hexes": ["#B49A82", "#FBF7EE", "#EBD8C0", "#161108"] },
+    { "name": "rose-noir",         "hexes": ["#C58F89", "#FBF1EE", "#EFCFC8", "#100808"] },
+    { "name": "ink-cream",         "hexes": ["#1B1816", "#FAF5ED", "#E0D0BA", "#080706"] }
+  ],
+  "section_library": ["hero", "page-hero", "portfolio-grid", "category-strip", "service-card", "rate-card", "kit-notes", "trial-and-day-of-strip", "inquiry-form", "phone-cta", "press-strip", "story-strip", "review-strip", "faq-accordion", "footer"],
+  "image_directives": "portfolio-first photography. Tight crops of finished looks, a brush mid-blend, a palette streaked with worked-in color, a bride at her vanity. Show the kit and the work — not the artist's selfie. Avoid filtered glamour-shot retouching, IG-influencer ring-light flat lays, and AI-perfect skin renders. Studio strobe or bright daylight, real skin texture preserved, varied skin tones front and center.",
+  "voice_pet_words": ["look", "kit", "trial", "skin prep", "lash strip", "blend", "wear time", "on-location"],
+  "primary_keywords": ["makeup artist", "bridal makeup", "editorial makeup", "wedding makeup"]
+}

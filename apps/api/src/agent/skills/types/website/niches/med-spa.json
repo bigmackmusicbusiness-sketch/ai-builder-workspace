@@ -1,0 +1,29 @@
+{
+  "niche": "med-spa",
+  "label": "Medical Spa",
+  "triggers": ["med spa", "medical spa", "botox", "dysport", "filler", "lip filler", "dermal filler", "laser hair removal", "laser resurfacing", "microneedling", "iv therapy", "hydrafacial", "injectables", "aesthetic medicine"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+treatments+consult-cta" },
+    { "slug": "services", "role": "injectables+laser+skin+iv" },
+    { "slug": "team",     "role": "medical-director+nurse-injectors" },
+    { "slug": "results",  "role": "case-photos+disclosures" },
+    { "slug": "book",     "role": "consultation-booking" },
+    { "slug": "faq",      "role": "downtime+candidacy+aftercare" },
+    { "slug": "contact",  "role": "address+hours+phone" }
+  ],
+  "compliance_blocks": ["medical-supervision-disclaimer", "medical-director-credentials", "results-may-vary", "pre-treatment-consultation-required", "health-questionnaire-required", "hipaa-privacy-link-footer", "ada-accessibility-statement"],
+  "schema_org_primary": "HealthAndBeautyBusiness",
+  "voice_template": "clinical-warm, precise about units and downtime, conservative with claims, no pushy upsell",
+  "palettes": [
+    { "name": "clinical-rose-gold", "hexes": ["#B07A60", "#FFFFFF", "#F4E6DD", "#171010"] },
+    { "name": "navy-champagne",     "hexes": ["#1F2C46", "#FBF7F0", "#E8DCC9", "#0B1322"] },
+    { "name": "porcelain-clay",     "hexes": ["#9C7864", "#FFFEFB", "#F1E3D6", "#161210"] },
+    { "name": "slate-blush",        "hexes": ["#5C6470", "#FBF6F4", "#EBD6D2", "#10141C"] },
+    { "name": "platinum-mauve",     "hexes": ["#8C7A82", "#FFFFFF", "#EFE2E4", "#161114"] },
+    { "name": "ink-pearl",          "hexes": ["#1C1C1C", "#FAF6F2", "#E5D7C9", "#070707"] }
+  ],
+  "section_library": ["hero", "page-hero", "treatment-grid", "treatment-detail", "before-after-gallery", "medical-director-card", "injector-card", "consultation-cta", "downtime-table", "candidacy-checklist", "phone-cta", "faq-accordion", "results-disclaimer", "address-card", "hours-strip", "footer-hipaa", "footer"],
+  "image_directives": "calm clinical photography of treatment rooms and providers. A nurse injector with a marked patient, a laser handpiece on a gel-prepped arm, a microneedling device on a clean tray. Show real instruments and real PPE. Avoid airbrushed glow-up retouching, glossy spa-robe stock, smoke-and-petals luxury wellness clichés. Daylight or even clinical light, no neon halos, faces neutral rather than rapturous.",
+  "voice_pet_words": ["consultation", "units", "downtime", "candidate", "treatment plan", "aftercare", "medical director", "follow-up"],
+  "primary_keywords": ["med spa", "botox", "filler", "laser hair removal"]
+}

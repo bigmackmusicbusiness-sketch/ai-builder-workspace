@@ -1,0 +1,27 @@
+{
+  "niche": "nail-salon",
+  "label": "Nail Salon",
+  "triggers": ["nail salon", "manicure", "pedicure", "gel manicure", "dip powder", "acrylic nails", "nail art", "builder gel", "gel-x", "press-ons", "nails done", "spa pedicure", "nail tech"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+menu-preview+book" },
+    { "slug": "services", "role": "manicure+pedicure+enhancements+pricing" },
+    { "slug": "gallery",  "role": "nail-art-portfolio" },
+    { "slug": "book",     "role": "online-booking" },
+    { "slug": "contact",  "role": "address+hours+phone" }
+  ],
+  "compliance_blocks": ["cosmetology-license-footer", "allergy-disclosure-form", "cancellation-policy", "no-show-fee-policy", "gratuity-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "NailSalon",
+  "voice_template": "clean, relaxed, detail-aware about shape and finish, friendly without overselling add-ons",
+  "palettes": [
+    { "name": "soft-blush",    "hexes": ["#E6B4B4", "#FFF6F5", "#FBE2DE", "#1F1314"] },
+    { "name": "sage-cream",    "hexes": ["#A6B89A", "#FBF8F0", "#E0E6D2", "#171A12"] },
+    { "name": "lacquer-black", "hexes": ["#1A1A1A", "#FBF6EE", "#E8D9C2", "#080808"] },
+    { "name": "shell-pearl",   "hexes": ["#D6BFA8", "#FFFAF2", "#F2DFC8", "#1B130A"] },
+    { "name": "cool-lilac",    "hexes": ["#A89BC9", "#FAF7FC", "#E2DAEE", "#161020"] },
+    { "name": "almond-mauve",  "hexes": ["#B5917A", "#FBF4ED", "#ECD3C2", "#1B0F08"] }
+  ],
+  "section_library": ["hero", "page-hero", "service-menu", "nail-shape-guide", "color-bar-strip", "tech-card", "appointment-cta", "phone-cta", "gallery-grid", "art-portfolio-grid", "salon-story", "address-card", "hours-strip", "review-strip", "faq-accordion", "footer"],
+  "image_directives": "macro photography of finished sets. Hands on a clean towel, gel-x tips with a fresh french, a polish bottle next to a buffed nail. Show the work — cuticle nippers, an e-file in motion, a soak-off bowl. Avoid plastic foot-model shots, neon nightclub-lit nails, and lifestyle-blogger flat lays with peonies. Even daylight, light grain, real hands of varying skin tones.",
+  "voice_pet_words": ["shape", "finish", "fill", "soak-off", "cuticle", "art", "set", "refresh"],
+  "primary_keywords": ["nail salon", "manicure", "pedicure", "gel nails"]
+}

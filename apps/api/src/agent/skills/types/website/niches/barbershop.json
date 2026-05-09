@@ -1,0 +1,28 @@
+{
+  "niche": "barbershop",
+  "label": "Barbershop",
+  "triggers": ["barbershop", "barber", "fade", "skin fade", "taper", "beard trim", "hot towel shave", "straight razor", "men's haircut", "lineup", "buzz cut", "barber chair", "walk-in barber"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services+book" },
+    { "slug": "services", "role": "cuts+shaves+pricing" },
+    { "slug": "team",     "role": "barber-bios+chairs" },
+    { "slug": "gallery",  "role": "fades+beard-work" },
+    { "slug": "book",     "role": "online-booking" },
+    { "slug": "contact",  "role": "address+hours+walk-in-policy" }
+  ],
+  "compliance_blocks": ["cosmetology-license-footer", "cancellation-policy", "no-show-fee-policy", "gratuity-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "HairSalon",
+  "voice_template": "neighborhood-friendly, no-bullshit, fast hands behind the chair, knows the regulars by name",
+  "palettes": [
+    { "name": "leather-walnut",   "hexes": ["#7A4B2C", "#F2EAD8", "#D9C2A0", "#1B0F08"] },
+    { "name": "brick-brass",      "hexes": ["#9C3B25", "#FAF3E6", "#E8D6B4", "#1F0E08"] },
+    { "name": "tobacco-cream",    "hexes": ["#8A5A2B", "#FBF6EC", "#E4D2B5", "#221608"] },
+    { "name": "oxblood-mahogany", "hexes": ["#5C1F1F", "#F5EBE0", "#D8C0A6", "#170808"] },
+    { "name": "shop-charcoal",    "hexes": ["#2B2B2B", "#F4F0E8", "#C8B89A", "#0E0E0E"] },
+    { "name": "cobalt-tile",      "hexes": ["#1F3D6B", "#F7F1E2", "#D9C9A6", "#0A1628"] }
+  ],
+  "section_library": ["hero", "page-hero", "services-strip", "cut-menu", "barber-card", "barber-chair-grid", "walk-in-policy", "appointment-cta", "phone-cta", "gallery-grid", "shop-story", "address-card", "hours-strip", "map", "review-strip", "footer"],
+  "image_directives": "real shop-floor photography. Clippers mid-fade, neck strip on a cape, hot lather in a mug, leather chairs and a checkered floor. Show the actual barbers cutting actual heads, beard scissors mid-snip, a straight razor in steady hands. Avoid model-grade composites, airbrushed beard catalogs, fake-tattoo-sleeve stock photos. Tungsten-warm light, a little wear on the gear, regulars in the background.",
+  "voice_pet_words": ["fade", "lineup", "chair", "regular", "walk-in", "hot towel", "neck shave", "straight razor"],
+  "primary_keywords": ["barbershop", "barber", "men's haircut", "fade"]
+}

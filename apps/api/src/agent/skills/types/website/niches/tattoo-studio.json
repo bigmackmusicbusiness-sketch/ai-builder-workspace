@@ -1,0 +1,29 @@
+{
+  "niche": "tattoo-studio",
+  "label": "Tattoo Studio",
+  "triggers": ["tattoo studio", "tattoo shop", "tattoo artist", "custom tattoo", "flash tattoo", "walk-in tattoo", "fine line tattoo", "traditional tattoo", "blackwork", "neo traditional", "japanese tattoo", "guest artist", "tattoo consultation"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+artist-roster+book" },
+    { "slug": "team",     "role": "resident-artists+styles" },
+    { "slug": "gallery",  "role": "artist-portfolios" },
+    { "slug": "services", "role": "custom+flash+walk-in+guest-spots" },
+    { "slug": "book",     "role": "consultation-and-deposit" },
+    { "slug": "faq",      "role": "aftercare+pricing+policies" },
+    { "slug": "contact",  "role": "address+hours+phone" }
+  ],
+  "compliance_blocks": ["tattoo-license-footer", "bloodborne-pathogen-cert", "minor-consent-form-link", "health-questionnaire-required", "allergy-disclosure-form", "aftercare-instructions-link", "results-may-vary", "ada-accessibility-statement"],
+  "schema_org_primary": "TattooParlor",
+  "voice_template": "artist-respectful, plain about deposits and prep, never bro-y, lets the portfolio do the talking",
+  "palettes": [
+    { "name": "ink-bone",       "hexes": ["#0B0B0B", "#F1ECE2", "#CFC4B0", "#000000"] },
+    { "name": "oxblood-rust",   "hexes": ["#5A1A1A", "#1A1410", "#A65A3D", "#070403"] },
+    { "name": "smoke-brick",    "hexes": ["#8C3322", "#1F1B17", "#C9B49A", "#070504"] },
+    { "name": "shop-iron",      "hexes": ["#262626", "#E9E1D2", "#9A8E78", "#080808"] },
+    { "name": "moss-on-black",  "hexes": ["#3D5A3A", "#0F100E", "#B8AE96", "#040605"] },
+    { "name": "vermillion-ink", "hexes": ["#B5341E", "#0E0C0A", "#D6C5A8", "#050302"] }
+  ],
+  "section_library": ["hero", "page-hero", "artist-roster", "artist-card", "portfolio-grid", "guest-artist-strip", "consultation-cta", "deposit-policy", "flash-sheet-gallery", "aftercare-section", "shop-story", "address-card", "hours-strip", "faq-accordion", "review-strip", "footer"],
+  "image_directives": "real shop photography. A machine in a gloved hand, ink caps on a tray, stencils being applied, healed work shot in daylight. Show the actual artists at the actual stations. Avoid model-pose flash glamour, edited skin smoothing on healed work, AI-perfect linework that no real machine produces. Tungsten and daylight mix, grain is fine, hands and gear over faces.",
+  "voice_pet_words": ["custom", "flash", "consultation", "deposit", "stencil", "healed", "session", "aftercare"],
+  "primary_keywords": ["tattoo studio", "custom tattoo", "tattoo artist", "fine line tattoo"]
+}

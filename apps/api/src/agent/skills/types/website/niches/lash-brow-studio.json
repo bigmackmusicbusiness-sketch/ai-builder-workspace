@@ -1,0 +1,28 @@
+{
+  "niche": "lash-brow-studio",
+  "label": "Lash & Brow Studio",
+  "triggers": ["lash studio", "lash extensions", "classic lashes", "hybrid lashes", "volume lashes", "lash lift", "lash tint", "brow lamination", "brow tint", "microblading", "powder brows", "ombre brows", "lash and brow"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services+book" },
+    { "slug": "services", "role": "lash+brow+pricing" },
+    { "slug": "gallery",  "role": "lash-and-brow-portfolio" },
+    { "slug": "team",     "role": "artist-bios+specialties" },
+    { "slug": "book",     "role": "consultation+online-booking" },
+    { "slug": "contact",  "role": "address+hours+phone" }
+  ],
+  "compliance_blocks": ["cosmetology-license-footer", "allergy-disclosure-form", "patch-test-policy", "aftercare-instructions-link", "results-may-vary", "cancellation-policy", "no-show-fee-policy", "gratuity-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "BeautySalon",
+  "voice_template": "detail-precise, soft-spoken, mapping-and-symmetry obsessed, careful with retention talk",
+  "palettes": [
+    { "name": "nude-rose",      "hexes": ["#C49A8C", "#FBF2EE", "#EDD3C7", "#1E1411"] },
+    { "name": "soft-slate",     "hexes": ["#6E7986", "#FAF7F4", "#DCDCE0", "#0F1318"] },
+    { "name": "beige-pearl",    "hexes": ["#B19682", "#FBF6EE", "#EAD9C5", "#1A120B"] },
+    { "name": "powder-rose",    "hexes": ["#D5A6A6", "#FFF5F2", "#F4DDD9", "#1A1112"] },
+    { "name": "taupe-bone",     "hexes": ["#8C7A6B", "#FBF6EE", "#E5D6C2", "#161210"] },
+    { "name": "graphite-blush", "hexes": ["#3F3A3A", "#FBF1ED", "#EAD6CF", "#0E0A0A"] }
+  ],
+  "section_library": ["hero", "page-hero", "service-menu", "lash-style-grid", "brow-style-grid", "artist-card", "consultation-cta", "appointment-cta", "phone-cta", "before-after-gallery", "patch-test-notes", "aftercare-section", "studio-story", "address-card", "hours-strip", "faq-accordion", "footer"],
+  "image_directives": "macro close-up photography. A mapped brow with brown pencil, lash tweezers picking a single fan, a tile of pre-made volume fans, a brow lamination kit on the cart. Show the mapping, the tweezers, the magnification light. Avoid fake-eye stock photos, glossy advertorial close-ups with airbrushed skin, and unrealistic doll-eye renders. Even soft light, real eyes of varied tones, light grain.",
+  "voice_pet_words": ["mapping", "fan", "fill", "lift", "retention", "patch test", "lamination", "session"],
+  "primary_keywords": ["lash extensions", "brow lamination", "microblading", "lash lift"]
+}

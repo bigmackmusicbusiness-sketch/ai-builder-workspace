@@ -1292,6 +1292,186 @@ export const COPY_PATTERNS: Record<string, CopyPattern[]> = {
       primary:   "Couples come in repeating the same Tuesday-night argument for three years. Eight to twelve sessions of structured work and most leave with a different conversation. We don't take crisis cases — call 988 if you're in one.",
     },
   ],
+
+  'barbershop': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Skin fade + beard line. 35 minutes flat.',
+      primary:   'Six chairs, walk-ins until 6pm, $32 cut and $18 beard. Two-week touch-up free if you booked the fade. Find us at 412 Mott — Tues through Sat.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We don't book 15-minute slots.",
+      primary:   "Most shops over-book and rush the lineup. We hold 35 minutes per chair so the fade gets blended right and the neck shave gets a hot towel. That's why our regulars don't shop around.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Three-month grow-out → cleaned up in 40.',
+      primary:   "If you put the haircut off until it's a problem, walk in Tuesday morning. Faded, lined, beard squared, neck shaved — out the door in forty. $42 all in.",
+    },
+  ],
+
+  'hair-salon': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Balayage + glaze. Same-day, $245.',
+      primary:   'Hand-painted balayage, root tap, and a finishing glaze in one chair. 3.5 hours start to blow-dry. Goldwell colorist with 11 years on the bench. Booking 4 weeks out.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '20-minute consultation before the chair.',
+      primary:   "We won't pour color until we've seen your hair in three lights and pulled your last six months of tone history. That's why our color corrections take one visit, not three.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Box-dye orange → soft buttery blonde.',
+      primary:   "If you tried to go lighter at home and landed on brassy, that's a color correction, not a touch-up. We tone it down in one sitting and write a maintenance plan you can actually keep.",
+    },
+  ],
+
+  'nail-salon': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Gel-X full set, $75. 90 minutes.',
+      primary:   'Soft gel tips applied with builder gel, shaped almond or coffin, finished in any color from our 240-bottle wall. Three-week wear, soak-off included on your refill.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'No drills on natural nails. Ever.',
+      primary:   'We file by hand on natural nails because an e-file at the wrong angle thins the plate for a year. The set takes ten extra minutes; your nails come back stronger.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Bitten short → grown out in 8 weeks.',
+      primary:   "Builder-gel overlays on natural nails — protects what you've got while it grows. Eight weeks of fills and your real nails reach the tip. Starts at $60, fills $45.",
+    },
+  ],
+
+  'med-spa': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Botox: $13/unit, RN-injected, MD-supervised.',
+      primary:   "Glabella, forehead, and crow's feet by an RN with 7 years of injectables. Medical director on file, two-week follow-up included, units charged not areas. Consultation required first.",
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We won't inject you on the first visit.",
+      primary:   "Every new patient starts with a 30-minute consultation, a health questionnaire, and a treatment plan written down. If the plan and the price don't match what you walked in for, you don't book.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Six laser sessions, four months apart.',
+      primary:   "Laser hair removal isn't one visit. We schedule six sessions on a 4-week interval for face, 6-week for body. Pricing is per area, packaged at the consult — no surprise add-ons.",
+    },
+  ],
+
+  'tattoo-studio': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Custom consultation. $150 deposit, applied.',
+      primary:   '30-minute consult with the artist, reference review, and a date held on the calendar. Deposit applied to the session. Five resident artists, fine line through Japanese traditional.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '14 years on the same machine.',
+      primary:   "Our resident artist still pulls a coil machine because the bigger pieces stay solid that way. If you're booking a back piece or a sleeve, that's the chair you want.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Old flash piece → covered in one session.',
+      primary:   'Cover-ups need darker ink, smarter shapes, and a real consultation. Bring a photo, we draw twice, and we book the session when the design works on paper. Healed photos in our gallery.',
+    },
+  ],
+
+  'day-spa-massage': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '90-minute deep tissue. LMT, $145.',
+      primary:   'Licensed massage therapist, 9 years on the table, focused on shoulders, hips, and lower back. 90 minutes hands-on, intake before the session, water and quiet room after.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'No music piped through the ceiling.',
+      primary:   'Most spas run the same playlist on every speaker. We let the room be quiet because actual rest is quieter than a soundtrack. The clock on the wall is the only thing keeping time.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Locked-up shoulders → loose by Sunday.',
+      primary:   'If your traps have been knotted since the last quarter, book the 90-minute deep tissue Saturday. We work it out, write you a stretch plan, and you sit at the desk Monday without the headache.',
+    },
+  ],
+
+  'waxing-studio': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Brazilian wax, hard wax, 25 minutes, $58.',
+      primary:   'Hard wax only on intimate areas — gentler on the skin, less pull. First-time visit includes a walkthrough and a written aftercare card. Booking three weeks out.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "It's a wax, not a euphemism.",
+      primary:   'We call services by their actual names on the menu, on the booking page, and in the room. No coded language, no awkward small talk — just a licensed esthetician doing the wax you booked.',
+    },
+    {
+      framework: 'before-after',
+      headline:  '4-week regrowth → smooth in 25 minutes.',
+      primary:   'If your hair is at least a quarter inch, we can wax it cleanly in one sitting. Book on the 4-week mark and growth comes in finer over the first three sessions.',
+    },
+  ],
+
+  'lash-brow-studio': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Hybrid lash full set, $185. 2.5 hours.',
+      primary:   '60% volume fans, 40% classics, mapped to your eye shape and held with medical-grade adhesive. Patch test 24 hours ahead for first-timers. Refills at 2-3 weeks, $75 and up.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '40 minutes of mapping before glue.',
+      primary:   "We draw the brow shape and the lash map before a single fan goes on. That's the part that keeps the look symmetrical at week three — not the brand of glue.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Sparse brows → laminated and full.',
+      primary:   'Brow lamination sets the hair upward for 6-8 weeks. We add a tint and a clean-up trim in the same visit. $95, 45 minutes, patch tested before booking.',
+    },
+  ],
+
+  'makeup-artist': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Bridal trial + day-of, $850.',
+      primary:   '90-minute trial 6 weeks ahead, day-of application on-location, lash strip and 8-hour touch-up kit included. Travel within 25 miles flat. Booking 2026 dates now.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'I work with one bride per Saturday.',
+      primary:   'Some artists book three brides a day and rush the trial. I take one wedding per Saturday so the timing breathes — bride, mother of the bride, two attendants, no clock-watching.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Phone-camera tan → 12-hour wedding skin.',
+      primary:   'Trial is where we test the foundation in your light, the lash that lasts the reception, and the lip that survives the toast. By the day, the kit is dialed and the timing is rehearsed.',
+    },
+  ],
+
+  'skincare-esthetician': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Custom 75-minute facial, $135.',
+      primary:   'Cleanse, steam, hand exfoliation, extractions, mask, LED, and a take-home homecare card. Built around your skin that day — not a fixed treatment menu.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '20-minute consultation before any peel.',
+      primary:   'We read your skin under a magnifier, walk through your last 30 days of products, and pick the right peel strength — or none at all. The right answer is sometimes a hydrating facial first.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Cystic flare → settled by month three.',
+      primary:   'Acne facials work on a 12-week schedule, not a one-visit fix. Bi-weekly extractions, a homecare regimen you can actually stick to, and a check-in at week six. Starting at $115 a session.',
+    },
+  ],
 };
 
 /** Fallback for niches without curated patterns — generic but framework-shaped,

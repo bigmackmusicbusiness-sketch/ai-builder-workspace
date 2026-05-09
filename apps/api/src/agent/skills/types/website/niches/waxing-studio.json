@@ -1,0 +1,27 @@
+{
+  "niche": "waxing-studio",
+  "label": "Waxing Studio",
+  "triggers": ["waxing studio", "brazilian wax", "bikini wax", "leg wax", "underarm wax", "face wax", "lip wax", "body waxing", "hard wax", "soft wax", "wax appointment", "wax salon"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services+book" },
+    { "slug": "services", "role": "menu+pricing+timing" },
+    { "slug": "book",     "role": "online-booking" },
+    { "slug": "faq",      "role": "first-wax+prep+aftercare" },
+    { "slug": "contact",  "role": "address+hours+phone" }
+  ],
+  "compliance_blocks": ["cosmetology-license-footer", "allergy-disclosure-form", "health-questionnaire-required", "aftercare-instructions-link", "cancellation-policy", "no-show-fee-policy", "gratuity-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "BeautySalon",
+  "voice_template": "direct, reassuring, calls services by their actual names, no euphemisms, no shame",
+  "palettes": [
+    { "name": "fresh-white-pink", "hexes": ["#E89DA8", "#FFFFFF", "#FFE4E6", "#1A1010"] },
+    { "name": "peach-cream",      "hexes": ["#E6A685", "#FFF7F0", "#FBDDCA", "#1F1208"] },
+    { "name": "fern-cream",       "hexes": ["#7AA67C", "#FBFBF6", "#DEE9D6", "#142016"] },
+    { "name": "pink-gold",        "hexes": ["#C49075", "#FFFAF4", "#F2DFCE", "#1A0F08"] },
+    { "name": "mint-bone",        "hexes": ["#9BC2A8", "#FFFFFA", "#DDEEDF", "#0F1614"] },
+    { "name": "warm-clay",        "hexes": ["#B7785E", "#FFF6EE", "#F1D8C5", "#1B0E08"] }
+  ],
+  "section_library": ["hero", "page-hero", "service-menu", "pricing-table", "timing-strip", "first-wax-walkthrough", "appointment-cta", "phone-cta", "prep-checklist", "aftercare-section", "studio-story", "address-card", "hours-strip", "faq-accordion", "review-strip", "footer"],
+  "image_directives": "clean room photography. Hard wax in a warmer, fresh strips on a tray, a folded paper sheet on a treatment bed, gloves on, a kettle pot beside the room. Show the supplies and the space, not the body. Avoid pin-up legs in heels, smoke-and-petals stock, and any imagery that euphemizes the service. Daylight, plain linens, minimal staging, no glamour retouch.",
+  "voice_pet_words": ["hard wax", "soft wax", "session", "regrowth", "first-time", "prep", "aftercare", "ingrown"],
+  "primary_keywords": ["waxing studio", "brazilian wax", "body waxing", "wax appointment"]
+}

@@ -1,0 +1,27 @@
+{
+  "niche": "day-spa-massage",
+  "label": "Day Spa & Massage",
+  "triggers": ["day spa", "massage therapy", "swedish massage", "deep tissue massage", "hot stone massage", "couples massage", "prenatal massage", "spa package", "massage therapist", "lmt", "spa day", "wellness spa"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+menu-preview+book" },
+    { "slug": "services", "role": "massage+body+packages+pricing" },
+    { "slug": "team",     "role": "therapist-bios+modalities" },
+    { "slug": "book",     "role": "online-booking+gift-cards" },
+    { "slug": "contact",  "role": "address+hours+phone+arrival-notes" }
+  ],
+  "compliance_blocks": ["massage-therapist-license-footer", "health-questionnaire-required", "cancellation-policy", "no-show-fee-policy", "gratuity-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "BeautySalon",
+  "voice_template": "quiet, considered, body-literate, low-volume marketing — the menu does the talking",
+  "palettes": [
+    { "name": "sage-eucalyptus", "hexes": ["#7B8E73", "#F2EFE6", "#D7DECC", "#1B201A"] },
+    { "name": "candle-warm",     "hexes": ["#C49A6C", "#FBF5EC", "#EBD8BE", "#241608"] },
+    { "name": "river-slate",     "hexes": ["#5A6A75", "#F4F2EE", "#D8DCDD", "#101820"] },
+    { "name": "linen-clay",      "hexes": ["#A98E73", "#FBF7F0", "#EADAC5", "#1A140C"] },
+    { "name": "moss-driftwood",  "hexes": ["#5C6A4F", "#F2EEE3", "#D6CFB8", "#181B12"] },
+    { "name": "obsidian-stone",  "hexes": ["#1F2227", "#F1EDE6", "#D2C8B6", "#0A0B0E"] }
+  ],
+  "section_library": ["hero", "page-hero", "menu-preview", "service-grid", "package-card", "therapist-card", "modality-strip", "appointment-cta", "phone-cta", "gift-card-cta", "arrival-notes", "spa-story", "address-card", "hours-strip", "faq-accordion", "review-strip", "footer"],
+  "image_directives": "quiet interior photography. A warm-stone tray, oil bottles on a clean shelf, folded linens, a treatment room lit by a single window. Show the room, not the model. Avoid cucumber-on-eyes spa-robe stock, hot-stone-on-spine staged shots, and rose-petal bath clichés. Soft daylight, deep shadows, candles unlit during the day, no whitewashed brightness.",
+  "voice_pet_words": ["session", "modality", "pressure", "intake", "package", "arrival", "quiet hour", "hands"],
+  "primary_keywords": ["day spa", "massage therapy", "deep tissue massage", "spa package"]
+}

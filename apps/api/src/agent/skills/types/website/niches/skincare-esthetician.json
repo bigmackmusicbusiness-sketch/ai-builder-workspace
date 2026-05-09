@@ -1,0 +1,28 @@
+{
+  "niche": "skincare-esthetician",
+  "label": "Skincare & Esthetician",
+  "triggers": ["esthetician", "facial", "custom facial", "chemical peel", "dermaplaning", "led therapy", "skincare studio", "acne facial", "skin treatment", "face spa", "licensed esthetician", "extractions", "skin consultation"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+treatments+consultation-cta" },
+    { "slug": "services", "role": "facials+peels+add-ons+pricing" },
+    { "slug": "about",    "role": "esthetician-bio+approach" },
+    { "slug": "book",     "role": "consultation+online-booking" },
+    { "slug": "faq",      "role": "candidacy+downtime+aftercare" },
+    { "slug": "contact",  "role": "address+hours+phone" }
+  ],
+  "compliance_blocks": ["cosmetology-license-footer", "results-may-vary", "allergy-disclosure-form", "pre-treatment-consultation-required", "aftercare-instructions-link", "cancellation-policy", "no-show-fee-policy", "gratuity-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "BeautySalon",
+  "voice_template": "ingredient-knowledgeable, calm, honest about timelines, no miracle promises",
+  "palettes": [
+    { "name": "botanical-green", "hexes": ["#6E8765", "#F4F1E6", "#D5DEC2", "#13180F"] },
+    { "name": "milk-terracotta", "hexes": ["#B5664A", "#FFFEF8", "#F2D8C5", "#1A0E08"] },
+    { "name": "beige-fern",      "hexes": ["#A38E70", "#FBF7EC", "#DBD7BC", "#171408"] },
+    { "name": "oat-clay",        "hexes": ["#9F7A5E", "#FBF5EA", "#E8D5BE", "#1B120A"] },
+    { "name": "fig-cream",       "hexes": ["#7A4856", "#FAF3EC", "#E9D5C8", "#170B0F"] },
+    { "name": "linen-moss",      "hexes": ["#5C6A4F", "#FBF8EE", "#DAD7BE", "#161A10"] }
+  ],
+  "section_library": ["hero", "page-hero", "service-menu", "treatment-card", "skin-concern-grid", "ingredient-strip", "esthetician-card", "consultation-cta", "appointment-cta", "phone-cta", "before-after-gallery", "homecare-section", "faq-accordion", "address-card", "hours-strip", "review-strip", "footer"],
+  "image_directives": "calm treatment-room photography. A tray of serums, a steamer arm bent toward a clean towel, a magnifying lamp angled over a draped client, a hand applying a mask with a fan brush. Show the room and the products. Avoid airbrushed glow-up retouching, glass-skin AI renders, and floral-bath spa cliches. Daylight or warm task light, real pores visible on real faces, varied skin types and tones.",
+  "voice_pet_words": ["skin type", "ingredient", "consultation", "extractions", "homecare", "barrier", "concern", "regimen"],
+  "primary_keywords": ["esthetician", "custom facial", "chemical peel", "skincare studio"]
+}
