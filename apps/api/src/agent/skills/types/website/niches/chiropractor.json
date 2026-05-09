@@ -1,0 +1,28 @@
+{
+  "niche": "chiropractor",
+  "label": "Chiropractic Clinic",
+  "triggers": ["chiropractor", "chiropractic", "adjustment", "spinal decompression", "neck pain treatment", "back pain clinic", "sciatica relief", "dc clinic", "spine doctor", "posture correction", "manual adjustment", "chiro"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+conditions+book" },
+    { "slug": "services", "role": "treatments-list" },
+    { "slug": "about",    "role": "doctor-bio+credentials" },
+    { "slug": "team",     "role": "practitioners" },
+    { "slug": "faq",      "role": "what-to-expect+insurance" },
+    { "slug": "contact",  "role": "location+hours+phone" }
+  ],
+  "compliance_blocks": ["chiropractic-disclaimer", "results-may-vary", "hipaa-privacy-link-footer", "scope-of-practice-disclaimer", "ada-accessibility-statement"],
+  "schema_org_primary": "Chiropractor",
+  "voice_template": "direct, hands-on, evidence-grounded, plain-English about adjustments and decompression",
+  "palettes": [
+    { "name": "spine-slate",   "hexes": ["#3B5566", "#F4F6F8", "#D9DEE3", "#0E1A22"] },
+    { "name": "clay-clinical", "hexes": ["#B36A4F", "#FBF6F1", "#F0DDD0", "#241412"] },
+    { "name": "deep-copper",   "hexes": ["#8C4E2A", "#FAF5EE", "#E8D5C2", "#1B0F08"] },
+    { "name": "graphite-blue", "hexes": ["#1E3A5C", "#FFFFFF", "#DBE3EE", "#0A1422"] },
+    { "name": "warm-stone",    "hexes": ["#7A6A57", "#FBF8F2", "#E2DAC8", "#1F1812"] },
+    { "name": "muted-rust",    "hexes": ["#9B4F36", "#FAF4EC", "#F0DACB", "#221008"] }
+  ],
+  "section_library": ["hero", "page-hero", "conditions-grid", "treatment-card", "service-strip", "doctor-card", "doctor-intro", "credentials-strip", "process-timeline", "patient-testimonial", "before-after-posture", "appointment-cta", "phone-cta", "intake-form-link", "insurance-strip", "address-card", "hours-strip", "map", "faq-accordion", "footer-hipaa", "footer"],
+  "image_directives": "honest clinical photography of an adjusting room. Practitioner with hands on a patient's mid-back, decompression table in use, X-ray viewer on the wall, athletic patients of varied ages. Daylight, no neon glow. Avoid spine-energy graphics, glowing chakra overlays, and stock 'before-after' silhouettes. Show the actual room and the actual hands.",
+  "voice_pet_words": ["adjustment", "alignment", "decompression", "mobility", "range of motion", "soft tissue", "manual", "treatment plan"],
+  "primary_keywords": ["chiropractor", "chiropractic care", "spinal adjustment", "back pain treatment"]
+}

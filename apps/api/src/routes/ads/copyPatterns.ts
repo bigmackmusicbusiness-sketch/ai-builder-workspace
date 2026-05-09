@@ -1202,6 +1202,96 @@ export const COPY_PATTERNS: Record<string, CopyPattern[]> = {
       primary:   'Before: a 5.8 you fell off twice and a tight harness. Now: a heel hook, a body-tension move, and a top-out that holds. Drop-in day passes, youth team, and a community board.',
     },
   ],
+
+  'chiropractor': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Adjustments + decompression. 30-minute slots.',
+      primary:   'Manual adjustments and DRX-9000 spinal decompression in the same visit. 30-minute appointments, in-network with most PPOs, walk-in slots Tuesday and Thursday afternoons.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We don't sell 60-visit packages.",
+      primary:   "Most patients we see are out of pain in 6 to 10 visits. If you need more, we tell you. If you don't, we say so. No upfront packages, no contracts, no upsells at the front desk.",
+    },
+    {
+      framework: 'before-after',
+      headline:  "Couldn't turn your head → driving without wincing.",
+      primary:   'Came in unable to check the blind spot. Soft-tissue work, three adjustments, a posture homework sheet. Most office-job necks settle within four visits. Book a 20-minute exam.',
+    },
+  ],
+
+  'physical-therapy': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'One-on-one DPT. 45-minute sessions.',
+      primary:   'Every visit is 45 minutes with a doctor of physical therapy — no aides running you through bands. Post-op, sports, and stubborn old injuries. In-network with BCBS, Aetna, and United.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'We measure load tolerance. Not just pain on a 1-10.',
+      primary:   "Pain scales are useful, but they don't tell us if your knee can take a step-down off a curb. We test the actual movement, then build a plan around the gap. First visit covers the testing and the plan.",
+    },
+    {
+      framework: 'before-after',
+      headline:  '6 weeks post-ACL → cleared for return to sport.',
+      primary:   'Came in at week 6 unable to single-leg squat. 12 sessions of progressive loading, plyo, and on-field testing. Cleared by the surgeon at week 22. Outcomes vary; the work is the same.',
+    },
+  ],
+
+  'veterinary-clinic': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Wellness, dental, and surgery — one team.',
+      primary:   'Annual wellness exams, dental cleanings under anesthesia, soft-tissue surgery, and senior-pet care under the same roof. Same-day sick visits Monday through Friday before noon.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'We weigh your dog with a treat in our hand.',
+      primary:   'Most pets hate the vet because the vet feels rushed. We schedule longer appointments, do exams on the floor when it helps, and skip the muzzle when a treat works. Our regulars walk in on their own.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Stressed visits → tail wags at the door.',
+      primary:   'Last clinic, your dog hid under the chair. Here, the techs sit on the floor, the exam table has a non-slip mat, and we stop when your pet says stop. Book a meet-and-greet before the first real exam.',
+    },
+  ],
+
+  'optometry-eye-doctor': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Comprehensive exam + 60-second OCT scan.',
+      primary:   'Annual comprehensive eye exam includes Optomap retinal imaging and an OCT scan of the optic nerve. 45-minute appointment, in-network with VSP and EyeMed, frames and contacts dispensed in-house.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'We carry 412 frames. None of them are house brand.',
+      primary:   'Independent boutique brands and mainline labels — no markups dressed up as exclusives. Two-year frame warranty, free adjustments for life, and lens reorders at the same price every time.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Squinting at the laptop → fitted progressives.',
+      primary:   'Came in tired, blaming caffeine. Refraction caught a half-diopter shift and an early presbyopic reading need. Fitted progressives a week later. Most over-40 eye-strain stories end the same way.',
+    },
+  ],
+
+  'counseling-therapy': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Anxiety, couples, and teen therapy. In-network.',
+      primary:   'CBT, EMDR, and Gottman-trained couples work. Sessions are 50 minutes, weekly. In-network with BCBS and Aetna; sliding-scale slots posted on the fees page. Free 15-minute consult before booking.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Three therapists. Three different approaches.',
+      primary:   "We don't pretend one method fits everyone. Read each bio, pick the person whose approach reads right, and start with a free 15-minute consult. If we're not the right fit, we'll point you to someone who is.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Stuck in the same fight → a workable Sunday.',
+      primary:   "Couples come in repeating the same Tuesday-night argument for three years. Eight to twelve sessions of structured work and most leave with a different conversation. We don't take crisis cases — call 988 if you're in one.",
+    },
+  ],
 };
 
 /** Fallback for niches without curated patterns — generic but framework-shaped,

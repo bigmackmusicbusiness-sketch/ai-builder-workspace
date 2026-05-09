@@ -1,0 +1,28 @@
+{
+  "niche": "veterinary-clinic",
+  "label": "Veterinary Clinic",
+  "triggers": ["vet", "veterinarian", "veterinary", "animal hospital", "pet wellness exam", "dog and cat clinic", "spay neuter clinic", "pet vaccinations", "kitten checkup", "puppy visit", "small animal vet", "pet dental cleaning"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services+book" },
+    { "slug": "services", "role": "wellness+surgery+dental" },
+    { "slug": "team",     "role": "veterinarian-bios" },
+    { "slug": "about",    "role": "story+facility-tour" },
+    { "slug": "faq",      "role": "new-patient+after-hours" },
+    { "slug": "contact",  "role": "location+hours+phone" }
+  ],
+  "compliance_blocks": ["vet-license-footer", "after-hours-emergency-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "VeterinaryCare",
+  "voice_template": "caring, plain-spoken, never talks down to pet owners, calm under stress",
+  "palettes": [
+    { "name": "kennel-amber",     "hexes": ["#C68B3D", "#FBF6EC", "#F2DEB8", "#23150A"] },
+    { "name": "trail-green",      "hexes": ["#5A7A4E", "#F6F8F2", "#DDE5D2", "#15201A"] },
+    { "name": "retriever-cream",  "hexes": ["#B47A4A", "#FFFAF0", "#F0DDC2", "#241408"] },
+    { "name": "gentle-teal",      "hexes": ["#3F8284", "#F4F9F8", "#CDE2E1", "#0E1F22"] },
+    { "name": "rust-paws",        "hexes": ["#A35434", "#FBF4ED", "#F2D9C7", "#1E0E08"] },
+    { "name": "muted-sage",       "hexes": ["#7E977A", "#F8FAF6", "#DCE5D7", "#1A2218"] }
+  ],
+  "section_library": ["hero", "page-hero", "services-strip", "service-grid", "wellness-card", "surgery-card", "dental-care-card", "veterinarian-card", "team-strip", "facility-tour", "patient-story", "owner-testimonial", "appointment-cta", "phone-cta", "after-hours-banner", "address-card", "hours-strip", "map", "faq-accordion", "footer"],
+  "image_directives": "candid clinic life. A vet listening to a labrador's chest with a stethoscope, a tech holding a cat for vaccines, a wagging tail at the front desk, a kid meeting the office dog. Mix of breeds, mix of staff, real exam rooms with rubber mats and gauze rolls. No glossy stock-pet shots, no sad-eye sympathy bait, no over-styled puppy posing.",
+  "voice_pet_words": ["wellness", "checkup", "exam", "vaccines", "dental", "surgery", "boarding", "comfort", "family"],
+  "primary_keywords": ["veterinarian", "vet clinic", "animal hospital", "pet care"]
+}

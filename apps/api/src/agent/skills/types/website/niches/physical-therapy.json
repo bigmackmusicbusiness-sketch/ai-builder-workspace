@@ -1,0 +1,28 @@
+{
+  "niche": "physical-therapy",
+  "label": "Physical Therapy Clinic",
+  "triggers": ["physical therapy", "pt clinic", "physiotherapy", "post-op rehab", "sports rehab", "movement clinic", "manual therapy", "dpt", "orthopedic rehab", "knee rehab", "shoulder rehab", "return to sport"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+programs+outcomes" },
+    { "slug": "services", "role": "specialties-list" },
+    { "slug": "team",     "role": "physiotherapist-bios" },
+    { "slug": "results",  "role": "case-studies+outcomes" },
+    { "slug": "faq",      "role": "first-visit+insurance" },
+    { "slug": "contact",  "role": "location+hours+book" }
+  ],
+  "compliance_blocks": ["hipaa-privacy-link-footer", "physiotherapist-license-footer", "medical-disclaimer-footer", "results-may-vary", "ada-accessibility-statement"],
+  "schema_org_primary": "Physiotherapist",
+  "voice_template": "clinical, outcome-focused, athletic-pragmatic, movement-first without sports-bro chest-thumping",
+  "palettes": [
+    { "name": "kinesio-navy",         "hexes": ["#0F2A47", "#FFFFFF", "#DCE6F0", "#06121F"] },
+    { "name": "track-orange",         "hexes": ["#D45A1F", "#FAF6EE", "#F4DCC4", "#1F0F06"] },
+    { "name": "recovery-green",       "hexes": ["#2F6B4E", "#F4F8F4", "#D4E5D8", "#0E1F16"] },
+    { "name": "performance-graphite", "hexes": ["#2A2F36", "#F2F4F6", "#C9CFD4", "#0A0C0F"] },
+    { "name": "court-red",            "hexes": ["#A8362E", "#FAF4EE", "#F0D8CD", "#1F0E0A"] },
+    { "name": "ice-blue",             "hexes": ["#3D7CA8", "#F2F8FC", "#CFE2EE", "#0A1A2A"] }
+  ],
+  "section_library": ["hero", "page-hero", "specialty-grid", "program-card", "outcomes-strip", "physiotherapist-card", "credentials-strip", "process-timeline", "case-study-card", "patient-testimonial", "appointment-cta", "phone-cta", "intake-form-link", "insurance-strip", "address-card", "hours-strip", "faq-accordion", "footer-hipaa", "footer"],
+  "image_directives": "real rehab gym photography. Patients on parallel bars, single-leg balance work on a BOSU, manual therapy on a treatment table, BlazePods on the floor. Ages run from high-school athlete to post-op grandparent. Bright, organized clinic with measuring tape and goniometer visible. Avoid hero-shot dramatics, stock-photo grimaces, and cheesy thumbs-up recovery moments.",
+  "voice_pet_words": ["rehab", "mobility", "load tolerance", "return-to-sport", "manual therapy", "progression", "evidence-based", "movement"],
+  "primary_keywords": ["physical therapy", "physiotherapy", "sports rehab", "post-op rehab"]
+}

@@ -1,0 +1,28 @@
+{
+  "niche": "counseling-therapy",
+  "label": "Counseling & Therapy",
+  "triggers": ["therapist", "counselor", "counseling", "anxiety treatment", "depression therapy", "couples therapy", "teen therapy", "emdr therapist", "cbt therapy", "dbt skills", "marriage counseling", "trauma therapy", "lcsw", "lpc"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+approach+book" },
+    { "slug": "services", "role": "specialties+modalities" },
+    { "slug": "team",     "role": "therapist-bios" },
+    { "slug": "about",    "role": "approach+philosophy" },
+    { "slug": "faq",      "role": "fees+insurance+sliding-scale" },
+    { "slug": "contact",  "role": "intake-form+phone" }
+  ],
+  "compliance_blocks": ["hipaa-privacy-link-footer", "mental-health-license-footer", "crisis-line-disclaimer", "not-for-emergencies-notice", "scope-of-practice-disclaimer", "sliding-scale-policy"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "warm, careful, non-pathologizing, deliberate; meets the person where they are",
+  "palettes": [
+    { "name": "dusty-sage",  "hexes": ["#9AAE99", "#FBF8F3", "#E5EBE2", "#1F2A20"] },
+    { "name": "soft-plum",   "hexes": ["#7E5A78", "#FBF6F8", "#E7DAE2", "#1F1218"] },
+    { "name": "warm-oat",    "hexes": ["#B89776", "#FBF6EE", "#EDDDC4", "#22170E"] },
+    { "name": "linen-rose",  "hexes": ["#B07370", "#FBF4F2", "#F0DAD7", "#22120F"] },
+    { "name": "muted-clay",  "hexes": ["#8E5E48", "#FBF5EE", "#EAD2BD", "#1F0E08"] },
+    { "name": "river-stone", "hexes": ["#6F7E8A", "#F8FAFB", "#DCE3E8", "#171F25"] }
+  ],
+  "section_library": ["hero", "page-hero", "approach-strip", "specialty-grid", "modality-card", "therapist-card", "therapist-intro", "credentials-strip", "process-timeline", "first-session-walkthrough", "fees-card", "sliding-scale-note", "client-words", "appointment-cta", "intake-form-link", "crisis-banner", "address-card", "hours-strip", "faq-accordion", "footer-hipaa", "footer"],
+  "image_directives": "quiet, residential-feeling photography. A therapy office with a soft armchair, a tissue box, a houseplant by the window, late-afternoon light through a sheer curtain. People are dressed in everyday clothes. Show the room, not the session — privacy is the rule. Avoid fake-cry stock photos, hands-on-shoulder cliches, and any image that pathologizes the person seeking care.",
+  "voice_pet_words": ["space", "support", "approach", "session", "modality", "honest", "fit", "pace"],
+  "primary_keywords": ["therapy", "counseling", "therapist", "mental health"]
+}

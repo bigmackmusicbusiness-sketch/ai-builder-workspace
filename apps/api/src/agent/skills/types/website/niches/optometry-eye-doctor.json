@@ -1,0 +1,28 @@
+{
+  "niche": "optometry-eye-doctor",
+  "label": "Optometry / Eye Doctor",
+  "triggers": ["eye doctor", "optometrist", "eye exam", "contact lens fitting", "kids vision exam", "dry eye treatment", "annual eye exam", "vision care", "frames and lenses", "glasses store", "eye care clinic", "od optometrist"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services+book" },
+    { "slug": "services", "role": "exams+contacts+dry-eye" },
+    { "slug": "gallery",  "role": "frames-and-brands" },
+    { "slug": "team",     "role": "doctor-and-optician-bios" },
+    { "slug": "faq",      "role": "insurance+prescriptions" },
+    { "slug": "contact",  "role": "location+hours+phone" }
+  ],
+  "compliance_blocks": ["hipaa-privacy-link-footer", "prescription-policy", "frame-warranty", "ada-accessibility-statement"],
+  "schema_org_primary": "Optician",
+  "voice_template": "precise, accessible, gear-knowledgeable about frames and lens coatings, calm",
+  "palettes": [
+    { "name": "lens-slate",      "hexes": ["#445566", "#F6F8FA", "#D6DCE3", "#0F1A22"] },
+    { "name": "frame-amber",     "hexes": ["#A87038", "#FBF6EC", "#EAD4B6", "#22130A"] },
+    { "name": "optical-ink",     "hexes": ["#1A1A1F", "#FFFFFF", "#E5E5E8", "#0A0A0D"] },
+    { "name": "anti-glare-teal", "hexes": ["#286E7A", "#F2F8F9", "#C7DEDF", "#0A1F22"] },
+    { "name": "tortoise-cream",  "hexes": ["#7A4F2F", "#FBF5EA", "#E8D2B0", "#1F0F06"] },
+    { "name": "clinic-sage",     "hexes": ["#7B9282", "#F6FAF6", "#D7E2D8", "#1A221C"] }
+  ],
+  "section_library": ["hero", "page-hero", "service-grid", "exam-card", "contact-lens-card", "dry-eye-card", "frame-grid", "brand-strip", "doctor-card", "optician-card", "process-timeline", "patient-testimonial", "appointment-cta", "phone-cta", "insurance-strip", "address-card", "hours-strip", "faq-accordion", "footer-hipaa", "footer"],
+  "image_directives": "tasteful retail-clinic photography. Phoropter in an exam lane, a doctor adjusting a slit lamp, a wall of frames with the brand-name etching legible, an optician fitting nose pads, a child trying on tortoise-shell rounds. Lighting is even and color-true so frame finishes read accurately. No floating eyeballs, no LASIK glow effects, no over-saturated 'crisp vision' marketing tropes.",
+  "voice_pet_words": ["exam", "prescription", "frames", "lenses", "anti-reflective", "fit", "dilation", "vision"],
+  "primary_keywords": ["eye doctor", "optometrist", "eye exam", "contact lenses"]
+}
