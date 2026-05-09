@@ -33,6 +33,13 @@ export const projects = pgTable('projects', {
   /** When true, project is visible to all users in the same tenant.
    *  When false (default), only `createdBy` sees it. Toggleable by owner only. */
   isShared:    boolean('is_shared').notNull().default(false),
+  /** Optional pointer to a SignalPointSystems workspace that owns this project.
+   *  Set when a project is created via the bidirectional handoff flow
+   *  (POST /api/sps/projects with a valid HS256 handoff token). NULL for
+   *  ordinary standalone-IDE projects, which is the vast majority. The column
+   *  is dormant for non-SPS users and never observed by the standalone build
+   *  path — see apps/api/tests/integration/standalone-regression.test.ts. */
+  spsWorkspaceId: uuid('sps_workspace_id'),
   ...timestamps,
 });
 

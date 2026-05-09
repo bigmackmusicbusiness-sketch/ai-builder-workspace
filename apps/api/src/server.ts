@@ -37,6 +37,7 @@ import { clipperRoutes }    from './routes/clipper';
 import { providersRoutes }  from './routes/providers';
 import { adsRoutes }        from './routes/ads';
 import { aiEditRoutes }     from './routes/ai-edit';
+import { spsHandoffRoutes } from './routes/sps-handoff';
 import { ensureWorkspaceBackupsBucket } from './preview/workspace';
 
 async function main(): Promise<void> {
@@ -210,6 +211,7 @@ async function main(): Promise<void> {
   await app.register(providersRoutes);
   await app.register(adsRoutes);
   await app.register(aiEditRoutes);
+  await app.register(spsHandoffRoutes);
   // customHostRoutes is a Host-header preHandler — register LAST so the
   // /api/* routes have already been matched first (the preHandler still
   // fires per-request, but this keeps registration order tidy).

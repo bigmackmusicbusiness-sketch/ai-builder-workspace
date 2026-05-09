@@ -37,6 +37,11 @@ const SKIP_PATHS: RegExp[] = [
   /^\/api\/oauth\//,
   /^\/api\/higgsfield\/oauth\//,
   /^\/api\/clipper\/upload(?:$|\?)/,
+  // /api/sps/* — Phase 2.5 cross-project handoff. Auth is HS256 token in
+  // Authorization header / token query param, not a cookie, so traditional
+  // CSRF doesn't apply. Server-to-server callers (SPS) can't reliably set
+  // X-Requested-With from every language's HTTP client.
+  /^\/api\/sps\//,
 ];
 
 export async function csrfGuard(req: FastifyRequest, reply: FastifyReply): Promise<void> {

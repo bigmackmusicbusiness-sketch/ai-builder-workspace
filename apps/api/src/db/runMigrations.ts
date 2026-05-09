@@ -108,6 +108,25 @@ const MIGRATIONS: Array<{ id: string; sql: string }> = [
     `,
   },
   {
+    // Phase 2.5 (bidirectional ABW↔SignalPointSystems integration): add an
+    // optional pointer from a project to the SPS workspace that owns it.
+    // NULL for ordinary standalone-IDE projects (the default — the column is
+    // dormant for the vast majority). Populated only when a project is
+    // created via POST /api/sps/projects with a valid HS256 handoff token.
+    // The standalone-IDE guarantee is preserved: a workspace without an SPS
+    // link never produces this column on its bundle. Index for the
+    // (workspace, deleted) lookup the SPS handoff endpoint does.
+    id: '0014_sps_workspace_id',
+    sql: `
+      ALTER TABLE projects
+      ADD COLUMN IF NOT EXISTS sps_workspace_id UUID;
+
+      CREATE INDEX IF NOT EXISTS projects_sps_workspace_idx
+        ON projects (sps_workspace_id)
+        WHERE sps_workspace_id IS NOT NULL AND deleted_at IS NULL;
+    `,
+  },
+  {
     // Found during the bug-test sweep: two `mountain-peak-bakery` rows
     // existed in the same tenant. Slug is used for routing
     // (/api/published/<slug>/, the workspace path on disk, the customHost
