@@ -584,6 +584,224 @@ export const COPY_PATTERNS: Record<string, CopyPattern[]> = {
       primary:   'Years of sprinkler spray etched into the front windows before. Restored glass after, with a sealant pass so the spots stay gone. Quoted per window, no minimums on residential.',
     },
   ],
+
+  // ── Batch 3 / 12 — Trades part B (interior services + envelope/structure) ───
+
+  'carpet-cleaning': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Truck-mounted hot-water extraction. Dry in 4 hours.',
+      primary:   '230-degree extraction lifts traffic-lane soil portable units cannot. Pet-safe pre-spray, neutral rinse, fast-dry pass. Book a same-week slot.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Your carpet holds 1 lb of soil per square yard.',
+      primary:   'That is what a vacuum will not lift. Hot-water extraction with the right dwell time pulls it out and leaves fibers dry to the touch in hours, not days.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Stained traffic lanes to clean fiber, same day.',
+      primary:   'Before: matted lanes, set-in pet spots, lingering odor. After: lifted pile, neutralized stains, fresh rinse. The bridge is one truck-mounted appointment.',
+    },
+  ],
+
+  'chimney-sweep': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'CSIA-certified sweep + Level 1 inspection.',
+      primary:   'Annual creosote removal, full flue camera scan, written safety report. Book before burn season and avoid the November waitlist.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '1 in 8 chimney fires starts with glazed creosote.',
+      primary:   'Stage-3 creosote needs more than a brush. CSIA-certified techs identify the build-up, recommend the right removal, and document the flue end-to-end.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Smoky drafts to a clean draw and a clear flue.',
+      primary:   'Before: smoky room, glazed flue walls, drafty fireplace. After: full sweep, camera-verified clearance, code-compliant cap. The bridge is a single seasonal visit.',
+    },
+  ],
+
+  'locksmith': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '30-minute response. Bonded, insured, ALOA-trained.',
+      primary:   'Lockouts, rekeys, smart-lock installs, and master-key systems for businesses. Flat service-call pricing quoted on the phone before dispatch.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "Your old key still works at the last 4 owners' houses.",
+      primary:   'Most homes are never rekeyed after closing. A 20-minute rekey replaces every pin in your existing locks and renders all prior keys useless.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Locked out at 11 PM to back inside in 30 minutes.',
+      primary:   'Before: cold porch, dead phone, no spare. After: non-destructive entry, working key in hand, door secured behind you. The bridge is a flat-fee call.',
+    },
+  ],
+
+  'moving-company': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Free in-home estimates. Binding price. No surprises.',
+      primary:   'DOT-licensed and insured for local and long-distance moves. Pad-wrap on every piece, written binding quote, claim-free track record.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "9 out of 10 'cheap' moves end with an upcharge at the truck.",
+      primary:   'Hourly bait quotes turn into surprise stair fees and weight upcharges. A binding in-home estimate locks the price before the boxes leave the house.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Boxes everywhere to keys handed over by sunset.',
+      primary:   'Before: stacks in every room, no plan for the piano, no rental countdown. After: pad-wrapped load, even truck distribution, walk-through completed. The bridge is one crew.',
+    },
+  ],
+
+  'appliance-repair': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Same-day service. Diagnostic fee credited toward the repair.',
+      primary:   "Factory-authorized for Whirlpool, GE, LG, and Samsung. OEM parts on the truck. Honest call: if the repair costs more than replacement, we say so.",
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Most fridges fail on a $40 part, not the compressor.',
+      primary:   'A relay, a fan motor, a thermistor. Knowing which one means a 45-minute fix instead of a $1,800 replacement. Bring the diagnostic, keep the receipt.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Dead washer to spinning load by dinner.',
+      primary:   'Before: standing water, error code, laundry piling up. After: pump replaced, drum balanced, cycle running. The bridge is a same-day in-home call.',
+    },
+  ],
+
+  'concrete-masonry': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '4,000 PSI mix, 5-year warranty, finished by hand.',
+      primary:   'Driveways, patios, walkways, and retaining walls poured to spec. Stamped and colored options finished by trowel, not by template. Licensed and insured.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Concrete cures for 28 days. Most cracks happen in week one.',
+      primary:   "Wrong mix, wrong cure schedule, no rebar. The first seven days set the slab's life. We pour to PSI, score on time, and protect through the cure.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Cracked driveway to a stamped, sealed finish.',
+      primary:   'Before: heaving slab, weeds in the joints, settled apron. After: tear-out, compacted base, stamped pour with a release color. The bridge is one crew, one season.',
+    },
+  ],
+
+  'flooring-contractor': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Hardwood, tile, LVP — installed by one crew.',
+      primary:   "Free in-home estimate with samples, written subfloor-prep scope, and a manufacturer warranty in writing. Book a 30-minute visit and we bring three boxes of samples to your light.",
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '73% of floor failures start under the floor.',
+      primary:   "We measure moisture and flatness before we order a single plank. If your subfloor needs work, you'll see the readings and the fix in the quote — not a surprise on install day.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'From cupping oak to flat, finished floors.',
+      primary:   'Old: a kitchen of swelling boards and gaps you could feel through socks. New: refinished or replaced, transitions tight, baseboards back on. The bridge is a free in-home assessment with samples.',
+    },
+  ],
+
+  'siding-gutters': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Hardie-certified install with seamless gutters.',
+      primary:   'Fiber-cement, vinyl, or engineered wood — paired with seamless gutters cut on our truck to your exact run. Free written quote, manufacturer-certified installer, license and bond on the footer.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Your gutters are 3 feet shorter than they should be.',
+      primary:   'Most retrofits leave a gap behind the fascia where ice dams build. We measure the run, replace the fasteners, and seam the corners on-site so water leaves the roof and stays off the siding.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From storm-stripped panels to a tight envelope.',
+      primary:   'Old: cracked vinyl, sagging downspouts, daylight at the corner board. New: full-wrap fiber-cement, seamless aluminum, and leaf guards. The bridge is a free written quote and a certified-installer warranty.',
+    },
+  ],
+
+  'pool-services': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Weekly pool service with chemistry on the receipt.',
+      primary:   'Skim, vacuum, brush, test, balance — every visit. You get a printed reading of pH, alkalinity, and chlorine left at the equipment pad. Construction and equipment repair handled by the same crew.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Most green pools are fixed in 48 hours.',
+      primary:   'We test for phosphates and stabilizer first, then dose accordingly — no shock-and-pray. Two visits, written readings, and a plan to keep it clear through the season.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From cloudy water to a balanced backyard.',
+      primary:   "Old: green tint, scratched plaster, a pump that hums but won't prime. New: clear water, polished tile line, equipment serviced or replaced with parts on the truck. The bridge is a free site visit and a written plan.",
+    },
+  ],
+
+  'foundation-waterproofing': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Engineered foundation repair, transferable warranty.',
+      primary:   'Helical piers, push piers, carbon-fiber straps, and full interior drain tile — designed with a structural engineer when scope warrants. Free inspection, written scope, warranty that transfers when you sell.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Stair-step cracks rarely sit still.',
+      primary:   'If you marked the crack last spring and it widened, we measure deflection and lateral movement before we propose anything. The inspection is free and the report is yours to keep.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From a wet basement to a dry, monitored foundation.',
+      primary:   'Old: efflorescence on the block, a sump that ran every storm, a wall bowing 3/4-inch at mid-height. New: interior drain tile, twin sumps, carbon-fiber on the wall, monitored every 12 months. The bridge is a free inspection.',
+    },
+  ],
+
+  'restoration-emergency': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'IICRC-certified, 24-hour dispatch, insurance-direct billing.',
+      primary:   'Water, fire, smoke, mold — crews on the road inside an hour, documentation your adjuster needs, and direct billing to most major carriers. Stop the loss tonight; sort the claim with us tomorrow.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'After 48 hours, water becomes mold.',
+      primary:   'Category-1 water turns Category-3 fast. We extract, set air movers, and document moisture readings hour by hour so the drying is defensible to your carrier — not a guess.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From a flooded first floor to a documented dry-out.',
+      primary:   'Old: standing water, swollen baseboards, a thermostat reading 89% humidity. New: structurally dry to spec, photos and psychrometric logs ready for the adjuster. The bridge is one phone call, any hour.',
+    },
+  ],
+
+  'snow-removal-plowing': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Pre-storm dispatch, salt on the truck, contract in writing.',
+      primary:   'Per-event or seasonal — your driveway or your lot, plowed at the trigger depth you sign for. Salt and de-icer included in the route, insured for slip-and-fall on commercial accounts.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We're already moving when the forecast hits 2 inches.",
+      primary:   'Routes are loaded the night before. If the trigger fires at 3am, we plow at 3am — not at 8am after your tenants have called. Commercial response time is on the contract, in writing.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From a slick lot at 6am to clear pavement and salt down.',
+      primary:   'Old: tenants slipping in the lot, a phone full of complaints, a plow service that shows up after the storm. New: plowed before open, salted, and photo-logged for liability. The bridge is a seasonal contract with a guaranteed trigger.',
+    },
+  ],
 };
 
 /** Fallback for niches without curated patterns — generic but framework-shaped,

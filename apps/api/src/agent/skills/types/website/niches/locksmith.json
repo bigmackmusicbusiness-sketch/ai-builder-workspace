@@ -1,0 +1,28 @@
+{
+  "niche": "locksmith",
+  "label": "Locksmith",
+  "triggers": ["locksmith", "lockout", "car lockout", "house lockout", "rekey", "rekey locks", "master key", "smart lock install", "key duplication", "broken key extraction", "automotive locksmith", "commercial locksmith", "emergency locksmith", "24 hour locksmith"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+24-7-cta+services-preview" },
+    { "slug": "services", "role": "residential+commercial+automotive" },
+    { "slug": "about",    "role": "credentials+coverage" },
+    { "slug": "pricing",  "role": "service-call-pricing" },
+    { "slug": "faq",      "role": "response-time+payment+coverage" },
+    { "slug": "contact",  "role": "phone-first+form" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "aloa-credential-footer", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "emergency-ready, security-aware, ALOA-credentialed, calm under pressure",
+  "palettes": [
+    { "name": "alert-red",      "hexes": ["#DC2626", "#FFFFFF", "#FEE2E2", "#1F0A0A"] },
+    { "name": "vault-black",    "hexes": ["#111827", "#F9FAFB", "#D1D5DB", "#0A0A0A"] },
+    { "name": "security-navy",  "hexes": ["#1E3A8A", "#F8FAFC", "#DBEAFE", "#0A1228"] },
+    { "name": "brass-gold",     "hexes": ["#B45309", "#FFFBEB", "#FDE68A", "#1F1408"] },
+    { "name": "nickel-steel",   "hexes": ["#475569", "#F1F5F9", "#CBD5E1", "#0F172A"] },
+    { "name": "signal-amber",   "hexes": ["#D97706", "#FFFFFF", "#FEF3C7", "#1C1208"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "service-call-pricing-strip", "services-grid", "service-detail", "credential-badge-strip", "response-time-promise", "review-strip", "service-area-map", "faq-accordion", "contact-form", "address-card", "hours-strip", "footer"],
+  "image_directives": "honest locksmith photography. Service vans, key-cutting machines, smart-lock installs in real homes, automotive key programming through a steering column. Show ALOA badges and bonded-and-insured signage. Avoid stock-photo handshakes and dramatic break-in imagery; show the craft and the response.",
+  "voice_pet_words": ["bonded", "insured", "rekey", "master key", "deadbolt", "ALOA", "response time", "key code", "high-security"],
+  "primary_keywords": ["locksmith", "emergency lockout", "rekey service", "smart lock install"]
+}

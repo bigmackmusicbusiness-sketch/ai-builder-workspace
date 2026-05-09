@@ -1,0 +1,28 @@
+{
+  "niche": "foundation-waterproofing",
+  "label": "Foundation Repair & Waterproofing",
+  "triggers": ["foundation repair", "basement waterproofing", "wet basement", "foundation crack", "bowing wall", "helical pier", "push pier", "carbon fiber strap", "epoxy injection", "sump pump", "interior drain tile", "exterior waterproofing"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services-preview+inspection-cta" },
+    { "slug": "services", "role": "repair-method-grid" },
+    { "slug": "results",  "role": "before-after-case-studies" },
+    { "slug": "about",    "role": "engineer-collab+licenses" },
+    { "slug": "faq",      "role": "structural-warranty-questions" },
+    { "slug": "contact",  "role": "free-inspection-form+phone+hours" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "structural-engineer-collaboration-disclosure", "transferable-warranty-terms", "ada-accessibility-statement"],
+  "schema_org_primary": "HomeAndConstructionBusiness",
+  "voice_template": "structural-engineer credible, transparent about scope, plain-English without diluting precision",
+  "palettes": [
+    { "name": "concrete-grey",   "hexes": ["#1E3A5F", "#F4F6F8", "#CDD3DA", "#080F18"] },
+    { "name": "pier-steel",      "hexes": ["#334155", "#F8FAFC", "#CBD5E1", "#0B1220"] },
+    { "name": "waterproof-blue", "hexes": ["#0C4A6E", "#F2F8FB", "#C2DAE7", "#04111B"] },
+    { "name": "carbon-deep",     "hexes": ["#1B1F23", "#F5F5F7", "#D1D5DB", "#0A0A0A"] },
+    { "name": "rebar-iron",      "hexes": ["#7C2D12", "#FAF7F2", "#E5DBC8", "#1A0905"] },
+    { "name": "drain-jade",      "hexes": ["#0F766E", "#F2FAF8", "#C2E1DB", "#06201D"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "method-grid", "service-detail", "before-after-gallery", "case-study-card", "engineer-collab-strip", "transferable-warranty-callout", "free-inspection-form", "process-steps", "testimonial-card", "license-badge-strip", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "real basement and crawlspace work. Helical piers being driven, push-pier brackets bolted to footings, carbon-fiber straps epoxied across stair-step cracks, sump basins and drain tile. Crews in respirators and headlamps in low light. Wide frames showing foundation walls with crack maps drawn in chalk. Avoid catalog imagery and rendered cutaways used as hero shots. The work is invisible after backfill — show it while it's exposed.",
+  "voice_pet_words": ["pier", "footing", "hydrostatic", "lateral", "monitor", "transferable", "engineered", "inspection"],
+  "primary_keywords": ["foundation repair", "basement waterproofing", "bowing wall", "free inspection", "transferable warranty"]
+}

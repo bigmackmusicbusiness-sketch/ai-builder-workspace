@@ -1,0 +1,29 @@
+{
+  "niche": "moving-company",
+  "label": "Moving Company",
+  "triggers": ["movers", "moving company", "local movers", "long distance moving", "interstate movers", "packing services", "in home estimate", "office relocation", "apartment movers", "piano movers", "furniture movers", "labor only movers", "moving and storage"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+free-estimate-cta+services-preview" },
+    { "slug": "services", "role": "local+long-distance+packing" },
+    { "slug": "pricing",  "role": "estimate-process+factors" },
+    { "slug": "about",    "role": "dot-mc+team+story" },
+    { "slug": "reviews",  "role": "testimonials" },
+    { "slug": "faq",      "role": "estimates+claims+timeline" },
+    { "slug": "contact",  "role": "estimate-form+phone" }
+  ],
+  "compliance_blocks": ["dot-mc-license-footer", "fmcsa-required-disclosures", "insurance-footer", "ada-accessibility-statement"],
+  "schema_org_primary": "MovingCompany",
+  "voice_template": "dependable, careful, transparent on weight and distance pricing, low-pressure",
+  "palettes": [
+    { "name": "haul-orange",  "hexes": ["#EA580C", "#FFFBEB", "#FED7AA", "#1F1208"] },
+    { "name": "cargo-navy",   "hexes": ["#1E3A8A", "#F8FAFC", "#DBEAFE", "#0A1228"] },
+    { "name": "pallet-green", "hexes": ["#15803D", "#F7FEE7", "#D9F99D", "#0A1F12"] },
+    { "name": "kraft-paper",  "hexes": ["#92400E", "#FFFBEB", "#FEF3C7", "#1A0F08"] },
+    { "name": "fleet-red",    "hexes": ["#B91C1C", "#FFFFFF", "#FEE2E2", "#1A0808"] },
+    { "name": "calm-slate",   "hexes": ["#334155", "#F8FAFC", "#E2E8F0", "#0F172A"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "services-grid", "service-detail", "estimate-form", "in-home-estimate-promise", "before-after-gallery", "review-strip", "license-badge-strip", "service-area-map", "moving-checklist", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "honest moving-day photography. Crews wrapping furniture in pads, dollies on hardwood, branded trucks at curbside, careful tape-and-paper packing of glassware, walkboards on staircases. Avoid stock-photo couples cheering at a sofa. Show the wrap, the lift, and the drive.",
+  "voice_pet_words": ["bonded", "insured", "DOT", "MC number", "binding estimate", "pad-wrap", "weight tickets", "claim-free", "on-time"],
+  "primary_keywords": ["movers", "moving company", "long distance moving", "free in-home estimate"]
+}

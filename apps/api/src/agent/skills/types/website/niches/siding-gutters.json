@@ -1,0 +1,28 @@
+{
+  "niche": "siding-gutters",
+  "label": "Siding & Gutters",
+  "triggers": ["siding installation", "siding repair", "seamless gutters", "gutter installation", "leaf guards", "fiber cement siding", "vinyl siding", "hardie board", "engineered wood siding", "gutter guards", "downspouts", "gutter cleaning"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services-preview+phone-cta" },
+    { "slug": "services", "role": "siding-and-gutter-grid" },
+    { "slug": "gallery",  "role": "before-after-exterior-grid" },
+    { "slug": "about",    "role": "certified-installer+story" },
+    { "slug": "faq",      "role": "material-storm-questions" },
+    { "slug": "contact",  "role": "estimate-form+phone+hours" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "manufacturer-warranty-disclosure", "ada-accessibility-statement"],
+  "schema_org_primary": "HomeAndConstructionBusiness",
+  "voice_template": "weather-aware, material-confident, manufacturer-certified-installer signal, neighborly",
+  "palettes": [
+    { "name": "hardie-charcoal", "hexes": ["#2F3E46", "#F1F4F3", "#CFD8DC", "#0B1115"] },
+    { "name": "vinyl-cream",     "hexes": ["#1F3A5F", "#FAF7F0", "#E5DDC8", "#0A1322"] },
+    { "name": "copper-gutter",   "hexes": ["#B87333", "#FAF6EE", "#E6D5B8", "#241408"] },
+    { "name": "storm-blue",      "hexes": ["#1D4E78", "#F4F7FA", "#C8D8E6", "#091421"] },
+    { "name": "cedar-warm",      "hexes": ["#7B4B2A", "#FBF6EE", "#E2CCB0", "#1E0E06"] },
+    { "name": "fascia-white",    "hexes": ["#16324F", "#FFFFFF", "#DDE4EC", "#0F0F0F"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "siding-material-grid", "gutter-system-grid", "service-detail", "before-after-gallery", "manufacturer-certification-strip", "leaf-guard-callout", "estimate-form", "testimonial-card", "license-badge-strip", "warranty-strip", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "real exterior crew photography. Lifts, scaffolding, pneumatic nailers, and seamless-gutter machines mounted in trucks. Show wall sections mid-install with weather-resistive barrier visible, plus finished homes shot in raking afternoon light so plank shadow lines read. Avoid catalog renders and sterile suburban stock. Show storm context where it fits — blown-off siding, sagging gutters being replaced.",
+  "voice_pet_words": ["seamless", "fascia", "soffit", "weather-resistive", "downspout", "fastener", "certified", "warranty"],
+  "primary_keywords": ["siding installation", "seamless gutters", "fiber cement", "leaf guards", "free estimate"]
+}

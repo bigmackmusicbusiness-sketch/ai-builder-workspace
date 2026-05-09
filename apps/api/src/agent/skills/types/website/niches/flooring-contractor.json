@@ -1,0 +1,28 @@
+{
+  "niche": "flooring-contractor",
+  "label": "Flooring Contractor",
+  "triggers": ["flooring", "hardwood install", "tile install", "lvp install", "carpet install", "floor refinishing", "luxury vinyl plank", "hardwood refinishing", "tile installer", "subfloor repair", "engineered hardwood", "vinyl flooring"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+material-strip+estimate-cta" },
+    { "slug": "services", "role": "material-by-material-grid" },
+    { "slug": "gallery",  "role": "before-after-room-grid" },
+    { "slug": "about",    "role": "company-story+licenses" },
+    { "slug": "faq",      "role": "subfloor-prep+care-questions" },
+    { "slug": "contact",  "role": "in-home-estimate-form+samples-cta" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "manufacturer-warranty-disclosure", "ada-accessibility-statement"],
+  "schema_org_primary": "HomeAndConstructionBusiness",
+  "voice_template": "surface-aware, careful with prep, material-fluent, practical about wear and use",
+  "palettes": [
+    { "name": "oak-natural",    "hexes": ["#A0673D", "#FAF6EE", "#E8DCC2", "#221610"] },
+    { "name": "walnut-deep",    "hexes": ["#3D2817", "#F5EFE3", "#D9C5A6", "#0F0805"] },
+    { "name": "tile-slate",     "hexes": ["#475569", "#F1F5F9", "#CBD5E1", "#0F172A"] },
+    { "name": "lvp-warmgrey",   "hexes": ["#7C6F5E", "#F8F5EE", "#DDD2BF", "#1F1A12"] },
+    { "name": "carpet-sand",    "hexes": ["#B89968", "#FBF8F1", "#E8DCC2", "#2A1F12"] },
+    { "name": "refinish-amber", "hexes": ["#C7884A", "#FFFAF0", "#F2DDB8", "#2C1A0A"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "material-grid", "service-detail", "before-after-gallery", "subfloor-prep-callout", "sample-request-cta", "in-home-estimate-form", "warranty-strip", "testimonial-card", "license-badge-strip", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "real installation photography. Boards, planks, tile lippage checks, trowels, and dust-controlled sanding rigs. Show finished rooms shot wide with raking light to read the surface texture. Include subfloor-prep frames (leveling compound, vapor barrier) so the trade reads as serious. Avoid pristine showroom renders and stock-photo families on glossy floors. Real homes, real grain, real grout lines.",
+  "voice_pet_words": ["subfloor", "lippage", "moisture", "underlayment", "grain", "finish", "transition", "warranty"],
+  "primary_keywords": ["flooring", "hardwood", "tile", "luxury vinyl plank", "free in-home estimate"]
+}

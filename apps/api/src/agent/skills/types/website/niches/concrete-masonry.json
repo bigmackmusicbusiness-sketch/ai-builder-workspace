@@ -1,0 +1,28 @@
+{
+  "niche": "concrete-masonry",
+  "label": "Concrete & Masonry",
+  "triggers": ["concrete contractor", "masonry", "stamped concrete", "retaining wall", "brick repair", "stone mason", "concrete driveway", "concrete patio", "block wall", "tuckpointing", "decorative concrete", "concrete walkway", "paver patio", "chimney masonry"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services-preview+free-estimate-cta" },
+    { "slug": "services", "role": "concrete+masonry+decorative" },
+    { "slug": "gallery",  "role": "finished-work-portfolio" },
+    { "slug": "about",    "role": "trade-credentials+team" },
+    { "slug": "reviews",  "role": "testimonials" },
+    { "slug": "contact",  "role": "estimate-form+phone+service-area" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "ada-accessibility-statement", "warranty-disclosure"],
+  "schema_org_primary": "GeneralContractor",
+  "voice_template": "skilled-trade pride, weather-aware on cure times, straight-talking, finish-quality focused",
+  "palettes": [
+    { "name": "wet-pour-grey", "hexes": ["#475569", "#F8FAFC", "#CBD5E1", "#0F172A"] },
+    { "name": "fired-brick",   "hexes": ["#9A3412", "#FAF7F2", "#F0E2D0", "#1A0E08"] },
+    { "name": "limestone",     "hexes": ["#78716C", "#FAFAF9", "#E7E5E4", "#1C1917"] },
+    { "name": "stamped-bronze","hexes": ["#78350F", "#FFFBEB", "#FEF3C7", "#1A0F08"] },
+    { "name": "field-clay",    "hexes": ["#B45309", "#FAF7F2", "#FED7AA", "#1A0F08"] },
+    { "name": "trowel-steel",  "hexes": ["#1F2937", "#FFFFFF", "#E5E7EB", "#0A0A0A"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "services-grid", "service-detail", "before-after-gallery", "decorative-finish-grid", "review-strip", "license-badge-strip", "estimate-form", "service-area-map", "warranty-strip", "address-card", "hours-strip", "footer"],
+  "image_directives": "honest masonry and concrete photography. Forms going up before a pour, finishers riding bullfloats, stamped patterns being released, brick courses with mortar joints fresh, retaining walls back-filled. Show calluses and dust. Avoid stock 'happy homeowner' shots; show the trowel work and the finish line.",
+  "voice_pet_words": ["pour", "cure", "rebar", "tuckpoint", "mortar", "stamped", "PSI", "course", "joint"],
+  "primary_keywords": ["concrete contractor", "masonry contractor", "stamped concrete", "retaining wall"]
+}

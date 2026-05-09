@@ -1,0 +1,28 @@
+{
+  "niche": "snow-removal-plowing",
+  "label": "Snow Removal & Plowing",
+  "triggers": ["snow plowing", "snow removal", "commercial plowing", "driveway plowing", "salt service", "ice management", "snow contract", "parking lot plowing", "sidewalk shoveling", "de-icing", "skid steer plowing", "seasonal snow contract"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services-preview+contract-cta" },
+    { "slug": "services", "role": "residential-commercial-grid" },
+    { "slug": "pricing",  "role": "per-event-vs-seasonal" },
+    { "slug": "about",    "role": "fleet+insurance" },
+    { "slug": "faq",      "role": "trigger-depth-response-questions" },
+    { "slug": "contact",  "role": "contract-quote-form+phone+hours" }
+  ],
+  "compliance_blocks": ["insurance-footer", "slip-and-fall-liability-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "pre-storm-ready, contract-flexible, equipment-confident, dependable when the forecast turns",
+  "palettes": [
+    { "name": "storm-navy",     "hexes": ["#0B2447", "#F4F7FB", "#C8D6E5", "#020616"] },
+    { "name": "salt-white",     "hexes": ["#1C3A5E", "#FFFFFF", "#E5EDF5", "#080F1A"] },
+    { "name": "plow-orange",    "hexes": ["#EA580C", "#FFFAF4", "#FFE0C7", "#1A0805"] },
+    { "name": "blade-steel",    "hexes": ["#475569", "#F8FAFC", "#CBD5E1", "#0F172A"] },
+    { "name": "deice-cyan",     "hexes": ["#0E7490", "#F2FAFC", "#C2E2EE", "#04181E"] },
+    { "name": "midnight-route", "hexes": ["#1E1B4B", "#F4F4FB", "#D4D4F2", "#080714"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "service-grid", "fleet-strip", "trigger-depth-callout", "per-event-vs-seasonal-tiers", "commercial-residential-toggle", "salt-deice-callout", "contract-form", "process-steps", "testimonial-card", "license-badge-strip", "insurance-strip", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "real night-and-dawn plowing. Headlights on a parked fleet of trucks with V-plows angled, skid steers clearing sidewalks, salters spreading bulk on a lot. Frames at 4am with crews in reflective gear, breath visible. Show before-and-after of a cleared parking lot under sodium lights. Avoid sunny stock-photo plows on ribbon-clean asphalt — the work happens in the storm.",
+  "voice_pet_words": ["trigger", "route", "windrow", "salt", "de-ice", "contract", "response", "storm"],
+  "primary_keywords": ["snow plowing", "snow removal", "commercial plowing", "seasonal contract", "ice management"]
+}

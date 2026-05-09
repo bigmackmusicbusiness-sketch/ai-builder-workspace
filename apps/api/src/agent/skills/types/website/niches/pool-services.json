@@ -1,0 +1,29 @@
+{
+  "niche": "pool-services",
+  "label": "Pool Service & Construction",
+  "triggers": ["pool cleaning", "pool service", "pool construction", "pool repair", "pool opening", "pool chemicals", "weekly pool maintenance", "gunite pool", "fiberglass pool", "vinyl liner pool", "pool equipment repair", "pool closing"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services-preview+plan-cta" },
+    { "slug": "services", "role": "service-construction-repair-grid" },
+    { "slug": "pricing",  "role": "weekly-plan-tiers" },
+    { "slug": "gallery",  "role": "build-and-finished-pools" },
+    { "slug": "about",    "role": "team+licenses" },
+    { "slug": "faq",      "role": "chemistry-season-questions" },
+    { "slug": "contact",  "role": "quote-form+phone+hours" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "ansi-pool-safety-disclosure", "chemical-handling-disclosure", "ada-accessibility-statement"],
+  "schema_org_primary": "HomeAndConstructionBusiness",
+  "voice_template": "chemistry-fluent, dependable, season-aware, plain about what each visit includes",
+  "palettes": [
+    { "name": "pool-aqua",     "hexes": ["#0EA5C4", "#F0FAFC", "#C8EAF1", "#06212B"] },
+    { "name": "deep-deck",     "hexes": ["#0F4C5C", "#F2F8F9", "#BFD8DD", "#04181E"] },
+    { "name": "skimmer-white", "hexes": ["#1C7C9A", "#FFFFFF", "#D5EBF1", "#0A2A35"] },
+    { "name": "tile-lapis",    "hexes": ["#1E3A8A", "#F5F8FE", "#CDDBF1", "#0A1230"] },
+    { "name": "sand-stone",    "hexes": ["#C0A36E", "#FBF7EE", "#EADFC2", "#211806"] },
+    { "name": "chlorine-mint", "hexes": ["#3FA796", "#F4FBF9", "#CFE9E1", "#0C2520"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "service-grid", "weekly-plan-tiers", "construction-process-steps", "equipment-repair-grid", "before-after-gallery", "build-gallery", "seasonal-callout", "chemistry-explainer", "estimate-form", "testimonial-card", "license-badge-strip", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "real pool work: techs vacuuming, brushing tile lines, testing water with photometers, replacing pumps and cartridge filters. Construction frames showing rebar cages, gunite shoot, plaster crews. Finished backyards shot at golden hour with deck furniture and clean water surface. Avoid resort-stock aerials and oversaturated marketing renders. Mosquito-coast humidity is fine; the work is real.",
+  "voice_pet_words": ["chemistry", "alkalinity", "skim", "filter", "circulation", "opening", "closing", "warranty"],
+  "primary_keywords": ["pool cleaning", "pool service", "pool construction", "weekly maintenance", "free quote"]
+}

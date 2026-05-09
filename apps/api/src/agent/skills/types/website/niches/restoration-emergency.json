@@ -1,0 +1,29 @@
+{
+  "niche": "restoration-emergency",
+  "label": "Water/Fire/Mold Restoration (24-hour)",
+  "triggers": ["water damage restoration", "fire damage", "mold remediation", "flood cleanup", "smoke damage", "iicrc", "24 hour restoration", "emergency water removal", "structural drying", "soot cleanup", "category 3 water", "biohazard cleanup"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+24hr-phone+services-preview" },
+    { "slug": "services", "role": "water-fire-mold-grid" },
+    { "slug": "insights", "role": "insurance-claim-walkthrough" },
+    { "slug": "about",    "role": "iicrc-team+licenses" },
+    { "slug": "results",  "role": "before-after-case-studies" },
+    { "slug": "faq",      "role": "claims-timeline-questions" },
+    { "slug": "contact",  "role": "24hr-dispatch-form+phone" }
+  ],
+  "compliance_blocks": ["iicrc-certification-footer", "license-bond-insurance-footer", "ehs-mold-remediation-license", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "urgent but calm, IICRC-credentialed, insurance-fluent, plain steps under pressure",
+  "palettes": [
+    { "name": "alert-orange",     "hexes": ["#EA580C", "#FFFFFF", "#FFE7D2", "#190603"] },
+    { "name": "siren-red",        "hexes": ["#B91C1C", "#FAF7F4", "#F3D9D9", "#0F0606"] },
+    { "name": "command-navy",     "hexes": ["#0B2447", "#F5F8FB", "#CBD5E1", "#020616"] },
+    { "name": "containment-teal", "hexes": ["#0F766E", "#F1FAF8", "#C2E1DB", "#06201D"] },
+    { "name": "soot-charcoal",    "hexes": ["#1F2937", "#F8FAFC", "#D1D5DB", "#0A0A0A"] },
+    { "name": "dry-sand",         "hexes": ["#92400E", "#FAF6EE", "#E8D8B8", "#1A0A04"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "24hr-dispatch-strip", "service-grid", "process-steps", "iicrc-badge-strip", "insurance-claim-walkthrough", "case-study-card", "before-after-gallery", "estimate-form", "testimonial-card", "license-badge-strip", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "real loss-site response. Trucks staged at flooded driveways at 2am, techs running air movers and dehumidifiers, moisture meters on drywall, soot-line photography on stud walls, mold containment sheeting with negative-air machines. Show technicians in proper PPE — Tyvek, half-mask respirators. Avoid stock-photo cleaners with feather dusters. The job looks like triage; let the photography say so.",
+  "voice_pet_words": ["dispatch", "category", "psychrometric", "containment", "remediation", "documentation", "claim", "drying"],
+  "primary_keywords": ["water damage", "fire damage", "mold remediation", "24 hour emergency", "insurance accepted"]
+}

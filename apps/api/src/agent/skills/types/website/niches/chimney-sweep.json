@@ -1,0 +1,28 @@
+{
+  "niche": "chimney-sweep",
+  "label": "Chimney Sweep & Fireplace",
+  "triggers": ["chimney sweep", "chimney cleaning", "chimney inspection", "creosote removal", "fireplace cleaning", "csia certified", "level 2 inspection", "wood stove cleaning", "chimney cap install", "fireplace insert", "chimney repair", "annual chimney service", "smoke chamber cleaning"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services-preview+seasonal-cta" },
+    { "slug": "services", "role": "sweep+inspection+repair" },
+    { "slug": "about",    "role": "csia-credentials+team" },
+    { "slug": "gallery",  "role": "before-after-flue" },
+    { "slug": "faq",      "role": "frequency+codes+safety" },
+    { "slug": "contact",  "role": "booking-form+phone+service-area" }
+  ],
+  "compliance_blocks": ["csia-certification-footer", "insurance-footer", "ada-accessibility-statement"],
+  "schema_org_primary": "HomeAndConstructionBusiness",
+  "voice_template": "safety-first, seasonal-aware, code-fluent, calm and credentialed",
+  "palettes": [
+    { "name": "hearth-red",     "hexes": ["#991B1B", "#FFF7ED", "#FED7AA", "#1A0A06"] },
+    { "name": "soot-charcoal",  "hexes": ["#1F2937", "#F5F5F4", "#D6D3D1", "#0A0A0A"] },
+    { "name": "ember-orange",   "hexes": ["#C2410C", "#FFFBEB", "#FEF3C7", "#1F1208"] },
+    { "name": "cast-iron",      "hexes": ["#374151", "#F9FAFB", "#E5E7EB", "#111111"] },
+    { "name": "brick-rust",     "hexes": ["#7C2D12", "#FAF7F2", "#F0E2D0", "#1A0E08"] },
+    { "name": "stone-cream",    "hexes": ["#78716C", "#FAF9F7", "#E7E5E4", "#1C1917"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "services-grid", "service-detail", "csia-credential-strip", "inspection-level-table", "before-after-gallery", "testimonial-card", "seasonal-reminder-banner", "faq-accordion", "service-area-map", "booking-form", "address-card", "hours-strip", "footer"],
+  "image_directives": "real chimney-service photography. Sweeps on roofs in soft caps, brushes and rods, soot tarps protecting hearths, video-camera flue inspection footage, masonry work on crowns and caps. Show CSIA patches and proper PPE. Avoid generic 'cozy fire' stock; show the work, not the lifestyle.",
+  "voice_pet_words": ["creosote", "flue", "draft", "liner", "cap", "crown", "code-compliant", "csia-certified", "seasonal"],
+  "primary_keywords": ["chimney sweep", "chimney inspection", "fireplace cleaning", "creosote removal"]
+}

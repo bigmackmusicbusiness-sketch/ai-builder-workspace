@@ -1,0 +1,28 @@
+{
+  "niche": "appliance-repair",
+  "label": "Appliance Repair",
+  "triggers": ["appliance repair", "refrigerator repair", "washer repair", "dryer repair", "dishwasher repair", "oven repair", "stove repair", "ice maker repair", "freezer repair", "samsung repair", "lg repair", "whirlpool repair", "in home appliance service"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+same-day-cta+brands-strip" },
+    { "slug": "services", "role": "appliance-types-grid" },
+    { "slug": "pricing",  "role": "diagnostic-fee+credit-policy" },
+    { "slug": "about",    "role": "brand-certifications+team" },
+    { "slug": "faq",      "role": "parts+warranty+timeline" },
+    { "slug": "contact",  "role": "service-request-form+phone" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "manufacturer-certification-footer", "warranty-disclosure", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "brand-fluent, parts-ready, transparent on diagnostic fees, no-nonsense scheduling",
+  "palettes": [
+    { "name": "service-blue",    "hexes": ["#2563EB", "#F8FAFC", "#DBEAFE", "#0A1228"] },
+    { "name": "fix-red",         "hexes": ["#B91C1C", "#FFFFFF", "#FEE2E2", "#1A0808"] },
+    { "name": "kitchen-slate",   "hexes": ["#334155", "#FFFFFF", "#E2E8F0", "#0F172A"] },
+    { "name": "tool-orange",     "hexes": ["#EA580C", "#FFFBEB", "#FED7AA", "#1F1208"] },
+    { "name": "appliance-white", "hexes": ["#0F766E", "#FFFFFF", "#CCFBF1", "#0A1F1C"] },
+    { "name": "trade-gold",      "hexes": ["#B45309", "#FFFBEB", "#FDE68A", "#1F1408"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "appliance-types-grid", "service-detail", "brand-strip", "diagnostic-fee-explainer", "same-day-promise", "review-strip", "service-area-map", "faq-accordion", "service-request-form", "trust-badge-strip", "address-card", "hours-strip", "footer"],
+  "image_directives": "honest in-home repair photography. A tech with a multimeter at the back of a fridge, a washer drum opened on a kitchen floor, a parts case on a doorstep. Show factory-authorized patches and parts boxes. Avoid stock-photo shiny showrooms; show the actual repair on the actual appliance.",
+  "voice_pet_words": ["diagnostic", "OEM parts", "factory-authorized", "same-day", "in-home", "warranty-honored", "compressor", "control board", "drain pump"],
+  "primary_keywords": ["appliance repair", "refrigerator repair", "washer repair", "same-day service"]
+}

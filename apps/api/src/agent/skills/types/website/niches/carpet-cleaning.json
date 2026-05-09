@@ -1,0 +1,28 @@
+{
+  "niche": "carpet-cleaning",
+  "label": "Carpet & Upholstery Cleaning",
+  "triggers": ["carpet cleaning", "carpet cleaner", "upholstery cleaning", "rug cleaning", "pet stain", "pet odor removal", "steam cleaning", "hot water extraction", "truck mounted cleaning", "commercial carpet cleaning", "tile and grout cleaning", "stain removal", "deep clean carpets"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services-preview+phone-cta" },
+    { "slug": "services", "role": "service-list+method-detail" },
+    { "slug": "pricing",  "role": "room-based-pricing" },
+    { "slug": "gallery",  "role": "before-after-stains" },
+    { "slug": "faq",      "role": "dry-time+pet-safety+method-questions" },
+    { "slug": "contact",  "role": "booking-form+phone+service-area" }
+  ],
+  "compliance_blocks": ["insurance-footer", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "science-aware, fast-dry confident, pet-safe focused, plain-spoken about methods and outcomes",
+  "palettes": [
+    { "name": "fresh-aqua",   "hexes": ["#0EA5A1", "#F0FDFA", "#CCFBF1", "#0F2A2A"] },
+    { "name": "clean-citrus", "hexes": ["#10B981", "#FFFFFF", "#ECFDF5", "#0A1F18"] },
+    { "name": "deep-water",   "hexes": ["#1E40AF", "#F0F9FF", "#DBEAFE", "#0A1525"] },
+    { "name": "soft-mint",    "hexes": ["#34D399", "#F8FAFC", "#D1FAE5", "#0F1F1A"] },
+    { "name": "steam-blue",   "hexes": ["#0284C7", "#F8FAFC", "#E0F2FE", "#0C1822"] },
+    { "name": "honest-slate", "hexes": ["#475569", "#FFFFFF", "#E2E8F0", "#0F172A"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "services-grid", "service-detail", "method-comparison-strip", "before-after-gallery", "testimonial-card", "review-strip", "pricing-table", "faq-accordion", "service-area-map", "booking-form", "trust-badge-strip", "address-card", "footer"],
+  "image_directives": "honest carpet-cleaning photography. Truck-mounted units, wand extraction in real living rooms, before-and-after pet-stain shots, spotting agents and brushes mid-job. Show dry tile and traffic-lane lift. Avoid sterile lab setups and stock-photo families on white couches. Real homes, real soil, real lift.",
+  "voice_pet_words": ["extraction", "dwell time", "fast-dry", "pet-safe", "truck-mounted", "encapsulation", "pre-spray", "traffic lane", "deodorize"],
+  "primary_keywords": ["carpet cleaning", "upholstery cleaning", "pet stain removal", "steam cleaning"]
+}
