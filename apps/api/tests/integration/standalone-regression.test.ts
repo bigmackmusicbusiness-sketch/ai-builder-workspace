@@ -159,21 +159,32 @@ describe('standalone-IDE guarantee — Phase 2.5 regression check', () => {
     }
   });
 
-  it('standalone build paths never reference sps_workspace_id', () => {
+  it('standalone build paths only reference sps_workspace_id behind the gate file', () => {
     // The agent + preview + bundler source paths do the standalone build.
-    // None of them should ever read from the new column. The only places
-    // that may reference it are the SPS handoff routes, which are dormant
-    // for non-SPS projects.
+    // The only place that may reference sps_workspace_id is the explicit
+    // gate (apps/api/src/agent/phases/siteDataShim.ts), which is what
+    // ENFORCES the standalone-IDE guarantee — every reference there is
+    // wrapped in an early-return check.
+    //
+    // Anywhere else under src/agent or src/preview that mentions
+    // sps_workspace_id is a leak: the standalone build path could read it
+    // unconditionally and bake SPS info into a non-SPS bundle.
+    const ALLOWED_GATE_FILES = new Set([
+      'src/agent/phases/siteDataShim.ts',  // the gate function itself
+      'src/agent/phases/runPhases.ts',     // orchestrator — passes project handle to the gate, never reads it directly
+    ]);
+
     const offenders: string[] = [];
     for (const dir of [AGENT_DIR, PREVIEW_DIR]) {
       for (const file of walkTsFiles(dir)) {
         const src = readFileSync(file, 'utf8');
-        if (src.includes('sps_workspace_id') || src.includes('spsWorkspaceId')) {
-          offenders.push(file.replace(ROOT + '\\', '').replace(ROOT + '/', ''));
-        }
+        if (!src.includes('sps_workspace_id') && !src.includes('spsWorkspaceId')) continue;
+        const rel = file.replace(ROOT + '\\', '').replace(ROOT + '/', '').replace(/\\/g, '/');
+        if (ALLOWED_GATE_FILES.has(rel)) continue;
+        offenders.push(rel);
       }
     }
-    expect(offenders, 'standalone build paths must not reference sps_workspace_id').toEqual([]);
+    expect(offenders, 'only the gate file may reference sps_workspace_id under src/agent or src/preview').toEqual([]);
   });
 
   it('handoffToken module is server-only (no browser imports)', () => {

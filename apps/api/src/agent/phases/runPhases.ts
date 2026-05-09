@@ -21,13 +21,15 @@ import type { WorkspaceHandle } from '../../preview/workspace';
 import { runPlanner, type PlanType } from './plan';
 import { runInlineHumanizer } from './humanize';
 import { runInlinePolish, type AuditFinding } from './polish';
+import { maybeInjectSiteDataShim, type ProjectSignalPointHandle } from './siteDataShim';
 
 export type PhaseEvent =
   | { type: 'plan_start';     niche?: string;                                 }
   | { type: 'plan_done';      niche: string;  pagesCount: number; assetsCount: number; voice: string; palette: string }
   | { type: 'plan_failed';    error: string                                    }
   | { type: 'humanize_done';  filesTouched: number; swaps: number              }
-  | { type: 'polish_done';    findings: AuditFinding[]; filesTouched: number   };
+  | { type: 'polish_done';    findings: AuditFinding[]; filesTouched: number   }
+  | { type: 'shim_check';     injected: boolean; reason: string; bindingCount: number };
 
 export interface PrePhaseInput {
   brief:          string;
@@ -53,6 +55,13 @@ export interface PrePhaseResult {
 export interface PostPhaseInput {
   ws:    WorkspaceHandle;
   plan?: PlanType;
+  /** Project's SPS handle (optional). Standalone projects pass nothing or
+   *  an object with both spsWorkspaceId and signalpointConfig null —
+   *  maybeInjectSiteDataShim returns a no-op in that case. */
+  project?: ProjectSignalPointHandle;
+  /** Project type id used to load niche manifests when checking bindings.
+   *  Defaults to 'website' when omitted. */
+  projectTypeId?: string;
   emit:  (event: PhaseEvent) => void;
 }
 
@@ -116,11 +125,13 @@ export async function runPrePhase(input: PrePhaseInput): Promise<PrePhaseResult>
 export async function runPostPhase(input: PostPhaseInput): Promise<{
   humanize?: { filesTouched: number; swaps: number };
   polish?:   { findings: AuditFinding[]; filesTouched: number };
+  shim?:     { injected: boolean; reason: string; bindingCount: number };
 }> {
-  const { ws, emit } = input;
+  const { ws, plan, project, projectTypeId, emit } = input;
   const result: {
     humanize?: { filesTouched: number; swaps: number };
     polish?:   { findings: AuditFinding[]; filesTouched: number };
+    shim?:     { injected: boolean; reason: string; bindingCount: number };
   } = {};
 
   // Phase B': humanize copy in written HTML files
@@ -135,6 +146,30 @@ export async function runPostPhase(input: PostPhaseInput): Promise<{
   if (polishRes.ok) {
     result.polish = { findings: polishRes.findings, filesTouched: polishRes.filesTouched };
     emit({ type: 'polish_done', findings: polishRes.findings, filesTouched: polishRes.filesTouched });
+  }
+
+  // Phase 3: optional site-data shim injection. The gate function
+  // (maybeInjectSiteDataShim) early-returns a no-op for any project that
+  // doesn't have an SPS link AND a binding-eligible niche manifest.
+  // Standalone-IDE guarantee: this code path produces zero side-effects on
+  // workspaces without project.signalpointConfig set.
+  if (plan && project) {
+    const shimRes = await maybeInjectSiteDataShim({
+      projectTypeId: projectTypeId ?? 'website',
+      plan,
+      project,
+    });
+    result.shim = {
+      injected:     shimRes.injected,
+      reason:       shimRes.reason,
+      bindingCount: shimRes.bindings.length,
+    };
+    emit({
+      type:         'shim_check',
+      injected:     shimRes.injected,
+      reason:       shimRes.reason,
+      bindingCount: shimRes.bindings.length,
+    });
   }
 
   return result;
