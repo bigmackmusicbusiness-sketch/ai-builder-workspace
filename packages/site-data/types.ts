@@ -16,7 +16,13 @@ import { z } from 'zod';
 /** The runtime config the publish step writes to the project bundle when a
  *  workspace has an SPS link. ABW's site-data shim reads this on first
  *  request and caches the resolved supabase URL + anon key for the
- *  remainder of the page lifecycle. */
+ *  remainder of the page lifecycle.
+ *
+ *  Mirrors SPS round-4 issuer response shape:
+ *  `POST /api/abw/site-config-token` returns
+ *  `{ ok: true, config: { workspace_id, supabase_url, anon_key, edge_token,
+ *  edge_base_url, expires_at } }`. ABW publish strips the `ok` envelope and
+ *  writes the inner `config` object as `signalpoint-config.json`. */
 export const SignalPointConfigSchema = z.object({
   /** UUID of the SPS workspace that owns this customer's data. Becomes the
    *  `x-workspace-id` header on every read so RLS scopes correctly. */
@@ -28,11 +34,17 @@ export const SignalPointConfigSchema = z.object({
    *  the public-read RLS policies enforce per-workspace boundaries even on
    *  the open internet. */
   anon_key: z.string().min(1),
-  /** HS256 token for embed-edge requests (form submissions, mutations).
-   *  Reads don't need this — they go directly to Supabase. */
+  /** HS256 token for embed-edge requests. Used by the shim's refresh path
+   *  to mint a fresh anon_key + workspace_id when `expires_at` approaches
+   *  by hitting `${edge_base_url}/v1/site-config/${edge_token}`. */
   edge_token: z.string().min(1),
-  /** ISO 8601 timestamp when ABW should re-fetch site-config from the SPS
-   *  issuer endpoint. The shim refetches when within 24h of expiry. */
+  /** Embed-edge base URL (e.g. https://embed.signalpointportal.com). Where
+   *  the shim's refresh fetch lands. Added in SPS round 4 — keeps ABW from
+   *  needing hardcoded knowledge of SPS infra. */
+  edge_base_url: z.string().url(),
+  /** ISO 8601 timestamp when ABW should re-fetch site-config from
+   *  `${edge_base_url}/v1/site-config/${edge_token}`. The shim refetches
+   *  when within 24h of expiry. */
   expires_at: z.string().datetime(),
 });
 

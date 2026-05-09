@@ -39,13 +39,18 @@ export interface ProjectSignalPointHandle {
   spsWorkspaceId?: string | null;
   /** When the publish flow has resolved a full config from SPS's issuer,
    *  this is populated. NULL until SPS_HANDOFF_KID + the issuer endpoint
-   *  are live + a valid config has been minted for this tenant. */
+   *  are live + a valid config has been minted for this tenant.
+   *
+   *  Shape matches SPS round-4 issuer response (`POST /api/abw/site-config-token`)
+   *  inner `config` object. `edge_base_url` was added in round 4 so the shim
+   *  knows where to refresh from. */
   signalpointConfig?: {
-    workspace_id: string;
-    supabase_url: string;
-    anon_key:     string;
-    edge_token:   string;
-    expires_at:   string;
+    workspace_id:  string;
+    supabase_url:  string;
+    anon_key:      string;
+    edge_token:    string;
+    edge_base_url: string;
+    expires_at:    string;
   } | null;
 }
 

@@ -48,16 +48,18 @@ export async function resolveSignalpointConfigForProject(opts: {
 /** Serialize a config for embedding into the bundle as
  *  `signalpoint-config.json`. Stable JSON formatting (sorted keys, 2-space
  *  indent) so re-publishing the same config produces a byte-identical
- *  artifact and downstream caches don't bust. */
+ *  artifact and downstream caches don't bust.
+ *
+ *  Order matches SPS round-4 issuer response (`POST /api/abw/site-config-token`)
+ *  byte-for-byte except for the `ok` envelope, which the publish flow strips. */
 export function serializeSignalpointConfig(config: SignalPointConfig): Uint8Array {
-  // Sort keys for stable output. The known-good order matches the contract
-  // documented in HANDOFF_NOTES.md OUTBOUND TO SPS round 2 §7.
   const ordered = {
-    workspace_id: config.workspace_id,
-    supabase_url: config.supabase_url,
-    anon_key:     config.anon_key,
-    edge_token:   config.edge_token,
-    expires_at:   config.expires_at,
+    workspace_id:  config.workspace_id,
+    supabase_url:  config.supabase_url,
+    anon_key:      config.anon_key,
+    edge_token:    config.edge_token,
+    edge_base_url: config.edge_base_url,
+    expires_at:    config.expires_at,
   };
   const json = JSON.stringify(ordered, null, 2) + '\n';
   return new TextEncoder().encode(json);
