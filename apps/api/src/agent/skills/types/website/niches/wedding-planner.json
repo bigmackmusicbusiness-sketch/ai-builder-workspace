@@ -1,0 +1,28 @@
+{
+  "niche": "wedding-planner",
+  "label": "Wedding Planner",
+  "triggers": ["wedding planner", "wedding coordinator", "day-of coordinator", "month-of coordinator", "wedding planning service", "full-service wedding planning", "partial wedding planning", "wedding design and planning", "destination wedding planner", "elopement planner", "wedding production"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+tiers-preview+inquire" },
+    { "slug": "services", "role": "full-partial-day-of+scope-table" },
+    { "slug": "work",     "role": "selected-weddings-with-vendor-credits" },
+    { "slug": "about",    "role": "planner-bio+training+team" },
+    { "slug": "faq",      "role": "timeline+contracts+vendors+budget" },
+    { "slug": "contact",  "role": "inquiry-form+intake-questions" }
+  ],
+  "compliance_blocks": ["contract-required-disclosure", "event-insurance-required", "deposit-and-retainer-policy", "final-payment-and-cancellation-policy", "force-majeure-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "calm-coordinated, vendor-network honest, timeline-led, no fairytale-fluff, knows what an 11 p.m. teardown actually costs",
+  "palettes": [
+    { "name": "champagne-ink",  "hexes": ["#A88B5E", "#FBF7EE", "#EFE0C2", "#15110A"] },
+    { "name": "blush-pewter",   "hexes": ["#C9A39A", "#FBF4F1", "#E8D2CC", "#1A1314"] },
+    { "name": "sage-paper",     "hexes": ["#8A9F84", "#FAF9F1", "#D9E1D2", "#13180F"] },
+    { "name": "bone-bordeaux",  "hexes": ["#6B2330", "#FBF6EE", "#E5D7C5", "#1A0810"] },
+    { "name": "linen-charcoal", "hexes": ["#3F3A33", "#F8F4EB", "#D6CDBA", "#0E0B07"] },
+    { "name": "soft-clay-blue", "hexes": ["#7E91A2", "#FBF8F2", "#D7DEE6", "#101720"] }
+  ],
+  "section_library": ["hero", "page-hero", "tier-grid", "scope-comparison-table", "sample-timeline", "vendor-network-strip", "selected-weddings-grid", "weddings-detail-card", "process-timeline", "planner-bio", "team-grid", "review-strip", "press-strip", "inquiry-form", "intake-questions-block", "faq-accordion", "footer"],
+  "image_directives": "behind-the-scenes documentary photography. A planner with a clipboard at 6 a.m. setup, a binder open to the run-of-show, a vendor pre-meeting around a folding table, a quiet moment between ceremony and reception. Real couples, real vendors, varied skin tones and body types. Avoid posed bride-on-staircase glamour, ring-on-bouquet flat-lays, AI-perfect tablescapes. Soft natural light, mid-frame compositions, the planner is rarely the subject.",
+  "voice_pet_words": ["timeline", "scope", "run-of-show", "vendor team", "load-in", "intake", "month-of", "ceremony cue", "buffer"],
+  "primary_keywords": ["wedding planner", "wedding coordinator", "day-of coordinator", "wedding planning service"]
+}

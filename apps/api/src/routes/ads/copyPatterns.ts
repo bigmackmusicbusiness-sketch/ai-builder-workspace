@@ -1562,6 +1562,114 @@ export const COPY_PATTERNS: Record<string, CopyPattern[]> = {
       primary:   'Long workdays plus a young dog plus a small apartment usually means a chewed couch and a guilty owner. Standing 1pm walk three days a week fixes most of it. Vacation overnights and cat drop-ins are on the same client portal.',
     },
   ],
+
+  'wedding-venue': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '150 seated. Rain plan in the barn.',
+      primary:   '5-acre estate, ceremony lawn for 150, reception barn that seats the same group if it pours. Saturdays $9,800 May–Oct, Fridays and Sundays from $5,400. Tour by appointment.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'We turn down 60% of Saturday inquiries.',
+      primary:   'We host 22 weddings a year, not 60. Peak Saturdays book 14 months out; Fridays and Sundays open up inside 6. Send us your date and we will tell you the truth about availability.',
+    },
+    {
+      framework: 'before-after',
+      headline:  '"What if it rains?" → "Same room, plan B is real."',
+      primary:   'Most venues sell you an outdoor ceremony and pray for sun. Our rain plan is a heated barn with the chairs already set. You see both spaces on the tour and pick the call at noon the day-of.',
+    },
+  ],
+
+  'wedding-planner': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Day-of coordination. 11-week runway.',
+      primary:   'Month-of coordination starting 11 weeks out: vendor confirmations, run-of-show, rehearsal lead, and a full timeline with buffers. Flat fee $3,800. Two slots open for fall 2026.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'I plan 14 weddings a year. On purpose.',
+      primary:   'Full-service planning is a 200-hour job. I take 14 a year because that is the math. If you want a planner who is on six other timelines this Saturday, I am not her.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Pinterest spreadsheet → a 47-page run-of-show.',
+      primary:   'You start with a shared doc and a vendor wishlist. We end with a 47-page run-of-show every vendor signs off on, plus a 6 a.m. setup call sheet so nothing depends on your sister-in-law.',
+    },
+  ],
+
+  'photography-studio': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '8-hour coverage, two photographers, 600 selects.',
+      primary:   '8 hours, two photographers, 600 culled and edited selects in your gallery within 6 weeks. Print release included. Wedding packages from $4,800; 12 dates open for 2026.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'I shoot in mixed light, not flat overcast.',
+      primary:   'I do not chase golden hour and I do not flatten skin tones. I light for the room you are in. Look at the gallery — every wedding has a real noon, a real reception, and a real first dance.',
+    },
+    {
+      framework: 'before-after',
+      headline:  '900 phone snaps → 600 frames you will print.',
+      primary:   'Guest phones will give you 900 photos you scroll past. We deliver 600 you actually print, and a print release so the lab does not call you for permission.',
+    },
+  ],
+
+  'videography-events': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '5-min film + ceremony cut. 10-week edit.',
+      primary:   '5-minute highlight film plus a full ceremony and toasts cut, color-graded, licensed audio, delivered in 10 weeks. Wedding films from $4,200; second shooter and drone optional.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Half the work is the lavalier.',
+      primary:   'Most wedding films sound like a phone in a coat pocket. We mic the officiant, the couple, and the speeches with three lavs and a backup recorder. The vows are the film — the audio has to land.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Acoustic-cover montage → a film that holds vows.',
+      primary:   'If you have watched a wedding film set to a Bon Iver cover, you have watched a montage. Our films keep the actual vows, the actual speech, and the actual room tone — and license the music we add.',
+    },
+  ],
+
+  'dj-services': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'DJ + MC, 6-hour reception, 4 uplights.',
+      primary:   'Two CDJs, a wireless MC mic, four LED uplights, and a 6-hour reception block. Open-format reads the room and runs your do-not-play list. Weddings from $2,400 — Saturday dates Apr–Oct moving fast.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Your venue caps at 95 dB. We know that.',
+      primary:   'Half of urban venues cap reception sound between 85 and 95 dB. We coordinate with the venue, run a meter, and still fill the floor. If your contract has a sound clause, send it with the inquiry.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Spotify on aux → a floor that does not clear at 9.',
+      primary:   'An iPad on aux empties the floor at 9. A DJ who reads the room watches who is dancing, who just sat down, and pivots in the next song. That is the whole job and it is harder than it sounds.',
+    },
+  ],
+
+  'event-rental': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '40x80 tent, 150 chairs, delivered Friday.',
+      primary:   '40x80 pole tent, 18 60-inch rounds, 150 wood folding chairs, white linen, delivered Friday morning and struck Sunday by 6 p.m. Package from $4,600 inside our 30-mile zone.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '4-hour delivery windows, not all-day.',
+      primary:   "We give you a 4-hour delivery window, not 'sometime Friday.' Our crew calls 30 minutes out so you are not waiting on a folding chair while the florist needs the room.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Three vendors, three trucks → one load-in.',
+      primary:   'Tents, tables, and linens from three companies means three trucks at your venue. We carry all three, run one load-in, and one strike, on one contract with one damage waiver.',
+    },
+  ],
 };
 
 /** Fallback for niches without curated patterns — generic but framework-shaped,

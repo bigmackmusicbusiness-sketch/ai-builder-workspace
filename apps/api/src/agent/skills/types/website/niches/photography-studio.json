@@ -1,0 +1,28 @@
+{
+  "niche": "photography-studio",
+  "label": "Photography Studio",
+  "triggers": ["photographer", "photography", "wedding photographer", "family photographer", "branding photographer", "headshot photography", "portrait studio", "engagement session", "editorial photography", "commercial photographer", "studio photographer", "lifestyle photography"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+selected-work+inquire" },
+    { "slug": "work",     "role": "portfolio-by-category" },
+    { "slug": "services", "role": "weddings+portrait+branding+packages" },
+    { "slug": "pricing",  "role": "package-table+coverage-windows" },
+    { "slug": "about",    "role": "photographer-bio+gear-and-approach" },
+    { "slug": "contact",  "role": "inquiry-form+availability-window" }
+  ],
+  "compliance_blocks": ["contract-required-disclosure", "print-release-policy", "retouching-policy", "digital-delivery-timeline", "deposit-and-retainer-policy", "final-payment-and-cancellation-policy", "force-majeure-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "PhotographyBusiness",
+  "voice_template": "portfolio-led, taste-driven, technical about light and skin tones, honest about delivery windows, no glamour-shot gloss",
+  "palettes": [
+    { "name": "editorial-bone",  "hexes": ["#8B7E6C", "#FBF8F1", "#E1D5C0", "#0F0C08"] },
+    { "name": "warm-paper",      "hexes": ["#A47A52", "#FBF6EC", "#EBD9BD", "#15100A"] },
+    { "name": "studio-graphite", "hexes": ["#3A3631", "#F7F4ED", "#D8CFBE", "#0A0907"] },
+    { "name": "rose-archive",    "hexes": ["#B58479", "#FBF2EE", "#EFD4CB", "#160E0D"] },
+    { "name": "ink-cream",       "hexes": ["#1B1815", "#FAF5EC", "#DFCEB7", "#070605"] },
+    { "name": "sand-onyx",       "hexes": ["#9C8266", "#F9F2E5", "#E2CBA8", "#0C0907"] }
+  ],
+  "section_library": ["hero", "page-hero", "selected-work-grid", "category-strip", "case-study-cover", "package-table", "coverage-window-strip", "kit-gear-notes", "delivery-timeline-block", "print-release-block", "photographer-bio", "press-strip", "review-strip", "inquiry-form", "availability-strip", "faq-accordion", "footer"],
+  "image_directives": "the portfolio is the photography. Tight image-led layout, full-bleed signature frames from real shoots, varied skin tones and lighting setups in equal measure. Show printed work, a contact sheet, the back of the camera mid-shoot. Avoid filtered Instagram-glow retouching, ring-on-bouquet flat-lays, AI-perfect skin renders that erase texture. Mixed natural and strobe, real grain preserved, hands and gear over the photographer's selfie.",
+  "voice_pet_words": ["frame", "coverage", "delivery", "gallery", "selects", "edit", "session", "kit", "skin tones"],
+  "primary_keywords": ["wedding photographer", "portrait photographer", "branding photography", "photography studio"]
+}

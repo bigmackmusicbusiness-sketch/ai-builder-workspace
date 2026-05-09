@@ -1,0 +1,29 @@
+{
+  "niche": "dj-services",
+  "label": "DJ Services",
+  "triggers": ["dj", "wedding dj", "event dj", "corporate dj", "private party dj", "mc service", "wedding mc", "dj and mc", "reception dj", "dj for hire", "open-format dj", "club dj for events", "mobile dj"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+packages+inquire" },
+    { "slug": "services", "role": "wedding+corporate+private+mc-add-on" },
+    { "slug": "pricing",  "role": "tier-table+addons+travel" },
+    { "slug": "work",     "role": "set-clips+event-recaps+playlists" },
+    { "slug": "about",    "role": "dj-bio+rig-and-approach" },
+    { "slug": "faq",      "role": "requests+do-not-play+sound-coordination" },
+    { "slug": "contact",  "role": "inquiry-form+date-check" }
+  ],
+  "compliance_blocks": ["contract-required-disclosure", "music-licensing-disclosure", "sound-level-coordination-policy", "deposit-and-retainer-policy", "final-payment-and-cancellation-policy", "force-majeure-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "read-the-room, MC-pro, sound-tech-aware, honest about request lists, no party-animal posing",
+  "palettes": [
+    { "name": "stage-amber",    "hexes": ["#C26A1F", "#13110E", "#E5C28C", "#050403"] },
+    { "name": "ruby-noir",      "hexes": ["#962033", "#0E0A0B", "#D9A8A5", "#040202"] },
+    { "name": "uplight-violet", "hexes": ["#6E3DA8", "#0E0B14", "#C9B6E2", "#040208"] },
+    { "name": "sunset-stage",   "hexes": ["#D8542A", "#181311", "#E8C2A6", "#070403"] },
+    { "name": "warm-stagedeep", "hexes": ["#7A4221", "#1A1410", "#D9B58C", "#080604"] },
+    { "name": "neon-bone",      "hexes": ["#2BB3A0", "#0F1010", "#E3DBC8", "#030505"] }
+  ],
+  "section_library": ["hero", "page-hero", "package-table", "service-card", "addon-list", "set-clip-embed", "playlist-strip", "request-policy-block", "do-not-play-block", "sound-coordination-note", "rig-and-gear-notes", "dj-bio", "review-strip", "event-type-tiles", "inquiry-form", "date-check-strip", "faq-accordion", "footer"],
+  "image_directives": "real booth photography. The rig set up at 5 p.m. before doors, two CDJs and a mixer mid-blend, a wireless on the MC's hand, a packed dance floor shot from the booth. Show the actual gear and uplights at the actual venue. Avoid laser-show flash stock, headphones-on-DJ-with-arms-raised cliche, AI-rendered crowd shots. Tungsten plus colored uplight, real motion blur, the dance floor over the DJ's face.",
+  "voice_pet_words": ["set", "rig", "MC", "mix", "request list", "do-not-play", "uplights", "load-in", "house system"],
+  "primary_keywords": ["wedding dj", "event dj", "dj and mc", "corporate dj"]
+}

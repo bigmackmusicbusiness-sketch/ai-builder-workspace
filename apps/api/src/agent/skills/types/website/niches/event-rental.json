@@ -1,0 +1,28 @@
+{
+  "niche": "event-rental",
+  "label": "Event Rental",
+  "triggers": ["event rental", "tent rental", "table and chair rental", "wedding rental", "linen rental", "china rental", "lounge furniture rental", "photo booth rental", "bar rental", "dance floor rental", "party rental", "event equipment rental"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+inventory-categories+quote-cta" },
+    { "slug": "services", "role": "category-grid" },
+    { "slug": "gallery",  "role": "inventory-by-collection" },
+    { "slug": "pricing",  "role": "category-rate-card+delivery-zones" },
+    { "slug": "faq",      "role": "delivery+setup+damage+lead-time" },
+    { "slug": "contact",  "role": "quote-request-form+coverage-area" }
+  ],
+  "compliance_blocks": ["damage-waiver-policy", "delivery-policy", "setup-strike-window-policy", "contract-required-disclosure", "deposit-and-retainer-policy", "final-payment-and-cancellation-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "LocalBusiness",
+  "voice_template": "inventory-honest, logistics-clear, delivery-window-strict, treats setup-strike as the real product",
+  "palettes": [
+    { "name": "canvas-bone",     "hexes": ["#A99A82", "#FBF7EE", "#E5D9C2", "#13110D"] },
+    { "name": "warehouse-stone", "hexes": ["#5C5852", "#F6F3ED", "#CFC9BC", "#0D0C0A"] },
+    { "name": "linen-clay",      "hexes": ["#B58A6A", "#FBF5EB", "#EBD3B8", "#15100B"] },
+    { "name": "tent-deep",       "hexes": ["#2C3035", "#F2ECDF", "#B6AC92", "#080A0C"] },
+    { "name": "olive-canvas",    "hexes": ["#7E8458", "#FAF7EC", "#DDDDB8", "#13140C"] },
+    { "name": "rust-paper",      "hexes": ["#9A4A2A", "#FBF4EA", "#EAC9A8", "#170A05"] }
+  ],
+  "section_library": ["hero", "page-hero", "category-grid", "inventory-card", "collection-strip", "rate-card", "delivery-zone-map", "lead-time-strip", "setup-strike-window-block", "damage-waiver-block", "minimum-order-note", "quote-request-form", "coverage-map", "review-strip", "press-strip", "faq-accordion", "footer"],
+  "image_directives": "warehouse and load-in documentary work. Pallets of folding chairs strapped down, linens being unfolded onto a 60-inch round, a tent crew pulling poles into place, a delivery truck backed to a venue. Show the inventory at the warehouse and on-site mid-setup. Avoid stylized magazine tablescapes shot at peak event, glossy stock of empty ballrooms, AI-perfect china flat-lays. Daylight in the warehouse, mixed light at the load-in, the crew in branded shirts.",
+  "voice_pet_words": ["inventory", "delivery window", "load-in", "strike", "lead time", "minimum order", "damage waiver", "rounds", "linen count"],
+  "primary_keywords": ["event rental", "tent rental", "wedding rental", "table and chair rental"]
+}

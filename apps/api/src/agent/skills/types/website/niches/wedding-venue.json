@@ -1,0 +1,28 @@
+{
+  "niche": "wedding-venue",
+  "label": "Wedding Venue",
+  "triggers": ["wedding venue", "ceremony venue", "reception venue", "wedding barn", "wedding estate", "wedding ballroom", "vineyard wedding", "garden wedding venue", "rehearsal dinner venue", "private estate venue", "outdoor wedding site", "indoor ceremony space", "tented reception site"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+spaces-overview+inquire" },
+    { "slug": "gallery",  "role": "ceremony-and-reception-spaces" },
+    { "slug": "pricing",  "role": "season-tiers+rental-windows+capacity" },
+    { "slug": "faq",      "role": "rain-plan+vendor-policy+alcohol+parking" },
+    { "slug": "about",    "role": "property-story+stewardship" },
+    { "slug": "contact",  "role": "tour-request+inquiry-form" }
+  ],
+  "compliance_blocks": ["event-insurance-required", "vendor-insurance-required", "alcohol-license-footer", "capacity-limits-statement", "contract-required-disclosure", "deposit-and-retainer-policy", "final-payment-and-cancellation-policy", "force-majeure-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "LocalBusiness",
+  "voice_template": "warm, capacity-honest, season-aware, the rain plan is a real plan, no fairytale-fluff",
+  "palettes": [
+    { "name": "estate-oak",      "hexes": ["#5C4A2E", "#FBF6EA", "#D9C49A", "#1B130A"] },
+    { "name": "vineyard-stone",  "hexes": ["#6E5340", "#F9F4EB", "#E1D4BC", "#1A120B"] },
+    { "name": "garden-deep",     "hexes": ["#3F5238", "#F6F4EC", "#C9D2BE", "#0E1410"] },
+    { "name": "barn-iron",       "hexes": ["#2A2520", "#F2EBDB", "#B89E78", "#0A0806"] },
+    { "name": "ballroom-bronze", "hexes": ["#7A5A2E", "#FBF7EE", "#E8D3A8", "#1A0F06"] },
+    { "name": "field-sage",      "hexes": ["#7C8E6E", "#FAF8F1", "#D7DDC8", "#161C13"] }
+  ],
+  "section_library": ["hero", "page-hero", "spaces-overview", "ceremony-space-card", "reception-space-card", "capacity-table", "season-pricing-table", "rain-plan-block", "vendor-policy-strip", "alcohol-and-bar-policy", "parking-and-access-strip", "site-map-figure", "tour-request-form", "testimonial-strip", "address-card", "faq-accordion", "footer"],
+  "image_directives": "real property photography. The actual ceremony lawn at 4 p.m. with chairs set, the reception barn before guests arrive, the bridal suite at golden hour, the kitchen prep area where caterers stage. Show the rain plan space — the real one. Avoid stylized flat-lays of rings on stationery, generic sunset stock, AI-perfect garden renders. Wide architectural frames, mid-day and overcast both included, no model couples in frame.",
+  "voice_pet_words": ["site", "capacity", "ceremony lawn", "rain plan", "season", "vendor list", "load-in", "tented", "rehearsal"],
+  "primary_keywords": ["wedding venue", "reception venue", "ceremony site", "private estate venue"]
+}

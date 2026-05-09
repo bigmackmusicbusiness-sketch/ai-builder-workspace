@@ -1,0 +1,28 @@
+{
+  "niche": "videography-events",
+  "label": "Videography (Events)",
+  "triggers": ["videographer", "videography", "wedding film", "wedding video", "event videographer", "wedding cinematographer", "highlight reel", "recap film", "brand video", "event recap video", "documentary wedding film", "hybrid photo and video"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+film-reel+inquire" },
+    { "slug": "work",     "role": "films-by-format" },
+    { "slug": "services", "role": "wedding+event+brand+coverage-tiers" },
+    { "slug": "pricing",  "role": "package-table+edit-timeline" },
+    { "slug": "about",    "role": "filmmaker-bio+kit-and-edit-approach" },
+    { "slug": "contact",  "role": "inquiry-form+booking-window" }
+  ],
+  "compliance_blocks": ["contract-required-disclosure", "music-licensing-disclosure", "digital-delivery-timeline", "deposit-and-retainer-policy", "final-payment-and-cancellation-policy", "force-majeure-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "cinematographer-minded, color-aware, edit-honest about timelines, treats audio as half the work",
+  "palettes": [
+    { "name": "filmic-charcoal", "hexes": ["#1F1D1B", "#F4EFE5", "#A99A82", "#070605"] },
+    { "name": "deep-teal",       "hexes": ["#1F4046", "#F2EFE7", "#B7C2BD", "#080F11"] },
+    { "name": "ember-noir",      "hexes": ["#8C3A1C", "#181311", "#D7BFA0", "#040303"] },
+    { "name": "raw-bone",        "hexes": ["#7A6F5E", "#FAF5EA", "#DFD0B6", "#0F0C08"] },
+    { "name": "midnight-rust",   "hexes": ["#532A1A", "#0F0E0C", "#C7A983", "#040302"] },
+    { "name": "fog-graphite",    "hexes": ["#5C6A6E", "#F1EEE7", "#C2C4BE", "#0B0E0F"] }
+  ],
+  "section_library": ["hero", "page-hero", "reel-embed", "selected-films-grid", "film-card", "format-strip", "package-table", "coverage-window-strip", "edit-timeline-block", "audio-and-music-note", "kit-gear-notes", "filmmaker-bio", "review-strip", "press-strip", "inquiry-form", "faq-accordion", "footer"],
+  "image_directives": "frame-grabs over still photography. Stills lifted from the actual films — gimbal mid-move, a lavalier clip on a lapel, the second-shooter at a low angle, a color-corrected ceremony frame next to the raw. Show the edit bay, the timeline open in Resolve, the licensed track on screen. Avoid generic videographer-with-camera stock, motion-blurred wedding clips set to acoustic covers, AI-rendered cinematic skies. Real footage, real grain, mixed color temperatures.",
+  "voice_pet_words": ["frame", "color", "edit", "audio", "timeline", "delivery", "licensed", "lav", "gimbal"],
+  "primary_keywords": ["wedding videographer", "wedding film", "event videographer", "brand video"]
+}
