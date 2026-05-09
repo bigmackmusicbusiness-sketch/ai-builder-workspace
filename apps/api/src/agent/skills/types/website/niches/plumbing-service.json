@@ -1,0 +1,28 @@
+{
+  "niche": "plumbing-service",
+  "label": "Plumbing Service",
+  "triggers": ["plumber", "plumbing", "plumbing service", "burst pipe", "clogged drain", "drain cleaning", "water heater", "tankless water heater", "leak repair", "sewer line", "repipe", "sump pump", "emergency plumber", "flat-rate plumbing"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+24-7-emergency-phone+flat-rate-promise" },
+    { "slug": "services", "role": "service-list+drains+water-heaters+repipe+sewer" },
+    { "slug": "pricing",  "role": "flat-rate-pricebook+upfront-quote-policy" },
+    { "slug": "about",    "role": "company-story+master-plumber-bio+licensing" },
+    { "slug": "gallery",  "role": "before-after-photos+job-site-shots" },
+    { "slug": "contact",  "role": "estimate-form+service-area+phone+hours" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "master-plumber-license-footer", "manufacturer-warranty-disclosure", "ada-accessibility-statement"],
+  "schema_org_primary": "Plumber",
+  "voice_template": "emergency-ready, no-nonsense, flat-rate trustworthy, plain about pipes and prices",
+  "palettes": [
+    { "name": "deep-water",   "hexes": ["#1E3A8A", "#94A3B8", "#F8FAFC", "#0B1220"] },
+    { "name": "chrome-pipe",  "hexes": ["#0F766E", "#64748B", "#E2E8F0", "#0F172A"] },
+    { "name": "copper-line",  "hexes": ["#1E40AF", "#B45309", "#F4F4F5", "#0A0A0A"] },
+    { "name": "wrench-red",   "hexes": ["#1D4ED8", "#B91C1C", "#FFFFFF", "#111827"] },
+    { "name": "galvanized",   "hexes": ["#334155", "#0284C7", "#F1F5F9", "#0F172A"] },
+    { "name": "valve-yellow", "hexes": ["#0C4A6E", "#FACC15", "#F0F9FF", "#082030"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "services-grid", "service-detail", "flat-rate-pricebook", "emergency-banner", "before-after-gallery", "testimonial-card", "review-strip", "license-badge-strip", "estimate-form", "service-area-map", "hours-strip", "address-card", "faq-accordion", "footer"],
+  "image_directives": "real plumbing job-site photography. PEX manifolds, copper sweats, water heater swaps, drain camera footage, sewage cleanouts in actual basements and crawlspaces. Show wet hands, pipe threaders, and the truck bed of fittings. Avoid bright-white studio shots of a fake plumber holding a single shiny wrench. Honest light, real homeowners visible occasionally. Include the camera-snake monitor or pressure gauge for credibility.",
+  "voice_pet_words": ["licensed", "master plumber", "flat rate", "upfront", "emergency", "guaranteed", "honest", "on-time"],
+  "primary_keywords": ["plumber near me", "emergency plumber", "drain cleaning", "water heater repair", "plumbing service"]
+}

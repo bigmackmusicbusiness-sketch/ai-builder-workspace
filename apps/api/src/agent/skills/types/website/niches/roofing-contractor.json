@@ -1,0 +1,28 @@
+{
+  "niche": "roofing-contractor",
+  "label": "Roofing Contractor",
+  "triggers": ["roofing contractor", "roof replacement", "roof repair", "shingle", "shingle roof", "metal roof", "tile roof", "storm damage roof", "hail damage", "roof leak", "drone roof inspection", "roof financing", "insurance claim roofing"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+storm-cta+services-preview" },
+    { "slug": "services", "role": "service-list+materials-grid" },
+    { "slug": "work",     "role": "before-after-gallery" },
+    { "slug": "about",    "role": "company-story+licenses+warranty" },
+    { "slug": "faq",      "role": "insurance-claim-faq" },
+    { "slug": "contact",  "role": "free-inspection-form+phone+hours" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "manufacturer-warranty-disclosure", "ada-accessibility-statement"],
+  "schema_org_primary": "RoofingContractor",
+  "voice_template": "confident, weather-aware, insurance-fluent, transparent, plain-English on claims",
+  "palettes": [
+    { "name": "storm-slate",      "hexes": ["#334155", "#F1F5F9", "#CBD5E1", "#0B1220"] },
+    { "name": "shingle-charcoal", "hexes": ["#1F2937", "#F8FAFC", "#E5E7EB", "#0A0F1A"] },
+    { "name": "copper-roof",      "hexes": ["#B45309", "#FFF8EC", "#F1D9AC", "#1C1108"] },
+    { "name": "weather-blue",     "hexes": ["#1D4ED8", "#FFFFFF", "#DBEAFE", "#0A1124"] },
+    { "name": "iron-rust",        "hexes": ["#9A3412", "#FAF7F4", "#F4D6C4", "#1A0E08"] },
+    { "name": "barn-red-steel",   "hexes": ["#991B1B", "#F5F5F4", "#D6D3D1", "#0F0A0A"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "storm-response-banner", "services-grid", "service-detail", "materials-comparison", "before-after-gallery", "drone-survey-strip", "warranty-strip", "insurance-claim-faq", "financing-strip", "testimonial-card", "license-badge-strip", "free-inspection-form", "address-card", "hours-strip", "footer"],
+  "image_directives": "real roofing job-site photography. Crews on actual roofs in harnesses, completed shingle and metal installs, storm damage inspections, drone survey shots, branded trucks at the curb. Show the roofline, the eaves, the work. Avoid stock-photo workers in pressed polos and clean boots. Honest weather and honest mess over polished marketing imagery.",
+  "voice_pet_words": ["licensed", "insured", "shingle", "underlayment", "warranty", "claim", "inspection", "honest", "local"],
+  "primary_keywords": ["roofing", "roof replacement", "roof repair", "free inspection", "storm damage"]
+}

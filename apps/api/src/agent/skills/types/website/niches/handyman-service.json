@@ -1,0 +1,29 @@
+{
+  "niche": "handyman-service",
+  "label": "Handyman Service",
+  "triggers": ["handyman", "handyperson", "handyman near me", "tv mounting", "furniture assembly", "drywall patch", "fixture installation", "picture hanging", "shelf installation", "door repair", "honey-do list", "hourly handyman"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+task-list+book-cta" },
+    { "slug": "services", "role": "task-categories-grid" },
+    { "slug": "pricing",  "role": "hourly-rate+job-rate-table" },
+    { "slug": "about",    "role": "personal-bio+experience" },
+    { "slug": "gallery",  "role": "small-jobs-portfolio" },
+    { "slug": "book",     "role": "schedule-form+phone" },
+    { "slug": "faq",      "role": "scope-and-billing-questions" }
+  ],
+  "compliance_blocks": ["insurance-liability-footer"],
+  "schema_org_primary": "HomeAndConstructionBusiness",
+  "voice_template": "personable, reliable, attentive to small details, comfortable saying yes to the punch list",
+  "palettes": [
+    { "name": "denim-pencil",  "hexes": ["#1E40AF", "#FAF5E9", "#FDE68A", "#0C1A33"] },
+    { "name": "putty-clay",    "hexes": ["#92400E", "#FAF7F2", "#F5E6D3", "#1F1409"] },
+    { "name": "level-green",   "hexes": ["#047857", "#F0FDF4", "#D1FAE5", "#0A1F16"] },
+    { "name": "tape-yellow",   "hexes": ["#CA8A04", "#1E293B", "#FEF9C3", "#0F172A"] },
+    { "name": "claw-hammer",   "hexes": ["#475569", "#F1F5F9", "#CBD5E1", "#020617"] },
+    { "name": "shop-rag-red",  "hexes": ["#B91C1C", "#FFF1F2", "#FECACA", "#1C0A0A"] }
+  ],
+  "section_library": ["hero", "page-hero", "task-grid", "task-detail-card", "hourly-rate-card", "job-rate-table", "schedule-form", "phone-cta-bar", "personal-bio-strip", "before-after-card", "review-strip", "service-area-strip", "faq-accordion", "address-card", "insurance-badge-strip", "footer"],
+  "image_directives": "close-up craft photography. A drill driving a screw into a stud, a level on a freshly mounted TV, a cabinet handle being aligned, a smiling sole operator at the front door with a tool bag. Single-person scale, not a fleet. Show the small wins: a patched wall sanded smooth, a wobbly chair now solid. Avoid heavy machinery and large remodels — that's a contractor, not a handyman.",
+  "voice_pet_words": ["punch list", "honey-do", "by the hour", "small fix", "tidy", "tighten", "patch", "mount", "assemble", "insured"],
+  "primary_keywords": ["handyman", "handyman service", "small home repairs", "book a handyman"]
+}

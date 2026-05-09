@@ -1,0 +1,28 @@
+{
+  "niche": "home-services-general",
+  "label": "General Home Services",
+  "triggers": ["home services", "home maintenance", "home repair", "small jobs", "odd jobs", "property maintenance", "household repairs", "home upkeep", "around the house", "fix-it service", "multi-trade", "from a to z", "no job too small"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+service-grid+quote-cta" },
+    { "slug": "services", "role": "full-service-list-grid" },
+    { "slug": "about",    "role": "neighbor-story+coverage" },
+    { "slug": "gallery",  "role": "completed-jobs-grid" },
+    { "slug": "pricing",  "role": "rate-card+job-minimums" },
+    { "slug": "contact",  "role": "request-quote-form+phone" }
+  ],
+  "compliance_blocks": ["insurance-liability-footer", "ada-accessibility-statement"],
+  "schema_org_primary": "HomeAndConstructionBusiness",
+  "voice_template": "practical, neighborly, friendly jack-of-all-trades, no job is too small, honest about scope",
+  "palettes": [
+    { "name": "truck-blue",    "hexes": ["#2563EB", "#F8FAFC", "#E2E8F0", "#0F172A"] },
+    { "name": "workshop-tan",  "hexes": ["#A16207", "#FFFBEB", "#FEF3C7", "#1F1611"] },
+    { "name": "porch-green",   "hexes": ["#15803D", "#F7FBF6", "#DCFCE7", "#0B1F12"] },
+    { "name": "garage-grey",   "hexes": ["#52525B", "#FAFAFA", "#E4E4E7", "#18181B"] },
+    { "name": "toolbox-red",   "hexes": ["#DC2626", "#FFFFFF", "#FEE2E2", "#1F0B0B"] },
+    { "name": "ladder-orange", "hexes": ["#EA580C", "#FFF7ED", "#FFEDD5", "#1C0E05"] }
+  ],
+  "section_library": ["hero", "page-hero", "service-grid", "service-detail-card", "phone-cta-bar", "quote-form", "before-after-strip", "neighbor-story-strip", "rate-card", "service-area-map", "testimonial-strip", "hours-strip", "address-card", "insurance-badge-strip", "faq-accordion", "footer"],
+  "image_directives": "candid neighborhood photography. A pickup truck in a residential driveway, a tool belt on a porch, hands tightening a bolt, a freshly hung shelf, a homeowner shaking hands with the crew. Real houses, mid-job dust, finished result side-by-side. Avoid pristine corporate uniforms and sterile studio shots. Daylight on suburban streets reads better than golden-hour gloss.",
+  "voice_pet_words": ["neighbor", "honest", "fair", "show up", "small job", "fix", "around the house", "insured", "local", "punch list"],
+  "primary_keywords": ["home services", "home repair", "property maintenance", "request a quote"]
+}

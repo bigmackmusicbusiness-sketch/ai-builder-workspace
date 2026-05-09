@@ -1,0 +1,29 @@
+{
+  "niche": "pressure-washing",
+  "label": "Pressure Washing",
+  "triggers": ["pressure washing", "power washing", "soft wash", "soft washing", "driveway cleaning", "deck cleaning", "house washing", "concrete cleaning", "roof soft wash", "exterior surface cleaning", "patio cleaning", "fence washing", "rust stain removal", "oil stain removal"],
+  "default_sitemap": [
+    { "slug": "index",        "role": "hero+before-after-strip+phone-cta" },
+    { "slug": "services",     "role": "service-list+pressure-vs-soft-wash-explainer" },
+    { "slug": "gallery",      "role": "before-after-gallery" },
+    { "slug": "pricing",      "role": "flat-rate-table+square-foot-pricing" },
+    { "slug": "service-area", "role": "coverage-map" },
+    { "slug": "about",        "role": "company-story+licenses+insurance-badge" },
+    { "slug": "contact",      "role": "estimate-form+phone+hours" }
+  ],
+  "compliance_blocks": ["insurance-footer", "soft-wash-vs-pressure-disclosure"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "pride-in-craft, before-and-after driven, transparent flat-rate, plainspoken about chemistry and PSI",
+  "palettes": [
+    { "name": "rinse-blue",       "hexes": ["#0EA5E9", "#0F172A", "#F0F9FF", "#FFFFFF"] },
+    { "name": "spray-cyan",       "hexes": ["#06B6D4", "#1E293B", "#ECFEFF", "#F8FAFC"] },
+    { "name": "deep-water-navy",  "hexes": ["#1E3A8A", "#FBBF24", "#EFF6FF", "#0A1628"] },
+    { "name": "soap-foam",        "hexes": ["#38BDF8", "#475569", "#F1F5F9", "#0C1B2A"] },
+    { "name": "pressure-graphite","hexes": ["#0284C7", "#334155", "#F8FAFC", "#0F172A"] },
+    { "name": "driveway-slate",   "hexes": ["#0369A1", "#FACC15", "#F5F5F4", "#0B1B2B"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "before-after-slider", "before-after-gallery", "services-grid", "service-detail", "pressure-vs-soft-wash-card", "flat-rate-pricing-table", "service-area-map", "testimonial-card", "review-strip", "insurance-badge-strip", "annual-maintenance-cta", "estimate-form", "hours-strip", "address-card", "footer"],
+  "image_directives": "real on-the-truck pressure-washing photography. Wand in motion, foam dripping down siding, half-cleaned driveways with crisp dirty/clean lines, soft-wash setups for roofs, branded trucks and trailers. Show the operator in PPE — eye protection, boots, gloves. Avoid stock-photo crews in pristine uniforms or computer-generated foam. The dirty half of the surface is the hero of the shot.",
+  "voice_pet_words": ["soft wash", "PSI", "flat-rate", "before-and-after", "insured", "biodegradable", "surface cleaner", "annual"],
+  "primary_keywords": ["pressure washing", "power washing", "soft wash", "house washing", "free estimate"]
+}

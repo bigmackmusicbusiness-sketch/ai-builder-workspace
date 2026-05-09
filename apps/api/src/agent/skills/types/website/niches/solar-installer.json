@@ -1,0 +1,29 @@
+{
+  "niche": "solar-installer",
+  "label": "Solar Installer",
+  "triggers": ["solar panels", "solar installer", "rooftop solar", "pv system", "solar incentives", "battery storage", "solar power", "solar company", "residential solar", "solar contractor", "solar energy", "home solar"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+savings-calculator+free-survey-cta" },
+    { "slug": "services", "role": "rooftop-pv+battery-storage+ev-charging" },
+    { "slug": "pricing",  "role": "financing+lease+ppa+payback-table" },
+    { "slug": "work",     "role": "installed-systems-gallery" },
+    { "slug": "faq",      "role": "incentives+permits+interconnection" },
+    { "slug": "about",    "role": "company-story+nabcep-credentials" },
+    { "slug": "contact",  "role": "site-survey-form+phone+hours" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "irs-tax-credit-disclaimer", "financing-disclosure", "utility-interconnection-notice"],
+  "schema_org_primary": "HomeAndConstructionBusiness",
+  "voice_template": "incentive-fluent, long-term thinker, transparent ROI, plain-English about kilowatt-hours",
+  "palettes": [
+    { "name": "rooftop-noon",    "hexes": ["#F4B400", "#1E40AF", "#FFFBEB", "#0B1F3A"] },
+    { "name": "panel-graphite",  "hexes": ["#0EA5E9", "#FACC15", "#F8FAFC", "#0F172A"] },
+    { "name": "midday-azure",    "hexes": ["#2563EB", "#FCD34D", "#EFF6FF", "#0C1A2B"] },
+    { "name": "harvest-sun",     "hexes": ["#D97706", "#1E3A8A", "#FEF9C3", "#1A2238"] },
+    { "name": "kilowatt-teal",   "hexes": ["#0F766E", "#FACC15", "#F0FDFA", "#082F49"] },
+    { "name": "interconnect",    "hexes": ["#1D4ED8", "#FBBF24", "#FFFFFF", "#0A0F1F"] }
+  ],
+  "section_library": ["hero", "page-hero", "savings-calculator", "production-estimate-card", "financing-comparison-table", "incentive-explainer", "battery-storage-card", "before-after-bill", "site-survey-cta", "installed-system-gallery", "credential-badge-strip", "warranty-strip", "faq-accordion", "testimonial-card", "phone-cta-bar", "estimate-form", "footer"],
+  "image_directives": "real residential and small-commercial PV installs. Rooftop arrays at golden hour, crews in harnesses on actual roofs, racking detail, inverter and battery cabinet shots, homeowner standing in driveway with finished system. Show NABCEP cards, hard hats, and lifts. Avoid stock-photo families pointing at a panel against a fake sun. Bias toward sun-on-glass detail and honest residential streetscapes.",
+  "voice_pet_words": ["kilowatt-hour", "production", "payback", "interconnection", "net-metering", "tax credit", "warranty", "monitoring"],
+  "primary_keywords": ["solar installer", "rooftop solar", "solar panel installation", "free site survey", "solar tax credit"]
+}

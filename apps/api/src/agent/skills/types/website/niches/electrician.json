@@ -1,0 +1,29 @@
+{
+  "niche": "electrician",
+  "label": "Electrician",
+  "triggers": ["electrician", "electrical contractor", "panel upgrade", "ev charger install", "circuit breaker", "rewiring", "generator install", "whole-home generator", "smart home wiring", "knob and tube replacement", "service upgrade", "subpanel", "code compliance", "electrical troubleshooting"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+phone-cta+ev-and-panel-callout" },
+    { "slug": "services", "role": "service-list+panels+ev+generators+rewiring+smart-home" },
+    { "slug": "pricing",  "role": "panel-upgrade-tiers+ev-install-flat-rate+financing" },
+    { "slug": "about",    "role": "company-story+master-electrician-bio+licensing" },
+    { "slug": "gallery",  "role": "install-photos+panel-before-after" },
+    { "slug": "faq",      "role": "load-calc+permit+nec-2023+rebates" },
+    { "slug": "contact",  "role": "estimate-form+service-area+phone+hours" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "master-electrician-license-footer", "nec-code-compliance", "manufacturer-warranty-disclosure", "ada-accessibility-statement"],
+  "schema_org_primary": "Electrician",
+  "voice_template": "code-fluent, safety-first, modern-home-aware, calm and exact about voltage and load",
+  "palettes": [
+    { "name": "conduit-charcoal", "hexes": ["#0F172A", "#FACC15", "#F4F4F5", "#1E293B"] },
+    { "name": "service-amber",    "hexes": ["#1F2937", "#F59E0B", "#F8FAFC", "#0A0A0A"] },
+    { "name": "panel-graphite",   "hexes": ["#111827", "#EAB308", "#E5E7EB", "#0B1220"] },
+    { "name": "ev-volt",          "hexes": ["#0E7490", "#FACC15", "#F1F5F9", "#0F172A"] },
+    { "name": "copper-conductor", "hexes": ["#1E293B", "#B45309", "#F5F5F4", "#0A0A0A"] },
+    { "name": "smart-home-slate", "hexes": ["#334155", "#22D3EE", "#F8FAFC", "#0F172A"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "services-grid", "service-detail", "ev-charger-callout", "generator-callout", "panel-spec-card", "financing-strip", "before-after-gallery", "testimonial-card", "review-strip", "license-badge-strip", "estimate-form", "service-area-map", "hours-strip", "faq-accordion", "footer"],
+  "image_directives": "real residential and light-commercial electrical job-site photography. Open panels with neat wire dressing, EV chargers mounted in garages, standby generators on pads, attic rewires, smart-switch installs. Show torque screwdrivers, multimeters, and labeled breakers. Avoid stock photos of a smiling person holding a single yellow voltage tester in a sterile white kitchen. Honest light, real conduit, occasional NEC-2023 reference visible. Safety glasses on.",
+  "voice_pet_words": ["licensed", "master electrician", "permitted", "code-compliant", "load calc", "safe", "on-time", "honest"],
+  "primary_keywords": ["electrician near me", "panel upgrade", "ev charger installation", "generator installation", "electrical contractor"]
+}

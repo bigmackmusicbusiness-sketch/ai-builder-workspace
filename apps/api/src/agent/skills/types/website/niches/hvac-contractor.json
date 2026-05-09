@@ -1,0 +1,29 @@
+{
+  "niche": "hvac-contractor",
+  "label": "HVAC Contractor",
+  "triggers": ["hvac", "hvac contractor", "air conditioning", "ac repair", "ac install", "furnace", "furnace repair", "heating and cooling", "heat pump", "duct cleaning", "indoor air quality", "ductless mini split", "tune-up", "emergency hvac"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+24-7-phone-cta+seasonal-offer" },
+    { "slug": "services", "role": "service-list+heating+cooling+iaq+maintenance-plans" },
+    { "slug": "pricing",  "role": "tune-up+install-financing+rebate-finder" },
+    { "slug": "about",    "role": "company-story+epa-608+licensing" },
+    { "slug": "gallery",  "role": "install-photos+job-site-shots" },
+    { "slug": "faq",      "role": "system-sizing+r-410a-r-454b+rebates" },
+    { "slug": "contact",  "role": "estimate-form+service-area+phone+hours" }
+  ],
+  "compliance_blocks": ["epa-608-certified-footer", "license-bond-insurance-footer", "manufacturer-warranty-disclosure", "ada-accessibility-statement"],
+  "schema_org_primary": "HVACBusiness",
+  "voice_template": "comfort-focused, efficiency-aware, emergency-ready, plain-spoken about equipment and pricing",
+  "palettes": [
+    { "name": "cold-line",        "hexes": ["#0EA5E9", "#0F172A", "#F1F5F9", "#FFFFFF"] },
+    { "name": "frost-graphite",   "hexes": ["#2563EB", "#334155", "#E2E8F0", "#0B1220"] },
+    { "name": "copper-coil",      "hexes": ["#0891B2", "#B45309", "#F8FAFC", "#0E1B22"] },
+    { "name": "service-truck",    "hexes": ["#1D4ED8", "#FBBF24", "#F4F4F5", "#0A0A0A"] },
+    { "name": "ductwork-steel",   "hexes": ["#475569", "#0EA5E9", "#F8FAFC", "#0F172A"] },
+    { "name": "thermostat-deep",  "hexes": ["#1E40AF", "#0E7490", "#E0F2FE", "#0C1A2A"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "services-grid", "service-detail", "maintenance-plan-card", "rebate-callout", "financing-strip", "before-after-gallery", "testimonial-card", "review-strip", "license-badge-strip", "estimate-form", "service-area-map", "hours-strip", "address-card", "faq-accordion", "footer"],
+  "image_directives": "real residential and light-commercial HVAC job-site photography. Outdoor condensers on pads, indoor air handlers, ductwork in attics and crawlspaces, technicians with gauge sets and manifolds, branded service vans. Show the actual sweat and the actual sheet metal. Avoid stock photos of pristine techs holding clipboards in empty white rooms. Natural light, slightly overcast or interior LED preferred. Include occasional thermal-imaging or manometer screen overlays for credibility.",
+  "voice_pet_words": ["licensed", "epa-certified", "tonnage", "seer2", "tune-up", "rebate", "comfort", "on-time", "honest quote"],
+  "primary_keywords": ["hvac contractor", "ac repair", "furnace repair", "heat pump install", "hvac near me"]
+}

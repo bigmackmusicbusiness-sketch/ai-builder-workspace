@@ -1,0 +1,29 @@
+{
+  "niche": "pest-control",
+  "label": "Pest Control",
+  "triggers": ["pest control", "exterminator", "termite treatment", "roach", "bed bugs", "mosquito", "mouse rodent", "ant control", "wasp removal", "rodent exclusion", "pest inspection", "quarterly pest plan"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+pest-grid+free-inspection-cta" },
+    { "slug": "services", "role": "pest-specific-pages" },
+    { "slug": "programs", "role": "quarterly-recurring-plans" },
+    { "slug": "pricing",  "role": "plan-comparison-table" },
+    { "slug": "faq",      "role": "kid-pet-safety+products+process" },
+    { "slug": "about",    "role": "company-story+credentials" },
+    { "slug": "contact",  "role": "inspection-form+phone+hours" }
+  ],
+  "compliance_blocks": ["pesticide-applicator-license-footer", "state-pest-control-license", "msds-disclosure"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "protective, science-aware with real entomology, kid and pet safe, transparent about products",
+  "palettes": [
+    { "name": "clean-room-blue",  "hexes": ["#0284C7", "#FFFFFF", "#F0F9FF", "#0C4A6E"] },
+    { "name": "shield-navy",      "hexes": ["#1E3A8A", "#22C55E", "#F8FAFC", "#0A0F1F"] },
+    { "name": "inspection-mint",  "hexes": ["#0E7490", "#A7F3D0", "#FFFFFF", "#0F172A"] },
+    { "name": "trust-cobalt",     "hexes": ["#1D4ED8", "#FBBF24", "#EFF6FF", "#1E293B"] },
+    { "name": "hospital-gray",    "hexes": ["#0369A1", "#E2E8F0", "#FFFFFF", "#0B1F3A"] },
+    { "name": "perimeter-teal",   "hexes": ["#0F766E", "#F1F5F9", "#FFFFFF", "#082F49"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "pest-grid", "pest-detail-card", "quarterly-plan-card", "plan-comparison-table", "kid-pet-safe-strip", "inspection-cta-banner", "before-after-strip", "credential-badge-strip", "review-strip", "faq-accordion", "inspection-form", "address-card", "footer"],
+  "image_directives": "credible technicians in branded polos with backpack sprayers, granule spreaders, bait stations, exclusion mesh, and inspection lights. Closeups of actual pests (roach in bait gel, mouse at exclusion gap, mosquito on skin) treated like field documentation. Tidy crawlspace and attic shots. Avoid cartoon bugs and gloved hands holding clean spray bottles against gradients. No fear-bait gore.",
+  "voice_pet_words": ["inspection", "exclusion", "bait", "perimeter", "infestation", "licensed applicator", "quarterly", "pet-safe"],
+  "primary_keywords": ["pest control", "exterminator", "termite treatment", "free inspection", "quarterly pest plan"]
+}

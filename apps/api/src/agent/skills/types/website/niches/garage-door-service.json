@@ -1,0 +1,28 @@
+{
+  "niche": "garage-door-service",
+  "label": "Garage Door Service",
+  "triggers": ["garage door repair", "garage door service", "broken spring", "garage door spring", "garage door opener", "garage door installation", "garage door replacement", "off track garage door", "same-day garage door", "emergency garage door", "garage door panel", "noisy garage door"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+emergency-cta+services-preview" },
+    { "slug": "services", "role": "repair-install-split" },
+    { "slug": "pricing",  "role": "common-repair-prices" },
+    { "slug": "work",     "role": "install-gallery" },
+    { "slug": "about",    "role": "company-story+licenses" },
+    { "slug": "contact",  "role": "service-request-form+phone+hours" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "ada-accessibility-statement"],
+  "schema_org_primary": "HomeAndConstructionBusiness",
+  "voice_template": "emergency-ready, mechanically clear, transparent on price, calm under pressure",
+  "palettes": [
+    { "name": "service-red",    "hexes": ["#B91C1C", "#F8FAFC", "#E2E8F0", "#0F172A"] },
+    { "name": "tool-black",     "hexes": ["#111827", "#F9FAFB", "#D1D5DB", "#050810"] },
+    { "name": "spring-yellow",  "hexes": ["#CA8A04", "#FFFBEB", "#FEF3C7", "#1A140A"] },
+    { "name": "track-steel",    "hexes": ["#475569", "#F8FAFC", "#CBD5E1", "#0B1220"] },
+    { "name": "opener-blue",    "hexes": ["#1E40AF", "#FFFFFF", "#DBEAFE", "#0A1124"] },
+    { "name": "panel-white",    "hexes": ["#1F2937", "#FFFFFF", "#F3F4F6", "#0F172A"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "emergency-banner", "services-grid", "repair-install-split", "service-detail", "common-prices-table", "process-strip", "warranty-strip", "before-after-gallery", "testimonial-card", "license-badge-strip", "service-request-form", "address-card", "hours-strip", "footer"],
+  "image_directives": "real garage door service photography. Technicians on ladders swapping springs, opener boards on workbench, branded service vans in driveways, finished installs from the street. Show the spring, the bracket, the track. Avoid stock-photo workers leaning on pristine doors. Honest tools and honest fixes over staged marketing imagery.",
+  "voice_pet_words": ["spring", "opener", "track", "panel", "same-day", "licensed", "insured", "warranty", "honest"],
+  "primary_keywords": ["garage door repair", "garage door installation", "broken spring", "same-day service", "garage door opener"]
+}

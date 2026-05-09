@@ -348,6 +348,242 @@ export const COPY_PATTERNS: Record<string, CopyPattern[]> = {
       primary:   'Most beginners freeze the first time gloves come on. Six weeks of fundamentals — footwork, breathing, controlled drilling — and the bell stops sounding scary. The bridge is a no-pressure trial week.',
     },
   ],
+
+  // ── Batch 2 / 12 — Home services umbrella + licensed trades part A ──────────
+
+  'home-services-general': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'From a leaky faucet to a fence repair.',
+      primary:   'One call covers the punch list. Insured local crew, flat quote before we start, most jobs wrapped in a single visit. Text a photo for a same-week estimate.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '37 things on your honey-do list. We do all 37.',
+      primary:   'Most homeowners save up small repairs until the list is overwhelming. Send us the list, we knock it out in one Saturday, and you get your weekends back.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Sticky doors, loose railings, peeling trim — fixed.',
+      primary:   'Before: half a dozen small annoyances you keep meaning to handle. After: a tighter, quieter, safer house in one afternoon. The bridge is a flat-rate visit from a crew that shows up when promised.',
+    },
+  ],
+
+  'handyman-service': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'TVs mounted, shelves hung, drywall patched.',
+      primary:   'Booked by the hour or by the job, your call. Insured solo handyman, clean shop habits, photo confirmation when the work is done. Most bookings open within 48 hours.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '$95 an hour, two-hour minimum, no surprises.',
+      primary:   'Hourly pricing posted on the site, a written scope before the visit, and a hard stop when the agreed hours run out. The boring kind of contractor — which is exactly the kind you want for small jobs.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'A stack of IKEA boxes. A finished bedroom.',
+      primary:   'Before: flat boxes, missing hardware, an Allen key with no memory of which screw goes where. After: assembled, leveled, anchored to studs, packaging hauled away. The bridge is one booking on the calendar.',
+    },
+  ],
+
+  'roofing-contractor': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Free drone roof inspection in 48 hours.',
+      primary:   'Licensed, bonded, insured. We document every shingle with drone photos, walk you through the report, and handle the insurance claim paperwork from intake to final payment.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '1 in 3 storm-damaged roofs gets denied first.',
+      primary:   "Insurance adjusters miss hail strikes the untrained eye doesn't catch. We meet your adjuster on the roof, point out every impact, and rework denied claims with photo evidence.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Curling shingles to 50-year metal roof.',
+      primary:   'Old asphalt was patched four times and still leaking at the valleys. New standing-seam metal is rated for 130 mph wind and backed by a manufacturer warranty. The bridge is a free written estimate.',
+    },
+  ],
+
+  'painting-contractor': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Free written estimate plus color consultation.',
+      primary:   'Licensed, bonded, insured. We pressure-wash, scrape, prime, and apply two finish coats on every exterior. Color consultation included with any whole-house quote.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '70 percent of a paint job is prep nobody sees.',
+      primary:   'A two-coat finish over bare drywall fails inside a year. We sand, fill, prime, and caulk every seam before a brush touches the wall, and we document the prep in writing.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Tired oak cabinets to satin off-white.',
+      primary:   'Original cabinets were sticky, yellowed, and brushed twice in the past decade. New finish is sprayed, baked, and rated for kitchen wear. The bridge is a free in-home color consultation.',
+    },
+  ],
+
+  'garage-door-service': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Same-day broken-spring repair, flat-rate pricing.',
+      primary:   'Licensed, bonded, insured. Most spring replacements done in one visit, parts on the truck, written quote before we turn a wrench. Evening and weekend slots open.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'A broken spring strands your car in 3 seconds.',
+      primary:   'A torsion spring snaps without warning and a 200-pound door drops dead. We carry both common spring sizes on every truck and most calls finish in 90 minutes.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Loud chain drive to quiet belt opener.',
+      primary:   'Old chain unit shook the bedroom above the garage every time it ran. New belt-drive opener with smartphone control is rated for 1,500 cycles a year. The bridge is a free on-site quote.',
+    },
+  ],
+
+  'hvac-contractor': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Same-day AC repair, flat-rate diagnostic.',
+      primary:   "Licensed EPA-608 techs, $89 diagnostic credited toward repair, average on-site within 2 hours in metro service area. Book online or call to lock today's slot.",
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '94 degrees inside? Your capacitor is the $19 part.',
+      primary:   'Most no-cool calls trace to a failed run capacitor or contactor, not a dead system. We carry both on every truck. Diagnostic in 30 minutes, repair the same visit.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From 22-year furnace to 96% AFUE in one day.',
+      primary:   'Old single-stage furnace, $340 winter gas bill. New 96% AFUE two-stage with utility rebate, projected $190. Free in-home load calc and financing quote this week.',
+    },
+  ],
+
+  'plumbing-service': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '24/7 plumber, flat-rate quote before we start.',
+      primary:   'Master-plumber-led crew, written flat rate signed before any wrench turns, average arrival under 60 minutes for emergencies. Drain clear from $89, water heaters in stock.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Your sewer line is 47 feet long. We camera all of it.',
+      primary:   'Most plumbers quote a clog from the cleanout. We push a camera the full run and email you the video before recommending hydrojet, spot repair, or liner. Same-day appointments.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From cold showers to tankless in under 6 hours.',
+      primary:   'Failing 50-gallon tank, recovery time 90 minutes. New gas tankless, endless hot water at 9.5 GPM. Permit pulled, old tank hauled, warranty registered. Quote in writing today.',
+    },
+  ],
+
+  'electrician': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '200-amp panel upgrade, permit and inspection included.',
+      primary:   'Master electrician on every job, NEC-2023 code-compliant, permit pulled and inspection scheduled by us. Flat-rate quote in 24 hours, most upgrades completed in one day.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Your 100-amp panel cannot handle a Level 2 EV charger.',
+      primary:   'Before we install a 48-amp charger we run a load calc. Half the homes need a service upgrade first. Free assessment, written tier quote, financing on approved credit.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From knob-and-tube to whole-home rewire in 5 days.',
+      primary:   '1928 cloth-insulated wiring, two-prong outlets, no grounds. New copper home runs, AFCI/GFCI per NEC-2023, smart panel with monitoring. Permit, drywall patch, and final inspection handled.',
+    },
+  ],
+
+  'solar-installer': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Cut your power bill 70% with rooftop solar.',
+      primary:   'Free site survey, production estimate in 48 hours, and a 25-year panel warranty. We file the federal tax credit paperwork for you. Book your survey.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '30% federal tax credit ends sooner than you think.',
+      primary:   'The residential ITC sunsets on a hard schedule. A typical 8 kW system claims roughly $7,800 back. Lock your install before the rate steps down.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From $280 power bill to $14 grid fee.',
+      primary:   'Last year you paid the utility every month. This year you pay them once and bank the rest in net-metering credits. The bridge is one rooftop survey.',
+    },
+  ],
+
+  'landscaping-lawn-care': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Weekly mowing on the same day, every week.',
+      primary:   'Edged, mowed, and blown clean in 35 minutes. Licensed and insured crews, recurring plans from 28 visits a season. Get a quote in under a minute.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '47 yards on our route, 0 missed weeks.',
+      primary:   'Same crew, same day, every week from April to October. That is how you get a striped lawn instead of a coin-flip. Book the route slot before it fills.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From weekend chore to Saturday morning coffee.',
+      primary:   'You spent four hours every Saturday on the mower. Now you watch the crew work from the porch with coffee. The bridge is a 10-minute quote and a recurring plan.',
+    },
+  ],
+
+  'pest-control': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Quarterly pest plan, kid and pet safe products.',
+      primary:   'Four treatments a year, exterior perimeter and interior touchpoints, free re-treats between visits. Licensed applicators, EPA-registered products. Book a free inspection.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'A single termite colony eats 5 lb of wood a week.',
+      primary:   'By the time you see frass on the windowsill the damage is years deep. A 45-minute inspection finds entry points, mud tubes, and moisture readings. Schedule yours.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From midnight roach in the kitchen to a quiet pantry.',
+      primary:   'Last month it was a flashlight at 2 a.m. and a panic search for spray. Now perimeter bait and quarterly visits keep the kitchen quiet. The bridge is a free inspection.',
+    },
+  ],
+
+  'pressure-washing': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Flat-rate driveway washing, no surprise add-ons.',
+      primary:   'Up-front price by the square foot. Surface cleaner pass plus post-treatment included. Most driveways done in under 90 minutes. Text a photo for your quote.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Your roof does not need 3,000 PSI.',
+      primary:   'Asphalt shingles get soft-washed with a low-pressure biodegradable mix that kills the black streaks at the root. Pressure shortens roof life. Soft wash is the right tool.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Grey concrete to clean concrete in one pass.',
+      primary:   'Three years of mildew and tire marks before. Even, bright concrete after, with a rinse that protects your beds and grass. Book a Saturday and have the crew gone by lunch.',
+    },
+  ],
+
+  'window-cleaning': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Streak-free interior and exterior, per-pane pricing.',
+      primary:   'Flat per-pane rate, tracks and sills wiped, screens hand-washed, booties on every visit. Insured and OSHA-trained on ladders. Get a same-day quote by text.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Your storefront looks closed when the glass is dirty.',
+      primary:   "Foot traffic reads a smudged door as 'we are not open.' Weekly or biweekly storefront route service keeps your entry sharp for under the cost of one walk-in customer.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Hard-water spots, then clear glass again.',
+      primary:   'Years of sprinkler spray etched into the front windows before. Restored glass after, with a sealant pass so the spots stay gone. Quoted per window, no minimums on residential.',
+    },
+  ],
 };
 
 /** Fallback for niches without curated patterns — generic but framework-shaped,

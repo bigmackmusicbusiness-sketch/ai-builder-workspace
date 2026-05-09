@@ -1,0 +1,29 @@
+{
+  "niche": "window-cleaning",
+  "label": "Window Cleaning",
+  "triggers": ["window cleaning", "window washing", "screen cleaning", "hard water stain removal", "storefront window service", "residential window cleaning", "commercial window cleaning", "track and sill detail", "high-rise window cleaning", "skylight cleaning", "post-construction window cleaning", "weekly storefront cleaning", "streak-free window service"],
+  "default_sitemap": [
+    { "slug": "index",        "role": "hero+services-preview+booking-cta" },
+    { "slug": "services",     "role": "residential+commercial+specialty-list" },
+    { "slug": "pricing",      "role": "per-pane-rates+recurring-plan-table" },
+    { "slug": "gallery",      "role": "before-after-gallery" },
+    { "slug": "service-area", "role": "coverage-map" },
+    { "slug": "about",        "role": "company-story+insurance+osha-training" },
+    { "slug": "contact",      "role": "booking-form+phone+hours" }
+  ],
+  "compliance_blocks": ["insurance-footer", "fall-protection-osha-compliance"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "detail-obsessed, streak-free pride, fully insured, calm and methodical about ladder and rope work",
+  "palettes": [
+    { "name": "clear-glass",      "hexes": ["#0EA5E9", "#FFFFFF", "#F8FAFC", "#0F172A"] },
+    { "name": "squeegee-teal",    "hexes": ["#14B8A6", "#0F172A", "#F0FDFA", "#FFFFFF"] },
+    { "name": "high-noon-sky",    "hexes": ["#3B82F6", "#1E293B", "#EFF6FF", "#FFFFFF"] },
+    { "name": "soft-spring-blue", "hexes": ["#60A5FA", "#0E1B2C", "#F1F5F9", "#FAFAFA"] },
+    { "name": "marine-stripe",    "hexes": ["#0369A1", "#FACC15", "#F0F9FF", "#0B1B2B"] },
+    { "name": "polished-mint",    "hexes": ["#2DD4BF", "#1E293B", "#ECFDF5", "#FFFFFF"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "services-grid", "service-detail", "before-after-slider", "before-after-gallery", "per-pane-pricing-table", "recurring-plan-table", "service-area-map", "testimonial-card", "review-strip", "insurance-badge-strip", "osha-trained-badge", "booking-form", "hours-strip", "address-card", "footer"],
+  "image_directives": "tight, clean window-cleaning photography. Squeegee pulls leaving a sharp wet line on glass, water-fed pole on a second-story window, screens stacked on a drop cloth, storefronts at golden hour with the cleaner reflected. Crisp focus on the glass edge. Show ladders set safely and rope-access harnesses on commercial jobs. Avoid generic 'happy worker' stock; the geometry of clean glass is the subject.",
+  "voice_pet_words": ["streak-free", "squeegee", "water-fed pole", "insured", "OSHA-trained", "tracks-and-sills", "recurring", "hard-water"],
+  "primary_keywords": ["window cleaning", "window washing", "streak-free", "hard water stain removal", "free quote"]
+}

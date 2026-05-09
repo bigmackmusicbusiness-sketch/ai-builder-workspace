@@ -1,0 +1,29 @@
+{
+  "niche": "landscaping-lawn-care",
+  "label": "Landscaping & Lawn Care",
+  "triggers": ["lawn care", "landscaping", "lawn mowing", "hardscape", "mulch installation", "yard cleanup", "lawn service", "weekly mowing", "spring cleanup", "fall cleanup", "patio installation", "shrub trimming"],
+  "default_sitemap": [
+    { "slug": "index",         "role": "hero+programs-preview+free-quote-cta" },
+    { "slug": "services",      "role": "mowing+cleanups+hardscape+tree-shrub" },
+    { "slug": "programs",      "role": "weekly-biweekly-recurring-plans" },
+    { "slug": "work",          "role": "before-after-yard-gallery" },
+    { "slug": "neighborhoods", "role": "service-area-map" },
+    { "slug": "about",         "role": "crew-story+licenses" },
+    { "slug": "contact",       "role": "quote-form+phone+hours" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "pesticide-applicator-license"],
+  "schema_org_primary": "HomeAndConstructionBusiness",
+  "voice_template": "dependable, season-aware, property-pride, neighborly without being folksy",
+  "palettes": [
+    { "name": "fairway-loam",    "hexes": ["#15803D", "#92400E", "#F5F5DC", "#0F1F12"] },
+    { "name": "fresh-cut",       "hexes": ["#65A30D", "#1F2937", "#F7FEE7", "#14532D"] },
+    { "name": "mulch-and-stone", "hexes": ["#854D0E", "#16A34A", "#F5F5F4", "#1C1917"] },
+    { "name": "hedge-shadow",    "hexes": ["#166534", "#A16207", "#FAFAF9", "#0A1F12"] },
+    { "name": "spring-cleanup",  "hexes": ["#4D7C0F", "#78350F", "#FEFCE8", "#1F2937"] },
+    { "name": "patio-evening",   "hexes": ["#2F855A", "#B45309", "#F8FAFC", "#1A202C"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "service-program-grid", "recurring-plan-card", "seasonal-cta-banner", "before-after-gallery", "hardscape-portfolio-card", "service-area-map", "review-strip", "license-badge-strip", "quote-form", "hours-strip", "address-card", "footer", "faq-accordion"],
+  "image_directives": "real properties under our care. Striped fresh-cut lawns, crews loading trailers, mulch beds with crisp edges, finished paver patios, fall-leaf cleanups, spring bed prep. Show actual machines (zero-turns, blowers, trailers) and uniformed crew. Avoid stock-photo families on perfect grass with no equipment. Bias to morning light, dew, and earned tidiness.",
+  "voice_pet_words": ["weekly", "seasonal", "edged", "mulched", "hardscape", "curb appeal", "licensed", "scheduled"],
+  "primary_keywords": ["lawn care", "landscaping", "weekly mowing", "free quote", "spring cleanup"]
+}
