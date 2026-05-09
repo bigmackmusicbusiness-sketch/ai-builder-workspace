@@ -1,0 +1,29 @@
+{
+  "niche": "mobile-detailing",
+  "label": "Mobile Auto Detailing",
+  "triggers": ["mobile detailing", "mobile auto detailing", "mobile car detailing", "mobile car wash", "we come to you detailing", "ceramic coating", "paint correction", "interior detail", "exterior detail", "auto detailer", "rinseless wash", "waterless wash", "detail package"],
+  "default_sitemap": [
+    { "slug": "index",         "role": "hero+packages-preview+booking-cta" },
+    { "slug": "services",      "role": "package-tiers" },
+    { "slug": "pricing",       "role": "pricing-tiers+addons" },
+    { "slug": "gallery",       "role": "before-after-gallery" },
+    { "slug": "neighborhoods", "role": "service-area-map" },
+    { "slug": "book",          "role": "scheduler+address-intake" },
+    { "slug": "contact",       "role": "phone+sms+hours" }
+  ],
+  "compliance_blocks": [],
+  "schema_org_primary": "AutoWash",
+  "voice_template": "pride-in-craft, detail-obsessed, friendly without filler, photo-driven proof",
+  "palettes": [
+    { "name": "gunmetal-citrus",  "hexes": ["#27313A", "#F8FAFB", "#D8DEE3", "#0B0F13"] },
+    { "name": "obsidian-chrome",  "hexes": ["#111418", "#FAFAFA", "#C8CCD0", "#000000"] },
+    { "name": "deep-navy-mist",   "hexes": ["#0F2A4A", "#F2F4F7", "#C9D3DF", "#06101F"] },
+    { "name": "graphite-spark",   "hexes": ["#3A3F46", "#FFFFFF", "#E5E7EA", "#16181B"] },
+    { "name": "midnight-pearl",   "hexes": ["#1B2230", "#F4F1EC", "#D1CEC8", "#08090C"] },
+    { "name": "slate-amber",      "hexes": ["#2A3340", "#FBF6EE", "#E2C68A", "#10141A"] }
+  ],
+  "section_library": ["hero", "page-hero", "package-tier-grid", "before-after-gallery", "process-strip", "addon-grid", "service-area-map", "neighborhood-card", "scheduler-embed", "review-strip", "testimonial-card", "phone-cta-bar", "faq-accordion", "address-card", "hours-strip", "footer", "trust-badge-strip"],
+  "image_directives": "real detailing work shot up close. Beading water on fresh paint, foam cannons, polishers on hood, vacuumed interiors, shot in residential driveways with the customer's home in soft focus. Show the van or pop-up canopy. Before-and-after side-by-sides matter most. Avoid pristine showroom lighting and stock-photo polish. Natural overcast or shaded light beats bright sun.",
+  "voice_pet_words": ["paint correction", "ceramic", "two-bucket", "decontamination", "swirls", "gloss", "by appointment", "we come to you"],
+  "primary_keywords": ["mobile detailing", "ceramic coating", "auto detailing", "mobile car wash"]
+}

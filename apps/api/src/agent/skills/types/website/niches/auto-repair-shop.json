@@ -1,0 +1,29 @@
+{
+  "niche": "auto-repair-shop",
+  "label": "Auto Repair Shop",
+  "triggers": ["auto repair shop", "car repair shop", "ase certified mechanic", "car maintenance", "check engine light", "brake repair", "oil change shop", "transmission repair", "muffler shop", "engine diagnostic", "written warranty mechanic", "napa auto care", "local mechanic"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services-preview+appointment-cta" },
+    { "slug": "services", "role": "service-list+specialties" },
+    { "slug": "pricing",  "role": "free-estimate-explainer" },
+    { "slug": "about",    "role": "shop-story+ase-credentials" },
+    { "slug": "book",     "role": "appointment-scheduler" },
+    { "slug": "faq",      "role": "warranty-and-process-questions" },
+    { "slug": "contact",  "role": "phone+address+hours" }
+  ],
+  "compliance_blocks": ["written-warranty-disclosure-footer", "estimate-authorization-notice", "ada-accessibility-statement"],
+  "schema_org_primary": "AutoRepair",
+  "voice_template": "straight-talker, mechanically credible, transparent on price, plain-English diagnostics",
+  "palettes": [
+    { "name": "shop-navy-red",     "hexes": ["#0E2A4F", "#C8302C", "#F4F6F8", "#070F1C"] },
+    { "name": "gunmetal-safety",   "hexes": ["#2C333B", "#F4B400", "#FAFAFA", "#0E1115"] },
+    { "name": "garage-charcoal",   "hexes": ["#1F2328", "#E2E5E8", "#FFFFFF", "#0A0B0D"] },
+    { "name": "racing-stripe",     "hexes": ["#15243C", "#D14B3D", "#EFEFEC", "#06101F"] },
+    { "name": "iron-clay",         "hexes": ["#3A4148", "#A6573D", "#F5F1EB", "#13171B"] },
+    { "name": "service-blue",      "hexes": ["#1F4E8C", "#FFFFFF", "#E5ECF3", "#0A1A30"] }
+  ],
+  "section_library": ["hero", "page-hero", "services-grid", "service-detail", "specialty-callout", "credentials-strip", "ase-badge-strip", "warranty-card", "estimate-cta", "appointment-scheduler", "process-strip", "review-strip", "testimonial-card", "phone-cta-bar", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "real shop floor photography. Lifts with cars on them, technicians in shop uniforms with name patches, clean diagnostic bays, parts on workbenches, ASE and NAPA badges in frame. Show the waiting area too. Avoid stock-photo mechanics in spotless coveralls under studio light. Honest fluorescent shop light, real grease, branded loaner if applicable.",
+  "voice_pet_words": ["ASE-certified", "written warranty", "free estimate", "diagnostic", "OEM", "drivability", "honest quote", "loaner"],
+  "primary_keywords": ["auto repair", "ASE certified", "free estimate", "brake repair", "car maintenance"]
+}

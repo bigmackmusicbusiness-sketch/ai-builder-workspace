@@ -202,6 +202,152 @@ export const COPY_PATTERNS: Record<string, CopyPattern[]> = {
       primary:   "If your last cup tasted like ash, you've been drinking dark-roast cover-up. Try a light-roast washed Ethiopian — actual fruit, no scorch.",
     },
   ],
+
+  // ── Batch 1 / 12 — Marketing-doc niches (2026-05-09 niche expansion) ────────
+
+  'tree-service': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'ISA-certified arborists, fully insured crews.',
+      primary:   'Removal, pruning, and stump grinding by climbers with saddle hours, not handymen with rope. Free on-site estimate, written scope, and a clean drop zone before we cut.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'That oak limb is 1,200 lb of leverage.',
+      primary:   'A 14-inch limb over your roof weighs more than a Honda Civic. We rig, lower, and chip it without dropping debris on your shingles. Same-day callback for storm work.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From storm-dropped to driveway-clear.',
+      primary:   'Last night a maple split and pinned the driveway. By 4 p.m. the wood is rounds, the brush is chipped, and the lawn is raked. Call for a same-day arborist visit.',
+    },
+  ],
+
+  'fencing-contractor': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Free quote with on-site measurement.',
+      primary:   'Cedar, vinyl, chain-link, or ornamental aluminum. We measure your run, mark setbacks, check HOA rules, and quote per linear foot in writing before any post goes in.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '6-foot privacy fence: $42 a foot installed.',
+      primary:   'Materials, posts, concrete, gates, and labor in one number. Permit pulled if your county requires it. Most backyards finished in two days, stained or capped on day three.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From open yard to fenced backyard in 48 hours.',
+      primary:   'Monday morning the line is just stakes and string. Wednesday evening the gate latches, the dog stays in, and the HOA paperwork is filed. Book a measurement this week.',
+    },
+  ],
+
+  'junk-removal': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Same-day pickup. Flat rate by truckload.',
+      primary:   'Text a photo, get a price in 15 minutes, crew arrives the same afternoon. We donate reusable items and recycle metal, e-waste, and cardboard. Average single-item haul: $89.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Three guys, one truck, 47 minutes.',
+      primary:   "That's the average for a full garage cleanout in our service area. Flat-rate by truckload, no hourly surprises, photo quote before we touch a thing. Booking the same week.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Cluttered garage Friday. Empty floor Saturday.',
+      primary:   "Yesterday: boxes you can't park around, a broken treadmill, two mattresses on the wall. Today: swept concrete and a parking spot. The bridge is a flat-rate truckload quote — text a photo to start.",
+    },
+  ],
+
+  'cleaning-service': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Bonded, insured, room-by-room checklist.',
+      primary:   'Same two-person team every visit, supplies included, 47-point checklist signed off before we leave. Weekly, biweekly, or monthly plans starting at $145. Satisfaction guarantee on every clean.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Your bathroom grout has 11 steps.',
+      primary:   "That's how many our checklist runs through — wipe, scrub, rinse, polish, mirror, fixtures, baseboards, vent, floor edge, trash, restock. Same for kitchens. Bonded and insured, supplies included.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Saturday scrubbing → Saturday with the kids.',
+      primary:   'Before: three hours of bathrooms and baseboards while the day burns. After: a signed-off checklist by noon, supplies and team included. The bridge is a 20-minute walk-through to lock in your recurring plan.',
+    },
+  ],
+
+  'mobile-detailing': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Ceramic coating in your driveway. Booked in 60 seconds.',
+      primary:   'Three package tiers from interior refresh to two-stage paint correction plus ceramic. Pick a slot, share an address, we show up with water and power. Before and after photos sent to your phone.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Your car has 14,000 swirl marks. We can count them.',
+      primary:   'A paint depth gauge and a 3M inspection light tell us what your eyes miss. Two-stage correction removes the swirls, ceramic locks the gloss, and we do it in your driveway on Saturday.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Daily-driver dust to wedding-day shine, no detour required.',
+      primary:   'Before: salt streaks, coffee spills, dog hair welded into the back seat. After: hand-washed paint, decontaminated wheels, vacuumed and steam-cleaned cabin. The bridge is one appointment in your driveway.',
+    },
+  ],
+
+  'auto-repair-shop': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'ASE-certified repair. 12-month, 12,000-mile written warranty.',
+      primary:   'Free written estimate before any wrench turns. NAPA AutoCare parts, plain-English diagnostics, and a loaner when the job runs past lunch. Book a slot online or call the shop direct.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Most check-engine codes are a $40 sensor, not a $4,000 bill.',
+      primary:   "We pull the code for free, walk you through what it means, and quote the fix in writing before we start. If it really is the transmission, you'll know before you sign anything.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Mystery dashboard light to a printed work order in one stop.',
+      primary:   "Before: warning light, vague phone quote, and a knot in your stomach. After: line-item estimate, ASE-certified tech assigned, written warranty stapled to the receipt. The bridge is a free diagnostic this week.",
+    },
+  ],
+
+  'car-dealership': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Every vehicle, free Carfax report.',
+      primary:   'Walk our lot or browse online — every car, truck, and SUV ships with a no-charge Carfax history. Pre-qualify for financing in under 4 minutes. Visit us this weekend.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '312 vehicles. One honest price tag.',
+      primary:   'No four-square games, no surprise add-ons at signing. The price you see is the price you sign — financing options shown openly beside it. Test drive any inventory unit today.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From dealership dread to driving home.',
+      primary:   'Most car-buying days drag on for hours of back-and-forth. Ours start with an upfront price, a Carfax in hand, and a 20-minute test drive. The bridge is a trade-in valuation you can trust.',
+    },
+  ],
+
+  'combat-gym': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Free first class. Boxing, BJJ, Muay Thai.',
+      primary:   'Try any class on the schedule before you sign anything. Loaner gloves, mat space, and a coach who actually watches your stance. Adult and kids programs run separately.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Our head coach trained under a Pedro Sauer black belt.',
+      primary:   "Lineage matters in combat sports — it's how technique stays honest across generations. Roll with coaches who can name every teacher above them. Walk in this week for a free first class.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'From sideline to first sparring round.',
+      primary:   'Most beginners freeze the first time gloves come on. Six weeks of fundamentals — footwork, breathing, controlled drilling — and the bell stops sounding scary. The bridge is a no-pressure trial week.',
+    },
+  ],
 };
 
 /** Fallback for niches without curated patterns — generic but framework-shaped,

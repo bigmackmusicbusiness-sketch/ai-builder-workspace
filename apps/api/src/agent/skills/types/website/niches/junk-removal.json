@@ -1,0 +1,28 @@
+{
+  "niche": "junk-removal",
+  "label": "Junk Removal",
+  "triggers": ["junk removal", "junk hauling", "trash hauling", "furniture removal", "appliance removal", "mattress removal", "estate cleanout", "hoarding cleanout", "garage cleanout", "attic cleanout", "basement cleanout", "truckload pricing", "same-day pickup", "construction debris haul"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+truckload-pricing+phone-cta" },
+    { "slug": "services", "role": "haul-categories+items-we-take" },
+    { "slug": "pricing",  "role": "flat-rate-truckload-tiers" },
+    { "slug": "gallery",  "role": "before-after-photos" },
+    { "slug": "about",    "role": "crew-story+donation-recycling-policy" },
+    { "slug": "contact",  "role": "text-photo-quote+phone+service-area" }
+  ],
+  "compliance_blocks": ["liability-and-property-damage-disclaimer-footer", "prohibited-items-list-footer"],
+  "schema_org_primary": "MovingCompany",
+  "voice_template": "friendly muscle, no-judgment, transparent flat-rate pricing, fast and respectful",
+  "palettes": [
+    { "name": "haul-orange",      "hexes": ["#E55A1F", "#FFFFFF", "#F4F4F2", "#1A1A1A"] },
+    { "name": "recycle-green",    "hexes": ["#2E7D4F", "#FAFBF7", "#E2EBDD", "#0F1B12"] },
+    { "name": "truck-charcoal",   "hexes": ["#F97316", "#1F2937", "#F5F5F4", "#0A0A0A"] },
+    { "name": "clay-cardboard",   "hexes": ["#B45F2A", "#FBF5EC", "#EBDDC8", "#231509"] },
+    { "name": "safety-yellow",    "hexes": ["#FACC15", "#0F172A", "#F8FAFC", "#1A1A1A"] },
+    { "name": "forest-haul",      "hexes": ["#1F4D2C", "#F4F1E9", "#D9DCC9", "#0A1410"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "truckload-pricing-tiers", "items-we-take-grid", "items-we-dont-take", "before-after-gallery", "photo-quote-cta", "service-area-map", "testimonial-strip", "donation-recycling-policy", "faq-accordion", "hours-strip", "address-card", "footer"],
+  "image_directives": "real haul-day photography. Two-person crews loading sofas, mattresses, refrigerators, and yard debris into a branded dump truck. Driveways, garages, and stacked curbside piles. Show before-and-after of cleared rooms. Include donation drop-offs and recycling sort lines to back up the eco angle. Avoid pristine warehouse stock and posed thumbs-up shots. Sweat, work gloves, and full truck beds preferred.",
+  "voice_pet_words": ["haul", "load", "truckload", "cleanout", "flat-rate", "same-day", "donate", "recycle", "crew", "upfront"],
+  "primary_keywords": ["junk removal", "cleanout", "same-day haul", "flat-rate pricing", "furniture pickup"]
+}

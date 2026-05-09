@@ -1,0 +1,28 @@
+{
+  "niche": "tree-service",
+  "label": "Tree Service",
+  "triggers": ["tree service", "arborist", "tree removal", "tree trimming", "tree pruning", "stump grinding", "stump removal", "storm damage", "emergency tree", "tree care", "fallen tree", "isa certified arborist", "tree company", "limb removal"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services-preview+phone-cta+emergency-banner" },
+    { "slug": "services", "role": "service-list+pricing-notes" },
+    { "slug": "work",     "role": "before-after-gallery" },
+    { "slug": "about",    "role": "arborist-credentials+story" },
+    { "slug": "faq",      "role": "faq-accordion" },
+    { "slug": "contact",  "role": "estimate-form+phone+24-7-emergency" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "isa-certification-footer", "ada-accessibility-statement"],
+  "schema_org_primary": "HomeAndConstructionBusiness",
+  "voice_template": "rugged, weather-aware, careful around property, plain-spoken about risk and insurance",
+  "palettes": [
+    { "name": "forest-bark",      "hexes": ["#2F5233", "#F4F1EA", "#D9CFB8", "#1A2A1C"] },
+    { "name": "storm-cedar",      "hexes": ["#3B5249", "#F8F7F3", "#C9D1C8", "#1B2622"] },
+    { "name": "chainsaw-orange",  "hexes": ["#D2691E", "#FFFAF2", "#F0DCC4", "#1F1611"] },
+    { "name": "oak-canopy",       "hexes": ["#4A6741", "#F5F4EE", "#DCE4D2", "#1C2419"] },
+    { "name": "sawdust-amber",    "hexes": ["#A05B2A", "#FBF6EC", "#EAD8B8", "#241710"] },
+    { "name": "granite-pine",     "hexes": ["#36454F", "#F2F4F3", "#C7CCC8", "#0E1417"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "emergency-banner", "services-grid", "service-detail", "before-after-gallery", "testimonial-card", "review-strip", "license-badge-strip", "arborist-credential-card", "estimate-form", "faq-accordion", "hours-strip", "address-card", "footer"],
+  "image_directives": "real arborist work in the field. Climbers in saddles, bucket trucks, chainsaws on stumps, brush piles, storm-snapped limbs across driveways. Show ropes, helmets, chaps, and ground crew chipping debris. Wide shots of canopies and tight shots of cuts on healthy wood. Avoid pristine catalog crews and tidy lawns. Overcast or wet light is fine; the job is weather.",
+  "voice_pet_words": ["arborist", "canopy", "crown", "deadwood", "cabling", "chipping", "drop zone", "insured", "ISA-certified", "callback"],
+  "primary_keywords": ["tree service", "arborist", "tree removal", "stump grinding", "emergency tree care"]
+}

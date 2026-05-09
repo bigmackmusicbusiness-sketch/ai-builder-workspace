@@ -1,0 +1,28 @@
+{
+  "niche": "cleaning-service",
+  "label": "Cleaning Service",
+  "triggers": ["house cleaning service", "residential cleaning", "commercial cleaning", "office cleaning", "recurring weekly cleaning", "biweekly house cleaning", "monthly cleaning plan", "one-time deep clean", "move-in cleaning", "move-out cleaning", "post-construction cleaning", "airbnb turnover cleaning", "green cleaning service", "bonded and insured cleaners"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+plan-tiers+phone-cta" },
+    { "slug": "services", "role": "residential-vs-commercial+room-checklist" },
+    { "slug": "pricing",  "role": "recurring-vs-one-time-tiers" },
+    { "slug": "about",    "role": "team-bio+bonded-insured-badges" },
+    { "slug": "faq",      "role": "supplies-policy+pets+key-handoff" },
+    { "slug": "book",     "role": "online-booking+phone+service-area" }
+  ],
+  "compliance_blocks": ["bonded-and-insured-footer", "worker-comp-coverage-statement", "satisfaction-guarantee-terms"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "trustworthy, dependable, attention-to-detail, calm and consistent",
+  "palettes": [
+    { "name": "linen-sage",        "hexes": ["#6B8E6F", "#FBFCF8", "#E4ECDC", "#15211A"] },
+    { "name": "fresh-mint",        "hexes": ["#2C8C7A", "#F4FAF7", "#D4ECE3", "#0F1F1B"] },
+    { "name": "pearl-navy",        "hexes": ["#1E3A8A", "#F8FAFC", "#DBE5F2", "#0A0F1F"] },
+    { "name": "soft-citron",       "hexes": ["#84A33C", "#FCFDF5", "#E8EFD0", "#1A210B"] },
+    { "name": "clay-rose",         "hexes": ["#B0746B", "#FDF7F4", "#F0DDD3", "#241410"] },
+    { "name": "slate-eucalyptus",  "hexes": ["#475A4D", "#F6F7F4", "#DCE2D7", "#111612"] }
+  ],
+  "section_library": ["hero", "page-hero", "plan-tier-pricing", "room-by-room-checklist", "residential-commercial-split", "supplies-included-strip", "bonded-insured-badges", "testimonial-strip", "before-after-gallery", "online-booking-form", "phone-cta-bar", "service-area-map", "faq-accordion", "hours-strip", "address-card", "footer"],
+  "image_directives": "real homes and small offices, mid-clean and post-clean. Cleaners in branded polos with caddies of supplies, microfiber cloths, vacuum lines on carpet, streak-free glass. Show kitchens and bathrooms specifically — these are the rooms that sell the service. Include shots of products and labeled caddies to back the supplies-included claim. Avoid stock-photo maids in French aprons or sterile lab settings. Soft daylight, real countertops with light wear.",
+  "voice_pet_words": ["bonded", "insured", "detail", "checklist", "recurring", "supplies-included", "reliable", "walk-through", "guarantee"],
+  "primary_keywords": ["cleaning service", "house cleaning", "commercial cleaning", "recurring cleaning", "deep clean"]
+}
