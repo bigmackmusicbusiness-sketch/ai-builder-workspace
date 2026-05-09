@@ -1,0 +1,29 @@
+{
+  "niche": "car-wash",
+  "label": "Car Wash",
+  "triggers": ["car wash", "express car wash", "unlimited car wash", "car wash membership", "self-serve car wash", "tunnel wash", "full-service car wash", "monthly wash club", "soft-touch wash", "touchless car wash"],
+  "default_sitemap": [
+    { "slug": "index",     "role": "hero+membership-cta+wash-tiers" },
+    { "slug": "pricing",   "role": "wash-tiers+unlimited-membership" },
+    { "slug": "services",  "role": "tunnel+self-serve+detail-add-ons" },
+    { "slug": "about",     "role": "water-recycling+location-story" },
+    { "slug": "locations", "role": "locations-grid+hours" },
+    { "slug": "faq",       "role": "membership-and-pause-questions" },
+    { "slug": "contact",   "role": "phone+location+hours" }
+  ],
+  "compliance_blocks": ["ada-accessibility-statement", "environmental-water-recycling-disclosure", "membership-billing-disclosure"],
+  "schema_org_primary": "AutoWash",
+  "voice_template": "fast, fresh, membership-positive, environmental-aware without preaching",
+  "palettes": [
+    { "name": "splash-cyan",          "hexes": ["#0DB4D6", "#F2F8FB", "#B6E4F0", "#062B36"] },
+    { "name": "lather-mint",          "hexes": ["#3CC0A1", "#F1FAF7", "#C0EADE", "#0C2A23"] },
+    { "name": "tunnel-blue-white",    "hexes": ["#1E78C8", "#FFFFFF", "#DDECF6", "#04253F"] },
+    { "name": "rinse-aqua",           "hexes": ["#3B9AE1", "#F0FAFE", "#A9D8EE", "#08243A"] },
+    { "name": "soap-pop",             "hexes": ["#F26EA9", "#1FB7CE", "#F7FAFC", "#0F2330"] },
+    { "name": "membership-citrus",    "hexes": ["#FFB100", "#0EA9C2", "#FFFFFF", "#0B2630"] }
+  ],
+  "section_library": ["hero", "page-hero", "wash-tier-grid", "membership-card", "unlimited-cta", "tunnel-flow-strip", "self-serve-bay-grid", "detail-add-on-strip", "locations-grid", "hours-strip", "review-strip", "testimonial-card", "phone-cta-bar", "faq-accordion", "footer"],
+  "image_directives": "bright, wet, cinematic car wash photography. Foam cannons covering a windshield, soft-cloth wraps spinning blue, water sheeting off a freshly waxed hood, customer on tablet activating an unlimited membership. Show self-serve bays with people vacuuming the floor mats. Avoid sterile renderings. Want sunlight glinting off chrome and water droplets, real customers smiling at clean cars. Wide shot of tunnel entrance with cars queued.",
+  "voice_pet_words": ["unlimited", "membership", "tunnel", "soft-touch", "express", "self-serve bay", "free vacuum", "rinse", "wax", "ceramic seal"],
+  "primary_keywords": ["car wash", "unlimited car wash", "express car wash", "car wash membership", "self-serve car wash"]
+}

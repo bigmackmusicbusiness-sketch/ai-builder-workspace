@@ -1,0 +1,29 @@
+{
+  "niche": "auto-body-collision",
+  "label": "Auto Body & Collision",
+  "triggers": ["auto body shop", "collision repair", "paintless dent repair", "frame straightening", "fender repair", "i-car certified body shop", "drp insurance body shop", "color match paint", "bumper repair", "rental car coordination body shop", "hail damage repair", "auto body estimate"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+drp-strip+estimate-cta" },
+    { "slug": "services", "role": "collision-services+pdr+frame+paint" },
+    { "slug": "about",    "role": "i-car-credentials+shop-tour" },
+    { "slug": "gallery",  "role": "before-after-restoration-grid" },
+    { "slug": "book",     "role": "estimate-uploader+rental-coordination" },
+    { "slug": "faq",      "role": "insurance-claim-questions" },
+    { "slug": "contact",  "role": "phone+address+hours" }
+  ],
+  "compliance_blocks": ["i-car-certification-footer", "license-bond-insurance-footer", "written-warranty-disclosure-footer", "ada-accessibility-statement"],
+  "schema_org_primary": "AutoBodyShop",
+  "voice_template": "calm under stress, insurance-fluent, restoration-proud, plain-English on claims",
+  "palettes": [
+    { "name": "primer-grey-coral",  "hexes": ["#5B6873", "#E26A50", "#F2F0EB", "#10171D"] },
+    { "name": "paint-booth-cream",  "hexes": ["#3C2F26", "#F6EFE2", "#D9CFBE", "#1A130D"] },
+    { "name": "claim-blue-steel",   "hexes": ["#274C77", "#E6E9EE", "#A3B5C8", "#0A1622"] },
+    { "name": "spray-arena",        "hexes": ["#7A1F1F", "#F4F2EE", "#C9C4BC", "#160808"] },
+    { "name": "bondo-clay",         "hexes": ["#8E5A3B", "#F1E8DA", "#CFC0AC", "#1B100A"] },
+    { "name": "showroom-platinum",  "hexes": ["#2E3A48", "#D8DDE3", "#FAFAFA", "#06090D"] }
+  ],
+  "section_library": ["hero", "page-hero", "drp-partner-strip", "i-car-badge-strip", "services-grid", "service-detail", "before-after-slider", "estimate-uploader", "rental-coordination-card", "process-strip", "warranty-card", "review-strip", "testimonial-card", "gallery-grid", "phone-cta-bar", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "real body shop photography. Cars on frame benches, paint booths with pressure suits, color-match cameras, masked panels, fresh clear coat under booth lights. Show before/after restoration pairs honestly — dented quarter panel and the finished panel side by side. Avoid generic mechanic stock. Include estimator with tablet meeting customer in the lobby. Slight motion blur on sander dust acceptable.",
+  "voice_pet_words": ["I-CAR certified", "DRP", "color match", "frame bench", "paintless dent repair", "OEM panel", "claim", "rental coordination", "factory finish"],
+  "primary_keywords": ["collision repair", "auto body shop", "paintless dent repair", "I-CAR certified", "insurance body shop"]
+}

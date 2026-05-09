@@ -1,0 +1,30 @@
+{
+  "niche": "window-tint-vinyl",
+  "label": "Window Tint & Vehicle Wraps",
+  "triggers": ["window tint", "vehicle wrap", "paint protection film", "ceramic tint", "fleet wrap", "ppf install", "color change wrap", "3m window film", "suntek tint", "xpel ppf", "car wrap shop", "auto window film"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+work-gallery+lifetime-warranty-cta" },
+    { "slug": "services", "role": "tint+wrap+ppf+fleet" },
+    { "slug": "gallery",  "role": "before-after-tint-and-wrap-grid" },
+    { "slug": "pricing",  "role": "by-vehicle-tier-pricing" },
+    { "slug": "about",    "role": "installer-credentials+film-brands" },
+    { "slug": "book",     "role": "appointment-scheduler" },
+    { "slug": "faq",      "role": "tint-law-and-warranty-questions" },
+    { "slug": "contact",  "role": "phone+address+hours" }
+  ],
+  "compliance_blocks": ["state-tint-law-disclaimer", "manufacturer-warranty-disclosure", "license-bond-insurance-footer"],
+  "schema_org_primary": "AutoRepair",
+  "voice_template": "installer-precise, film-brand fluent, finish-obsessed, candid on state law",
+  "palettes": [
+    { "name": "limo-glass-noir",     "hexes": ["#0A0A0A", "#1F1F1F", "#E8E8E8", "#000000"] },
+    { "name": "ceramic-cool",        "hexes": ["#101820", "#7AC0D6", "#EAEFF2", "#03070B"] },
+    { "name": "satin-wrap-pearl",    "hexes": ["#3A3F4A", "#D9D9D9", "#F4F4F4", "#0B0D11"] },
+    { "name": "color-change-violet", "hexes": ["#1F1B2E", "#9B7CFF", "#EDEAF5", "#08060F"] },
+    { "name": "ppf-clearcoat",       "hexes": ["#16191D", "#7BE0CB", "#EFEFEF", "#04060A"] },
+    { "name": "fleet-graphite-lime", "hexes": ["#1C1F23", "#B8FF3A", "#EFEFEF", "#06080B"] }
+  ],
+  "section_library": ["hero", "page-hero", "services-grid", "service-detail", "film-brand-strip", "before-after-slider", "gallery-grid", "vehicle-tier-pricing-table", "fleet-callout", "warranty-card", "appointment-scheduler", "tint-law-disclaimer-strip", "review-strip", "testimonial-card", "phone-cta-bar", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "high-craft tint and wrap shop photography. Installers heat-shrinking film with squeegees and torches, dust-free clean booth lighting, peel-back shots showing fresh PPF on a hood, color-change vinyl panels mid-application. Detail shots of clean cut lines around door handles and badges. Avoid stock cars on white seamless. Show 3M, SunTek, XPEL labels naturally where they appear on rolls.",
+  "voice_pet_words": ["VLT", "ceramic", "PPF", "color-change", "lifetime warranty", "clean cut", "heat shrink", "edge wrap", "self-healing", "fleet"],
+  "primary_keywords": ["window tint", "vehicle wrap", "paint protection film", "ceramic tint", "fleet wrap"]
+}

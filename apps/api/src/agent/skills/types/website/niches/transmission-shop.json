@@ -1,0 +1,29 @@
+{
+  "niche": "transmission-shop",
+  "label": "Transmission Specialist",
+  "triggers": ["transmission repair", "transmission rebuild", "transmission specialist", "cvt repair", "manual transmission rebuild", "automatic transmission shop", "free tow-in transmission", "torque converter replacement", "transmission flush", "slipping transmission diagnosis", "transmission solenoid"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+rebuild-vs-replace+free-tow-cta" },
+    { "slug": "services", "role": "rebuild+replace+repair+cvt" },
+    { "slug": "pricing",  "role": "free-diagnostic-explainer" },
+    { "slug": "about",    "role": "shop-credentials+rebuild-bench" },
+    { "slug": "book",     "role": "tow-in-request+vehicle-info" },
+    { "slug": "faq",      "role": "rebuild-warranty-questions" },
+    { "slug": "contact",  "role": "phone+address+hours" }
+  ],
+  "compliance_blocks": ["written-warranty-disclosure-footer", "ase-certification-footer", "estimate-authorization-notice", "ada-accessibility-statement"],
+  "schema_org_primary": "AutoRepair",
+  "voice_template": "specialist-deep, rebuild-proud, decision-tree honest about repair vs replace, warranty-confident",
+  "palettes": [
+    { "name": "gear-bronze",       "hexes": ["#5B3A1E", "#E0A85B", "#F2EBDC", "#150A04"] },
+    { "name": "fluid-red",         "hexes": ["#1B1B1B", "#9C1B2C", "#F0EBE4", "#0A0A0A"] },
+    { "name": "torque-converter",  "hexes": ["#2C3540", "#D1AE6A", "#EEEAE2", "#0B0E13"] },
+    { "name": "rebuild-bench",     "hexes": ["#3A2E22", "#C4D4D2", "#EDEAE2", "#150F09"] },
+    { "name": "valve-body-blue",   "hexes": ["#152F4A", "#F4A258", "#EEF1F4", "#050F1B"] },
+    { "name": "specialist-slate",  "hexes": ["#2E3338", "#D9874F", "#F1EEEA", "#080A0C"] }
+  ],
+  "section_library": ["hero", "page-hero", "rebuild-vs-replace-card", "decision-tree-strip", "services-grid", "service-detail", "free-tow-cta", "diagnostic-callout", "credentials-strip", "warranty-card", "process-strip", "review-strip", "testimonial-card", "before-after-slider", "phone-cta-bar", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "specialty transmission shop photography. Gearboxes split open on the rebuild bench, valve body components laid out on a parts mat, technician torquing pump bolts, ATF fluid pouring on a transparent funnel. Tow truck dropping off a customer car at the shop entrance. Avoid generic auto-repair stock photography. Show the rebuild bench as the hero — it's what makes this niche different.",
+  "voice_pet_words": ["rebuild", "torque converter", "valve body", "solenoid pack", "CVT", "ATF", "free tow-in", "specialist", "written warranty"],
+  "primary_keywords": ["transmission repair", "transmission rebuild", "transmission specialist", "CVT repair", "free tow-in"]
+}

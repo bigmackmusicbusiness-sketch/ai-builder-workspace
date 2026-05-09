@@ -802,6 +802,170 @@ export const COPY_PATTERNS: Record<string, CopyPattern[]> = {
       primary:   'Old: tenants slipping in the lot, a phone full of complaints, a plow service that shows up after the storm. New: plowed before open, salted, and photo-logged for liability. The bridge is a seasonal contract with a guaranteed trigger.',
     },
   ],
+
+  // ── Batch 4 / 12 — Auto vertical (9 niches) ─────────────────────────────────
+
+  'auto-body-collision': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'I-CAR certified collision repair, factory color match.',
+      primary:   'We work direct with your insurer, write the supplement, and coordinate the rental. Most repairs back on the road in 5-9 business days. Free written estimate.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '97% of our paint matches pass on the first spray.',
+      primary:   'Our spectrophotometer reads your panel before we mix. That cuts re-spray time and gets your car back faster. Bring it in any weekday for a free estimate.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Crumpled quarter panel Monday. Driving to work Friday.',
+      primary:   'Tow lands at our bay, we open a claim with your carrier same day. Frame straightening, panel work, paint, blend, polish. Lifetime workmanship warranty on every repair.',
+    },
+  ],
+
+  'tire-shop': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Mount, balance, alignment in under 90 minutes.',
+      primary:   'Out-the-door pricing on Michelin, Goodyear, BFGoodrich. TPMS reset included. Road-hazard warranty available on every set. Book online or walk in any weekday.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'A 1/8 inch alignment drift kills 6 mpg.',
+      primary:   'We put your car on a Hunter Hawkeye rack, show you the readout, and tell you straight if it actually needs an alignment. Free check with any tire purchase.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Cupped tires and a wandering steering wheel. Smooth highway by 3 pm.',
+      primary:   'Drop in this morning, we mount four new ones, balance to spec, and pull alignment back into the green. Most installs under 90 minutes start to finish.',
+    },
+  ],
+
+  'mobile-mechanic': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'We fix it in your driveway. No tow needed.',
+      primary:   'Brakes, batteries, alternators, starters, sensors, oil changes, scan-tool diagnostics. Flat-rate pricing texted to you before we start. Same-day appointments most weekdays.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Your driveway has a 14-foot bay. We bring the rest.',
+      primary:   'Service truck arrives with the tools, parts, scan tool, and torque wrench. You stay home, we do the work. Job-rate quote in writing before any wrench turns.',
+    },
+    {
+      framework: 'before-after',
+      headline:  "Car wouldn't start at 7 am. Driving to lunch by noon.",
+      primary:   'Text us with the symptoms, we route a tech and a battery to your driveway. Most no-start calls finished inside two hours, no tow charge, no wait at a shop.',
+    },
+  ],
+
+  'transmission-shop': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Free tow-in, free diagnostic, written rebuild warranty.',
+      primary:   'We pull, tear down, and inspect every transmission before quoting. You get a rebuild-vs-replace recommendation in plain English. Most rebuilds carry a 3-year/100k written warranty.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Three things kill a CVT before 80,000 miles.',
+      primary:   'Heat, neglected fluid, and pulley wear. We diagnose all three on a free scan, then tell you whether a flush, a valve-body refresh, or a rebuild is the honest call.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Slipping into third on the freeway. Crisp shifts in two weeks.',
+      primary:   'Free tow brings your car to our bench. We split the case, replace seals, clutches, solenoids, and torque converter as needed. Back on the road with a written warranty.',
+    },
+  ],
+
+  'car-wash': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Unlimited washes, $24.99 a month.',
+      primary:   "Soft-cloth tunnel, ceramic-seal top tier, free vacuums included. Pause your membership any month. RFID windshield tag, drive in any time we're open.",
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'We recycle 78% of the water that hits your hood.',
+      primary:   "Closed-loop reclaim system, biodegradable detergents, soft cloth that won't scratch ceramic coats. Two-minute tunnel, free vacuums, unlimited memberships from $19.99.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Salt-streaked hood at 8 am. Beading clean by 8:08.',
+      primary:   'Pull into the tunnel, foam, soft-cloth, ceramic spray, blow-off. Eight minutes including the vacuum bay. Members skip the line on the express side.',
+    },
+  ],
+
+  'motorcycle-dealer': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Honda, Yamaha, Suzuki, Kawasaki under one roof.',
+      primary:   'New and pre-owned bikes from cruisers to adventure. Factory-trained service, full gear wall, on-site MSF rider course. Test-ride appointments any weekday.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Your first bike should not be the 1000cc.',
+      primary:   'We talk you through what fits your size, license stage, and how you actually plan to ride. Then we set up a no-pressure test ride on something honest.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Curious browser at 10 am. Riding home Saturday afternoon.',
+      primary:   'Sit on a few, take one out, run the numbers, walk the gear wall. We finish paperwork, fit a helmet, and watch you pull off. Service-dept relationship starts day one.',
+    },
+  ],
+
+  'boat-marine-service': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Outboard, inboard, winterize, store. One yard.',
+      primary:   'ABYC-certified techs on Yamaha, Mercury, and Volvo Penta. Travel-lift haul-out, shrink-wrap winterization, indoor and outdoor storage. Spring commissioning slots fill fast.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'A skipped winterize cracks blocks at $4,800 a pop.',
+      primary:   'We pull, fog, drain, and antifreeze every powerhead and stern drive in the yard. Shrink-wrap goes on the same day. Reserve your slot before the first freeze.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Boat sitting on the trailer in October. Splashed and running in May.',
+      primary:   'Drop her in our yard for haul-out, winterize, and indoor storage. Spring service runs lower units, anodes, fuel-water separators. Back in the water on schedule.',
+    },
+  ],
+
+  'towing-roadside': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '24/7 dispatch, ETA on every call, flat-rate pricing.',
+      primary:   'Light-duty to heavy-duty rotator. Jump starts, fuel delivery, lockouts, accident recovery. Flat-rate quote before the truck rolls. AAA contractor, multiple motor clubs.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Average ETA in our coverage area is 23 minutes.',
+      primary:   "Five trucks on rotation, dispatch tracks every job from your call. Drop a pin, we tell you the truck's plate number and the driver's name before we hang up.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Stuck on the shoulder at 11 pm. Home by midnight.',
+      primary:   'One call, dispatch confirms ETA, flatbed arrives, your car loads safe, we drop you at your address or your shop. Card on file, no fumbling for cash on the roadside.',
+    },
+  ],
+
+  'window-tint-vinyl': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Ceramic tint, full wraps, PPF. Lifetime film warranty.',
+      primary:   'M, SunTek, XPEL installs in a clean booth. Edge-wrapped on every panel. State-legal VLT options laid out before we cut. Most sedans done same day.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Cheap tint goes purple in 18 months.',
+      primary:   'Dyed film fades, ceramic does not. We show you the brand spec sheet and warranty card before you book. If it bubbles or fades on our install, we replace it.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Stock glass and stone-chipped hood. Ceramic tint and PPF by Friday.',
+      primary:   'Park Tuesday morning, we strip, prep, cut, and heat-shrink. Pick up Friday with film on every window and self-healing PPF on the front clip. Lifetime warranty in the glove box.',
+    },
+  ],
 };
 
 /** Fallback for niches without curated patterns — generic but framework-shaped,

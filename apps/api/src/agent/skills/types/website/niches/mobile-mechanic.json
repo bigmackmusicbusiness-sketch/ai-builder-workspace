@@ -1,0 +1,29 @@
+{
+  "niche": "mobile-mechanic",
+  "label": "Mobile Mechanic",
+  "triggers": ["mobile mechanic", "we come to you mechanic", "in-driveway repair", "mobile car repair", "on-site auto repair", "fleet on-site mechanic", "parking lot mechanic", "mobile diagnostic scan", "no-tow repair", "house-call mechanic"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+service-area-map+book-cta" },
+    { "slug": "services", "role": "common-jobs+flat-rate" },
+    { "slug": "pricing",  "role": "service-call-fee+job-rates" },
+    { "slug": "about",    "role": "ase-credentials+truck-tour" },
+    { "slug": "book",     "role": "address+vehicle+symptoms-form" },
+    { "slug": "faq",      "role": "what-we-cant-do-on-site" },
+    { "slug": "contact",  "role": "phone+text+service-area" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "ase-certification-footer", "estimate-authorization-notice"],
+  "schema_org_primary": "AutoRepair",
+  "voice_template": "comes-to-you convenience, mechanically credible, schedule-aware, plain-English on what's possible curbside",
+  "palettes": [
+    { "name": "service-truck-blue", "hexes": ["#0B4F8A", "#FFC72C", "#F4F7FA", "#03182B"] },
+    { "name": "driveway-charcoal",  "hexes": ["#2A2D34", "#FF7A1A", "#F1EFEB", "#0A0C10"] },
+    { "name": "fleet-forest",       "hexes": ["#1F4E3D", "#F2C94C", "#F0EDE6", "#0A1B14"] },
+    { "name": "scan-tool-violet",   "hexes": ["#3D2E5C", "#56C7C2", "#F2EEF6", "#120B1F"] },
+    { "name": "tailgate-rust",      "hexes": ["#7A3B1F", "#F4E1C1", "#E6D9C3", "#1A0A04"] },
+    { "name": "asphalt-lime",       "hexes": ["#1A1F25", "#C4E538", "#EFEFEF", "#070A0D"] }
+  ],
+  "section_library": ["hero", "page-hero", "service-area-map", "common-jobs-grid", "flat-rate-card", "service-call-explainer", "credentials-strip", "ase-badge-strip", "diagnostic-callout", "appointment-scheduler", "what-we-cant-do-strip", "review-strip", "testimonial-card", "phone-cta-bar", "text-cta-bar", "faq-accordion", "footer"],
+  "image_directives": "candid mobile-mechanic photography. Service van or truck with toolbox open in someone's driveway, technician under a customer's hood with a scan tool plugged in, parts and a portable battery jumper on a rolling cart. Show context: house, garage door, parking lot — never a clean shop. Avoid stock photos of mechanics in white coveralls. Real fleet logos and grease-marked uniforms preferred.",
+  "voice_pet_words": ["service call", "flat rate", "scan tool", "driveway", "fleet on-site", "no tow", "schedule window", "OBD-II", "ASE-certified"],
+  "primary_keywords": ["mobile mechanic", "mobile car repair", "on-site auto repair", "fleet mechanic", "we come to you"]
+}

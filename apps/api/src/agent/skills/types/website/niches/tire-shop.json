@@ -1,0 +1,29 @@
+{
+  "niche": "tire-shop",
+  "label": "Tire Shop",
+  "triggers": ["tire shop", "tire installation", "tire rotation", "wheel alignment shop", "tpms service", "road hazard warranty", "michelin dealer", "goodyear dealer", "bfgoodrich dealer", "mount and balance", "tire pressure sensor", "all-season tires", "winter tire changeover"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+brand-grid+install-quote-cta" },
+    { "slug": "services", "role": "install+rotation+alignment+tpms" },
+    { "slug": "pricing",  "role": "out-the-door-tire-pricing" },
+    { "slug": "about",    "role": "shop-story+brands-carried" },
+    { "slug": "book",     "role": "appointment-scheduler" },
+    { "slug": "faq",      "role": "warranty-and-tread-questions" },
+    { "slug": "contact",  "role": "phone+address+hours" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "manufacturer-warranty-disclosure", "ada-accessibility-statement"],
+  "schema_org_primary": "AutoRepair",
+  "voice_template": "knowledgeable on rubber, brand-fluent, no-upsell tone, concrete on tread and torque",
+  "palettes": [
+    { "name": "tread-black-yellow",  "hexes": ["#161616", "#F2C300", "#F5F5F5", "#000000"] },
+    { "name": "rim-graphite",        "hexes": ["#22272E", "#A6ADBA", "#FAFAFA", "#0B0E12"] },
+    { "name": "lug-orange",          "hexes": ["#1F1F1F", "#E55B13", "#F4F2EE", "#0B0B0B"] },
+    { "name": "alignment-grid",      "hexes": ["#1B2A41", "#7FB069", "#F1F4F7", "#070C14"] },
+    { "name": "warranty-red",        "hexes": ["#2B2B2B", "#B5252A", "#F0EDE8", "#0F0F0F"] },
+    { "name": "wet-traction-blue",   "hexes": ["#0F3460", "#16C4E8", "#EAF2F7", "#040C18"] }
+  ],
+  "section_library": ["hero", "page-hero", "brand-logo-grid", "tire-finder-bar", "services-grid", "service-detail", "pricing-table", "out-the-door-card", "alignment-callout", "tpms-callout", "appointment-scheduler", "warranty-card", "review-strip", "testimonial-card", "phone-cta-bar", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "honest tire shop photography. Stacks of new tires with sidewalls clearly readable, technicians on tire-changer machines, alignment racks with cars and laser sensors, balance machines spinning. Brand logos visible on sidewalls (Michelin, Goodyear, BFGoodrich) without being a logo wall. Show grease under fingernails and torque wrenches in hand. Avoid stock-photo studio shots of single floating tires.",
+  "voice_pet_words": ["tread", "torque spec", "out-the-door", "road hazard", "TPMS", "rotation", "balance", "alignment", "DOT date", "load rating"],
+  "primary_keywords": ["tire shop", "tire installation", "wheel alignment", "tire rotation", "TPMS service"]
+}

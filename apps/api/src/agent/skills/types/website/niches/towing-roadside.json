@@ -1,0 +1,28 @@
+{
+  "niche": "towing-roadside",
+  "label": "Towing & Roadside Assistance",
+  "triggers": ["towing", "tow truck", "roadside assistance", "jump start service", "fuel delivery", "lockout service", "flat tire change", "24 hour towing", "heavy duty towing", "accident recovery", "aaa contractor tow", "motor club tow"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+24-7-cta+coverage-area" },
+    { "slug": "services", "role": "tow+jump+fuel+lockout+heavy-duty" },
+    { "slug": "pricing",  "role": "transparent-rates-by-service" },
+    { "slug": "about",    "role": "fleet+motor-club-affiliations" },
+    { "slug": "contact",  "role": "phone+text+coverage-area" },
+    { "slug": "faq",      "role": "what-to-do-while-you-wait" }
+  ],
+  "compliance_blocks": ["license-bond-insurance-footer", "dot-license-footer", "motor-club-affiliations", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "calm-in-crisis, dispatch-direct, ETA-honest, safety-first without alarmism",
+  "palettes": [
+    { "name": "safety-yellow-black", "hexes": ["#FFD60A", "#0E0E0E", "#FAF6E2", "#000000"] },
+    { "name": "amber-strobe",        "hexes": ["#F26B1A", "#1A1A1A", "#F4EFE5", "#080808"] },
+    { "name": "highway-reflective",  "hexes": ["#F4C20D", "#1A1F2A", "#EFEAD8", "#06090F"] },
+    { "name": "dispatch-red",        "hexes": ["#C8102E", "#1B1B1B", "#F2EDE3", "#070707"] },
+    { "name": "wrecker-charcoal",    "hexes": ["#22272E", "#FFD200", "#E8E5DD", "#0B0E12"] },
+    { "name": "lockout-cobalt",      "hexes": ["#1A3FA0", "#FFC800", "#F2F1EC", "#070D24"] }
+  ],
+  "section_library": ["hero", "page-hero", "24-7-cta-bar", "phone-cta-bar", "text-cta-bar", "services-grid", "service-detail", "coverage-area-map", "rate-table", "fleet-strip", "motor-club-badge-strip", "what-to-do-while-you-wait-card", "review-strip", "testimonial-card", "faq-accordion", "footer"],
+  "image_directives": "real towing photography. Flatbed loading a sedan on a shoulder at dusk, light bar reflections on wet pavement, driver hooking a strap, jump-pack clamps on a battery, slim-jim entry through a passenger window. Heavy-duty rotator pulling a box truck out of a ditch. Avoid stock-photo tow trucks against white seamless. High-vis vest, real fleet branding, honest weather conditions.",
+  "voice_pet_words": ["dispatch", "ETA", "flatbed", "wheel-lift", "heavy-duty", "rotator", "motor club", "jump pack", "lockout", "24/7"],
+  "primary_keywords": ["towing", "roadside assistance", "tow truck", "jump start service", "24 hour towing"]
+}
