@@ -1,0 +1,29 @@
+{
+  "niche": "yoga-studio",
+  "label": "Yoga Studio",
+  "triggers": ["yoga studio", "vinyasa", "ashtanga", "yin yoga", "restorative yoga", "hot yoga", "hatha", "yoga classes", "yoga teacher training", "prenatal yoga", "kundalini", "yoga school", "ytt", "drop-in yoga"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+styles+intro-offer-cta" },
+    { "slug": "programs", "role": "class-styles+lineage-notes" },
+    { "slug": "schedule", "role": "weekly-timetable+livestream-tag" },
+    { "slug": "team",     "role": "teacher-bios+training-history" },
+    { "slug": "pricing",  "role": "drop-in+class-pack+unlimited" },
+    { "slug": "about",    "role": "studio-story+space" },
+    { "slug": "contact",  "role": "address+hours+first-class-form" }
+  ],
+  "compliance_blocks": ["liability-waiver-link", "medical-disclaimer-footer", "ada-accessibility-statement"],
+  "schema_org_primary": "SportsClub",
+  "voice_template": "calm, breath-led, grounded, beginner-welcoming without spiritual cosplay or guru posturing",
+  "palettes": [
+    { "name": "sage-linen",      "hexes": ["#7C8A6E", "#F4EFE6", "#E1D9C8", "#2E2A22"] },
+    { "name": "ochre-sand",      "hexes": ["#C68E3F", "#FBF5EA", "#EAD8B6", "#2A1E10"] },
+    { "name": "dawn-rose",       "hexes": ["#B57264", "#FBF1EC", "#EBD2C5", "#2D1A14"] },
+    { "name": "river-stone",     "hexes": ["#5A7480", "#F2F0EC", "#D8DCDB", "#1A2126"] },
+    { "name": "moss-clay",       "hexes": ["#5C6A3A", "#F1ECDF", "#D9C9A5", "#1F2412"] },
+    { "name": "ink-wash",        "hexes": ["#3F3A36", "#F8F5F0", "#DCD4C7", "#1B1815"] }
+  ],
+  "section_library": ["hero", "page-hero", "intro-offer-strip", "class-style-grid", "schedule-table", "teacher-card", "lineage-strip", "pricing-tiers", "first-class-cta", "story-strip", "studio-gallery", "faq-accordion", "address-card", "hours-strip", "waiver-link", "footer"],
+  "image_directives": "soft, naturally lit yoga photography. Real students mid-flow, blanketed savasana, props like bolsters and cork blocks visible. Diverse bodies and ages, modest mat-side framing. Avoid airbrushed studio-model poses on cliff edges, no incense smoke clichés, no cultural costume shots. Wood floors, plants, daylight through linen curtains. Hands adjusting safely, eyes closed in seated breath, not fashion-shoot arches.",
+  "voice_pet_words": ["breath", "practice", "mat", "drop-in", "flow", "intro offer", "props", "lineage", "first class"],
+  "primary_keywords": ["yoga studio", "yoga classes", "vinyasa", "drop-in yoga"]
+}

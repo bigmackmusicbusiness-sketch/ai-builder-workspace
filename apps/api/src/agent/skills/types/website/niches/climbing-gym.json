@@ -1,0 +1,28 @@
+{
+  "niche": "climbing-gym",
+  "label": "Climbing Gym",
+  "triggers": ["climbing gym", "bouldering gym", "rock climbing", "top rope", "lead climbing", "indoor climbing", "auto belay", "v-grade", "boulder problems", "climbing membership", "youth climbing team", "climbing day pass", "belay class"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+route-set+day-pass-cta" },
+    { "slug": "programs", "role": "intro+belay-cert+youth-team+clinics" },
+    { "slug": "schedule", "role": "set-rotation+events+open-hours" },
+    { "slug": "pricing",  "role": "day-pass+memberships+gear-rental" },
+    { "slug": "team",     "role": "setters+coaches" },
+    { "slug": "contact",  "role": "address+hours+first-visit-faq" }
+  ],
+  "compliance_blocks": ["liability-waiver-link", "climbing-rules-acknowledgment", "minor-consent-form-link", "medical-clearance-disclaimer", "ada-accessibility-statement"],
+  "schema_org_primary": "SportsClub",
+  "voice_template": "community-board friendly, gear-honest, beginner-respecting, route-setting nerdy without gatekeeping",
+  "palettes": [
+    { "name": "chalk-azure",       "hexes": ["#3A6FB0", "#F4F1EA", "#DDD7C8", "#101724"] },
+    { "name": "moss-rope",         "hexes": ["#4F6A37", "#F1EDE2", "#D6CDB6", "#161F0F"] },
+    { "name": "granite-tangerine", "hexes": ["#E07C2A", "#1B1B1F", "#2C2D33", "#F0EBDE"] },
+    { "name": "cinder-pine",       "hexes": ["#2D4F4A", "#1A1A1C", "#2A2C2E", "#EEEAE0"] },
+    { "name": "crimp-coral",       "hexes": ["#D4624C", "#F4EEE2", "#E6D7C2", "#1F140F"] },
+    { "name": "summit-bone",       "hexes": ["#7E869A", "#F2F0EC", "#D9D5CC", "#101218"] }
+  ],
+  "section_library": ["hero", "page-hero", "set-rotation-strip", "program-grid", "skills-track-card", "schedule-table", "setter-card", "coach-card", "youth-team-strip", "pricing-tiers", "gear-rental-strip", "first-visit-faq", "day-pass-cta", "community-board", "address-card", "hours-strip", "waiver-link", "footer"],
+  "image_directives": "honest indoor-climbing photography. Volumes and holds in real palettes, chalk on a crimp, a belayer feeding slack with a tube device, a climber clipping into an auto-belay. Diverse climbers at every grade — kids on V0s, adults projecting V5s, masters topping a slab. Avoid magazine outdoor-trad poses dragged indoors, no neon-rave color-grading, no fingerless-glove tactical-cosplay. Show the fall, the spotter, the brush on a problem, the chalk dust in afternoon light.",
+  "voice_pet_words": ["beta", "send", "project", "boulder", "top rope", "auto belay", "set", "grade", "day pass", "first visit"],
+  "primary_keywords": ["climbing gym", "bouldering gym", "indoor climbing", "rock climbing"]
+}

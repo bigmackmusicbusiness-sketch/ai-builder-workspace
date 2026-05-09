@@ -1076,6 +1076,132 @@ export const COPY_PATTERNS: Record<string, CopyPattern[]> = {
       primary:   'Last birthday, a plastic clamshell. This one, a two-layer cake with her picked flavors and a piped border. Order three days ahead, pick up morning of the party.',
     },
   ],
+
+  'yoga-studio': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Thirty classes a week, six teachers, one quiet room.',
+      primary:   'Vinyasa, yin, restorative, and a slow Saturday morning hatha. Thirty dollars for two weeks of unlimited classes when you start. Mats, blocks, and bolsters are here.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'We dim the lights, not the room temperature.',
+      primary:   'No 105-degree pressure to keep up. Sixty-eight degrees, breath-led pacing, and a teacher who walks the room with hands-on cues. First class on us if you ask at the desk.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From a YouTube flow at 6am to a Tuesday yin class with props.',
+      primary:   'Before: a sticky living-room mat, the dog walking through downward dog. Now: a bolstered hip-opener, a teacher adjusting your knee, and twenty minutes of stillness. Two-week intro for new students.',
+    },
+  ],
+
+  'pilates-studio': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Six reformers, six clients, sixty minutes.',
+      primary:   'Small-group classes capped at six so the instructor can cue your footbar setup before the first hundred. Three-class intro pack for new clients includes a posture intake.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "The carriage moves about an inch when it's set up right.",
+      primary:   "Spring tension, footbar height, headrest angle. Three checks before the first exercise so the work lands where it's supposed to. Book a private to map your body before group.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'From a stiff lower back at the desk to a hundred on the reformer.',
+      primary:   'Before: a chair-shaped spine and a dull ache by 4pm. After: ribs stacked over hips, glutes cued, breath in the back of the lungs. Start with the three-class intro pack.',
+    },
+  ],
+
+  'crossfit-box': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Fundamentals before Fran. Two weeks of free intros.',
+      primary:   'Four onboarding sessions teach the squat, the press, the deadlift, the kip. Then group classes seven days a week, scaled and Rx side by side. Coach in every class, no exceptions.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '21-15-9 of thrusters and pull-ups. Whiteboard waits.',
+      primary:   "Today it's Fran. Tomorrow it's a heavy clean and short metcon. Programming written by our head coach, posted Sunday night. Drop in, scale to your day, chalk up the bar.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'From treadmill boredom to a 7-minute AMRAP at 5:30am.',
+      primary:   'Before: thirty minutes of cardio you forgot the second you left. Now: a clock, a barbell, and five other people counting reps next to you. Free intro covers movement and scaling.',
+    },
+  ],
+
+  'personal-training': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Two sessions a week, one written program, one accountable coach.',
+      primary:   'A movement assessment in week one, a four-week block with progressions, weekly check-ins on sleep and protein. In-home, in-studio, or hybrid. First consult is free.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Most people quit at week three. The block changes at week four.',
+      primary:   'Why programs fail: same six exercises forever, no tracked load, no rest day. Why this works: written blocks, video review, a coach who texts on lift days. Book a 30-minute consult.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From a gym membership you stopped using to two booked sessions a week.',
+      primary:   'Before: a card on the keychain and an empty calendar. Now: Tuesday and Friday at 6am, a written warm-up, and a coach who knows your hamstring history. Free intake to start.',
+    },
+  ],
+
+  'dance-studio': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Pre-ballet at 3, hip-hop at 7, adult tap on Wednesdays.',
+      primary:   'Forty classes a week across ballet, jazz, contemporary, hip-hop, and tap. Spring recital at the Civic Theater in May. Costume fees posted before you register, no surprises.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'The recital costume is ordered in October. We tell you in August.',
+      primary:   'No mid-season fee surprises. Tuition, costume, and recital fees are on the registration page before you sign anything. Family discount kicks in at the second sibling.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From a living-room twirl to a first plié at the barre.',
+      primary:   'Before: socks on hardwood and a phone playing Frozen. Now: a real barre, a teacher counting in French, and twenty kids learning first position together. Fall registration is open.',
+    },
+  ],
+
+  'martial-arts-school': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Three trial classes, one white belt, no contract to sign.',
+      primary:   'Kids, teens, adults, and family classes six days a week. Belt testing four times a year, every rank earned on the floor. Trial week ends with a private goal-setting session.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'We bow in. We line up by rank. Then we work.',
+      primary:   'A traditional dojo with thirty years of lineage, kihon drilled before kata, kata drilled before sparring. After-school pickup available from four local elementaries.',
+    },
+    {
+      framework: 'before-after',
+      headline:  "From a kid who won't look up from a tablet to a yellow belt.",
+      primary:   'Before: a screen and a slouch. After: eyes up, feet set, a kihon count out loud. Three-class trial includes a uniform and a private with the head instructor.',
+    },
+  ],
+
+  'climbing-gym': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Sixty boulder problems, reset every two weeks.',
+      primary:   'V0 to V10, two route-setters, twelve auto-belays, and a top-rope wall to thirty feet. Day pass with rental shoes and chalk runs twenty-five dollars. Belay class on Saturdays.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'The setters stripped the cave on Sunday. New problems Monday at noon.',
+      primary:   "Two setters rotate the boulder field every two weeks so there's always something to project. Read the tape, brush the holds, ask the staff for beta. First-visit waiver online.",
+    },
+    {
+      framework: 'before-after',
+      headline:  "From a top-rope you couldn't finish to your first V3 send.",
+      primary:   'Before: a 5.8 you fell off twice and a tight harness. Now: a heel hook, a body-tension move, and a top-out that holds. Drop-in day passes, youth team, and a community board.',
+    },
+  ],
 };
 
 /** Fallback for niches without curated patterns — generic but framework-shaped,

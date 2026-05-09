@@ -1,0 +1,29 @@
+{
+  "niche": "dance-studio",
+  "label": "Dance Studio",
+  "triggers": ["dance studio", "ballet classes", "jazz dance", "hip hop dance", "contemporary dance", "tap dance", "kids dance class", "dance recital", "competition dance", "pre-ballet", "lyrical dance", "musical theatre dance", "adult ballet"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+styles+register-cta" },
+    { "slug": "programs", "role": "styles-by-age-track" },
+    { "slug": "schedule", "role": "season-timetable+recital-dates" },
+    { "slug": "team",     "role": "faculty-bios+training" },
+    { "slug": "pricing",  "role": "tuition+costume-fees+recital" },
+    { "slug": "gallery",  "role": "recital-photos+performance-reel" },
+    { "slug": "contact",  "role": "registration-form+studio-info" }
+  ],
+  "compliance_blocks": ["liability-waiver-link", "minor-consent-form-link", "photo-release-policy", "ada-accessibility-statement", "tuition-refund-policy"],
+  "schema_org_primary": "SportsClub",
+  "voice_template": "warm, family-friendly, technique-respecting, recital-proud without competitive bragging",
+  "palettes": [
+    { "name": "rose-marley",     "hexes": ["#C7768B", "#FBF3F4", "#F0DCDF", "#241317"] },
+    { "name": "lavender-stage",  "hexes": ["#7C5C9C", "#F6F1F8", "#E0D2EB", "#1B1325"] },
+    { "name": "barre-cream",     "hexes": ["#A37152", "#FAF4EA", "#EDD9C2", "#231711"] },
+    { "name": "stage-gold",      "hexes": ["#C99A3A", "#1A1620", "#2A2335", "#F4ECDB"] },
+    { "name": "tulle-sky",       "hexes": ["#7AA4C2", "#F4F8FB", "#D6E4EE", "#142231"] },
+    { "name": "studio-blush",    "hexes": ["#E0A6A0", "#FCF5F2", "#F4DBD3", "#241413"] }
+  ],
+  "section_library": ["hero", "page-hero", "style-grid", "age-track-card", "schedule-table", "season-calendar", "faculty-card", "tuition-table", "registration-cta", "recital-gallery", "performance-reel", "parent-faq", "address-card", "hours-strip", "waiver-link", "photo-release-link", "footer"],
+  "image_directives": "warm, candid dance-studio photography. Sprung floors, ballet barres, mirrors, tights and leotards mid-class. Kids in pre-ballet circles, teen jazz combos full-out, adult beginners trying a chasse for the first time. Real recital costumes backstage, dressing room moments, a teacher kneeling to fix a foot. Avoid pageant-pose competition stock, no glitter-overload hero shots, no airbrushed lines. Sweat on the marley, hair coming loose at the end of class.",
+  "voice_pet_words": ["barre", "marley", "combo", "recital", "season", "across the floor", "spotting", "tendu", "registration", "family"],
+  "primary_keywords": ["dance studio", "kids dance classes", "ballet classes", "dance lessons"]
+}

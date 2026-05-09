@@ -1,0 +1,28 @@
+{
+  "niche": "personal-training",
+  "label": "Personal Training",
+  "triggers": ["personal trainer", "personal training", "1-on-1 training", "one on one training", "in-home trainer", "mobile personal trainer", "online coaching", "strength coach", "nutrition coaching", "small-group training", "semi-private training", "hybrid coaching"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+coach-intro+free-consult-cta" },
+    { "slug": "services", "role": "1-on-1+small-group+online-tracks" },
+    { "slug": "results",  "role": "client-outcomes+lift-numbers" },
+    { "slug": "about",    "role": "coach-bio+credentials" },
+    { "slug": "pricing",  "role": "session-packs+monthly-coaching" },
+    { "slug": "contact",  "role": "intake-form+phone+booking" }
+  ],
+  "compliance_blocks": ["liability-waiver-link", "medical-clearance-disclaimer", "scope-of-practice-disclaimer", "results-may-vary", "ada-accessibility-statement"],
+  "schema_org_primary": "HealthAndBeautyBusiness",
+  "voice_template": "results-driven, plain-spoken, accountability-first, honest about effort and timelines",
+  "palettes": [
+    { "name": "graphite-citron",  "hexes": ["#C6DA3A", "#161616", "#262626", "#F4F4F1"] },
+    { "name": "deep-navy-rust",   "hexes": ["#B45A2C", "#0F1A2A", "#1B2638", "#F1ECE5"] },
+    { "name": "carbon-clay",      "hexes": ["#A86C4D", "#121212", "#22201E", "#F1ECE3"] },
+    { "name": "pine-bone",        "hexes": ["#345643", "#F4F1EA", "#D9D2C2", "#15201A"] },
+    { "name": "sand-slate",       "hexes": ["#3E4A55", "#EFEAE0", "#D6CDBC", "#15191D"] },
+    { "name": "asphalt-amber",    "hexes": ["#D2962A", "#101113", "#23252A", "#F2EDE0"] }
+  ],
+  "section_library": ["hero", "page-hero", "coach-intro-strip", "service-grid", "assessment-explainer", "results-table", "transformation-card", "testimonial-card", "pricing-tiers", "intake-form", "free-consult-cta", "credential-strip", "faq-accordion", "address-card", "hours-strip", "waiver-link", "footer"],
+  "image_directives": "honest training photography. A trainer cueing a hinge, a client mid-rep with a real bar, a tape measure on a quad, a notebook tracking sets. Home gyms, garage racks, or a corner of a commercial floor — wherever the work happens. Diverse clients, post-rehab knees, parents fitting sessions before work. Avoid glamour-fitness shoots, no aspirational beach silhouettes, no abs-only torsos. Show the assessment, the cue, the spot.",
+  "voice_pet_words": ["assessment", "intake", "consistency", "progression", "block", "movement", "accountability", "session", "deload", "client"],
+  "primary_keywords": ["personal trainer", "personal training", "1-on-1 coaching", "strength coach"]
+}

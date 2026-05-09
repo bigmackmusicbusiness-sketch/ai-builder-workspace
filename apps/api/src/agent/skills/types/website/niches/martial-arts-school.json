@@ -1,0 +1,29 @@
+{
+  "niche": "martial-arts-school",
+  "label": "Martial Arts School",
+  "triggers": ["karate", "taekwondo", "kung fu", "tai chi", "aikido", "judo", "traditional martial arts", "kids karate", "family martial arts", "dojo", "dojang", "kwoon", "belt testing", "after-school martial arts"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+disciplines+trial-cta" },
+    { "slug": "programs", "role": "kids+teens+adults+family-tracks" },
+    { "slug": "schedule", "role": "weekly-timetable" },
+    { "slug": "team",     "role": "head-instructor-lineage+rank" },
+    { "slug": "pricing",  "role": "tuition+testing-fees+gear" },
+    { "slug": "about",    "role": "school-history+philosophy" },
+    { "slug": "contact",  "role": "trial-form+address+hours" }
+  ],
+  "compliance_blocks": ["liability-waiver-link", "minor-consent-form-link", "medical-clearance-disclaimer", "ada-accessibility-statement", "code-of-conduct-policy"],
+  "schema_org_primary": "SportsClub",
+  "voice_template": "respectful, lineage-conscious, disciplined-not-stern, family-welcoming with traditional structure",
+  "palettes": [
+    { "name": "indigo-bone",     "hexes": ["#1F2A6E", "#F5F1E6", "#E2D9C2", "#0E132E"] },
+    { "name": "crimson-slate",   "hexes": ["#9B2A28", "#F2EEE6", "#2C2C2E", "#0F0F10"] },
+    { "name": "bamboo-ink",      "hexes": ["#3B5F36", "#F4F0E2", "#D8D0BB", "#10180E"] },
+    { "name": "sumi-gold",       "hexes": ["#B98A2C", "#1B1A18", "#2C2A26", "#F4EEDC"] },
+    { "name": "stone-court",     "hexes": ["#5C6770", "#F0EDE6", "#D6D2C8", "#161A1F"] },
+    { "name": "white-belt",      "hexes": ["#7E2725", "#FFFCF4", "#F0E9D6", "#1F1612"] }
+  ],
+  "section_library": ["hero", "page-hero", "discipline-grid", "age-track-card", "schedule-table", "lineage-strip", "head-instructor-bio", "rank-progression-explainer", "kids-program-strip", "testimonial-card", "tuition-table", "trial-cta", "code-of-conduct-link", "address-card", "hours-strip", "waiver-link", "footer"],
+  "image_directives": "traditional dojo photography. Wood floors, kamiza or training-hall front, students bowing in. Belts at every rank, gi or dobok crisp at testing, scuffed at training. Kids drilling kihon, families on the floor side by side, an instructor correcting a stance. Avoid action-movie poses, no flying-kick hero shots, no neon competition lighting. Show the bow, the line-up, the focus before a kata, the calm after.",
+  "voice_pet_words": ["dojo", "sensei", "kata", "form", "rank", "belt", "lineage", "respect", "trial class", "family"],
+  "primary_keywords": ["martial arts school", "karate classes", "taekwondo", "kids martial arts"]
+}
