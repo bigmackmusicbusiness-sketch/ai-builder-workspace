@@ -1,27 +1,153 @@
 {
   "niche": "food-truck",
   "label": "Food Truck",
-  "triggers": ["food truck", "mobile food", "street food", "food festival", "truck schedule", "where parked today", "rolling kitchen", "food trailer", "festival vendor", "private truck booking", "lunch truck", "taco truck"],
-  "default_sitemap": [
-    { "slug": "index",    "role": "hero+today-location+menu-preview" },
-    { "slug": "schedule", "role": "weekly-grid+follow-cta" },
-    { "slug": "menu",     "role": "menu-detail" },
-    { "slug": "book",     "role": "private-event-form" },
-    { "slug": "about",    "role": "story+truck-card" }
+  "triggers": [
+    "food truck",
+    "mobile food",
+    "street food",
+    "food festival",
+    "truck schedule",
+    "where parked today",
+    "rolling kitchen",
+    "food trailer",
+    "festival vendor",
+    "private truck booking",
+    "lunch truck",
+    "taco truck"
   ],
-  "compliance_blocks": ["mobile-food-vendor-license-footer", "allergen-disclaimer-footer"],
+  "default_sitemap": [
+    {
+      "slug": "index",
+      "role": "hero+today-location+menu-preview"
+    },
+    {
+      "slug": "schedule",
+      "role": "weekly-grid+follow-cta"
+    },
+    {
+      "slug": "menu",
+      "role": "menu-detail"
+    },
+    {
+      "slug": "book",
+      "role": "private-event-form"
+    },
+    {
+      "slug": "about",
+      "role": "story+truck-card"
+    }
+  ],
+  "compliance_blocks": [
+    "mobile-food-vendor-license-footer",
+    "allergen-disclaimer-footer"
+  ],
   "schema_org_primary": "FastFoodRestaurant",
   "voice_template": "loose, hands-on, festival-energy, specific about the food, no marketing voice",
   "palettes": [
-    { "name": "chili-mustard",     "hexes": ["#D24B2A", "#FFFCF2", "#FFE2BA", "#22100A"] },
-    { "name": "lime-charcoal",     "hexes": ["#9DC83C", "#1A1A1A", "#2C2C2C", "#F4FFD8"] },
-    { "name": "tangerine-cream",   "hexes": ["#E07B2D", "#FFFAF1", "#FFD9B0", "#241208"] },
-    { "name": "neon-papaya",       "hexes": ["#F26B36", "#FFFCF4", "#FFC9A8", "#1F0A04"] },
-    { "name": "smoke-paprika",     "hexes": ["#B23A22", "#1F1F1F", "#3A3030", "#FFE7CC"] },
-    { "name": "honey-asphalt",     "hexes": ["#E0A33A", "#222020", "#3D3936", "#FFF4D6"] }
+    {
+      "name": "chili-mustard",
+      "hexes": [
+        "#D24B2A",
+        "#FFFCF2",
+        "#FFE2BA",
+        "#22100A"
+      ]
+    },
+    {
+      "name": "lime-charcoal",
+      "hexes": [
+        "#9DC83C",
+        "#1A1A1A",
+        "#2C2C2C",
+        "#F4FFD8"
+      ]
+    },
+    {
+      "name": "tangerine-cream",
+      "hexes": [
+        "#E07B2D",
+        "#FFFAF1",
+        "#FFD9B0",
+        "#241208"
+      ]
+    },
+    {
+      "name": "neon-papaya",
+      "hexes": [
+        "#F26B36",
+        "#FFFCF4",
+        "#FFC9A8",
+        "#1F0A04"
+      ]
+    },
+    {
+      "name": "smoke-paprika",
+      "hexes": [
+        "#B23A22",
+        "#1F1F1F",
+        "#3A3030",
+        "#FFE7CC"
+      ]
+    },
+    {
+      "name": "honey-asphalt",
+      "hexes": [
+        "#E0A33A",
+        "#222020",
+        "#3D3936",
+        "#FFF4D6"
+      ]
+    }
   ],
-  "section_library": ["hero", "page-hero", "today-location-strip", "weekly-schedule-grid", "schedule-row", "menu-preview", "menu-grid", "instagram-strip", "festival-list", "private-event-form", "truck-card", "story-strip", "follow-cta", "phone-cta", "press-quotes", "footer-vendor-license", "footer"],
+  "section_library": [
+    "hero",
+    "page-hero",
+    "today-location-strip",
+    "weekly-schedule-grid",
+    "schedule-row",
+    "menu-preview",
+    "menu-grid",
+    "instagram-strip",
+    "festival-list",
+    "private-event-form",
+    "truck-card",
+    "story-strip",
+    "follow-cta",
+    "phone-cta",
+    "press-quotes",
+    "footer-vendor-license",
+    "footer"
+  ],
   "image_directives": "real food-truck documentary. Service window with order tickets clipped overhead, hand-off shot to a customer in line, prep inside the truck, festival night lighting with string bulbs. Phone-shot energy, motion blur fine, steam visible. No glossy product hero shots, no clean white backgrounds, no staged smiles.",
-  "voice_pet_words": ["window", "service", "rolling", "lineup", "this week", "stop", "festival", "smash", "load-in", "hand-off"],
-  "primary_keywords": ["food truck", "street food", "mobile kitchen", "truck schedule", "festival"]
+  "voice_pet_words": [
+    "window",
+    "service",
+    "rolling",
+    "lineup",
+    "this week",
+    "stop",
+    "festival",
+    "smash",
+    "load-in",
+    "hand-off"
+  ],
+  "primary_keywords": [
+    "food truck",
+    "street food",
+    "mobile kitchen",
+    "truck schedule",
+    "festival"
+  ],
+  "signalpoint_systems": true,
+  "vertical_kind": "restaurant",
+  "site_data_bindings": [
+    {
+      "source": "menu_sections",
+      "target": "sections"
+    },
+    {
+      "source": "menu_items",
+      "target": "menu"
+    }
+  ]
 }

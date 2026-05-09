@@ -1,28 +1,164 @@
 {
   "niche": "bar-lounge",
   "label": "Bar / Lounge / Cocktail Bar",
-  "triggers": ["cocktail bar", "lounge", "happy hour", "speakeasy", "wine bar", "martini bar", "dive bar", "tiki bar", "whiskey bar", "signature cocktail", "dj night", "bar buyout"],
-  "default_sitemap": [
-    { "slug": "index",    "role": "hero+signature-drinks+events" },
-    { "slug": "menu",     "role": "drinks-list+small-plates" },
-    { "slug": "schedule", "role": "events-calendar+dj-nights" },
-    { "slug": "book",     "role": "private-buyout-form" },
-    { "slug": "visit",    "role": "location+hours+dress-code" },
-    { "slug": "contact",  "role": "phone+email" }
+  "triggers": [
+    "cocktail bar",
+    "lounge",
+    "happy hour",
+    "speakeasy",
+    "wine bar",
+    "martini bar",
+    "dive bar",
+    "tiki bar",
+    "whiskey bar",
+    "signature cocktail",
+    "dj night",
+    "bar buyout"
   ],
-  "compliance_blocks": ["alcohol-license-footer", "age-21-disclaimer", "drink-responsibly-footer"],
+  "default_sitemap": [
+    {
+      "slug": "index",
+      "role": "hero+signature-drinks+events"
+    },
+    {
+      "slug": "menu",
+      "role": "drinks-list+small-plates"
+    },
+    {
+      "slug": "schedule",
+      "role": "events-calendar+dj-nights"
+    },
+    {
+      "slug": "book",
+      "role": "private-buyout-form"
+    },
+    {
+      "slug": "visit",
+      "role": "location+hours+dress-code"
+    },
+    {
+      "slug": "contact",
+      "role": "phone+email"
+    }
+  ],
+  "compliance_blocks": [
+    "alcohol-license-footer",
+    "age-21-disclaimer",
+    "drink-responsibly-footer"
+  ],
   "schema_org_primary": "BarOrPub",
   "voice_template": "low-lit, considered, late-night confident, never cheesy",
   "palettes": [
-    { "name": "garnet-velvet",   "hexes": ["#7A1F2A", "#1A1416", "#2C2024", "#F2DEDC"] },
-    { "name": "midnight-brass",  "hexes": ["#C29448", "#141519", "#262830", "#F4ECDA"] },
-    { "name": "smoke-rose",      "hexes": ["#A85968", "#1B181A", "#2E282B", "#F2E0E2"] },
-    { "name": "deep-emerald",    "hexes": ["#2B5A48", "#13130F", "#262924", "#E4ECDC"] },
-    { "name": "ink-amber",       "hexes": ["#D49A48", "#0F0F12", "#1F1F24", "#F4E8D0"] },
-    { "name": "plum-cream",      "hexes": ["#5A2A52", "#FAF4F4", "#E4D4DE", "#1A0A18"] }
+    {
+      "name": "garnet-velvet",
+      "hexes": [
+        "#7A1F2A",
+        "#1A1416",
+        "#2C2024",
+        "#F2DEDC"
+      ]
+    },
+    {
+      "name": "midnight-brass",
+      "hexes": [
+        "#C29448",
+        "#141519",
+        "#262830",
+        "#F4ECDA"
+      ]
+    },
+    {
+      "name": "smoke-rose",
+      "hexes": [
+        "#A85968",
+        "#1B181A",
+        "#2E282B",
+        "#F2E0E2"
+      ]
+    },
+    {
+      "name": "deep-emerald",
+      "hexes": [
+        "#2B5A48",
+        "#13130F",
+        "#262924",
+        "#E4ECDC"
+      ]
+    },
+    {
+      "name": "ink-amber",
+      "hexes": [
+        "#D49A48",
+        "#0F0F12",
+        "#1F1F24",
+        "#F4E8D0"
+      ]
+    },
+    {
+      "name": "plum-cream",
+      "hexes": [
+        "#5A2A52",
+        "#FAF4F4",
+        "#E4D4DE",
+        "#1A0A18"
+      ]
+    }
   ],
-  "section_library": ["hero", "page-hero", "signature-drinks-strip", "drinks-menu-grid", "menu-section", "small-plates-list", "happy-hour-banner", "events-calendar", "event-card", "dj-night-row", "private-buyout-form", "dress-code-note", "story-strip", "bartender-card", "press-quotes", "address-card", "hours-strip", "age-policy-banner", "phone-cta", "footer-alcohol", "footer-age-21", "footer-drink-responsibly", "footer"],
+  "section_library": [
+    "hero",
+    "page-hero",
+    "signature-drinks-strip",
+    "drinks-menu-grid",
+    "menu-section",
+    "small-plates-list",
+    "happy-hour-banner",
+    "events-calendar",
+    "event-card",
+    "dj-night-row",
+    "private-buyout-form",
+    "dress-code-note",
+    "story-strip",
+    "bartender-card",
+    "press-quotes",
+    "address-card",
+    "hours-strip",
+    "age-policy-banner",
+    "phone-cta",
+    "footer-alcohol",
+    "footer-age-21",
+    "footer-drink-responsibly",
+    "footer"
+  ],
   "image_directives": "low-light bar photography. Backbar bottles glowing under amber sconces, a built cocktail with a measured citrus twist, hands stirring in a mixing glass, late-night booth with two glasses on the table. Deep shadow, narrow depth of field, no flash. No bright daytime stock, no posed cheers shots, no over-saturated party-vibe imagery.",
-  "voice_pet_words": ["stirred", "spec", "house", "backbar", "list", "pour", "low-lit", "late", "nightly", "well-built"],
-  "primary_keywords": ["cocktail bar", "lounge", "happy hour", "private events", "drinks menu"]
+  "voice_pet_words": [
+    "stirred",
+    "spec",
+    "house",
+    "backbar",
+    "list",
+    "pour",
+    "low-lit",
+    "late",
+    "nightly",
+    "well-built"
+  ],
+  "primary_keywords": [
+    "cocktail bar",
+    "lounge",
+    "happy hour",
+    "private events",
+    "drinks menu"
+  ],
+  "signalpoint_systems": true,
+  "vertical_kind": "restaurant",
+  "site_data_bindings": [
+    {
+      "source": "menu_sections",
+      "target": "sections"
+    },
+    {
+      "source": "menu_items",
+      "target": "menu"
+    }
+  ]
 }

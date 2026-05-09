@@ -1,28 +1,160 @@
 {
   "niche": "bakery",
   "label": "Bakery",
-  "triggers": ["bakery", "custom cake", "wedding cake", "birthday cake", "sourdough bread", "viennoiserie", "croissant", "custom decorating", "pastry shop", "bread baker", "cake decorator", "patisserie"],
-  "default_sitemap": [
-    { "slug": "index",   "role": "hero+daily-fresh+custom-order-cta" },
-    { "slug": "menu",    "role": "case-list+seasonal-menu" },
-    { "slug": "gallery", "role": "custom-cake-portfolio" },
-    { "slug": "book",    "role": "custom-order-form" },
-    { "slug": "about",   "role": "story+baker-card" },
-    { "slug": "contact", "role": "location+hours+phone" }
+  "triggers": [
+    "bakery",
+    "custom cake",
+    "wedding cake",
+    "birthday cake",
+    "sourdough bread",
+    "viennoiserie",
+    "croissant",
+    "custom decorating",
+    "pastry shop",
+    "bread baker",
+    "cake decorator",
+    "patisserie"
   ],
-  "compliance_blocks": ["allergen-disclaimer-footer", "food-safety-license-footer"],
+  "default_sitemap": [
+    {
+      "slug": "index",
+      "role": "hero+daily-fresh+custom-order-cta"
+    },
+    {
+      "slug": "menu",
+      "role": "case-list+seasonal-menu"
+    },
+    {
+      "slug": "gallery",
+      "role": "custom-cake-portfolio"
+    },
+    {
+      "slug": "book",
+      "role": "custom-order-form"
+    },
+    {
+      "slug": "about",
+      "role": "story+baker-card"
+    },
+    {
+      "slug": "contact",
+      "role": "location+hours+phone"
+    }
+  ],
+  "compliance_blocks": [
+    "allergen-disclaimer-footer",
+    "food-safety-license-footer"
+  ],
   "schema_org_primary": "Bakery",
   "voice_template": "warm, craft-focused, seasonal, patient about flour and butter, never breathless",
   "palettes": [
-    { "name": "butter-honey",   "hexes": ["#D4A24A", "#FFFCF3", "#F5E6BF", "#2A1F08"] },
-    { "name": "flour-rose",     "hexes": ["#C97464", "#FFF8F2", "#F4DDD0", "#2B1410"] },
-    { "name": "rye-cream",      "hexes": ["#8B6F47", "#FAF5EC", "#EBDDC2", "#1F1810"] },
-    { "name": "amber-loaf",     "hexes": ["#B8853A", "#FFFAEF", "#FFE9C0", "#241808"] },
-    { "name": "vanilla-bean",   "hexes": ["#7A5230", "#FFFCF6", "#F0E0C5", "#1A100A"] },
-    { "name": "rhubarb-cream",  "hexes": ["#A23E4A", "#FFF7F4", "#F8DBDB", "#240A0E"] }
+    {
+      "name": "butter-honey",
+      "hexes": [
+        "#D4A24A",
+        "#FFFCF3",
+        "#F5E6BF",
+        "#2A1F08"
+      ]
+    },
+    {
+      "name": "flour-rose",
+      "hexes": [
+        "#C97464",
+        "#FFF8F2",
+        "#F4DDD0",
+        "#2B1410"
+      ]
+    },
+    {
+      "name": "rye-cream",
+      "hexes": [
+        "#8B6F47",
+        "#FAF5EC",
+        "#EBDDC2",
+        "#1F1810"
+      ]
+    },
+    {
+      "name": "amber-loaf",
+      "hexes": [
+        "#B8853A",
+        "#FFFAEF",
+        "#FFE9C0",
+        "#241808"
+      ]
+    },
+    {
+      "name": "vanilla-bean",
+      "hexes": [
+        "#7A5230",
+        "#FFFCF6",
+        "#F0E0C5",
+        "#1A100A"
+      ]
+    },
+    {
+      "name": "rhubarb-cream",
+      "hexes": [
+        "#A23E4A",
+        "#FFF7F4",
+        "#F8DBDB",
+        "#240A0E"
+      ]
+    }
   ],
-  "section_library": ["hero", "page-hero", "daily-fresh-list", "menu-preview", "menu-grid", "case-list", "custom-cake-gallery", "custom-order-form", "wedding-cake-tier", "seasonal-strip", "baker-card", "story-strip", "ingredient-source", "hours-strip", "address-card", "phone-cta", "press-quotes", "testimonial-strip", "footer-allergen", "footer"],
+  "section_library": [
+    "hero",
+    "page-hero",
+    "daily-fresh-list",
+    "menu-preview",
+    "menu-grid",
+    "case-list",
+    "custom-cake-gallery",
+    "custom-order-form",
+    "wedding-cake-tier",
+    "seasonal-strip",
+    "baker-card",
+    "story-strip",
+    "ingredient-source",
+    "hours-strip",
+    "address-card",
+    "phone-cta",
+    "press-quotes",
+    "testimonial-strip",
+    "footer-allergen",
+    "footer"
+  ],
   "image_directives": "warm bakery photography. Hands shaping dough, scored sourdough cooling on wire racks, laminated croissant cross-sections, frosted layer cakes on marble. Tungsten and morning window light, flour dust visible. Tight crops on crumb structure. No glossy stock-pastry plates, no bright magazine over-saturation.",
-  "voice_pet_words": ["scratch", "laminated", "scored", "crumb", "long-fermented", "small-batch", "from-scratch", "seasonal", "decorated", "tiered"],
-  "primary_keywords": ["bakery", "custom cake", "wedding cake", "sourdough", "pastry"]
+  "voice_pet_words": [
+    "scratch",
+    "laminated",
+    "scored",
+    "crumb",
+    "long-fermented",
+    "small-batch",
+    "from-scratch",
+    "seasonal",
+    "decorated",
+    "tiered"
+  ],
+  "primary_keywords": [
+    "bakery",
+    "custom cake",
+    "wedding cake",
+    "sourdough",
+    "pastry"
+  ],
+  "signalpoint_systems": true,
+  "vertical_kind": "restaurant",
+  "site_data_bindings": [
+    {
+      "source": "menu_sections",
+      "target": "sections"
+    },
+    {
+      "source": "menu_items",
+      "target": "menu"
+    }
+  ]
 }

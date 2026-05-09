@@ -1,28 +1,156 @@
 {
   "niche": "motorcycle-dealer",
   "label": "Motorcycle Dealer & Service",
-  "triggers": ["motorcycle dealer", "used motorcycles", "motorcycle service", "motorcycle parts and accessories", "honda motorcycle dealer", "yamaha dealer", "suzuki dealer", "kawasaki dealer", "msf rider course", "motorcycle financing", "helmet shop", "motorcycle gear", "powersports dealer"],
-  "default_sitemap": [
-    { "slug": "index",    "role": "hero+inventory+oem-grid" },
-    { "slug": "listings", "role": "new-and-used-bike-grid" },
-    { "slug": "services", "role": "service-dept+gear+rider-course" },
-    { "slug": "about",    "role": "dealership-story+oem-relationships" },
-    { "slug": "contact",  "role": "test-ride-cta+location" },
-    { "slug": "faq",      "role": "financing-and-licensing-questions" }
+  "triggers": [
+    "motorcycle dealer",
+    "used motorcycles",
+    "motorcycle service",
+    "motorcycle parts and accessories",
+    "honda motorcycle dealer",
+    "yamaha dealer",
+    "suzuki dealer",
+    "kawasaki dealer",
+    "msf rider course",
+    "motorcycle financing",
+    "helmet shop",
+    "motorcycle gear",
+    "powersports dealer"
   ],
-  "compliance_blocks": ["dealer-license-footer", "financing-disclosure", "msf-rider-course-disclaimer", "ada-accessibility-statement"],
+  "default_sitemap": [
+    {
+      "slug": "index",
+      "role": "hero+inventory+oem-grid"
+    },
+    {
+      "slug": "listings",
+      "role": "new-and-used-bike-grid"
+    },
+    {
+      "slug": "services",
+      "role": "service-dept+gear+rider-course"
+    },
+    {
+      "slug": "about",
+      "role": "dealership-story+oem-relationships"
+    },
+    {
+      "slug": "contact",
+      "role": "test-ride-cta+location"
+    },
+    {
+      "slug": "faq",
+      "role": "financing-and-licensing-questions"
+    }
+  ],
+  "compliance_blocks": [
+    "dealer-license-footer",
+    "financing-disclosure",
+    "msf-rider-course-disclaimer",
+    "ada-accessibility-statement"
+  ],
   "schema_org_primary": "AutoDealer",
   "voice_template": "rider-to-rider, OEM-fluent, gear-knowledgeable, safety-positive without sermonizing",
   "palettes": [
-    { "name": "vintage-red-black",    "hexes": ["#B0211C", "#1A1A1A", "#F1EDE6", "#0A0A0A"] },
-    { "name": "track-yellow-onyx",    "hexes": ["#FFD400", "#191A1F", "#F4F2EE", "#000000"] },
-    { "name": "cafe-racer-cream",     "hexes": ["#1F2226", "#E0CFA9", "#F0EBE0", "#0A0C0F"] },
-    { "name": "adventure-orange",     "hexes": ["#E36B1F", "#1F2A2E", "#F0E9DD", "#08110F"] },
-    { "name": "chrome-cobalt",        "hexes": ["#0E3D6E", "#C0C5CC", "#F0F2F4", "#040E1B"] },
-    { "name": "leather-tobacco",      "hexes": ["#5C3A1E", "#D2A86A", "#F0E6D4", "#150A04"] }
+    {
+      "name": "vintage-red-black",
+      "hexes": [
+        "#B0211C",
+        "#1A1A1A",
+        "#F1EDE6",
+        "#0A0A0A"
+      ]
+    },
+    {
+      "name": "track-yellow-onyx",
+      "hexes": [
+        "#FFD400",
+        "#191A1F",
+        "#F4F2EE",
+        "#000000"
+      ]
+    },
+    {
+      "name": "cafe-racer-cream",
+      "hexes": [
+        "#1F2226",
+        "#E0CFA9",
+        "#F0EBE0",
+        "#0A0C0F"
+      ]
+    },
+    {
+      "name": "adventure-orange",
+      "hexes": [
+        "#E36B1F",
+        "#1F2A2E",
+        "#F0E9DD",
+        "#08110F"
+      ]
+    },
+    {
+      "name": "chrome-cobalt",
+      "hexes": [
+        "#0E3D6E",
+        "#C0C5CC",
+        "#F0F2F4",
+        "#040E1B"
+      ]
+    },
+    {
+      "name": "leather-tobacco",
+      "hexes": [
+        "#5C3A1E",
+        "#D2A86A",
+        "#F0E6D4",
+        "#150A04"
+      ]
+    }
   ],
-  "section_library": ["hero", "page-hero", "inventory-search-bar", "bike-card", "featured-bike-grid", "oem-logo-grid", "service-dept-strip", "gear-and-accessory-grid", "rider-course-callout", "financing-calculator", "test-ride-cta", "story-strip", "review-strip", "testimonial-card", "address-card", "hours-strip", "faq-accordion", "footer"],
+  "section_library": [
+    "hero",
+    "page-hero",
+    "inventory-search-bar",
+    "bike-card",
+    "featured-bike-grid",
+    "oem-logo-grid",
+    "service-dept-strip",
+    "gear-and-accessory-grid",
+    "rider-course-callout",
+    "financing-calculator",
+    "test-ride-cta",
+    "story-strip",
+    "review-strip",
+    "testimonial-card",
+    "address-card",
+    "hours-strip",
+    "faq-accordion",
+    "footer"
+  ],
   "image_directives": "real motorcycle showroom photography. Bikes lined up under track-style lighting, riders trying on helmets at the gear wall, service tech adjusting a chain on a lift. Show OEM badges (Honda, Yamaha, Suzuki, Kawasaki) where natural. Detail shots of grips, fuel tanks, exhausts. Avoid leather-vest cliche. Real customers throwing a leg over a bike for the first time. Open garage door with bikes parked outside is a strong hero shot.",
-  "voice_pet_words": ["test ride", "OEM", "MSF course", "gear up", "service interval", "displacement", "trim level", "factory warranty", "rider"],
-  "primary_keywords": ["motorcycle dealer", "used motorcycles", "motorcycle service", "powersports dealer", "MSF rider course"]
+  "voice_pet_words": [
+    "test ride",
+    "OEM",
+    "MSF course",
+    "gear up",
+    "service interval",
+    "displacement",
+    "trim level",
+    "factory warranty",
+    "rider"
+  ],
+  "primary_keywords": [
+    "motorcycle dealer",
+    "used motorcycles",
+    "motorcycle service",
+    "powersports dealer",
+    "MSF rider course"
+  ],
+  "signalpoint_systems": true,
+  "vertical_kind": "auto-dealer",
+  "site_data_bindings": [
+    {
+      "source": "vehicles",
+      "target": "inventory"
+    }
+  ]
 }

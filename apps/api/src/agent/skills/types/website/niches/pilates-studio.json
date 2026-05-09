@@ -1,28 +1,152 @@
 {
   "niche": "pilates-studio",
   "label": "Pilates Studio",
-  "triggers": ["pilates studio", "reformer pilates", "mat pilates", "classical pilates", "contemporary pilates", "tower pilates", "cadillac pilates", "private pilates", "duet pilates", "group reformer", "pilates classes", "pre/postnatal pilates"],
-  "default_sitemap": [
-    { "slug": "index",    "role": "hero+method+intro-package-cta" },
-    { "slug": "programs", "role": "reformer+mat+private-tracks" },
-    { "slug": "schedule", "role": "small-group-timetable" },
-    { "slug": "team",     "role": "instructor-credentials" },
-    { "slug": "pricing",  "role": "intro-pack+packages+memberships" },
-    { "slug": "contact",  "role": "address+hours+booking-form" }
+  "triggers": [
+    "pilates studio",
+    "reformer pilates",
+    "mat pilates",
+    "classical pilates",
+    "contemporary pilates",
+    "tower pilates",
+    "cadillac pilates",
+    "private pilates",
+    "duet pilates",
+    "group reformer",
+    "pilates classes",
+    "pre/postnatal pilates"
   ],
-  "compliance_blocks": ["liability-waiver-link", "medical-disclaimer-footer", "ada-accessibility-statement", "pre-existing-injury-intake-policy"],
+  "default_sitemap": [
+    {
+      "slug": "index",
+      "role": "hero+method+intro-package-cta"
+    },
+    {
+      "slug": "programs",
+      "role": "reformer+mat+private-tracks"
+    },
+    {
+      "slug": "schedule",
+      "role": "small-group-timetable"
+    },
+    {
+      "slug": "team",
+      "role": "instructor-credentials"
+    },
+    {
+      "slug": "pricing",
+      "role": "intro-pack+packages+memberships"
+    },
+    {
+      "slug": "contact",
+      "role": "address+hours+booking-form"
+    }
+  ],
+  "compliance_blocks": [
+    "liability-waiver-link",
+    "medical-disclaimer-footer",
+    "ada-accessibility-statement",
+    "pre-existing-injury-intake-policy"
+  ],
   "schema_org_primary": "SportsClub",
   "voice_template": "precise, alignment-focused, quietly confident, clinical without being cold",
   "palettes": [
-    { "name": "blush-charcoal",  "hexes": ["#D4A799", "#FBF6F2", "#E8D7CD", "#1F1A18"] },
-    { "name": "cream-graphite",  "hexes": ["#3D3A37", "#F7F2EA", "#E5DACB", "#1A1715"] },
-    { "name": "pearl-bone",      "hexes": ["#C8B9A5", "#FAF7F1", "#EAE0D0", "#22201D"] },
-    { "name": "powder-slate",    "hexes": ["#6E7B86", "#F4F4F2", "#D8DCDC", "#1A1F25"] },
-    { "name": "rose-taupe",      "hexes": ["#A77F71", "#F5EFE9", "#E1CCBE", "#241914"] },
-    { "name": "dune-ink",        "hexes": ["#9C8A6F", "#FBF7EE", "#E5D8B9", "#1E1B14"] }
+    {
+      "name": "blush-charcoal",
+      "hexes": [
+        "#D4A799",
+        "#FBF6F2",
+        "#E8D7CD",
+        "#1F1A18"
+      ]
+    },
+    {
+      "name": "cream-graphite",
+      "hexes": [
+        "#3D3A37",
+        "#F7F2EA",
+        "#E5DACB",
+        "#1A1715"
+      ]
+    },
+    {
+      "name": "pearl-bone",
+      "hexes": [
+        "#C8B9A5",
+        "#FAF7F1",
+        "#EAE0D0",
+        "#22201D"
+      ]
+    },
+    {
+      "name": "powder-slate",
+      "hexes": [
+        "#6E7B86",
+        "#F4F4F2",
+        "#D8DCDC",
+        "#1A1F25"
+      ]
+    },
+    {
+      "name": "rose-taupe",
+      "hexes": [
+        "#A77F71",
+        "#F5EFE9",
+        "#E1CCBE",
+        "#241914"
+      ]
+    },
+    {
+      "name": "dune-ink",
+      "hexes": [
+        "#9C8A6F",
+        "#FBF7EE",
+        "#E5D8B9",
+        "#1E1B14"
+      ]
+    }
   ],
-  "section_library": ["hero", "page-hero", "intro-package-strip", "method-explainer", "track-grid", "schedule-table", "instructor-card", "credential-strip", "pricing-tiers", "intake-form", "studio-gallery", "faq-accordion", "address-card", "hours-strip", "waiver-link", "footer"],
+  "section_library": [
+    "hero",
+    "page-hero",
+    "intro-package-strip",
+    "method-explainer",
+    "track-grid",
+    "schedule-table",
+    "instructor-card",
+    "credential-strip",
+    "pricing-tiers",
+    "intake-form",
+    "studio-gallery",
+    "faq-accordion",
+    "address-card",
+    "hours-strip",
+    "waiver-link",
+    "footer"
+  ],
   "image_directives": "clean editorial pilates photography. Reformers on light wood floors, springs and straps in frame, instructor cueing a footbar setup. Small classes, six clients max, real practitioners in muted-tone activewear. Avoid bright commercial-gym lighting and fitness-influencer angles. No backbend hero shots. Show the carriage moving, the foot in the strap, the hand on the rib. Daylight or warm tungsten, never neon.",
-  "voice_pet_words": ["alignment", "spring", "carriage", "control", "centering", "footbar", "intake", "private", "small group"],
-  "primary_keywords": ["pilates studio", "reformer pilates", "mat pilates", "private pilates"]
+  "voice_pet_words": [
+    "alignment",
+    "spring",
+    "carriage",
+    "control",
+    "centering",
+    "footbar",
+    "intake",
+    "private",
+    "small group"
+  ],
+  "primary_keywords": [
+    "pilates studio",
+    "reformer pilates",
+    "mat pilates",
+    "private pilates"
+  ],
+  "signalpoint_systems": true,
+  "vertical_kind": "gym",
+  "site_data_bindings": [
+    {
+      "source": "class_schedule",
+      "target": "schedule"
+    }
+  ]
 }

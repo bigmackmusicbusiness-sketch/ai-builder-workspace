@@ -1,28 +1,159 @@
 {
   "niche": "ice-cream-shop",
   "label": "Ice Cream / Frozen Yogurt",
-  "triggers": ["ice cream", "frozen yogurt", "soft serve", "hand-dipped", "ice cream cake", "gelato shop", "scoop shop", "froyo", "sundae bar", "seasonal flavor", "kids birthday", "creamery"],
-  "default_sitemap": [
-    { "slug": "index",   "role": "hero+flavor-of-week+visit" },
-    { "slug": "menu",    "role": "flavor-list+rotating" },
-    { "slug": "gallery", "role": "cake-portfolio" },
-    { "slug": "book",    "role": "custom-cake-order-form" },
-    { "slug": "about",   "role": "family-story" },
-    { "slug": "contact", "role": "location+hours+phone" }
+  "triggers": [
+    "ice cream",
+    "frozen yogurt",
+    "soft serve",
+    "hand-dipped",
+    "ice cream cake",
+    "gelato shop",
+    "scoop shop",
+    "froyo",
+    "sundae bar",
+    "seasonal flavor",
+    "kids birthday",
+    "creamery"
   ],
-  "compliance_blocks": ["allergen-disclaimer-footer", "food-safety-license-footer"],
+  "default_sitemap": [
+    {
+      "slug": "index",
+      "role": "hero+flavor-of-week+visit"
+    },
+    {
+      "slug": "menu",
+      "role": "flavor-list+rotating"
+    },
+    {
+      "slug": "gallery",
+      "role": "cake-portfolio"
+    },
+    {
+      "slug": "book",
+      "role": "custom-cake-order-form"
+    },
+    {
+      "slug": "about",
+      "role": "family-story"
+    },
+    {
+      "slug": "contact",
+      "role": "location+hours+phone"
+    }
+  ],
+  "compliance_blocks": [
+    "allergen-disclaimer-footer",
+    "food-safety-license-footer"
+  ],
   "schema_org_primary": "FoodEstablishment",
   "voice_template": "cheerful, family-run, sensory-specific about flavor, never childish",
   "palettes": [
-    { "name": "strawberry-cream",  "hexes": ["#E26A78", "#FFFAF6", "#FBDDD8", "#2A0E12"] },
-    { "name": "mint-pistachio",    "hexes": ["#7FB58E", "#FBFBF5", "#DDEAD2", "#152019"] },
-    { "name": "honey-malt",        "hexes": ["#D49B3A", "#FFFCF1", "#FFE7BC", "#241808"] },
-    { "name": "blueberry-cream",   "hexes": ["#4F5FA8", "#FBFAFB", "#D9DCEE", "#0E1424"] },
-    { "name": "rose-vanilla",      "hexes": ["#C76A85", "#FFF8F8", "#F8DCE2", "#240E18"] },
-    { "name": "chocolate-cone",    "hexes": ["#5C2E1F", "#FFF7EE", "#F0DCC2", "#180A04"] }
+    {
+      "name": "strawberry-cream",
+      "hexes": [
+        "#E26A78",
+        "#FFFAF6",
+        "#FBDDD8",
+        "#2A0E12"
+      ]
+    },
+    {
+      "name": "mint-pistachio",
+      "hexes": [
+        "#7FB58E",
+        "#FBFBF5",
+        "#DDEAD2",
+        "#152019"
+      ]
+    },
+    {
+      "name": "honey-malt",
+      "hexes": [
+        "#D49B3A",
+        "#FFFCF1",
+        "#FFE7BC",
+        "#241808"
+      ]
+    },
+    {
+      "name": "blueberry-cream",
+      "hexes": [
+        "#4F5FA8",
+        "#FBFAFB",
+        "#D9DCEE",
+        "#0E1424"
+      ]
+    },
+    {
+      "name": "rose-vanilla",
+      "hexes": [
+        "#C76A85",
+        "#FFF8F8",
+        "#F8DCE2",
+        "#240E18"
+      ]
+    },
+    {
+      "name": "chocolate-cone",
+      "hexes": [
+        "#5C2E1F",
+        "#FFF7EE",
+        "#F0DCC2",
+        "#180A04"
+      ]
+    }
   ],
-  "section_library": ["hero", "page-hero", "flavor-of-week", "flavor-list", "rotating-strip", "soft-serve-card", "hand-dipped-card", "cake-gallery", "custom-cake-order-form", "kid-party-card", "family-story-strip", "ingredient-source", "hours-strip", "address-card", "phone-cta", "testimonial-strip", "press-quotes", "footer-allergen", "footer"],
+  "section_library": [
+    "hero",
+    "page-hero",
+    "flavor-of-week",
+    "flavor-list",
+    "rotating-strip",
+    "soft-serve-card",
+    "hand-dipped-card",
+    "cake-gallery",
+    "custom-cake-order-form",
+    "kid-party-card",
+    "family-story-strip",
+    "ingredient-source",
+    "hours-strip",
+    "address-card",
+    "phone-cta",
+    "testimonial-strip",
+    "press-quotes",
+    "footer-allergen",
+    "footer"
+  ],
   "image_directives": "joyful scoop-shop photography. A double scoop on a sugar cone catching the light, a hand-piped birthday cake on a marble counter, kids leaning over the case picking flavors, the freezer case with labeled tubs. Daylight, warm pastels, condensation on glass. No glossy advertising shots, no melting-disaster gags, no overly saturated kid-cereal palette.",
-  "voice_pet_words": ["scoop", "small-batch", "hand-dipped", "rotating", "scratch", "house-churned", "seasonal", "family-run", "double", "cone"],
-  "primary_keywords": ["ice cream", "frozen yogurt", "soft serve", "ice cream cake", "scoop shop"]
+  "voice_pet_words": [
+    "scoop",
+    "small-batch",
+    "hand-dipped",
+    "rotating",
+    "scratch",
+    "house-churned",
+    "seasonal",
+    "family-run",
+    "double",
+    "cone"
+  ],
+  "primary_keywords": [
+    "ice cream",
+    "frozen yogurt",
+    "soft serve",
+    "ice cream cake",
+    "scoop shop"
+  ],
+  "signalpoint_systems": true,
+  "vertical_kind": "restaurant",
+  "site_data_bindings": [
+    {
+      "source": "menu_sections",
+      "target": "sections"
+    },
+    {
+      "source": "menu_items",
+      "target": "menu"
+    }
+  ]
 }

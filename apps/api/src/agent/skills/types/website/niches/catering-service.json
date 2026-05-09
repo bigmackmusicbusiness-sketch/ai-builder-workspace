@@ -1,28 +1,161 @@
 {
   "niche": "catering-service",
   "label": "Catering Service",
-  "triggers": ["catering", "event catering", "corporate catering", "wedding catering", "drop-off catering", "private chef", "office lunch", "buffet catering", "plated dinner service", "caterer", "boxed lunches", "off-site catering"],
-  "default_sitemap": [
-    { "slug": "index",    "role": "hero+event-tiles+quote-cta" },
-    { "slug": "services", "role": "tier-grid+packages" },
-    { "slug": "menu",     "role": "menu-pdf-list" },
-    { "slug": "gallery",  "role": "event-photo-grid" },
-    { "slug": "book",     "role": "quote-request-form" },
-    { "slug": "contact",  "role": "phone+email+coverage-area" }
+  "triggers": [
+    "catering",
+    "event catering",
+    "corporate catering",
+    "wedding catering",
+    "drop-off catering",
+    "private chef",
+    "office lunch",
+    "buffet catering",
+    "plated dinner service",
+    "caterer",
+    "boxed lunches",
+    "off-site catering"
   ],
-  "compliance_blocks": ["allergen-disclaimer-footer", "food-safety-license-footer", "liability-insurance-footer"],
+  "default_sitemap": [
+    {
+      "slug": "index",
+      "role": "hero+event-tiles+quote-cta"
+    },
+    {
+      "slug": "services",
+      "role": "tier-grid+packages"
+    },
+    {
+      "slug": "menu",
+      "role": "menu-pdf-list"
+    },
+    {
+      "slug": "gallery",
+      "role": "event-photo-grid"
+    },
+    {
+      "slug": "book",
+      "role": "quote-request-form"
+    },
+    {
+      "slug": "contact",
+      "role": "phone+email+coverage-area"
+    }
+  ],
+  "compliance_blocks": [
+    "allergen-disclaimer-footer",
+    "food-safety-license-footer",
+    "liability-insurance-footer"
+  ],
   "schema_org_primary": "FoodEstablishment",
   "voice_template": "calm, organized, hospitality-trained, confident about logistics and food",
   "palettes": [
-    { "name": "ivory-sage",      "hexes": ["#6B8062", "#FBFAF4", "#E2E8DA", "#1B2118"] },
-    { "name": "champagne-clay",  "hexes": ["#B58A4A", "#FBF6EC", "#F0DEC4", "#241A0C"] },
-    { "name": "bordeaux-linen",  "hexes": ["#7A2D38", "#FAF6F2", "#EFD9DA", "#1F0810"] },
-    { "name": "olive-cream",     "hexes": ["#7B8C42", "#FBF9F0", "#E8E5C8", "#1F2410"] },
-    { "name": "copper-table",    "hexes": ["#A86B3A", "#FCF8F2", "#F2DDC0", "#22140A"] },
-    { "name": "navy-pearl",      "hexes": ["#2D3F5C", "#FAFAF6", "#DEE2EB", "#0E1422"] }
+    {
+      "name": "ivory-sage",
+      "hexes": [
+        "#6B8062",
+        "#FBFAF4",
+        "#E2E8DA",
+        "#1B2118"
+      ]
+    },
+    {
+      "name": "champagne-clay",
+      "hexes": [
+        "#B58A4A",
+        "#FBF6EC",
+        "#F0DEC4",
+        "#241A0C"
+      ]
+    },
+    {
+      "name": "bordeaux-linen",
+      "hexes": [
+        "#7A2D38",
+        "#FAF6F2",
+        "#EFD9DA",
+        "#1F0810"
+      ]
+    },
+    {
+      "name": "olive-cream",
+      "hexes": [
+        "#7B8C42",
+        "#FBF9F0",
+        "#E8E5C8",
+        "#1F2410"
+      ]
+    },
+    {
+      "name": "copper-table",
+      "hexes": [
+        "#A86B3A",
+        "#FCF8F2",
+        "#F2DDC0",
+        "#22140A"
+      ]
+    },
+    {
+      "name": "navy-pearl",
+      "hexes": [
+        "#2D3F5C",
+        "#FAFAF6",
+        "#DEE2EB",
+        "#0E1422"
+      ]
+    }
   ],
-  "section_library": ["hero", "page-hero", "event-type-tiles", "tier-grid", "package-card", "menu-pdf-list", "menu-grid", "gallery-grid", "event-photo-card", "quote-request-form", "coverage-map", "lead-time-note", "testimonial-strip", "press-quotes", "story-strip", "team-grid", "phone-cta", "footer-allergen", "footer-insurance", "footer"],
+  "section_library": [
+    "hero",
+    "page-hero",
+    "event-type-tiles",
+    "tier-grid",
+    "package-card",
+    "menu-pdf-list",
+    "menu-grid",
+    "gallery-grid",
+    "event-photo-card",
+    "quote-request-form",
+    "coverage-map",
+    "lead-time-note",
+    "testimonial-strip",
+    "press-quotes",
+    "story-strip",
+    "team-grid",
+    "phone-cta",
+    "footer-allergen",
+    "footer-insurance",
+    "footer"
+  ],
   "image_directives": "calm catering documentary work. Crews plating before service, buffet tables under string lights, boxed lunches lined on a counter, full-service plated dinners mid-pour. Real venues, real guests, no obvious models. Soft mixed lighting, hands and uniforms in frame. No studio-stock food trays, no over-glossed wedding magazine look.",
-  "voice_pet_words": ["plated", "drop-off", "full-service", "head-count", "lead-time", "from-scratch", "off-site", "tasting", "logistics", "house-made"],
-  "primary_keywords": ["catering", "event catering", "wedding catering", "corporate lunch", "drop-off"]
+  "voice_pet_words": [
+    "plated",
+    "drop-off",
+    "full-service",
+    "head-count",
+    "lead-time",
+    "from-scratch",
+    "off-site",
+    "tasting",
+    "logistics",
+    "house-made"
+  ],
+  "primary_keywords": [
+    "catering",
+    "event catering",
+    "wedding catering",
+    "corporate lunch",
+    "drop-off"
+  ],
+  "signalpoint_systems": true,
+  "vertical_kind": "restaurant",
+  "site_data_bindings": [
+    {
+      "source": "menu_sections",
+      "target": "sections"
+    },
+    {
+      "source": "menu_items",
+      "target": "menu"
+    }
+  ]
 }

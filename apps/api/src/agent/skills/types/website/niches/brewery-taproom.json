@@ -1,28 +1,163 @@
 {
   "niche": "brewery-taproom",
   "label": "Brewery & Taproom",
-  "triggers": ["brewery", "taproom", "craft beer", "tasting flight", "growler", "crowler fill", "ipa", "stout", "lager", "brewhouse", "beer release", "on-tap list"],
-  "default_sitemap": [
-    { "slug": "index",    "role": "hero+on-tap+events" },
-    { "slug": "menu",     "role": "tap-list+rotating" },
-    { "slug": "schedule", "role": "events-calendar" },
-    { "slug": "visit",    "role": "location+hours+age-policy" },
-    { "slug": "about",    "role": "story+brewer-card" },
-    { "slug": "contact",  "role": "phone+email+private-events" }
+  "triggers": [
+    "brewery",
+    "taproom",
+    "craft beer",
+    "tasting flight",
+    "growler",
+    "crowler fill",
+    "ipa",
+    "stout",
+    "lager",
+    "brewhouse",
+    "beer release",
+    "on-tap list"
   ],
-  "compliance_blocks": ["alcohol-license-footer", "age-21-disclaimer", "drink-responsibly-footer"],
+  "default_sitemap": [
+    {
+      "slug": "index",
+      "role": "hero+on-tap+events"
+    },
+    {
+      "slug": "menu",
+      "role": "tap-list+rotating"
+    },
+    {
+      "slug": "schedule",
+      "role": "events-calendar"
+    },
+    {
+      "slug": "visit",
+      "role": "location+hours+age-policy"
+    },
+    {
+      "slug": "about",
+      "role": "story+brewer-card"
+    },
+    {
+      "slug": "contact",
+      "role": "phone+email+private-events"
+    }
+  ],
+  "compliance_blocks": [
+    "alcohol-license-footer",
+    "age-21-disclaimer",
+    "drink-responsibly-footer"
+  ],
   "schema_org_primary": "Brewery",
   "voice_template": "grounded, craft-confident, regional, friendly without trying too hard",
   "palettes": [
-    { "name": "jade-copper",  "hexes": ["#2F5E4C", "#FAF6EE", "#E2DDC8", "#0E1F18"] },
-    { "name": "amber-hop",    "hexes": ["#B5872A", "#1E1B17", "#332E27", "#F8E8C0"] },
-    { "name": "stout-cream",  "hexes": ["#3A2218", "#FAF1E2", "#E8D4B8", "#120A06"] },
-    { "name": "pine-wheat",   "hexes": ["#3D5C3A", "#F8F4E6", "#DCD9BC", "#16201A"] },
-    { "name": "rust-malt",    "hexes": ["#A14A2A", "#FBF6EC", "#F0DDC4", "#1F0E08"] },
-    { "name": "slate-tap",    "hexes": ["#445662", "#F4F1EA", "#D6D2C7", "#0F1418"] }
+    {
+      "name": "jade-copper",
+      "hexes": [
+        "#2F5E4C",
+        "#FAF6EE",
+        "#E2DDC8",
+        "#0E1F18"
+      ]
+    },
+    {
+      "name": "amber-hop",
+      "hexes": [
+        "#B5872A",
+        "#1E1B17",
+        "#332E27",
+        "#F8E8C0"
+      ]
+    },
+    {
+      "name": "stout-cream",
+      "hexes": [
+        "#3A2218",
+        "#FAF1E2",
+        "#E8D4B8",
+        "#120A06"
+      ]
+    },
+    {
+      "name": "pine-wheat",
+      "hexes": [
+        "#3D5C3A",
+        "#F8F4E6",
+        "#DCD9BC",
+        "#16201A"
+      ]
+    },
+    {
+      "name": "rust-malt",
+      "hexes": [
+        "#A14A2A",
+        "#FBF6EC",
+        "#F0DDC4",
+        "#1F0E08"
+      ]
+    },
+    {
+      "name": "slate-tap",
+      "hexes": [
+        "#445662",
+        "#F4F1EA",
+        "#D6D2C7",
+        "#0F1418"
+      ]
+    }
   ],
-  "section_library": ["hero", "page-hero", "tap-list", "tap-row", "rotating-strip", "release-card", "tasting-flight-card", "growler-fill-card", "events-calendar", "event-card", "food-truck-visiting", "brewer-card", "story-strip", "merch-strip", "hours-strip", "address-card", "age-policy-banner", "private-event-form", "footer-alcohol", "footer-age-21", "footer-drink-responsibly", "footer"],
+  "section_library": [
+    "hero",
+    "page-hero",
+    "tap-list",
+    "tap-row",
+    "rotating-strip",
+    "release-card",
+    "tasting-flight-card",
+    "growler-fill-card",
+    "events-calendar",
+    "event-card",
+    "food-truck-visiting",
+    "brewer-card",
+    "story-strip",
+    "merch-strip",
+    "hours-strip",
+    "address-card",
+    "age-policy-banner",
+    "private-event-form",
+    "footer-alcohol",
+    "footer-age-21",
+    "footer-drink-responsibly",
+    "footer"
+  ],
   "image_directives": "honest brewery work. Shiny fermenters and grain bags in the brewhouse, tap handles in a row, hands pulling a flight of four glasses, taproom interior in late-afternoon window light. Steel, wood, and condensation. No hyper-saturated beer-glamour shots, no fake foam, no stock cheers-clinking.",
-  "voice_pet_words": ["batch", "fermentation", "on tap", "rotating", "release", "hop-forward", "barrel-aged", "house", "flight", "pour"],
-  "primary_keywords": ["brewery", "taproom", "craft beer", "tap list", "tasting flight"]
+  "voice_pet_words": [
+    "batch",
+    "fermentation",
+    "on tap",
+    "rotating",
+    "release",
+    "hop-forward",
+    "barrel-aged",
+    "house",
+    "flight",
+    "pour"
+  ],
+  "primary_keywords": [
+    "brewery",
+    "taproom",
+    "craft beer",
+    "tap list",
+    "tasting flight"
+  ],
+  "signalpoint_systems": true,
+  "vertical_kind": "restaurant",
+  "site_data_bindings": [
+    {
+      "source": "menu_sections",
+      "target": "sections"
+    },
+    {
+      "source": "menu_items",
+      "target": "menu"
+    }
+  ]
 }

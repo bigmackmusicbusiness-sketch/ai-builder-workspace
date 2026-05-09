@@ -1,28 +1,155 @@
 {
   "niche": "crossfit-box",
   "label": "CrossFit Box",
-  "triggers": ["crossfit", "crossfit box", "wod", "amrap", "emom", "metcon", "olympic lifting", "barbell club", "functional fitness", "open gym", "rx workout", "crossfit affiliate", "box workout"],
-  "default_sitemap": [
-    { "slug": "index",    "role": "hero+wod-of-day+free-intro-cta" },
-    { "slug": "programs", "role": "fundamentals+group+barbell-club+kids" },
-    { "slug": "schedule", "role": "class-blocks+open-gym" },
-    { "slug": "team",     "role": "coaches+certs" },
-    { "slug": "pricing",  "role": "membership-tiers+drop-in" },
-    { "slug": "contact",  "role": "address+hours+free-intro-form" }
+  "triggers": [
+    "crossfit",
+    "crossfit box",
+    "wod",
+    "amrap",
+    "emom",
+    "metcon",
+    "olympic lifting",
+    "barbell club",
+    "functional fitness",
+    "open gym",
+    "rx workout",
+    "crossfit affiliate",
+    "box workout"
   ],
-  "compliance_blocks": ["liability-waiver-link", "medical-clearance-disclaimer", "ada-accessibility-statement", "scaling-options-policy"],
+  "default_sitemap": [
+    {
+      "slug": "index",
+      "role": "hero+wod-of-day+free-intro-cta"
+    },
+    {
+      "slug": "programs",
+      "role": "fundamentals+group+barbell-club+kids"
+    },
+    {
+      "slug": "schedule",
+      "role": "class-blocks+open-gym"
+    },
+    {
+      "slug": "team",
+      "role": "coaches+certs"
+    },
+    {
+      "slug": "pricing",
+      "role": "membership-tiers+drop-in"
+    },
+    {
+      "slug": "contact",
+      "role": "address+hours+free-intro-form"
+    }
+  ],
+  "compliance_blocks": [
+    "liability-waiver-link",
+    "medical-clearance-disclaimer",
+    "ada-accessibility-statement",
+    "scaling-options-policy"
+  ],
   "schema_org_primary": "ExerciseGym",
   "voice_template": "blue-collar, community-first, scalable for everyone, results talk louder than slogans",
   "palettes": [
-    { "name": "rust-iron",        "hexes": ["#A4452B", "#141414", "#2A2A2A", "#F2EEE8"] },
-    { "name": "concrete-lime",    "hexes": ["#C8D63A", "#1B1B1B", "#3A3A3A", "#EFEFEC"] },
-    { "name": "chalk-coal",       "hexes": ["#D6CFBE", "#0F0F10", "#1F1F22", "#E8E2D2"] },
-    { "name": "barbell-blue",     "hexes": ["#2C5675", "#0E1216", "#1F2A33", "#EDEFF2"] },
-    { "name": "brick-bone",       "hexes": ["#8B3A2E", "#1A1715", "#2D2723", "#EFE9DD"] },
-    { "name": "black-amber",      "hexes": ["#D38826", "#0B0B0C", "#222224", "#F0EBDF"] }
+    {
+      "name": "rust-iron",
+      "hexes": [
+        "#A4452B",
+        "#141414",
+        "#2A2A2A",
+        "#F2EEE8"
+      ]
+    },
+    {
+      "name": "concrete-lime",
+      "hexes": [
+        "#C8D63A",
+        "#1B1B1B",
+        "#3A3A3A",
+        "#EFEFEC"
+      ]
+    },
+    {
+      "name": "chalk-coal",
+      "hexes": [
+        "#D6CFBE",
+        "#0F0F10",
+        "#1F1F22",
+        "#E8E2D2"
+      ]
+    },
+    {
+      "name": "barbell-blue",
+      "hexes": [
+        "#2C5675",
+        "#0E1216",
+        "#1F2A33",
+        "#EDEFF2"
+      ]
+    },
+    {
+      "name": "brick-bone",
+      "hexes": [
+        "#8B3A2E",
+        "#1A1715",
+        "#2D2723",
+        "#EFE9DD"
+      ]
+    },
+    {
+      "name": "black-amber",
+      "hexes": [
+        "#D38826",
+        "#0B0B0C",
+        "#222224",
+        "#F0EBDF"
+      ]
+    }
   ],
-  "section_library": ["hero", "page-hero", "wod-strip", "program-grid", "class-card", "schedule-table", "coach-card", "cert-strip", "pr-board", "free-intro-cta", "pricing-tiers", "kids-program-strip", "waiver-link", "address-card", "hours-strip", "map", "footer"],
+  "section_library": [
+    "hero",
+    "page-hero",
+    "wod-strip",
+    "program-grid",
+    "class-card",
+    "schedule-table",
+    "coach-card",
+    "cert-strip",
+    "pr-board",
+    "free-intro-cta",
+    "pricing-tiers",
+    "kids-program-strip",
+    "waiver-link",
+    "address-card",
+    "hours-strip",
+    "map",
+    "footer"
+  ],
   "image_directives": "raw box photography. Chalked hands on a barbell, kettlebells racked along a wall, a rower mid-pull, a coach counting reps. Rubber flooring, exposed beams, garage doors open. Diverse members at every age and weight, scaling visible (boxes for pull-ups, kneeling push-ups). Avoid glossy fitness-magazine flexing, no bikini-photoshoot lighting. Sweat, callouses, smiles after the buzzer. Real PRs being chalked on a whiteboard.",
-  "voice_pet_words": ["wod", "amrap", "emom", "metcon", "rx", "scaled", "pr", "box", "fundamentals", "free intro"],
-  "primary_keywords": ["crossfit", "crossfit box", "wod", "functional fitness"]
+  "voice_pet_words": [
+    "wod",
+    "amrap",
+    "emom",
+    "metcon",
+    "rx",
+    "scaled",
+    "pr",
+    "box",
+    "fundamentals",
+    "free intro"
+  ],
+  "primary_keywords": [
+    "crossfit",
+    "crossfit box",
+    "wod",
+    "functional fitness"
+  ],
+  "signalpoint_systems": true,
+  "vertical_kind": "gym",
+  "site_data_bindings": [
+    {
+      "source": "class_schedule",
+      "target": "schedule"
+    }
+  ]
 }

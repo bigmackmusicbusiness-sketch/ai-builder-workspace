@@ -32,8 +32,8 @@ const PLAN_FILE = resolve(ROOT, 'src/agent/phases/plan.ts');
 const AGENT_DIR = resolve(ROOT, 'src/agent');
 const PREVIEW_DIR = resolve(ROOT, 'src/preview');
 
-/** Fields that Phase 3 will add to NicheManifest. None should appear in any
- *  manifest until that phase ships. */
+/** Phase 3 binding fields. Schema declares them as optional; manifests
+ *  populate them only when the niche is in BINDING_ELIGIBLE below. */
 const PHASE3_FIELDS = [
   'signalpoint_systems',
   'site_data_bindings',
@@ -41,6 +41,19 @@ const PHASE3_FIELDS = [
   'dashboard_widgets',
   'needs_systems',
 ];
+
+/** Niches that opt in to live data binding via the SPS site-data shim.
+ *  Mirror of apps/api/scripts/add-phase3-bindings.mjs. */
+const BINDING_ELIGIBLE = new Set([
+  // Food → vertical_kind=restaurant, bindings: menu_sections + menu_items
+  'restaurant', 'bakery', 'food-truck', 'catering-service',
+  'brewery-taproom', 'bar-lounge', 'ice-cream-shop',
+  // Auto-with-inventory → vertical_kind=auto-dealer, bindings: vehicles
+  'car-dealership', 'motorcycle-dealer', 'boat-marine-service',
+  // Fitness-with-class-schedule → vertical_kind=gym, bindings: class_schedule
+  'gym-fitness', 'combat-gym', 'yoga-studio', 'pilates-studio',
+  'crossfit-box', 'dance-studio', 'martial-arts-school',
+]);
 
 /** Recursively walk a directory and yield .ts file paths (skip node_modules,
  *  dist, anything starting with `.`). */
@@ -69,17 +82,58 @@ function* walkTsFiles(dir: string): Generator<string> {
 }
 
 describe('standalone-IDE guarantee — Phase 2.5 regression check', () => {
-  it('every niche manifest is standalone (no Phase 3 binding fields populated)', () => {
+  it('Phase 3 binding fields are populated only on binding-eligible niches', () => {
     const manifests = readdirSync(NICHE_DIR).filter((f) => f.endsWith('.json'));
     expect(manifests.length).toBeGreaterThanOrEqual(111);
 
     const violations: string[] = [];
     for (const file of manifests) {
+      const slug = file.replace(/\.json$/, '');
       const raw = readFileSync(resolve(NICHE_DIR, file), 'utf8');
       const m = JSON.parse(raw) as Record<string, unknown>;
-      for (const field of PHASE3_FIELDS) {
-        if (m[field] !== undefined && m[field] !== null) {
-          violations.push(`${file}: has ${field} = ${JSON.stringify(m[field])}`);
+      const hasBinding =
+        m['signalpoint_systems'] === true ||
+        (Array.isArray(m['site_data_bindings']) && (m['site_data_bindings'] as unknown[]).length > 0) ||
+        m['vertical_kind'] !== undefined;
+
+      if (hasBinding && !BINDING_ELIGIBLE.has(slug)) {
+        violations.push(`${slug}: has Phase 3 binding fields but is not in the BINDING_ELIGIBLE list`);
+      }
+      if (!hasBinding && BINDING_ELIGIBLE.has(slug)) {
+        violations.push(`${slug}: is binding-eligible but has no Phase 3 fields populated`);
+      }
+    }
+    expect(violations).toEqual([]);
+  });
+
+  it('binding-eligible manifests have correct vertical_kind + non-empty site_data_bindings', () => {
+    const FOOD = new Set(['restaurant', 'bakery', 'food-truck', 'catering-service', 'brewery-taproom', 'bar-lounge', 'ice-cream-shop']);
+    const AUTO = new Set(['car-dealership', 'motorcycle-dealer', 'boat-marine-service']);
+    const FITNESS = new Set(['gym-fitness', 'combat-gym', 'yoga-studio', 'pilates-studio', 'crossfit-box', 'dance-studio', 'martial-arts-school']);
+
+    const violations: string[] = [];
+    for (const slug of BINDING_ELIGIBLE) {
+      const path = resolve(NICHE_DIR, `${slug}.json`);
+      const m = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>;
+
+      const expectedKind = FOOD.has(slug) ? 'restaurant' : AUTO.has(slug) ? 'auto-dealer' : FITNESS.has(slug) ? 'gym' : null;
+      if (m['vertical_kind'] !== expectedKind) {
+        violations.push(`${slug}: vertical_kind = ${JSON.stringify(m['vertical_kind'])}, expected ${JSON.stringify(expectedKind)}`);
+      }
+      const bindings = m['site_data_bindings'];
+      if (!Array.isArray(bindings) || bindings.length === 0) {
+        violations.push(`${slug}: site_data_bindings missing or empty`);
+        continue;
+      }
+      // Each binding has a string source + string target
+      for (const b of bindings) {
+        if (typeof b !== 'object' || b === null) {
+          violations.push(`${slug}: binding entry not an object: ${JSON.stringify(b)}`);
+          continue;
+        }
+        const obj = b as Record<string, unknown>;
+        if (typeof obj['source'] !== 'string' || typeof obj['target'] !== 'string') {
+          violations.push(`${slug}: binding missing source/target string: ${JSON.stringify(b)}`);
         }
       }
     }

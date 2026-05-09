@@ -1,29 +1,158 @@
 {
   "niche": "boat-marine-service",
   "label": "Boat & Marine Service",
-  "triggers": ["boat repair", "marine service", "outboard repair", "boat winterization", "boat storage", "inboard engine service", "marine mechanic", "boat detailing", "boat shrink wrap", "yamaha outboard service", "mercury marine service", "boat haul-out"],
-  "default_sitemap": [
-    { "slug": "index",    "role": "hero+services+season-cta" },
-    { "slug": "services", "role": "outboard+inboard+winterize+storage" },
-    { "slug": "pricing",  "role": "haul-out-and-storage-rates" },
-    { "slug": "about",    "role": "yard-story+abyc-credentials" },
-    { "slug": "book",     "role": "service-request-form" },
-    { "slug": "faq",      "role": "winterize-and-storage-questions" },
-    { "slug": "contact",  "role": "phone+yard-address+hours" }
+  "triggers": [
+    "boat repair",
+    "marine service",
+    "outboard repair",
+    "boat winterization",
+    "boat storage",
+    "inboard engine service",
+    "marine mechanic",
+    "boat detailing",
+    "boat shrink wrap",
+    "yamaha outboard service",
+    "mercury marine service",
+    "boat haul-out"
   ],
-  "compliance_blocks": ["license-bond-insurance-footer", "abyc-certification-footer", "written-warranty-disclosure-footer"],
+  "default_sitemap": [
+    {
+      "slug": "index",
+      "role": "hero+services+season-cta"
+    },
+    {
+      "slug": "services",
+      "role": "outboard+inboard+winterize+storage"
+    },
+    {
+      "slug": "pricing",
+      "role": "haul-out-and-storage-rates"
+    },
+    {
+      "slug": "about",
+      "role": "yard-story+abyc-credentials"
+    },
+    {
+      "slug": "book",
+      "role": "service-request-form"
+    },
+    {
+      "slug": "faq",
+      "role": "winterize-and-storage-questions"
+    },
+    {
+      "slug": "contact",
+      "role": "phone+yard-address+hours"
+    }
+  ],
+  "compliance_blocks": [
+    "license-bond-insurance-footer",
+    "abyc-certification-footer",
+    "written-warranty-disclosure-footer"
+  ],
   "schema_org_primary": "AutoRepair",
   "voice_template": "saltwater-practical, season-aware, engine-fluent across outboard and inboard, marina-friendly",
   "palettes": [
-    { "name": "harbor-navy-cream",   "hexes": ["#0E3957", "#F1E9D2", "#C9D8DF", "#04141F"] },
-    { "name": "hull-white-teal",     "hexes": ["#0E7C7B", "#F4F9F8", "#C8E0DD", "#031C1B"] },
-    { "name": "weathered-pier",      "hexes": ["#2E4D52", "#D4C297", "#EAE5D8", "#0B181A"] },
-    { "name": "outboard-red-stripe", "hexes": ["#A8261A", "#0F2B3D", "#F0EDE5", "#06141C"] },
-    { "name": "rope-and-rust",       "hexes": ["#7A4421", "#E8DFC7", "#C9C2A8", "#1A0E05"] },
-    { "name": "deep-water-cobalt",   "hexes": ["#0F4C81", "#5DC6E0", "#EFF3F6", "#04162A"] }
+    {
+      "name": "harbor-navy-cream",
+      "hexes": [
+        "#0E3957",
+        "#F1E9D2",
+        "#C9D8DF",
+        "#04141F"
+      ]
+    },
+    {
+      "name": "hull-white-teal",
+      "hexes": [
+        "#0E7C7B",
+        "#F4F9F8",
+        "#C8E0DD",
+        "#031C1B"
+      ]
+    },
+    {
+      "name": "weathered-pier",
+      "hexes": [
+        "#2E4D52",
+        "#D4C297",
+        "#EAE5D8",
+        "#0B181A"
+      ]
+    },
+    {
+      "name": "outboard-red-stripe",
+      "hexes": [
+        "#A8261A",
+        "#0F2B3D",
+        "#F0EDE5",
+        "#06141C"
+      ]
+    },
+    {
+      "name": "rope-and-rust",
+      "hexes": [
+        "#7A4421",
+        "#E8DFC7",
+        "#C9C2A8",
+        "#1A0E05"
+      ]
+    },
+    {
+      "name": "deep-water-cobalt",
+      "hexes": [
+        "#0F4C81",
+        "#5DC6E0",
+        "#EFF3F6",
+        "#04162A"
+      ]
+    }
   ],
-  "section_library": ["hero", "page-hero", "services-grid", "service-detail", "season-callout", "winterize-package-card", "haul-out-strip", "storage-rate-card", "abyc-badge-strip", "credentials-strip", "before-after-slider", "review-strip", "testimonial-card", "phone-cta-bar", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "section_library": [
+    "hero",
+    "page-hero",
+    "services-grid",
+    "service-detail",
+    "season-callout",
+    "winterize-package-card",
+    "haul-out-strip",
+    "storage-rate-card",
+    "abyc-badge-strip",
+    "credentials-strip",
+    "before-after-slider",
+    "review-strip",
+    "testimonial-card",
+    "phone-cta-bar",
+    "faq-accordion",
+    "address-card",
+    "hours-strip",
+    "footer"
+  ],
   "image_directives": "working-yard marine photography. Boats on travel-lift slings, outboards tilted up with cowls off, technician on a stern checking lower units, shrink-wrap crews finishing a winter cocoon. Detail shots of props, anodes, fuel-water separators. Capture marina backdrops, gulls, weathered docks. Avoid yacht-magazine glamor. Honest yard light, hands-on work, salt residue on transoms.",
-  "voice_pet_words": ["winterize", "haul-out", "lower unit", "anode", "outboard", "inboard", "shrink wrap", "fuel-water separator", "ABYC certified"],
-  "primary_keywords": ["boat repair", "marine service", "boat winterization", "outboard repair", "boat storage"]
+  "voice_pet_words": [
+    "winterize",
+    "haul-out",
+    "lower unit",
+    "anode",
+    "outboard",
+    "inboard",
+    "shrink wrap",
+    "fuel-water separator",
+    "ABYC certified"
+  ],
+  "primary_keywords": [
+    "boat repair",
+    "marine service",
+    "boat winterization",
+    "outboard repair",
+    "boat storage"
+  ],
+  "signalpoint_systems": true,
+  "vertical_kind": "auto-dealer",
+  "site_data_bindings": [
+    {
+      "source": "vehicles",
+      "target": "inventory"
+    }
+  ]
 }

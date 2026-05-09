@@ -1,28 +1,160 @@
 {
   "niche": "car-dealership",
   "label": "Car Dealership",
-  "triggers": ["used cars", "pre-owned vehicles", "auto sales", "car dealership", "car dealer", "used car lot", "new car franchise", "certified pre-owned", "trade-in", "auto financing", "test drive", "car inventory", "autocheck", "carfax"],
-  "default_sitemap": [
-    { "slug": "index",    "role": "hero+inventory-search+featured-vehicles" },
-    { "slug": "listings", "role": "inventory-grid+filters" },
-    { "slug": "services", "role": "financing+trade-in+service-dept" },
-    { "slug": "about",    "role": "dealership-story+staff" },
-    { "slug": "contact",  "role": "location+hours+test-drive-cta" },
-    { "slug": "faq",      "role": "financing-and-warranty-questions" }
+  "triggers": [
+    "used cars",
+    "pre-owned vehicles",
+    "auto sales",
+    "car dealership",
+    "car dealer",
+    "used car lot",
+    "new car franchise",
+    "certified pre-owned",
+    "trade-in",
+    "auto financing",
+    "test drive",
+    "car inventory",
+    "autocheck",
+    "carfax"
   ],
-  "compliance_blocks": ["dealer-license-footer", "financing-disclosure", "as-is-warranty-disclosure", "ada-accessibility-statement", "truth-in-lending-disclaimer"],
+  "default_sitemap": [
+    {
+      "slug": "index",
+      "role": "hero+inventory-search+featured-vehicles"
+    },
+    {
+      "slug": "listings",
+      "role": "inventory-grid+filters"
+    },
+    {
+      "slug": "services",
+      "role": "financing+trade-in+service-dept"
+    },
+    {
+      "slug": "about",
+      "role": "dealership-story+staff"
+    },
+    {
+      "slug": "contact",
+      "role": "location+hours+test-drive-cta"
+    },
+    {
+      "slug": "faq",
+      "role": "financing-and-warranty-questions"
+    }
+  ],
+  "compliance_blocks": [
+    "dealer-license-footer",
+    "financing-disclosure",
+    "as-is-warranty-disclosure",
+    "ada-accessibility-statement",
+    "truth-in-lending-disclaimer"
+  ],
   "schema_org_primary": "AutoDealer",
   "voice_template": "trustworthy, transparent, plain-spoken, financing-aware, family-friendly without pressure tactics",
   "palettes": [
-    { "name": "showroom-navy",   "hexes": ["#1E3A5F", "#F7F9FB", "#E5EAF0", "#0B1626"] },
-    { "name": "graphite-amber",  "hexes": ["#C8842A", "#FAFAFA", "#E8E8EA", "#1A1A1D"] },
-    { "name": "steel-slate",     "hexes": ["#3D4A5C", "#F5F6F8", "#DDE2E8", "#0F141A"] },
-    { "name": "deep-bronze",     "hexes": ["#8B6F3A", "#FBF9F4", "#EFE9DC", "#1F1A11"] },
-    { "name": "midnight-chrome", "hexes": ["#2A4D6E", "#FFFFFF", "#E0E5EC", "#0A1118"] },
-    { "name": "wax-charcoal",    "hexes": ["#A8694A", "#F8F6F3", "#E2DDD6", "#181513"] }
+    {
+      "name": "showroom-navy",
+      "hexes": [
+        "#1E3A5F",
+        "#F7F9FB",
+        "#E5EAF0",
+        "#0B1626"
+      ]
+    },
+    {
+      "name": "graphite-amber",
+      "hexes": [
+        "#C8842A",
+        "#FAFAFA",
+        "#E8E8EA",
+        "#1A1A1D"
+      ]
+    },
+    {
+      "name": "steel-slate",
+      "hexes": [
+        "#3D4A5C",
+        "#F5F6F8",
+        "#DDE2E8",
+        "#0F141A"
+      ]
+    },
+    {
+      "name": "deep-bronze",
+      "hexes": [
+        "#8B6F3A",
+        "#FBF9F4",
+        "#EFE9DC",
+        "#1F1A11"
+      ]
+    },
+    {
+      "name": "midnight-chrome",
+      "hexes": [
+        "#2A4D6E",
+        "#FFFFFF",
+        "#E0E5EC",
+        "#0A1118"
+      ]
+    },
+    {
+      "name": "wax-charcoal",
+      "hexes": [
+        "#A8694A",
+        "#F8F6F3",
+        "#E2DDD6",
+        "#181513"
+      ]
+    }
   ],
-  "section_library": ["hero", "page-hero", "inventory-search-bar", "vehicle-card", "featured-listings-grid", "filter-rail", "financing-calculator", "trade-in-form", "test-drive-cta", "service-dept-strip", "staff-grid", "testimonial-strip", "story-strip", "faq-accordion", "address-card", "hours-strip", "map", "disclaimer-block", "footer"],
+  "section_library": [
+    "hero",
+    "page-hero",
+    "inventory-search-bar",
+    "vehicle-card",
+    "featured-listings-grid",
+    "filter-rail",
+    "financing-calculator",
+    "trade-in-form",
+    "test-drive-cta",
+    "service-dept-strip",
+    "staff-grid",
+    "testimonial-strip",
+    "story-strip",
+    "faq-accordion",
+    "address-card",
+    "hours-strip",
+    "map",
+    "disclaimer-block",
+    "footer"
+  ],
   "image_directives": "clean dealership photography. Vehicles on lit lots at dusk, detail shots of grilles and wheels, salespeople walking customers through paperwork without staged smiles. Avoid balloon-and-banner lot-sale aesthetics. No flame graphics. Real customers shaking hands beside their new keys, soft natural light, slight wide-angle for inventory rows. Showroom interiors should look swept and organized, not glossy.",
-  "voice_pet_words": ["trade-in", "financing", "pre-owned", "certified", "mileage", "carfax", "warranty", "test-drive", "upfront", "family"],
-  "primary_keywords": ["used cars", "car dealership", "pre-owned vehicles", "auto financing", "trade-in"]
+  "voice_pet_words": [
+    "trade-in",
+    "financing",
+    "pre-owned",
+    "certified",
+    "mileage",
+    "carfax",
+    "warranty",
+    "test-drive",
+    "upfront",
+    "family"
+  ],
+  "primary_keywords": [
+    "used cars",
+    "car dealership",
+    "pre-owned vehicles",
+    "auto financing",
+    "trade-in"
+  ],
+  "signalpoint_systems": true,
+  "vertical_kind": "auto-dealer",
+  "site_data_bindings": [
+    {
+      "source": "vehicles",
+      "target": "inventory"
+    }
+  ]
 }

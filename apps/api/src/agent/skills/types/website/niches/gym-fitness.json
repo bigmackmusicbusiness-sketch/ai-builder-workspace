@@ -1,28 +1,147 @@
 {
   "niche": "gym-fitness",
   "label": "Gym & Fitness Studio",
-  "triggers": ["gym", "fitness", "crossfit", "personal trainer", "workout", "strength", "bootcamp", "yoga", "pilates", "hiit"],
-  "default_sitemap": [
-    { "slug": "index",      "role": "hero+programs-preview" },
-    { "slug": "programs",   "role": "class-list" },
-    { "slug": "schedule",   "role": "weekly-timetable" },
-    { "slug": "trainers",   "role": "coach-bios" },
-    { "slug": "membership", "role": "pricing-tiers" },
-    { "slug": "contact",    "role": "location+hours+trial-cta" }
+  "triggers": [
+    "gym",
+    "fitness",
+    "crossfit",
+    "personal trainer",
+    "workout",
+    "strength",
+    "bootcamp",
+    "yoga",
+    "pilates",
+    "hiit"
   ],
-  "compliance_blocks": ["liability-waiver-link", "medical-disclaimer-footer", "ada-accessibility-statement"],
+  "default_sitemap": [
+    {
+      "slug": "index",
+      "role": "hero+programs-preview"
+    },
+    {
+      "slug": "programs",
+      "role": "class-list"
+    },
+    {
+      "slug": "schedule",
+      "role": "weekly-timetable"
+    },
+    {
+      "slug": "trainers",
+      "role": "coach-bios"
+    },
+    {
+      "slug": "membership",
+      "role": "pricing-tiers"
+    },
+    {
+      "slug": "contact",
+      "role": "location+hours+trial-cta"
+    }
+  ],
+  "compliance_blocks": [
+    "liability-waiver-link",
+    "medical-disclaimer-footer",
+    "ada-accessibility-statement"
+  ],
   "schema_org_primary": "ExerciseGym",
   "voice_template": "high-energy, motivational, direct and challenging but inclusive of all fitness levels",
   "palettes": [
-    { "name": "iron-volt",     "hexes": ["#F59E0B", "#0F172A", "#1E293B", "#FAFAFA"] },
-    { "name": "athletic-red",  "hexes": ["#DC2626", "#111827", "#F3F4F6", "#FFFFFF"] },
-    { "name": "neon-energy",   "hexes": ["#A3E635", "#18181B", "#27272A", "#FAFAFA"] },
-    { "name": "matte-black",   "hexes": ["#FB923C", "#0A0A0A", "#262626", "#F5F5F4"] },
-    { "name": "studio-soft",   "hexes": ["#7C3AED", "#FAFAFA", "#F3E8FF", "#1E1B4B"] },
-    { "name": "performance",   "hexes": ["#0EA5E9", "#0F172A", "#E0F2FE", "#FFFFFF"] }
+    {
+      "name": "iron-volt",
+      "hexes": [
+        "#F59E0B",
+        "#0F172A",
+        "#1E293B",
+        "#FAFAFA"
+      ]
+    },
+    {
+      "name": "athletic-red",
+      "hexes": [
+        "#DC2626",
+        "#111827",
+        "#F3F4F6",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "name": "neon-energy",
+      "hexes": [
+        "#A3E635",
+        "#18181B",
+        "#27272A",
+        "#FAFAFA"
+      ]
+    },
+    {
+      "name": "matte-black",
+      "hexes": [
+        "#FB923C",
+        "#0A0A0A",
+        "#262626",
+        "#F5F5F4"
+      ]
+    },
+    {
+      "name": "studio-soft",
+      "hexes": [
+        "#7C3AED",
+        "#FAFAFA",
+        "#F3E8FF",
+        "#1E1B4B"
+      ]
+    },
+    {
+      "name": "performance",
+      "hexes": [
+        "#0EA5E9",
+        "#0F172A",
+        "#E0F2FE",
+        "#FFFFFF"
+      ]
+    }
   ],
-  "section_library": ["hero", "page-hero", "stat-strip", "programs-grid", "class-card", "schedule-table", "trainer-card", "testimonial-carousel", "transformation-gallery", "pricing-tiers", "free-trial-cta", "address-card", "hours-strip", "map", "waiver-link", "footer"],
+  "section_library": [
+    "hero",
+    "page-hero",
+    "stat-strip",
+    "programs-grid",
+    "class-card",
+    "schedule-table",
+    "trainer-card",
+    "testimonial-carousel",
+    "transformation-gallery",
+    "pricing-tiers",
+    "free-trial-cta",
+    "address-card",
+    "hours-strip",
+    "map",
+    "waiver-link",
+    "footer"
+  ],
   "image_directives": "high-contrast action photography. Real members lifting, sweating, training together. Diverse body types and ages. Avoid glossy fitness-model stock. Dark gym interiors with dramatic lighting, kettlebells, barbells, turf. Candid effort shots over posed flexes. No clinical-white commercial-gym look.",
-  "voice_pet_words": ["push", "earn", "stronger", "community", "results", "consistency", "grit"],
-  "primary_keywords": ["gym", "fitness", "personal training", "group classes"]
+  "voice_pet_words": [
+    "push",
+    "earn",
+    "stronger",
+    "community",
+    "results",
+    "consistency",
+    "grit"
+  ],
+  "primary_keywords": [
+    "gym",
+    "fitness",
+    "personal training",
+    "group classes"
+  ],
+  "signalpoint_systems": true,
+  "vertical_kind": "gym",
+  "site_data_bindings": [
+    {
+      "source": "class_schedule",
+      "target": "schedule"
+    }
+  ]
 }

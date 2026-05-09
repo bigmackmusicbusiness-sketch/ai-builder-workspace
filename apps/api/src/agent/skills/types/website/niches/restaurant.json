@@ -1,27 +1,148 @@
 {
   "niche": "restaurant",
   "label": "Restaurant",
-  "triggers": ["restaurant", "eatery", "bistro", "diner", "cuisine", "menu", "chef", "dining", "kitchen", "trattoria", "cantina", "tavern", "grill"],
-  "default_sitemap": [
-    { "slug": "index",       "role": "hero+menu-preview" },
-    { "slug": "menu",        "role": "menu-detail" },
-    { "slug": "about",       "role": "story+chef" },
-    { "slug": "reservations","role": "booking" },
-    { "slug": "contact",     "role": "location+hours+phone" }
+  "triggers": [
+    "restaurant",
+    "eatery",
+    "bistro",
+    "diner",
+    "cuisine",
+    "menu",
+    "chef",
+    "dining",
+    "kitchen",
+    "trattoria",
+    "cantina",
+    "tavern",
+    "grill"
   ],
-  "compliance_blocks": ["allergen-disclaimer-footer"],
+  "default_sitemap": [
+    {
+      "slug": "index",
+      "role": "hero+menu-preview"
+    },
+    {
+      "slug": "menu",
+      "role": "menu-detail"
+    },
+    {
+      "slug": "about",
+      "role": "story+chef"
+    },
+    {
+      "slug": "reservations",
+      "role": "booking"
+    },
+    {
+      "slug": "contact",
+      "role": "location+hours+phone"
+    }
+  ],
+  "compliance_blocks": [
+    "allergen-disclaimer-footer"
+  ],
   "schema_org_primary": "Restaurant",
   "voice_template": "inviting, sensory-specific, confident about the food, no fluff",
   "palettes": [
-    { "name": "wine-cream",     "hexes": ["#7C2D2D", "#FFFCF6", "#F5E6E1", "#1A0808"] },
-    { "name": "olive-warm",     "hexes": ["#6B8E23", "#FFFCF5", "#F0F2DC", "#1F2A0E"] },
-    { "name": "deep-charcoal",  "hexes": ["#D4A574", "#1F1F1F", "#2D2D2D", "#FFFCF5"] },
-    { "name": "sunset-paprika", "hexes": ["#C7522A", "#FFF8F0", "#FCE0CD", "#2A1308"] },
-    { "name": "forest-table",   "hexes": ["#3E5641", "#FAF7F0", "#E0E8DD", "#1A2218"] },
-    { "name": "amber-lantern",  "hexes": ["#B8763A", "#FFFCF4", "#FFE7CC", "#2A1808"] }
+    {
+      "name": "wine-cream",
+      "hexes": [
+        "#7C2D2D",
+        "#FFFCF6",
+        "#F5E6E1",
+        "#1A0808"
+      ]
+    },
+    {
+      "name": "olive-warm",
+      "hexes": [
+        "#6B8E23",
+        "#FFFCF5",
+        "#F0F2DC",
+        "#1F2A0E"
+      ]
+    },
+    {
+      "name": "deep-charcoal",
+      "hexes": [
+        "#D4A574",
+        "#1F1F1F",
+        "#2D2D2D",
+        "#FFFCF5"
+      ]
+    },
+    {
+      "name": "sunset-paprika",
+      "hexes": [
+        "#C7522A",
+        "#FFF8F0",
+        "#FCE0CD",
+        "#2A1308"
+      ]
+    },
+    {
+      "name": "forest-table",
+      "hexes": [
+        "#3E5641",
+        "#FAF7F0",
+        "#E0E8DD",
+        "#1A2218"
+      ]
+    },
+    {
+      "name": "amber-lantern",
+      "hexes": [
+        "#B8763A",
+        "#FFFCF4",
+        "#FFE7CC",
+        "#2A1808"
+      ]
+    }
   ],
-  "section_library": ["hero", "page-hero", "menu-preview", "menu-grid", "menu-section", "feature-dish", "story-strip", "chef-card", "ingredient-source", "reservation-form", "hours-strip", "address-card", "phone-cta", "map", "press-quotes", "footer-allergen", "footer"],
+  "section_library": [
+    "hero",
+    "page-hero",
+    "menu-preview",
+    "menu-grid",
+    "menu-section",
+    "feature-dish",
+    "story-strip",
+    "chef-card",
+    "ingredient-source",
+    "reservation-form",
+    "hours-strip",
+    "address-card",
+    "phone-cta",
+    "map",
+    "press-quotes",
+    "footer-allergen",
+    "footer"
+  ],
   "image_directives": "warm food photography. Plated dishes, kitchen action shots, candid dining-room atmosphere. Warm tungsten + golden hour lighting. Avoid the over-saturated 'food blog' look. Hands in frame OK. No stock food.",
-  "voice_pet_words": ["seasonal", "house-made", "local", "honest", "from scratch", "served family-style"],
-  "primary_keywords": ["restaurant", "menu", "dining", "reservations"]
+  "voice_pet_words": [
+    "seasonal",
+    "house-made",
+    "local",
+    "honest",
+    "from scratch",
+    "served family-style"
+  ],
+  "primary_keywords": [
+    "restaurant",
+    "menu",
+    "dining",
+    "reservations"
+  ],
+  "signalpoint_systems": true,
+  "vertical_kind": "restaurant",
+  "site_data_bindings": [
+    {
+      "source": "menu_sections",
+      "target": "sections"
+    },
+    {
+      "source": "menu_items",
+      "target": "menu"
+    }
+  ]
 }

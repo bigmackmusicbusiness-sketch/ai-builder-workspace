@@ -1,28 +1,158 @@
 {
   "niche": "combat-gym",
   "label": "Combat Sports Gym",
-  "triggers": ["boxing gym", "mma gym", "bjj", "brazilian jiu jitsu", "jiu-jitsu", "muay thai", "kickboxing", "combat sports", "fight gym", "striking academy", "grappling", "martial arts gym", "mma training", "boxing classes"],
-  "default_sitemap": [
-    { "slug": "index",    "role": "hero+disciplines+free-trial-cta" },
-    { "slug": "programs", "role": "discipline-grid+kids-program" },
-    { "slug": "schedule", "role": "weekly-timetable-by-discipline" },
-    { "slug": "team",     "role": "head-coach-lineage+coaches" },
-    { "slug": "pricing",  "role": "membership-tiers+drop-in" },
-    { "slug": "contact",  "role": "location+hours+free-trial-cta" }
+  "triggers": [
+    "boxing gym",
+    "mma gym",
+    "bjj",
+    "brazilian jiu jitsu",
+    "jiu-jitsu",
+    "muay thai",
+    "kickboxing",
+    "combat sports",
+    "fight gym",
+    "striking academy",
+    "grappling",
+    "martial arts gym",
+    "mma training",
+    "boxing classes"
   ],
-  "compliance_blocks": ["liability-waiver-link", "medical-clearance-disclaimer", "ada-accessibility-statement", "minor-consent-form-link"],
+  "default_sitemap": [
+    {
+      "slug": "index",
+      "role": "hero+disciplines+free-trial-cta"
+    },
+    {
+      "slug": "programs",
+      "role": "discipline-grid+kids-program"
+    },
+    {
+      "slug": "schedule",
+      "role": "weekly-timetable-by-discipline"
+    },
+    {
+      "slug": "team",
+      "role": "head-coach-lineage+coaches"
+    },
+    {
+      "slug": "pricing",
+      "role": "membership-tiers+drop-in"
+    },
+    {
+      "slug": "contact",
+      "role": "location+hours+free-trial-cta"
+    }
+  ],
+  "compliance_blocks": [
+    "liability-waiver-link",
+    "medical-clearance-disclaimer",
+    "ada-accessibility-statement",
+    "minor-consent-form-link"
+  ],
   "schema_org_primary": "SportsClub",
   "voice_template": "hard-edged but welcoming, lineage-proud, no-ego, beginner-friendly without softening the work",
   "palettes": [
-    { "name": "oxblood-iron",      "hexes": ["#7A1F1F", "#F4F2EE", "#1F1F1F", "#0A0A0A"] },
-    { "name": "black-gold",        "hexes": ["#C9A14B", "#0F0F10", "#1F1F22", "#F5F2E8"] },
-    { "name": "deep-teal-coal",    "hexes": ["#0F4D52", "#0A0A0A", "#1B1B1D", "#F4F4F2"] },
-    { "name": "canvas-red",        "hexes": ["#B43A2C", "#F5F2EC", "#262626", "#0E0E0E"] },
-    { "name": "bronze-charcoal",   "hexes": ["#8C5A2B", "#13131A", "#262630", "#F2EFE9"] },
-    { "name": "smoke-saffron",     "hexes": ["#D88A2A", "#1A1A1B", "#2B2B2E", "#F4F1EA"] }
+    {
+      "name": "oxblood-iron",
+      "hexes": [
+        "#7A1F1F",
+        "#F4F2EE",
+        "#1F1F1F",
+        "#0A0A0A"
+      ]
+    },
+    {
+      "name": "black-gold",
+      "hexes": [
+        "#C9A14B",
+        "#0F0F10",
+        "#1F1F22",
+        "#F5F2E8"
+      ]
+    },
+    {
+      "name": "deep-teal-coal",
+      "hexes": [
+        "#0F4D52",
+        "#0A0A0A",
+        "#1B1B1D",
+        "#F4F4F2"
+      ]
+    },
+    {
+      "name": "canvas-red",
+      "hexes": [
+        "#B43A2C",
+        "#F5F2EC",
+        "#262626",
+        "#0E0E0E"
+      ]
+    },
+    {
+      "name": "bronze-charcoal",
+      "hexes": [
+        "#8C5A2B",
+        "#13131A",
+        "#262630",
+        "#F2EFE9"
+      ]
+    },
+    {
+      "name": "smoke-saffron",
+      "hexes": [
+        "#D88A2A",
+        "#1A1A1B",
+        "#2B2B2E",
+        "#F4F1EA"
+      ]
+    }
   ],
-  "section_library": ["hero", "page-hero", "discipline-grid", "class-card", "schedule-table", "head-coach-bio", "coach-card", "lineage-strip", "kids-program-strip", "fight-night-gallery", "testimonial-strip", "free-trial-cta", "pricing-tiers", "waiver-link", "address-card", "hours-strip", "map", "footer"],
+  "section_library": [
+    "hero",
+    "page-hero",
+    "discipline-grid",
+    "class-card",
+    "schedule-table",
+    "head-coach-bio",
+    "coach-card",
+    "lineage-strip",
+    "kids-program-strip",
+    "fight-night-gallery",
+    "testimonial-strip",
+    "free-trial-cta",
+    "pricing-tiers",
+    "waiver-link",
+    "address-card",
+    "hours-strip",
+    "map",
+    "footer"
+  ],
   "image_directives": "raw combat-gym photography. Heavy bags swinging mid-strike, mat work between training partners, fight wraps being taped, sweat on brows. Diverse practitioners — kids in gi, women boxing, older grapplers rolling. Avoid glossy fight-poster aesthetics. No flexed-bicep stock. Available light through high windows, dust in the air, team patches on rashguards. Candid teaching moments between coach and student over staged hero shots.",
-  "voice_pet_words": ["roll", "spar", "drill", "lineage", "wraps", "gi", "tap", "work", "first-timer", "team"],
-  "primary_keywords": ["boxing gym", "mma", "brazilian jiu jitsu", "muay thai", "combat sports"]
+  "voice_pet_words": [
+    "roll",
+    "spar",
+    "drill",
+    "lineage",
+    "wraps",
+    "gi",
+    "tap",
+    "work",
+    "first-timer",
+    "team"
+  ],
+  "primary_keywords": [
+    "boxing gym",
+    "mma",
+    "brazilian jiu jitsu",
+    "muay thai",
+    "combat sports"
+  ],
+  "signalpoint_systems": true,
+  "vertical_kind": "gym",
+  "site_data_bindings": [
+    {
+      "source": "class_schedule",
+      "target": "schedule"
+    }
+  ]
 }
