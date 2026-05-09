@@ -67,6 +67,36 @@ export const NicheManifest = z.object({
   image_directives:    z.string().optional(),
   voice_pet_words:     z.array(z.string()).optional(),
   primary_keywords:    z.array(z.string()).default([]),
+
+  // ── Phase 3 cross-platform glue (opt-in, dormant for non-SPS users) ──
+  // These five fields are populated only on niches that bind to live data
+  // from a SignalPointSystems workspace at runtime. Standalone-IDE behavior
+  // is unchanged: if a project has no signalpoint-config.json, the build
+  // path ignores these fields entirely and the bundle stays fully static.
+  // Schema extension lands ahead of the runtime so the manifest authors
+  // can configure bindings without breaking the planner.
+  /** When true, this niche is eligible for live-data binding via the
+   *  packages/site-data shim. False / absent = standalone-only. */
+  signalpoint_systems: z.boolean().optional(),
+  /** Categorical hint for the SPS data domain. Drives shim query routing
+   *  (e.g. 'restaurant' uses menu_sections + menu_items; 'auto-dealer'
+   *  uses vehicles; 'gym' uses class_schedule). Mirrors the SPS-side
+   *  vertical_kind discriminator at the schema level. */
+  vertical_kind:       z.enum(['restaurant', 'auto-dealer', 'gym', 'retail', 'services']).optional(),
+  /** Maps SPS source tables to the template binding names used in the
+   *  generated site's HTML. source = SPS table name (e.g. 'menu_items',
+   *  'vehicles', 'class_schedule'); target = binding name the generated
+   *  site refers to (e.g. 'menu', 'inventory', 'schedule'). Empty /
+   *  absent = no bindings, no shim injected. */
+  site_data_bindings:  z.array(z.object({ source: z.string(), target: z.string() })).optional(),
+  /** Optional admin-side widget hints (e.g. "live menu count", "today's
+   *  reservations") that the SPS service-center UI can surface for staff
+   *  managing this customer's data. Read by SPS, not by ABW. */
+  dashboard_widgets:   z.array(z.string()).optional(),
+  /** When true, ABW's project-create flow will surface a "you'll need a
+   *  SignalPointSystems workspace to make this dynamic" hint in the
+   *  onboarding step. When false / absent, the niche works fully static. */
+  needs_systems:       z.boolean().optional(),
 }).passthrough();
 
 export type NicheManifestType = z.infer<typeof NicheManifest>;

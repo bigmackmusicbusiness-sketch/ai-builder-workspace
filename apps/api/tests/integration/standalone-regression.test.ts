@@ -86,14 +86,22 @@ describe('standalone-IDE guarantee — Phase 2.5 regression check', () => {
     expect(violations).toEqual([]);
   });
 
-  it('NicheManifest Zod schema in plan.ts is the pre-Phase-3 shape', () => {
+  it('NicheManifest Zod schema in plan.ts declares Phase 3 fields as optional', () => {
+    // 2026-05-09: Phase 3 schema extension shipped. The 5 fields are now
+    // present as OPTIONAL in NicheManifest; the standalone path ignores
+    // them. This assertion ensures they don't accidentally get removed
+    // and ensures they stay optional (not required, which would break
+    // the existing 111 manifests).
     const planSrc = readFileSync(PLAN_FILE, 'utf8');
-    // None of the Phase 3 fields should appear as Zod schema keys yet. We
-    // search for the field name as part of a key declaration (`fieldName:`)
-    // to avoid matching a comment that mentions the future name.
     for (const field of PHASE3_FIELDS) {
       const rx = new RegExp(`^\\s*${field}:`, 'm');
-      expect(rx.test(planSrc), `plan.ts should not yet declare ${field}: in NicheManifest`).toBe(false);
+      expect(rx.test(planSrc), `plan.ts must declare ${field}: in NicheManifest`).toBe(true);
+    }
+    // None of the Phase 3 fields are required (z.<type>().optional() form).
+    // We grep for `<field>:.*\.optional\(\)` to confirm.
+    for (const field of PHASE3_FIELDS) {
+      const rx = new RegExp(`^\\s*${field}:.*\\.optional\\(\\)`, 'm');
+      expect(rx.test(planSrc), `${field} must be declared as .optional()`).toBe(true);
     }
   });
 

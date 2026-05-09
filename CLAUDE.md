@@ -80,6 +80,25 @@ Every file in `apps/api/src/agent/skills/types/website/niches/<slug>.json`:
 - Trigger keyword sets are mutually distinctive across niches (don't make
   "studio" alone disambiguate — pair with another word).
 
+## PDF generation — printer-friendly rule
+
+If you regenerate the user guide (`SignalPoint-Docs/render-pdf.mjs`) or
+produce any other PDF intended for paper printing:
+
+- **`printBackground: false`** in the Playwright `page.pdf()` call. NOT true.
+  `printBackground: true` bakes every CSS background (gradients, callout
+  fills, code-block highlights) into the PDF. Most home/office printers
+  cannot lay ink edge-to-edge, will burn the color cartridge, and the
+  output looks worse than B/W. Burned a fair amount of the user's ink + paper
+  the one time we did this in 2026-05.
+- No full-bleed colored backgrounds in the source HTML. Use thin borders /
+  left-accent rules for visual structure, not fills.
+- No `@page :first { margin: 0 }` tricks for full-bleed covers — that only
+  exists to support a printable gradient, which we don't do.
+- After rendering, sanity-check the resulting PDF size. A 30-page PDF
+  should land around 400-600 KB. If it balloons over 1 MB, something
+  (probably embedded raster backgrounds) leaked in.
+
 ## The standalone-IDE guarantee
 
 **Cross-project integration with SignalPointSystems is opt-in.** Every code
