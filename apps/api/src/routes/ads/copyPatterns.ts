@@ -966,6 +966,116 @@ export const COPY_PATTERNS: Record<string, CopyPattern[]> = {
       primary:   'Park Tuesday morning, we strip, prep, cut, and heat-shrink. Pick up Friday with film on every window and self-healing PPF on the front clip. Lifetime warranty in the glove box.',
     },
   ],
+
+  // ── Batch 5 / 12 — Food + drink (6 niches) ───────────────────────────────────
+
+  'bakery': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Sourdough scored at 5 a.m., on the rack by 8.',
+      primary:   'Long-fermented loaves baked daily, custom cakes booked one week out, viennoiserie laminated by hand. Order pickup online or stop by the case.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'We use four ingredients in our bread. Not eight.',
+      primary:   "Flour, water, salt, starter. That's it. Naturally leavened, scored each morning, sold the same day. Walk in before noon while the rye is still warm.",
+    },
+    {
+      framework: 'before-after',
+      headline:  "From grocery-aisle cake to your daughter's name in buttercream.",
+      primary:   'Last birthday it was a clamshell from the supermarket. This one, a hand-decorated tier with the flavors she actually picked. Custom orders open three weeks out.',
+    },
+  ],
+
+  'catering-service': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Plated dinner for 80, served hot, on time.',
+      primary:   'Drop-off, full-service, and plated tiers with house-made menus. Tasting two weeks ahead, final head-count locked seven days out, licensed and insured.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "Ask any caterer their lead-time. We'll ask yours.",
+      primary:   'Most jobs we book 30 to 90 days ahead so the menu fits the room and the head-count fits the kitchen. Drop-off lunches, three days is enough. Quote in 48 hours.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From cold pizza in the conference room to a hot plated lunch.',
+      primary:   'The old way: a stack of boxes by 12:15. The new way: chafers, real plates, a server, gone by 1:30. Office lunch packages start at 25 guests.',
+    },
+  ],
+
+  'food-truck': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Tuesday at the brewery, Friday at the night market.',
+      primary:   'Smashed-patty doubles, hand-cut fries, one rotating special each week. Schedule posts every Sunday night. Private bookings open for parties of 40 and up.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'We park where the line gets long.',
+      primary:   'Six stops a week, four festivals a season, one truck. Follow the schedule page or grab us on Instagram before the lunch rush ends and the window closes.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From sad office sandwich to a real lunch in 12 minutes.',
+      primary:   'Wednesdays your block was a desert. Now we pull up at 11:30, run service until the rice is gone, and roll. Add the truck schedule to your calendar.',
+    },
+  ],
+
+  'brewery-taproom': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Twelve taps, four rotating, one brewed in the room behind you.',
+      primary:   'House IPAs, a barrel-aged stout, a rotating sour, growler and crowler fills to go. Food truck visits Thursday through Sunday. Trivia every other Tuesday.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'The lager took six weeks. The pour takes ninety seconds.',
+      primary:   "Cold-conditioning we don't rush, and a tap line we keep clean. Flights of four for the curious, full pours for the regulars, growler fills for the road home.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'From mass-market lager to a pint that tastes like the grain.',
+      primary:   "Last week it was the same six bottles at the corner store. This week, four house beers on tap and a brewer who can tell you what's in the mash. Open Wednesday through Sunday.",
+    },
+  ],
+
+  'bar-lounge': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Twelve signature cocktails, one stocked backbar, no shortcuts.',
+      primary:   'House syrups, fresh citrus pressed in service, a rotating list that turns every season. Happy hour 4 to 6, kitchen open until eleven, buyouts available Sunday and Monday.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'We stir 90 percent of the menu. Most bars shake everything.',
+      primary:   'A martini wants a stir. A negroni wants a stir. Anything spirit-forward gets the same. Pull up to the bar and watch a drink get built the way the spec was written.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'From watered-down vodka soda to a built-to-spec old-fashioned.',
+      primary:   'Last bar handed you a plastic stirrer. This one hands you a hand-cut cube and a single orange peel. The list is short on purpose. Reservations open for parties of six and up.',
+    },
+  ],
+
+  'ice-cream-shop': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Sixteen flavors churned in the back, four rotating each week.',
+      primary:   'Hand-dipped and soft-serve in the case, custom birthday cakes on 72 hours notice, sundaes built to order. Family-run since 2009, open seven nights through August.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'The strawberry flavor needs strawberries. So we wait.',
+      primary:   "Six flavors only run when the fruit is in season. The rest of the year you'll find vanilla bean, salted caramel, and the dark chocolate the kids fight over. Walk-ins welcome.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'From grocery-aisle pint to a cake with her name in piped buttercream.',
+      primary:   'Last birthday, a plastic clamshell. This one, a two-layer cake with her picked flavors and a piped border. Order three days ahead, pick up morning of the party.',
+    },
+  ],
 };
 
 /** Fallback for niches without curated patterns — generic but framework-shaped,
