@@ -7,6 +7,87 @@
 
 ---
 
+## Current state (2026-05-09): Niche expansion Phase 1 — 4/12 batches shipped
+
+The active multi-phase plan lives at `~/.claude/plans/eventual-leaping-petal.md`.
+We're mid-Phase-1 (niche library expansion: 10 → 111 manifests).
+
+### Cumulative progress
+
+- **Day 0 cross-cutting:** ABW `CLAUDE.md` created; SPS `CLAUDE.md` got the
+  session-start INBOX rule; `notify-handoff.ps1` PowerShell toast script
+  added at `C:/Users/telly/OneDrive/Desktop/AI Ops/scripts/`. Manifest-author
+  prompt template at `apps/api/scripts/manifest-author-prompt.md`.
+- **Batches 1-4 shipped:** 42 net-new niches. Commits: `ac7ab05` (batch 1),
+  `6969cc0` (batch 2), `6f3172d` (batch 3), `900648b` (batch 4). Day 0 was
+  `2e741ba`. Plus `0268e03` from the prior copy-pattern alignment fix.
+- **Total niches on disk: 52** (10 original + 42 new). Catalog grows to 111
+  when the remaining 8 batches land.
+- **Validation tooling:** `apps/api/scripts/validate-niche-batch.mjs` gates
+  every batch — runs Zod against each manifest, slop-blocker against
+  voice/image_directives + the matching ad-copy block, and hex-format check
+  on palettes. Used per batch before commit.
+- **All builds + typechecks green** through 4 batches; production deploy
+  rolled cleanly each commit (api at `https://api.40-160-3-10.sslip.io`).
+
+### What's left in Phase 1 — 8 batches, 59 niches
+
+| Batch | Category | Slug count | Status |
+|---|---|---|---|
+| 5 | Food | 6 | pending |
+| 6 | Fitness | 7 | pending |
+| 7 | Health (trimmed) | 5 | pending |
+| 8 | Beauty | 10 | pending |
+| 9 | Pets | 5 | pending |
+| 10 | Events | 6 | pending |
+| 11 | Retail | 9 | pending |
+| 12 | Education + Professional | 11 | pending |
+
+Plus end-of-Phase-1 user-guide work: trim §12 cookbook to 4-5 representative
+prompts, add new §13 "Niche catalogue" (compact table of all 111 niches),
+re-render PDF.
+
+### How to resume — exact recipe per batch
+
+1. **Read** `apps/api/scripts/manifest-author-prompt.md` (the spec).
+2. **Spawn ONE general-purpose Agent** per batch with the niche list + the
+   spec template path + exemplars. The "single agent producing N niches in
+   one cohesive context" approach in batches 3-4 worked best — quality held,
+   palettes stayed mutually distinctive within the batch, and context cost
+   was lowest. Don't go back to multi-agent batches unless quality drops.
+3. **Validate** the JSON with `node scripts/validate-niche-batch.mjs <slugs...>`
+   from `apps/api/`. Fix any slop / hex / Zod failures before writing.
+4. **Write** the manifests to `apps/api/src/agent/skills/types/website/niches/<slug>.json`.
+5. **Append** the matching ad-copy patterns to
+   `apps/api/src/routes/ads/copyPatterns.ts` (3 per niche: specific-value-prop,
+   pattern-interrupt, before-after).
+6. **Re-validate** the full batch end-to-end:
+   `cd apps/api && node scripts/validate-niche-batch.mjs <all-slugs-in-batch>`.
+7. **Typecheck + build** — `pnpm --filter @abw/api typecheck && pnpm --filter @abw/api build`.
+8. **Commit** with message format `feat(niches): batch N/12 — <category> (<count> niches)`.
+   Include a short list of niche-specific notes in the body.
+9. **Push** — `git push`. Coolify rolls in ~6 min; no need to gate on it
+   between batches.
+10. **Update** this file's "Cumulative progress" section before moving to
+    the next batch.
+
+### Phase 2 (after all 12 batches): Handoff doc to SignalPointSystems
+
+Drop file at `C:/Users/telly/OneDrive/Desktop/SignalPointSystems/handoff/INBOUND_FROM_ABW_<date>.md`.
+See plan §2.2 for the doc skeleton. Then mark a `## OUTBOUND TO SPS` section
+in this HANDOFF_NOTES.md.
+
+### Phase 3 (after SPS writes back): Cross-platform glue
+
+Plan §3 — opt-in `signalpoint_systems` / `vertical_kind` / `site_data_bindings`
+fields on NicheManifest, new `packages/site-data` workspace package, code-gen
+hook in `runPhases.ts`, signalpoint-config flow in publish handler. Hard rule:
+zero regression on standalone-IDE behavior — verified by integration test
+that builds a no-config project and asserts zero `signalpoint` strings in
+the bundle.
+
+---
+
 ## Quick reference for the next agent
 
 - Brief (authoritative): `HANDOFF.md`
