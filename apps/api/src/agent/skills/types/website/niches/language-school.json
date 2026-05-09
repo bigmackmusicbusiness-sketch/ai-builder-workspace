@@ -1,0 +1,29 @@
+{
+  "niche": "language-school",
+  "label": "Language School",
+  "triggers": ["language school", "language lessons", "spanish lessons", "french lessons", "english as a second language", "esl classes", "mandarin lessons", "italian classes", "private language tutor", "small group language class", "cefr course", "immersion program"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+languages+placement-cta" },
+    { "slug": "programs", "role": "languages-and-cefr-levels" },
+    { "slug": "schedule", "role": "term-cohorts+private-slots" },
+    { "slug": "pricing",  "role": "tuition+private-vs-group" },
+    { "slug": "team",     "role": "teacher-bios+native-status" },
+    { "slug": "faq",      "role": "method+placement+policies" },
+    { "slug": "contact",  "role": "placement-form" }
+  ],
+  "compliance_blocks": ["instructor-credentials-policy", "student-progress-policy", "cancellation-and-makeup-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "fluency-realistic, methodology-clear, level-honest using CEFR, no three-week-fluent marketing",
+  "palettes": [
+    { "name": "book-cream",      "hexes": ["#A85A2C", "#FBF6EC", "#EFD8B8", "#1F1108"] },
+    { "name": "indigo-page",     "hexes": ["#2F3F8A", "#FBF8F0", "#DAD6E8", "#080A1E"] },
+    { "name": "jade-cream",      "hexes": ["#1F6E5C", "#FBF7EE", "#D6E5DD", "#080F0C"] },
+    { "name": "terracotta-text", "hexes": ["#B85A3C", "#FBF4EA", "#F0D2BC", "#1F0A08"] },
+    { "name": "olive-binding",   "hexes": ["#5E6E3A", "#FBF8EE", "#DEE2C2", "#0F1208"] },
+    { "name": "ochre-glossary",  "hexes": ["#C78B30", "#FBF7EC", "#F2DDB8", "#1F1408"] }
+  ],
+  "section_library": ["hero", "page-hero", "language-grid", "cefr-level-card", "program-card", "private-vs-group-strip", "term-calendar", "placement-cta", "teacher-card", "teacher-intro", "credentials-strip", "tuition-table", "method-explainer", "parent-faq", "policies-block", "address-card", "hours-strip", "footer"],
+  "image_directives": "warm classroom photography. A small-group room with eight chairs in a horseshoe, a CEFR level chart on the wall, vocabulary cards on a board, a teacher leading a B1 conversation drill in Spanish. Bookshelves with bilingual readers and dictionaries, a coffee thermos at the long table, mixed-age adult learners taking notes. A private-lesson nook with two chairs and a window. Avoid stock-photo speech-bubble globes, no flag-collage hero shots, no apps-on-a-phone-with-confetti imagery.",
+  "voice_pet_words": ["CEFR", "placement", "cohort", "fluency", "method", "drill", "immersion", "private", "level", "term"],
+  "primary_keywords": ["language school", "language lessons", "spanish lessons", "french lessons"]
+}

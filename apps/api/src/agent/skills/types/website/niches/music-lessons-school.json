@@ -1,0 +1,29 @@
+{
+  "niche": "music-lessons-school",
+  "label": "Music Lessons & School",
+  "triggers": ["music lessons", "music school", "piano lessons", "guitar lessons", "violin lessons", "voice lessons", "drum lessons", "music teacher", "private music lesson", "group music class", "recital", "music studio lessons"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+programs+book-trial" },
+    { "slug": "programs", "role": "instruments-and-tracks" },
+    { "slug": "team",     "role": "teacher-bios+training" },
+    { "slug": "pricing",  "role": "tuition+lesson-length+recital-fee" },
+    { "slug": "schedule", "role": "term-calendar+recital-dates" },
+    { "slug": "faq",      "role": "policies+practice-expectations" },
+    { "slug": "contact",  "role": "trial-lesson-form" }
+  ],
+  "compliance_blocks": ["instructor-credentials-policy", "student-progress-policy", "cancellation-and-makeup-policy", "minor-consent-form-link", "photo-release-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "MusicSchool",
+  "voice_template": "teacher-led, technique-respecting, kid-friendly without infantilizing, parent-honest about practice",
+  "palettes": [
+    { "name": "warm-wood",      "hexes": ["#8C5A2B", "#FBF6EE", "#EFD9BA", "#1F1208"] },
+    { "name": "music-stand",    "hexes": ["#2E2A3A", "#FBF8F0", "#E2DCC8", "#0F0C18"] },
+    { "name": "recital-velvet", "hexes": ["#7A1E2B", "#FBF4EE", "#E8D2C8", "#1A0A0E"] },
+    { "name": "rosin-amber",    "hexes": ["#C49241", "#FBF7EC", "#F2E2BD", "#22170A"] },
+    { "name": "ivory-key",      "hexes": ["#0E0E12", "#FCF9EF", "#E5E0CE", "#3A3934"] },
+    { "name": "score-cream",    "hexes": ["#5C7A8C", "#FBF8F2", "#DDE5EB", "#101A22"] }
+  ],
+  "section_library": ["hero", "page-hero", "instrument-grid", "program-card", "teacher-card", "teacher-intro", "credentials-strip", "tuition-table", "term-calendar", "recital-banner", "trial-lesson-cta", "practice-expectations-strip", "parent-faq", "policies-block", "address-card", "hours-strip", "footer"],
+  "image_directives": "honest studio photography of actual lesson rooms. An upright piano with sheet music open, a teacher's hand correcting a student's bow grip, a kid mid-scale with the metronome ticking, a teen with a guitar working through a chord change, a recital hall with stand lights up. Real instruments with wear, real students of mixed ages, parents in the doorway watching the last five minutes of a lesson. Avoid pristine concert-hall stock, no glowing-music-note overlays, no kids beaming at the camera holding a violin like a prop.",
+  "voice_pet_words": ["lesson", "practice", "technique", "recital", "term", "ear", "repertoire", "trial lesson", "method"],
+  "primary_keywords": ["music lessons", "music school", "private lessons", "piano lessons"]
+}

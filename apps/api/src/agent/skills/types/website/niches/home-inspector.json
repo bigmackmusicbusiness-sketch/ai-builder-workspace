@@ -1,0 +1,28 @@
+{
+  "niche": "home-inspector",
+  "label": "Home Inspector",
+  "triggers": ["home inspector", "home inspection", "pre-purchase inspection", "buyer inspection", "seller inspection", "warranty inspection", "radon test", "mold inspection", "sewer scope", "termite inspection", "wdo inspection", "infrared scan"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services+book" },
+    { "slug": "services", "role": "inspection-types-and-addons" },
+    { "slug": "pricing",  "role": "inspection-and-addon-fees" },
+    { "slug": "about",    "role": "inspector-bio+credentials" },
+    { "slug": "faq",      "role": "scope+report+timeline" },
+    { "slug": "contact",  "role": "booking-form" }
+  ],
+  "compliance_blocks": ["home-inspector-license-footer", "inspection-scope-and-limitations", "report-disclaimer", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "report-driven, finding-honest, no recommendation-bias, scope-clear",
+  "palettes": [
+    { "name": "slate-yellow",  "hexes": ["#2C3540", "#FBF8F0", "#F4D85A", "#080C12"] },
+    { "name": "safety-cream",  "hexes": ["#D9A413", "#FBF7EC", "#E8DCB8", "#1F1808"] },
+    { "name": "tool-graphite", "hexes": ["#404045", "#FBF8F0", "#E2DDC8", "#0E0D10"] },
+    { "name": "ladder-rust",   "hexes": ["#A35530", "#FBF4EA", "#EFD2BA", "#1F0A08"] },
+    { "name": "attic-spruce",  "hexes": ["#2A4A3A", "#FBF8F0", "#D6E0D5", "#0A140F"] },
+    { "name": "roof-stone",    "hexes": ["#5C6470", "#FBF8F0", "#DDE0E5", "#161A22"] }
+  ],
+  "section_library": ["hero", "page-hero", "service-grid", "inspection-type-card", "addon-card", "fee-table", "scope-and-limits-block", "sample-report-cta", "inspector-card", "credentials-strip", "process-timeline", "booking-cta", "faq-accordion", "client-testimonial", "address-card", "hours-strip", "footer"],
+  "image_directives": "working-tool documentary photography. An inspector on a roof with chalk in hand checking flashing, a thermal camera on an electrical panel, a moisture meter held to a basement wall, a crawl-space photo with a headlamp and respirator. A clipboard, a tablet running inspection software, the report printed and bound. Real attic insulation, real water-stain ceiling tiles flagged. Avoid stock-photo magnifying-glass-on-blueprint, no glowing-shield-on-house, no thumbs-up-with-clipboard cliches.",
+  "voice_pet_words": ["scope", "finding", "report", "deficiency", "ancillary", "summary", "narrative", "addendum", "limitations"],
+  "primary_keywords": ["home inspector", "home inspection", "pre-purchase inspection", "buyer inspection"]
+}

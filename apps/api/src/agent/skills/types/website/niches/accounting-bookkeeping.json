@@ -1,0 +1,28 @@
+{
+  "niche": "accounting-bookkeeping",
+  "label": "Accounting & Bookkeeping",
+  "triggers": ["accountant", "accounting", "bookkeeping", "bookkeeper", "cpa", "tax preparation", "tax preparer", "small business accountant", "monthly books", "payroll service", "1099 filing", "s-corp election"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services+book-call" },
+    { "slug": "services", "role": "engagement-tracks" },
+    { "slug": "pricing",  "role": "monthly-and-annual-packages" },
+    { "slug": "team",     "role": "cpa-and-bookkeeper-bios" },
+    { "slug": "faq",      "role": "process+deadlines+documents" },
+    { "slug": "contact",  "role": "consultation-form" }
+  ],
+  "compliance_blocks": ["cpa-license-footer", "no-tax-advice-disclaimer-without-engagement", "engagement-letter-required", "data-privacy-and-glba-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "FinancialService",
+  "voice_template": "plain-language, deadline-honest, scope-letter precise, no oversold tax magic",
+  "palettes": [
+    { "name": "ledger-navy",     "hexes": ["#0F2942", "#FBF7EE", "#D5DCE6", "#06101E"] },
+    { "name": "slate-cream",     "hexes": ["#3A4A5A", "#FBF8F0", "#DDE0E5", "#0E141C"] },
+    { "name": "warm-cream-ink",  "hexes": ["#1F1B16", "#FBF7EC", "#E5DEC8", "#070605"] },
+    { "name": "spruce-paper",    "hexes": ["#274C3A", "#FBF8F0", "#D6E0D5", "#0A140F"] },
+    { "name": "burgundy-binder", "hexes": ["#6B1F2A", "#FBF4EC", "#EDD8C4", "#1A0A0E"] },
+    { "name": "graphite-cream",  "hexes": ["#2F2F33", "#FBF8F2", "#E2DECC", "#0A0A0E"] }
+  ],
+  "section_library": ["hero", "page-hero", "service-grid", "engagement-card", "package-pricing", "deadline-calendar", "process-timeline", "cpa-card", "credentials-strip", "secure-portal-strip", "consultation-cta", "document-checklist", "client-testimonial", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "calm office photography. A CPA at a desk with a dual monitor showing a P&L, manila folders labeled by client and quarter, a coffee on a coaster, a printed engagement letter ready for signature. Real receipts in a tray, a secure-portal login on the screen, a quiet conference room with a whiteboard listing March and April deadlines. Avoid stock-photo handshakes, no calculator-on-cash hero shots, no money-fanned-on-desk cliches.",
+  "voice_pet_words": ["engagement", "scope", "deadline", "books", "filing", "quarter", "documentation", "advisor", "secure portal"],
+  "primary_keywords": ["accountant", "bookkeeping", "tax preparation", "cpa"]
+}

@@ -1,0 +1,29 @@
+{
+  "niche": "tutoring-service",
+  "label": "Tutoring Service",
+  "triggers": ["tutor", "tutoring", "academic tutor", "math tutor", "reading tutor", "sat prep", "act prep", "ap exam tutor", "private tutor", "homework help", "test prep", "college admissions tutor"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+subjects+book-consult" },
+    { "slug": "programs", "role": "subjects-and-grades" },
+    { "slug": "team",     "role": "tutor-bios+credentials" },
+    { "slug": "pricing",  "role": "rates+package-length" },
+    { "slug": "results",  "role": "score-gains+student-stories" },
+    { "slug": "faq",      "role": "process+timelines+policies" },
+    { "slug": "contact",  "role": "consultation-form" }
+  ],
+  "compliance_blocks": ["instructor-credentials-policy", "student-progress-policy", "cancellation-and-makeup-policy", "minor-consent-form-link", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "academic without pretense, parent-honest about timelines and effort, score-realistic",
+  "palettes": [
+    { "name": "library-cream", "hexes": ["#3F6D8C", "#FBF6EC", "#E2D8C0", "#0F1A24"] },
+    { "name": "study-blue",    "hexes": ["#1D3F70", "#FBFBF8", "#D8E0EC", "#080F1E"] },
+    { "name": "ink-cream",     "hexes": ["#1F1B16", "#FBF7EC", "#E5DEC8", "#070605"] },
+    { "name": "spruce-paper",  "hexes": ["#2F4F3E", "#FBF8F0", "#D9E2D6", "#101A14"] },
+    { "name": "burgundy-page", "hexes": ["#7A1E2A", "#FBF4EC", "#EDD8C4", "#1A0A0E"] },
+    { "name": "graph-grid",    "hexes": ["#3E5C76", "#FCFDFB", "#DDE3EA", "#0E1820"] }
+  ],
+  "section_library": ["hero", "page-hero", "subject-grid", "grade-track-card", "tutor-card", "tutor-intro", "credentials-strip", "process-timeline", "score-gain-table", "package-pricing", "consultation-cta", "parent-faq", "policies-block", "testimonial-strip", "address-card", "hours-strip", "footer"],
+  "image_directives": "calm, honest tutoring photography. A tutor and student at a kitchen table or a library carrel, an SAT booklet open, scratch work on graph paper, a laptop showing a College Board score report. Real homework, real handwriting, real coffee mugs. Mix of ages: a fourth grader with a chapter book, a junior on an AP Calc problem, a senior writing a Common App draft. Avoid stock-photo classroom rows, no thumbs-up over a perfect-score paper, no glowing-lightbulb cliches.",
+  "voice_pet_words": ["progress", "score", "homework", "concept", "method", "consultation", "package", "honest", "pace"],
+  "primary_keywords": ["tutoring", "tutor", "test prep", "academic tutoring"]
+}

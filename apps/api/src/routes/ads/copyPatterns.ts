@@ -1832,6 +1832,204 @@ export const COPY_PATTERNS: Record<string, CopyPattern[]> = {
       primary:   'Never played Magic? We hand you a $15 starter deck, walk you through three turns at the counter, and pair you with a regular for your first FNM. About 60 percent of our regulars started exactly this way.',
     },
   ],
+
+  'music-lessons-school': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '45-min lessons. Recital twice a year.',
+      primary:   'Private piano, guitar, violin, voice, and drums for ages 6 and up. 45-minute weekly lessons, two recitals a year on a real stage, monthly tuition with a 30-day notice to pause.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We won't put a sticker on a recorder.",
+      primary:   "We don't bribe practice with stickers. Kids practice because the next song is one they actually want to play. Trial lesson is $25 and 30 minutes — bring an instrument or borrow ours.",
+    },
+    {
+      framework: 'before-after',
+      headline:  '"I quit piano in 4th grade" → playing a wedding march.',
+      primary:   'Most adult beginners stopped as kids. Twelve weeks of weekly 45-minute lessons gets you reading two-handed at a beginner-intermediate level. Then we pick a song you actually want to play.',
+    },
+  ],
+
+  'tutoring-service': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'SAT prep. 12 sessions. Diagnostic first.',
+      primary:   '12 weekly 90-minute sessions for SAT or ACT, starting with a full-length diagnostic and ending the week before the test. Subject tutoring billed in 4-session packages. Free 30-minute consult to scope the work.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We won't promise a 200-point gain.",
+      primary:   "Anyone who promises a fixed score gain is selling. Median student lifts 80 to 140 points across 12 sessions, and we'll tell you in week three whether the test date you picked is realistic.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Algebra C → algebra B in one quarter.',
+      primary:   'Most C grades are two missing concepts compounding. We diagnose the actual gap in session one, drill it for three weeks, then move forward at the class pace. Honest about whether tutoring is the fix or whether the schedule is.',
+    },
+  ],
+
+  'driving-school': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '5-hour pre-licensing + 6 BTW. State-approved.',
+      primary:   'State-approved 5-hour pre-licensing course plus six 1-hour behind-the-wheel sessions. Pickup from home or school. Road-test rental car included on test day. Teen package $695, adult package $595.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  '85% of our road-test students pass on attempt one.',
+      primary:   'Our 85% first-attempt pass rate is for students who finish all six BTW hours. The 15% who fail almost always skipped the parallel-park practice block — we keep teaching until you book the retake.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Permit since March → road test on the calendar.',
+      primary:   "If your permit is sitting in a drawer, you're not alone. Six 1-hour BTW sessions and the state-required pre-licensing class, scheduled around school or work, gets most students road-test ready in 6 to 8 weeks.",
+    },
+  ],
+
+  'daycare-preschool': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '1:4 infant ratio. State-licensed since 2013.',
+      primary:   'State-licensed since 2013. 1:4 infant, 1:6 toddler, 1:10 pre-K ratios — published, not aspirational. Hot meals from a posted weekly menu, two outdoor blocks, nap from 12:30 to 2:30. Tours Tuesdays and Thursdays.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Our license number is on the front door.',
+      primary:   "License number 4471-CC, posted at eye level by the entry. Last state inspection on the bulletin board. Ratios on the classroom door. If a daycare won't show you these three things on a tour, keep looking.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Drop-off tears for two weeks → walks in waving.',
+      primary:   "Two weeks of crying at drop-off is normal for a 14-month-old; we've helped about 200 families through it. Same teacher, same routine, same hook for the lunchbox. Pickup notes daily for the first month.",
+    },
+  ],
+
+  'art-class-school': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '8-week ceramics. 8 students. Wheel time included.',
+      primary:   '8-week wheel-throwing course, 8 students max, 3-hour studio sessions. $385 tuition, $40 materials fee covers 25 lb of stoneware and two firings. Open studio time included Sundays for the term.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We don't teach 'find your inner artist.'",
+      primary:   "We teach drawing the way the figure actually works, ceramics the way clay actually moves, oil paint the way pigment actually layers. Practice and feedback. The 'inner artist' shows up by week six on its own.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Sketchbook in a drawer → drawing once a week.',
+      primary:   'Most adults stopped drawing around age 11 and never got past stick-figure shame. Eight weeks of life drawing, 2 hours weekly, gets you to confident contour and basic shading. Materials list, no prior experience needed.',
+    },
+  ],
+
+  'language-school': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Spanish A1 to B1 in 3 terms. CEFR-aligned.',
+      primary:   'CEFR-aligned Spanish, French, Italian, and Mandarin. Small groups of 6, 90-minute classes twice weekly, $385 per 10-week term. Free placement interview puts you in the right level instead of starting over.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Nobody is fluent in three weeks.',
+      primary:   'An app that promises fluency in 21 days is selling streaks. Honest math: 250 to 400 hours of structured study gets a beginner to conversational B1. Our 3-term track delivers about 270 of them.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Duolingo for 200 days → ordering in Madrid.',
+      primary:   "App streaks teach passive recognition; conversation requires production. Two terms of small-group A2 work, plus one private session a month, gets most students past the 'menu in Madrid' threshold by month four.",
+    },
+  ],
+
+  'accounting-bookkeeping': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Monthly books + annual return. $385/mo.',
+      primary:   'Monthly bookkeeping in QuickBooks Online, quarterly tax check-in, and your federal and state return filed. $385 a month for sole props and single-member LLCs, scoped in a written engagement letter.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We don't give tax advice without an engagement letter.",
+      primary:   "Real answers require real numbers. Free 30-minute consult to scope your situation, then a flat-fee engagement letter before any tax position. Faster than a 'quick question' that spirals into a $4,000 audit defense.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Shoebox of receipts → clean P&L by the 15th.',
+      primary:   "If your books are 14 months behind, you're not unusual. We catch up the prior year in 4 to 6 weeks, then deliver clean monthly statements by the 15th of the following month. Fixed-fee catch-up, then monthly retainer.",
+    },
+  ],
+
+  'insurance-agent': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Auto, home, umbrella. 14 carriers quoted.',
+      primary:   "Independent agency. We quote auto, home, and umbrella across 14 carriers in one sitting. Annual policy review on the renewal date — we call you, you don't chase us. Storefront on Main, walk-ins welcome.",
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "'You're fully covered' is not a coverage limit.",
+      primary:   "If your last agent told you 'you're fully covered,' your dec page can correct them. Bring it in for a 30-minute review and we'll show you, in plain English, what your liability limits actually pay and where the gaps are.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Claim denied → claim paid in 11 days.',
+      primary:   "A water-damage claim denied for 'gradual seepage' usually has a coverage path the homeowner couldn't see. We help file, push back on the adjuster, and document the timeline. Median resolution on the claims we walked: 11 days.",
+    },
+  ],
+
+  'mortgage-broker': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Preapproval in 48 hours. 22 lenders shopped.',
+      primary:   'Conventional, FHA, VA, and jumbo programs across 22 wholesale lenders. Preapproval letter in 48 hours from a complete document set. 30 or 45-day rate locks scoped at application. NMLS #142998.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We don't quote a rate before we see your file.",
+      primary:   'A rate quoted before we see your credit, income, and property is a billboard. After a 20-minute intake we can show real options across our lender panel — including the trade-off between a lower rate and a longer lock.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Denied at the bank → closed at 6.875% with us.',
+      primary:   'Banks lend off one rate sheet; we lend off 22. The same file declined for DTI at the corner branch closed last quarter at a competitive 30-year fixed with a non-bank lender. We send a written disclosures packet day one.',
+    },
+  ],
+
+  'home-inspector': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '$485 inspection. Report by 9 a.m. next day.',
+      primary:   'Standard pre-purchase inspection $485 for homes under 2,400 sq ft. Roof, attic, crawl space, electrical, plumbing, HVAC, structure. Bound PDF report with photos delivered by 9 a.m. the morning after the walk.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We don't take referrals from agents.",
+      primary:   "We don't pay agents for referrals and we don't recommend contractors. Findings are findings — you decide what to negotiate. The reason we get the next inspection is because the last one read clearly, not because someone owed us a favor.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Mystery house → 47-page report, every system rated.',
+      primary:   'A house under contract is a stack of unknowns. A 3-hour inspection produces a 47-page bound report with every major system rated, photos of each finding, a summary of the seven items worth negotiating. Add radon ($165) or sewer scope ($245) at booking.',
+    },
+  ],
+
+  'acupuncture-clinic': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '60-min sessions. Licensed since 2014.',
+      primary:   'Licensed acupuncturist, 10 years in practice. 75-minute first visit with a full intake and a treatment, $135. 60-minute follow-ups, $95. We treat low back, neck, headache, sleep, and stress patterns most often.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We don't promise to cure anything.",
+      primary:   "Anyone promising a cure with acupuncture is overstating the literature. We treat symptoms, track them session by session, and tell you by visit four whether this is the right tool. If it isn't, we'll say so and refer.",
+    },
+    {
+      framework: 'before-after',
+      headline:  '6 months of low back pain → walking the dog again.',
+      primary:   'Chronic low back pain is rarely a single fix. A typical course is 6 to 8 weekly sessions, with most patients reporting meaningful change by visit three. Detailed intake, written notes, and we adjust the plan if it stalls.',
+    },
+  ],
 };
 
 /** Fallback for niches without curated patterns — generic but framework-shaped,

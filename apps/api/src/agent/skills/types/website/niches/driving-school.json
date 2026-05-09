@@ -1,0 +1,29 @@
+{
+  "niche": "driving-school",
+  "label": "Driving School",
+  "triggers": ["driving school", "driving lessons", "driver education", "drivers ed", "behind the wheel", "permit test prep", "road test prep", "teen driving", "adult driving lessons", "defensive driving course", "pre-licensing course", "third party road test"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+programs+register" },
+    { "slug": "programs", "role": "courses-by-license-type" },
+    { "slug": "pricing",  "role": "package-and-hour-rates" },
+    { "slug": "schedule", "role": "classroom-and-btw-calendar" },
+    { "slug": "team",     "role": "instructor-bios+certifications" },
+    { "slug": "faq",      "role": "permit+road-test+state-hours" },
+    { "slug": "contact",  "role": "registration-form" }
+  ],
+  "compliance_blocks": ["state-licensing-information", "instructor-credentials-policy", "pre-licensing-course-disclosure", "dmv-third-party-tester-disclosure", "minor-consent-form-link", "cancellation-and-makeup-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "patient and safety-first, parent-aware, plain about state hour requirements and road-test expectations",
+  "palettes": [
+    { "name": "road-yellow",   "hexes": ["#E8B130", "#FCFBF4", "#F2E5B8", "#1B1A12"] },
+    { "name": "safety-orange", "hexes": ["#D9531E", "#FBF7F2", "#F4D4B8", "#1F0E08"] },
+    { "name": "slate-signal",  "hexes": ["#2C3E50", "#FBFBF9", "#D7DEE4", "#0A1118"] },
+    { "name": "asphalt-line",  "hexes": ["#404045", "#FCFBF4", "#E2DDC8", "#0E0D10"] },
+    { "name": "school-bus",    "hexes": ["#F2C014", "#1A1A20", "#2A2A33", "#FCF8E0"] },
+    { "name": "fleet-navy",    "hexes": ["#19324F", "#FBF7EC", "#DBE2EE", "#070D18"] }
+  ],
+  "section_library": ["hero", "page-hero", "course-grid", "license-track-card", "package-pricing", "btw-schedule", "classroom-schedule", "instructor-card", "credentials-strip", "vehicle-strip", "state-requirements-block", "road-test-prep-card", "registration-cta", "parent-faq", "policies-block", "address-card", "hours-strip", "footer"],
+  "image_directives": "documentary driving-school photography. A student-driver vehicle with the rooftop sign, an instructor in the passenger seat with a clipboard, a teen mid-three-point-turn in an empty parking lot, a permit booklet open on a classroom desk. Real DMV waiting room, real road-test course markings, mixed-age adult students learning at 35. Avoid hero-shot smiling-teen-with-keys stock, no glowing speedometer overlays, no rain-on-windshield mood pieces.",
+  "voice_pet_words": ["pre-licensing", "behind-the-wheel", "permit", "road test", "hours", "instructor", "package", "state-required", "fleet"],
+  "primary_keywords": ["driving school", "driving lessons", "drivers ed", "behind the wheel"]
+}

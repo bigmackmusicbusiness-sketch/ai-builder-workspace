@@ -1,0 +1,28 @@
+{
+  "niche": "acupuncture-clinic",
+  "label": "Acupuncture Clinic",
+  "triggers": ["acupuncture", "acupuncturist", "tcm clinic", "traditional chinese medicine", "cupping therapy", "moxibustion", "herbal medicine consultation", "fertility acupuncture", "pain acupuncture", "stress acupuncture", "community acupuncture", "licensed acupuncturist"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+conditions+book" },
+    { "slug": "services", "role": "modalities-list" },
+    { "slug": "about",    "role": "practitioner-bio+training" },
+    { "slug": "team",     "role": "practitioners" },
+    { "slug": "faq",      "role": "first-visit+insurance+policies" },
+    { "slug": "contact",  "role": "appointment-form" }
+  ],
+  "compliance_blocks": ["acupuncture-license-footer", "medical-disclaimer-footer", "results-may-vary", "hipaa-privacy-link-footer", "scope-of-practice-disclaimer", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "modality-respecting, ingredient-knowledgeable like a clinic, no miracle claims, calm and concrete",
+  "palettes": [
+    { "name": "jade-cream",  "hexes": ["#1F6E5C", "#FBF7EE", "#D6E5DD", "#080F0C"] },
+    { "name": "warm-earth",  "hexes": ["#8C5E3C", "#FBF6ED", "#EDD7BC", "#1F1108"] },
+    { "name": "moxa-amber",  "hexes": ["#B58530", "#FBF7EC", "#F2DDB8", "#1F1408"] },
+    { "name": "rice-paper",  "hexes": ["#2F4F3E", "#FBF8F0", "#DEE5DA", "#0F1A14"] },
+    { "name": "clay-brick",  "hexes": ["#A0533A", "#FBF4EA", "#EDD2BC", "#1F0A08"] },
+    { "name": "linen-stone", "hexes": ["#7E7B72", "#FCFAF1", "#E5DECC", "#1A1812"] }
+  ],
+  "section_library": ["hero", "page-hero", "conditions-grid", "modality-card", "treatment-strip", "practitioner-card", "practitioner-intro", "credentials-strip", "first-visit-walkthrough", "intake-form-link", "appointment-cta", "insurance-strip", "client-words", "faq-accordion", "address-card", "hours-strip", "footer-hipaa", "footer"],
+  "image_directives": "calm clinical photography of an actual treatment room. A massage-style table with sheeted bolster, single-use needles in a sterile tray, a moxa stick on a ceramic dish, glass cups on a wooden cart, an herbal pharmacy wall with labeled drawers and a granule bottle on the counter. A practitioner taking a wrist pulse, soft daylight through a paper-shaded window, a small reception with a kettle. Avoid stock-photo glowing-meridian overlays, no zen-stones-and-bamboo cliches, no patient-with-needles-and-spa-music montage.",
+  "voice_pet_words": ["modality", "point", "course", "intake", "session", "constitutional", "scope", "honest"],
+  "primary_keywords": ["acupuncture", "acupuncturist", "tcm clinic", "chinese medicine"]
+}

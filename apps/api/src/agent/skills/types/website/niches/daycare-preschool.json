@@ -1,0 +1,28 @@
+{
+  "niche": "daycare-preschool",
+  "label": "Daycare & Preschool",
+  "triggers": ["daycare", "preschool", "childcare", "infant care", "toddler care", "pre-k program", "nursery school", "early childhood program", "full day preschool", "half day preschool", "licensed childcare", "before and after care"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+programs+tour-cta" },
+    { "slug": "programs", "role": "age-groups+curriculum" },
+    { "slug": "team",     "role": "teacher-bios+credentials" },
+    { "slug": "pricing",  "role": "tuition+enrollment-fee" },
+    { "slug": "faq",      "role": "ratios+meals+nap+policies" },
+    { "slug": "contact",  "role": "tour-request-form" }
+  ],
+  "compliance_blocks": ["state-childcare-license-footer", "staff-to-child-ratios-disclosure", "instructor-credentials-policy", "meal-and-allergy-policy", "vaccination-policy", "minor-consent-form-link", "photo-release-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "ChildCare",
+  "voice_template": "parent-confident, ratio-honest, licensing-transparent, never theatrical or saccharine",
+  "palettes": [
+    { "name": "milk-sage",    "hexes": ["#9CB497", "#FCFBF4", "#E2EAD8", "#192418"] },
+    { "name": "warm-yellow",  "hexes": ["#E8C66B", "#FCFAF0", "#F5E8C2", "#1F1A10"] },
+    { "name": "soft-primary", "hexes": ["#5E8AB8", "#FCFBF4", "#DEE7EE", "#0F1820"] },
+    { "name": "cotton-clay",  "hexes": ["#C18268", "#FCF7EE", "#F4DCC8", "#21130A"] },
+    { "name": "linen-leaf",   "hexes": ["#7E9A6E", "#FBF8EC", "#DEE6CC", "#181F12"] },
+    { "name": "nap-blush",    "hexes": ["#C99494", "#FCF6F2", "#F2DAD3", "#1F100E"] }
+  ],
+  "section_library": ["hero", "page-hero", "age-group-grid", "classroom-card", "curriculum-strip", "daily-schedule-block", "ratio-table", "meal-policy-block", "nap-policy-block", "teacher-card", "credentials-strip", "license-display", "tuition-table", "enrollment-process", "tour-cta", "parent-faq", "address-card", "hours-strip", "footer"],
+  "image_directives": "warm, honest classroom photography. A teacher reading on a rug to four toddlers, a snack tray with cut-up apple and cheese, low cubbies with name labels, a 1:4 infant room with two caregivers and four bassinets, a fenced playground with mulch. Real wood toys with chips, real handwashing routines, real diaper-change stations sanitized. Mixed staff and mixed kids, parents at pickup. Avoid cartoon-bright primary saturation, no Comic Sans signage, no smiling-on-cue stock children with paint on their nose.",
+  "voice_pet_words": ["ratio", "curriculum", "licensed", "nap", "snack", "transition", "drop-off", "pickup", "tour", "enrollment"],
+  "primary_keywords": ["daycare", "preschool", "childcare", "early childhood"]
+}

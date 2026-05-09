@@ -1,0 +1,27 @@
+{
+  "niche": "insurance-agent",
+  "label": "Insurance Agent",
+  "triggers": ["insurance agent", "insurance agency", "auto insurance", "home insurance", "life insurance", "business insurance", "umbrella policy", "renters insurance", "insurance quote", "policy review", "claims help", "independent insurance agent"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+lines+quote-cta" },
+    { "slug": "services", "role": "lines-of-coverage" },
+    { "slug": "team",     "role": "agent-bios+licenses" },
+    { "slug": "faq",      "role": "claims-process+carriers" },
+    { "slug": "contact",  "role": "quote-request-form" }
+  ],
+  "compliance_blocks": ["insurance-license-footer", "carrier-affiliations", "data-privacy-and-glba-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "InsuranceAgency",
+  "voice_template": "consultative, carrier-network honest, claims-process clear, no best-rate guarantees",
+  "palettes": [
+    { "name": "trust-blue",      "hexes": ["#1E3A6E", "#FBF8F0", "#D8DEEC", "#0A1226"] },
+    { "name": "deep-navy-cream", "hexes": ["#0F2440", "#FBF7EE", "#D5DCE6", "#06101E"] },
+    { "name": "harbor-slate",    "hexes": ["#3A506B", "#FBFAF4", "#DCE2EA", "#0E141C"] },
+    { "name": "evergreen-cream", "hexes": ["#1F4E3D", "#FBF7EE", "#D6E0D8", "#0A140F"] },
+    { "name": "ash-gold",        "hexes": ["#A2864A", "#FBF7EC", "#E8DCB8", "#1F1808"] },
+    { "name": "stone-cream",     "hexes": ["#5C6470", "#FBF8F0", "#DDE0E5", "#161A22"] }
+  ],
+  "section_library": ["hero", "page-hero", "lines-of-coverage-grid", "policy-card", "carrier-strip", "agent-card", "agent-intro", "license-strip", "claims-process-timeline", "policy-review-cta", "quote-cta", "faq-accordion", "client-testimonial", "address-card", "hours-strip", "footer"],
+  "image_directives": "honest, low-key office photography. An agent at a desk with a dec page in front of them, a ring binder of carrier guidelines, a phone headset on the keyboard, a printed policy summary on the table for a client review. A storefront window with a clearly displayed state license number, a small conference table with two chairs and a brochure rack. Avoid stock-photo umbrella-over-family imagery, no shaking-hands-with-money cliches, no glowing-shield-around-a-house overlays.",
+  "voice_pet_words": ["coverage", "carrier", "policy", "premium", "quote", "claim", "deductible", "review", "umbrella"],
+  "primary_keywords": ["insurance agent", "insurance quote", "auto insurance", "home insurance"]
+}

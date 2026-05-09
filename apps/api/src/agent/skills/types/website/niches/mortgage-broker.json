@@ -1,0 +1,27 @@
+{
+  "niche": "mortgage-broker",
+  "label": "Mortgage Broker",
+  "triggers": ["mortgage broker", "mortgage", "home loan", "refinance", "mortgage rate", "preapproval", "fha loan", "va loan", "jumbo loan", "conventional mortgage", "rate lock", "mortgage originator"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+programs+preapproval-cta" },
+    { "slug": "services", "role": "loan-program-list" },
+    { "slug": "team",     "role": "originator-bios+nmls" },
+    { "slug": "faq",      "role": "process+documents+timeline" },
+    { "slug": "contact",  "role": "preapproval-form" }
+  ],
+  "compliance_blocks": ["nmls-id-footer", "equal-housing-lender-logo", "consumer-protection-disclosure", "engagement-letter-required", "data-privacy-and-glba-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "FinancialService",
+  "voice_template": "rate-honest, lock-period clear, doc-list realistic, never best-rate-guaranteed",
+  "palettes": [
+    { "name": "navy-champagne", "hexes": ["#0E2A4A", "#FBF6EC", "#EAD8B0", "#06101E"] },
+    { "name": "deep-graphite",  "hexes": ["#1F2430", "#FBF8F0", "#E2DCC8", "#0A0C12"] },
+    { "name": "harbor-cream",   "hexes": ["#314A6B", "#FBF8F0", "#DCE2EA", "#0E141C"] },
+    { "name": "olive-paper",    "hexes": ["#5C6E3A", "#FBF8EC", "#DEE2C2", "#101408"] },
+    { "name": "warm-stone",     "hexes": ["#7E6E5A", "#FBF7EE", "#E8DEC8", "#1A1408"] },
+    { "name": "spruce-cream",   "hexes": ["#214635", "#FBF7EE", "#D6E0D8", "#0A140F"] }
+  ],
+  "section_library": ["hero", "page-hero", "loan-program-grid", "program-card", "rate-snapshot-strip", "preapproval-cta", "originator-card", "originator-intro", "nmls-strip", "process-timeline", "document-checklist", "lock-policy-block", "faq-accordion", "client-testimonial", "address-card", "hours-strip", "footer"],
+  "image_directives": "documentary-style office photography. A loan originator at a desk with a phone to their ear, a stack of pay stubs and W-2s clipped together, a printed Loan Estimate, a calculator next to a yellow legal pad with debt-to-income scratch math. The Equal Housing Lender logo visibly placed on a window or business card. A closing-day handoff with a binder of disclosures. Avoid stock-photo couple-with-fake-keys-in-front-of-house, no piggy-bank-and-house cliches, no glowing-percent-sign hero overlays.",
+  "voice_pet_words": ["preapproval", "rate", "lock", "originator", "DTI", "LTV", "disclosures", "closing", "program"],
+  "primary_keywords": ["mortgage broker", "home loan", "mortgage", "refinance"]
+}

@@ -1,0 +1,29 @@
+{
+  "niche": "art-class-school",
+  "label": "Art Class & School",
+  "triggers": ["art classes", "art school", "painting class", "ceramics class", "drawing class", "printmaking class", "kids art class", "adult art class", "pottery wheel class", "oil painting class", "watercolor class", "studio art lessons"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+classes+register" },
+    { "slug": "programs", "role": "media-and-tracks" },
+    { "slug": "schedule", "role": "term-and-workshop-calendar" },
+    { "slug": "pricing",  "role": "tuition+materials-fee" },
+    { "slug": "team",     "role": "instructor-bios+practice" },
+    { "slug": "gallery",  "role": "student-work" },
+    { "slug": "contact",  "role": "registration-form" }
+  ],
+  "compliance_blocks": ["instructor-credentials-policy", "materials-fee-policy", "cancellation-and-makeup-policy", "minor-consent-form-link", "photo-release-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "practice-first, materials-knowledgeable, no find-your-inner-artist fluff",
+  "palettes": [
+    { "name": "studio-paper",    "hexes": ["#B58A5C", "#FCF8EF", "#EFE0BF", "#1F1408"] },
+    { "name": "india-ink",       "hexes": ["#1A1814", "#FBF7EC", "#E5DEC4", "#070605"] },
+    { "name": "fresh-palette",   "hexes": ["#C7445A", "#FCFBF6", "#F2D8D4", "#1A0A0E"] },
+    { "name": "kiln-clay",       "hexes": ["#A35A3C", "#FBF4EA", "#EFD2BA", "#1F0E08"] },
+    { "name": "underpainting",   "hexes": ["#3F5A4E", "#FBF8EC", "#DEE5DA", "#0F1A14"] },
+    { "name": "newsprint-cream", "hexes": ["#7E7B72", "#FCFAF1", "#E5DECC", "#1A1812"] }
+  ],
+  "section_library": ["hero", "page-hero", "media-grid", "class-card", "term-calendar", "workshop-card", "tuition-table", "materials-list-block", "instructor-card", "instructor-intro", "credentials-strip", "student-gallery", "registration-cta", "parent-faq", "policies-block", "address-card", "hours-strip", "footer"],
+  "image_directives": "studio-floor photography. A drawing-class easel with a charcoal still-life in progress, a wheel-thrown bowl mid-trim with a wire tool nearby, a watercolor underpainting drying on hot-press paper, a printmaking press with a damp linocut on the bed. Real student work pinned to a critique wall, smocks with pigment stains, a glaze-mixing area with labeled buckets. Adults and teens working at separate tables. Avoid stock-photo families finger-painting in matching aprons, no glowing brush trails, no inspirational-quote-on-canvas hero shots.",
+  "voice_pet_words": ["medium", "studio", "practice", "term", "workshop", "critique", "materials", "drawing from life", "process"],
+  "primary_keywords": ["art classes", "art school", "painting class", "ceramics class"]
+}
