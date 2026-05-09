@@ -3,8 +3,19 @@
 import { build } from 'esbuild';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { execSync } from 'node:child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Capture git SHA + ISO timestamp at build time. Inlined into the bundle via
+// esbuild's `define`. Surfaced on /healthz so we can verify which commit is
+// running in prod without needing log/SSH access. Falls back to 'unknown' if
+// git is unavailable (e.g. in a Docker layer that lacks .git/).
+let buildSha = 'unknown';
+try {
+  buildSha = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+} catch { /* keep 'unknown' */ }
+const buildTime = new Date().toISOString();
 
 await build({
   entryPoints: [resolve(__dirname, 'src/server.ts')],
@@ -12,6 +23,10 @@ await build({
   bundle: true,
   platform: 'node',
   target: 'node20',
+  define: {
+    '__BUILD_SHA__':  JSON.stringify(buildSha),
+    '__BUILD_TIME__': JSON.stringify(buildTime),
+  },
   // CJS format: avvio/fastify use dynamic require() inside functions which esbuild's
   // ESM output cannot hoist into static imports → crashes with "Dynamic require of
   // node:events is not supported". CJS format has native require() and avoids this.

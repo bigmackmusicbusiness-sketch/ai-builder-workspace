@@ -495,8 +495,35 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
               for (const tc of calls) {
                 if (tc.function?.name !== 'write_file') continue;
                 try {
-                  const parsed = JSON.parse(tc.function.arguments ?? '{}') as { path?: string; file?: string; filename?: string; filepath?: string };
-                  const p = parsed.path ?? parsed.file ?? parsed.filename ?? parsed.filepath;
+                  // Use the same tolerant parsing as the executor — the model
+                  // can wrap args ({args:{path}}, {input:{path}}) or use any
+                  // case ({Path}, {filepath}, {file-path}) and we still have to
+                  // track that a file was written for the build-incomplete nudge.
+                  // Mirrors findArgString in apps/api/src/agent/tools.ts.
+                  const raw = JSON.parse(tc.function.arguments ?? '{}') as unknown;
+                  const root: Record<string, unknown> = Array.isArray(raw)
+                    ? ((raw.find((el) => el && typeof el === 'object' && !Array.isArray(el)) as Record<string, unknown> | undefined) ?? {})
+                    : (raw as Record<string, unknown>) ?? {};
+                  const PATH_ALIASES = ['path', 'filepath', 'file', 'filename', 'pathname', 'name', 'relpath', 'relativepath', 'dest', 'destination', 'target', 'to', 'out', 'output', 'outputpath'];
+                  const WRAPPERS = ['args', 'arguments', 'input', 'params', 'parameters', 'function', 'data', 'payload', 'tool_input', 'toolInput'];
+                  const norm = (k: string): string => k.toLowerCase().replace(/[_\-\s]/g, '');
+                  const aliasSet = new Set(PATH_ALIASES.map(norm));
+                  const findPath = (obj: Record<string, unknown>): string | undefined => {
+                    for (const [k, v] of Object.entries(obj)) {
+                      if (typeof v === 'string' && v.trim() && aliasSet.has(norm(k))) return v.trim();
+                    }
+                    return undefined;
+                  };
+                  let p = findPath(root);
+                  if (!p) {
+                    for (const w of WRAPPERS) {
+                      const inner = root[w];
+                      if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
+                        p = findPath(inner as Record<string, unknown>);
+                        if (p) break;
+                      }
+                    }
+                  }
                   if (typeof p === 'string') writtenPaths.add(p.replace(/^\/+/, '').toLowerCase());
                 } catch { /* malformed — counted as no path */ }
               }

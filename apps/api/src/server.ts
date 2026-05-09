@@ -180,7 +180,17 @@ async function main(): Promise<void> {
   app.addHook('preHandler', csrfGuard);
 
   // ── Health ──────────────────────────────────────────────────────────────────
-  app.get('/healthz', async () => ({ ok: true, service: 'api', ts: Date.now() }));
+  // __BUILD_SHA__ + __BUILD_TIME__ are inlined by esbuild's `define` at build
+  // time (see apps/api/build.mjs). Surfacing them lets us verify which commit
+  // is running in prod via `curl /healthz` — critical when debugging "is my
+  // fix actually deployed yet?" without needing log/SSH access.
+  app.get('/healthz', async () => ({
+    ok:        true,
+    service:   'api',
+    ts:        Date.now(),
+    buildSha:  typeof __BUILD_SHA__  === 'string' ? __BUILD_SHA__  : 'unknown',
+    buildTime: typeof __BUILD_TIME__ === 'string' ? __BUILD_TIME__ : 'unknown',
+  }));
 
   // ── Routes ──────────────────────────────────────────────────────────────────
   await app.register(projectsRoutes);

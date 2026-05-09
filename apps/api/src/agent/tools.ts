@@ -288,9 +288,34 @@ function normKey(k: string): string {
   return k.toLowerCase().replace(/[_\-\s]/g, '');
 }
 
+/** Try to coerce `v` into a record we can search. Handles:
+ *   - already an object → returned as-is
+ *   - array → first object element (some models double-wrap)
+ *   - JSON-string ('{"path":"x"}') → parsed if valid
+ *   - anything else → undefined */
+function toSearchableObject(v: unknown): Record<string, unknown> | undefined {
+  if (!v) return undefined;
+  if (typeof v === 'object' && !Array.isArray(v)) {
+    return v as Record<string, unknown>;
+  }
+  if (Array.isArray(v)) {
+    const first = (v as unknown[]).find((el) => el && typeof el === 'object' && !Array.isArray(el));
+    return first ? (first as Record<string, unknown>) : undefined;
+  }
+  if (typeof v === 'string' && v.trim().startsWith('{')) {
+    try {
+      const parsed: unknown = JSON.parse(v);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch { /* not JSON, ignore */ }
+  }
+  return undefined;
+}
+
 /** Find the first non-empty string value at `args[alias]` for any alias,
- *  case-insensitive and ignoring separators. Falls back to one level of
- *  wrapper-object unwrap if no top-level match is found. */
+ *  case-insensitive and ignoring separators. Recurses into wrapper-object
+ *  properties up to 2 levels deep, and tolerates JSON-encoded args. */
 function findArgString(
   args: Record<string, unknown>,
   aliases: string[],
@@ -303,14 +328,26 @@ function findArgString(
     }
     return undefined;
   };
-  const top = lookup(args);
-  if (top !== undefined) return top;
-  for (const wrapKey of WRAPPER_KEYS) {
-    const wrapped = args[wrapKey];
-    if (wrapped && typeof wrapped === 'object' && !Array.isArray(wrapped)) {
-      const inner = lookup(wrapped as Record<string, unknown>);
-      if (inner !== undefined) return inner;
+  // Search up to 2 levels deep through wrapper keys (BFS, not DFS, to favor
+  // shallow matches). Models have been observed wrapping args 1-2 levels.
+  const visited = new Set<unknown>();
+  const queue: Record<string, unknown>[] = [args];
+  let depth = 0;
+  while (queue.length && depth <= 2) {
+    const nextQueue: Record<string, unknown>[] = [];
+    for (const obj of queue) {
+      if (visited.has(obj)) continue;
+      visited.add(obj);
+      const found = lookup(obj);
+      if (found !== undefined) return found;
+      for (const wrapKey of WRAPPER_KEYS) {
+        const inner = toSearchableObject(obj[wrapKey]);
+        if (inner) nextQueue.push(inner);
+      }
     }
+    queue.length = 0;
+    queue.push(...nextQueue);
+    depth++;
   }
   return undefined;
 }
@@ -328,14 +365,24 @@ function findArgStringAllowEmpty(
     }
     return undefined;
   };
-  const top = lookup(args);
-  if (top !== undefined) return top;
-  for (const wrapKey of WRAPPER_KEYS) {
-    const wrapped = args[wrapKey];
-    if (wrapped && typeof wrapped === 'object' && !Array.isArray(wrapped)) {
-      const inner = lookup(wrapped as Record<string, unknown>);
-      if (inner !== undefined) return inner;
+  const visited = new Set<unknown>();
+  const queue: Record<string, unknown>[] = [args];
+  let depth = 0;
+  while (queue.length && depth <= 2) {
+    const nextQueue: Record<string, unknown>[] = [];
+    for (const obj of queue) {
+      if (visited.has(obj)) continue;
+      visited.add(obj);
+      const found = lookup(obj);
+      if (found !== undefined) return found;
+      for (const wrapKey of WRAPPER_KEYS) {
+        const inner = toSearchableObject(obj[wrapKey]);
+        if (inner) nextQueue.push(inner);
+      }
     }
+    queue.length = 0;
+    queue.push(...nextQueue);
+    depth++;
   }
   return undefined;
 }
@@ -363,7 +410,15 @@ export async function executeToolCall(
 
   let args: Record<string, unknown>;
   try {
-    args = argsJson.trim() ? JSON.parse(argsJson) as Record<string, unknown> : {};
+    const parsed = argsJson.trim() ? JSON.parse(argsJson) : {};
+    // Top-level array drift: model emits [{path, content}] instead of {path, content}.
+    // Take the first object element if so.
+    if (Array.isArray(parsed)) {
+      const first = parsed.find((el) => el && typeof el === 'object' && !Array.isArray(el));
+      args = (first as Record<string, unknown> | undefined) ?? {};
+    } else {
+      args = parsed as Record<string, unknown>;
+    }
   } catch (err) {
     // Best-effort: pull a "path" or "filename" out of the malformed JSON for a useful hint.
     const pathMatch = argsJson.match(/"(?:path|filename)"\s*:\s*"([^"]+)"/);
