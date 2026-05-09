@@ -1,0 +1,29 @@
+{
+  "niche": "dog-trainer",
+  "label": "Dog Trainer",
+  "triggers": ["dog trainer", "puppy trainer", "dog training", "puppy class", "obedience training", "reactive dog training", "leash training", "force-free training", "positive reinforcement training", "private dog training", "group obedience class", "board and train"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+programs+contact" },
+    { "slug": "programs", "role": "private+group+puppy+reactivity" },
+    { "slug": "pricing",  "role": "package-pricing" },
+    { "slug": "about",    "role": "methodology+credentials" },
+    { "slug": "results",  "role": "case-stories+video" },
+    { "slug": "faq",      "role": "what-we-dont-do+gear+timeline" },
+    { "slug": "contact",  "role": "intake-form+phone" }
+  ],
+  "compliance_blocks": ["liability-waiver-link", "pet-health-disclosure-form", "methodology-statement", "cancellation-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "positive-reinforcement-grounded, ethics-forward, no aversive marketing or bro-coaching",
+  "palettes": [
+    { "name": "forest-clay",    "hexes": ["#365C3F", "#F5F1EA", "#D8C5B0", "#0E1B12"] },
+    { "name": "slate-loam",     "hexes": ["#3F4A52", "#F4F2EC", "#C9CDC2", "#0E1316"] },
+    { "name": "moss-stone",     "hexes": ["#4F6646", "#F2F3ED", "#CCCFC3", "#161B14"] },
+    { "name": "earth-rust",     "hexes": ["#7A4632", "#F5EFE5", "#D6BFA9", "#1A0E08"] },
+    { "name": "training-olive", "hexes": ["#5C5E33", "#F5F2E5", "#D4D2B5", "#191A0E"] },
+    { "name": "field-grey",     "hexes": ["#566064", "#EFEFEC", "#C6C9C6", "#11161A"] }
+  ],
+  "section_library": ["hero", "page-hero", "program-grid", "private-program-card", "group-class-card", "puppy-class-card", "reactivity-program-card", "methodology-strip", "credentials-card", "case-story-card", "before-after-video-strip", "intake-form", "review-strip", "testimonial-card", "appointment-cta", "phone-cta", "faq-accordion", "footer"],
+  "image_directives": "real working sessions. A trainer kneeling at a puppy's level with a clicker and treats, a long-line at the park with a shepherd, a reactive-dog client at threshold distance with a parked car between, hands on leash mechanics. Show flat collars and harnesses, never prong/e-collars. Dogs working — sniffing, sitting, decompressing — not posing. No tactical-vibe action shots, no AI-perfect heel pictures, no stock 'happy obedient dog' frames.",
+  "voice_pet_words": ["positive reinforcement", "force-free", "marker", "threshold", "loose-leash", "decompression", "reps", "criteria", "consent", "pace"],
+  "primary_keywords": ["dog trainer", "puppy class", "reactive dog training", "obedience training"]
+}

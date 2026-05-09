@@ -1,0 +1,29 @@
+{
+  "niche": "pet-grooming",
+  "label": "Pet Grooming Salon",
+  "triggers": ["dog groomer", "pet groomer", "dog grooming", "pet grooming", "grooming salon", "full groom", "deshed", "puppy bath", "nail trim", "breed cut", "doodle groom", "poodle cut", "shih tzu cut", "hand-stripping"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+services+book" },
+    { "slug": "services", "role": "groom-types+breed-cuts" },
+    { "slug": "pricing",  "role": "size-tier+coat-tier" },
+    { "slug": "gallery",  "role": "before-after-coat-gallery" },
+    { "slug": "about",    "role": "groomer-bios+salon-tour" },
+    { "slug": "faq",      "role": "first-visit+coat-prep" },
+    { "slug": "contact",  "role": "phone+address+hours" }
+  ],
+  "compliance_blocks": ["liability-waiver-link", "pet-health-disclosure-form", "cancellation-policy", "gratuity-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "PetStore",
+  "voice_template": "patient, breed-cut literate, calm with anxious dogs, no upsell pressure",
+  "palettes": [
+    { "name": "salon-terracotta", "hexes": ["#B8633F", "#FBF3EA", "#EBD3BD", "#23130C"] },
+    { "name": "soap-sage",        "hexes": ["#869F7C", "#F6F8F2", "#DAE3D1", "#1B2418"] },
+    { "name": "cream-clipper",    "hexes": ["#C7873A", "#FFF9EE", "#F4DEB7", "#251806"] },
+    { "name": "warm-oat",         "hexes": ["#A2774E", "#FBF5EB", "#EAD4B5", "#1F140A"] },
+    { "name": "blush-cocoa",      "hexes": ["#A85B58", "#FBF1EE", "#EFD0C9", "#21100E"] },
+    { "name": "linen-mauve",      "hexes": ["#8E6B7A", "#FAF4F4", "#E5D2D7", "#1F1318"] }
+  ],
+  "section_library": ["hero", "page-hero", "service-grid", "groom-type-card", "breed-cut-card", "coat-tier-table", "size-tier-table", "addon-grid", "before-after-gallery", "groomer-card", "salon-tour", "first-visit-checklist", "review-strip", "testimonial-card", "appointment-cta", "phone-cta", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "candid salon work shot close. Clippers moving through a doodle's coat, scissors finishing a poodle's face, a calm shih tzu in a force dryer, a tech holding a paw for nail trim. Show towels, smocks, non-slip table mats, the kennel-bank wall. No stock-photo bows-and-bandanas, no AI-perfect glamour-puppy portraits, no over-saturated pastel sets. Natural salon light beats studio strobes.",
+  "voice_pet_words": ["full groom", "deshed", "hand-strip", "scissoring", "force-dryer", "nail trim", "ear-clean", "coat", "tidy-up", "first visit"],
+  "primary_keywords": ["dog grooming", "pet grooming", "groomer", "breed cuts"]
+}

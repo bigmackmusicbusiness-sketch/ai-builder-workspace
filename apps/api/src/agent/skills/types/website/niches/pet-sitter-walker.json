@@ -1,0 +1,29 @@
+{
+  "niche": "pet-sitter-walker",
+  "label": "Pet Sitter & Dog Walker",
+  "triggers": ["dog walker", "pet sitter", "pet sitting", "dog walking", "in-home pet sitter", "overnight pet sitter", "mid-day dog walk", "vacation pet sitting", "cat sitter", "drop-in visit", "house-sit pet care", "professional dog walker"],
+  "default_sitemap": [
+    { "slug": "index",         "role": "hero+services+book" },
+    { "slug": "services",      "role": "walks+drop-ins+overnights" },
+    { "slug": "pricing",       "role": "visit-tier+overnight-tier" },
+    { "slug": "neighborhoods", "role": "service-area-map" },
+    { "slug": "about",         "role": "story+insurance+keys" },
+    { "slug": "faq",           "role": "meet-greet+gps+updates" },
+    { "slug": "contact",       "role": "intake-form+phone" }
+  ],
+  "compliance_blocks": ["bonded-and-insured-statement", "key-handling-policy", "liability-waiver-link", "service-area-radius", "cancellation-policy", "gratuity-policy", "holiday-rate-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "ProfessionalService",
+  "voice_template": "trustworthy, quiet-professional, transparent about keys, GPS tracks, and daily updates",
+  "palettes": [
+    { "name": "sage-oat",       "hexes": ["#8AA088", "#F7F5EC", "#DFE3D0", "#1A2118"] },
+    { "name": "slate-rose",     "hexes": ["#5E6770", "#F8F2F2", "#E2D3D3", "#13181D"] },
+    { "name": "oat-dusk",       "hexes": ["#A89070", "#FAF6EE", "#E6D9C2", "#1B140C"] },
+    { "name": "linen-fern",     "hexes": ["#7C9876", "#F8F8F2", "#DDE5D0", "#161D17"] },
+    { "name": "quiet-slate",    "hexes": ["#4F5C66", "#F4F4F1", "#D4D6D4", "#0E1318"] },
+    { "name": "dusty-rose-oat", "hexes": ["#9B7572", "#FAF4F1", "#E8D7D2", "#1B1311"] }
+  ],
+  "section_library": ["hero", "page-hero", "service-grid", "walk-tier-card", "drop-in-tier-card", "overnight-tier-card", "service-area-map", "neighborhood-card", "meet-greet-cta", "key-handling-strip", "gps-update-strip", "insurance-badge-strip", "review-strip", "testimonial-card", "appointment-cta", "phone-cta", "faq-accordion", "footer"],
+  "image_directives": "the quiet middle of a workday. A walker leashing a beagle at a porch, a dog drinking from a water bowl while the sitter texts an update, a cat sitter scooping a litter box in someone's apartment, two dogs side-by-side on a sidewalk on a 30-minute loop. Show keys on a carabiner, treat pouch, leash poop-bag holder. No marketing-bright park sprints, no stock 'woman jogging with a husky' frames, no over-cute pet selfies.",
+  "voice_pet_words": ["mid-day walk", "drop-in", "overnight", "key handoff", "GPS-tracked", "photo update", "bonded and insured", "meet-and-greet", "loop", "regular"],
+  "primary_keywords": ["dog walker", "pet sitter", "dog walking", "overnight pet sitting"]
+}

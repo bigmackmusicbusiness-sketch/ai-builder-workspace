@@ -1,0 +1,29 @@
+{
+  "niche": "mobile-pet-grooming",
+  "label": "Mobile Pet Grooming",
+  "triggers": ["mobile groomer", "mobile dog groomer", "mobile pet grooming", "grooming van", "mobile grooming", "we come to you grooming", "at-home grooming", "house-call groomer", "senior dog grooming", "anxious dog grooming", "one-dog-at-a-time grooming", "doorstep grooming"],
+  "default_sitemap": [
+    { "slug": "index",         "role": "hero+packages+book" },
+    { "slug": "services",      "role": "package-tiers+coat-types" },
+    { "slug": "pricing",       "role": "size-tier+travel-tier" },
+    { "slug": "neighborhoods", "role": "service-area-map" },
+    { "slug": "book",          "role": "scheduler+address-intake" },
+    { "slug": "faq",           "role": "van-tour+water-power-needs" },
+    { "slug": "contact",       "role": "phone+sms+hours" }
+  ],
+  "compliance_blocks": ["liability-waiver-link", "pet-health-disclosure-form", "service-area-radius", "bonded-and-insured-statement", "cancellation-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "LocalBusiness",
+  "voice_template": "convenience-first, low-stress for older or anxious dogs, route-clear and on-time",
+  "palettes": [
+    { "name": "van-rust",          "hexes": ["#A8542C", "#FBF5ED", "#E8C9A8", "#21130A"] },
+    { "name": "service-navy",      "hexes": ["#1F3A5F", "#F4F7FB", "#CFD9E5", "#0A1422"] },
+    { "name": "driveway-clay",     "hexes": ["#9C5640", "#FFF7F0", "#F0CFB8", "#22130D"] },
+    { "name": "weatherproof-teal", "hexes": ["#266A6A", "#F2F8F7", "#C7DCDA", "#0C1E1E"] },
+    { "name": "diesel-bronze",     "hexes": ["#7A4E2E", "#F8F1E6", "#E0C9A6", "#1A100A"] },
+    { "name": "route-cream",       "hexes": ["#B17A3F", "#FDF8EE", "#EFD8B6", "#1E140A"] }
+  ],
+  "section_library": ["hero", "page-hero", "package-tier-grid", "size-tier-table", "coat-type-card", "service-area-map", "neighborhood-card", "van-tour-strip", "water-power-checklist", "first-visit-checklist", "scheduler-embed", "review-strip", "testimonial-card", "phone-cta-bar", "faq-accordion", "footer", "trust-badge-strip"],
+  "image_directives": "the van is the studio. Show the actual rig parked at a curb, the side door open, hose on the ground, dog stepping onto the ramp. Inside: bath, dryer, table — tight quarters, real lighting. A senior labrador rinsing in the tub, a tech kneeling beside an anxious shepherd. No glossy fleet-marketing renders, no stock-photo grinning groomer, no impossibly-clean interiors. Curb-side and driveway daylight.",
+  "voice_pet_words": ["one-at-a-time", "no-cage drying", "doorstep", "route", "service area", "senior-friendly", "in-and-out", "self-contained", "bonded and insured"],
+  "primary_keywords": ["mobile dog grooming", "mobile pet grooming", "mobile groomer", "grooming van"]
+}

@@ -1472,6 +1472,96 @@ export const COPY_PATTERNS: Record<string, CopyPattern[]> = {
       primary:   'Acne facials work on a 12-week schedule, not a one-visit fix. Bi-weekly extractions, a homecare regimen you can actually stick to, and a check-in at week six. Starting at $115 a session.',
     },
   ],
+
+  'pet-grooming': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '60-minute full groom. Breed cuts on the chart.',
+      primary:   'Bath, blow-out, ear-clean, nail trim, and breed-cut finish in one appointment. Doodles, poodles, shih tzus, terriers — the cut card stays with the file. Booking 2-3 weeks out; same-day waitlist Tuesday and Wednesday.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We don't kennel-dry anxious dogs.",
+      primary:   "Force-dryer on a stand, hand-finished by the groomer, no cage. Senior dogs and shutdown rescues get a slower flow and a break room between bath and brush. Tell us at intake; we'll work to your dog's pace.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Six-month matted coat → clean tidy in two visits.',
+      primary:   'Heavy matting comes off short on visit one — coat-first, vanity second. Visit two we shape it. Honest about what scissors can save and what has to grow back. Health-of-skin notes go home with you.',
+    },
+  ],
+
+  'mobile-pet-grooming': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Self-contained van. One dog at a time.',
+      primary:   'Bath, dryer, and table inside the rig — your power and water not needed. Bonded and insured, 8-mile radius from the shop, 60-90 minutes curbside. Senior and anxious dogs get the first slots of the day.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'No salon. No other dogs barking.',
+      primary:   "Some dogs unravel in a salon — strange dryers, unfamiliar dogs in adjacent kennels, the wait. The van is just your dog and the groomer for an hour. If that's the difference between a groom that works and a groom that doesn't, this is it.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Two-person wrestle → curbside in an hour.',
+      primary:   "Loading a 70-lb senior labrador into a car for a salon visit was the hard part. We park out front, ramp down, in and out in 90 minutes, coat done, you didn't move the car. Standard route days are Tuesday through Friday.",
+    },
+  ],
+
+  'pet-boarding-daycare': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Daycare $42, overnight $58, holiday rates posted.',
+      primary:   "Group play matched by size and play-style, raised cots in every suite, two staffed potty-yard rotations after dinner. Vaccinations required: rabies, distemper, bordetella. Free meet-and-greet before the first stay — we don't board a dog we haven't met.",
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'We turn dogs away. Here is why.',
+      primary:   "If a dog can't settle in group, can't share a fence-line, or hasn't met us before a holiday week, we say so. Match-fit matters more than a booked kennel. Trial-day report goes home before we accept the boarding deposit.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Anxious first drop-off → asleep on the cot by 11.',
+      primary:   'Most dogs settle on visit two. Visit one is loud — we feed in the suite, walk the perimeter, skip group if the read says skip. By the second overnight, a lot of them walk themselves to the kennel. Holiday week books out 6 weeks ahead.',
+    },
+  ],
+
+  'dog-trainer': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '4-week puppy class. 5 dogs per cohort, capped.',
+      primary:   'Sit, down, recall, leash mechanics, and one socialization field-trip — built around what 8-to-16-week puppies actually need. Reward-based, no prong or e-collars. $325 for the four weeks, handouts and video drills between sessions.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "Reactivity isn't fixed in a weekend.",
+      primary:   'Trainers who promise a one-session reset for a leash-reactive dog are selling the dog short. Real work is threshold reps, gear changes, and a handler who learns to read body language earlier. 6-session reactivity package, in-person and home video review.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Pulling on every walk → loose-leash by week 3.',
+      primary:   'Most pulling problems are gear and timing, not stubbornness. Front-clip harness, marker, and short reps on the same block for two weeks. By week three the dog walks the route without checking out. Methodology page lays out exactly what we use and why.',
+    },
+  ],
+
+  'pet-sitter-walker': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '30-minute mid-day walk, $28. GPS map sent.',
+      primary:   "Bonded and insured, key returned at end of each visit unless you've authorized a lockbox. Walks logged with start and end pins, two photos, and a quick note on potty and water. 4-mile service radius from the shop, regulars get priority slots.",
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'We meet your dog before we walk your dog.',
+      primary:   "Free 20-minute meet-and-greet at your home before the first booking — keys, gear, leash, treats, vet card, and the no-go list. If your dog is uneasy with strangers, we come twice. We don't take same-day blind bookings; trust isn't a checkout flow.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Crated 9 hours → mid-day walk on the calendar.',
+      primary:   'Long workdays plus a young dog plus a small apartment usually means a chewed couch and a guilty owner. Standing 1pm walk three days a week fixes most of it. Vacation overnights and cat drop-ins are on the same client portal.',
+    },
+  ],
 };
 
 /** Fallback for niches without curated patterns — generic but framework-shaped,

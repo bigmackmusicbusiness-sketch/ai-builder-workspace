@@ -1,0 +1,29 @@
+{
+  "niche": "pet-boarding-daycare",
+  "label": "Pet Boarding & Daycare",
+  "triggers": ["dog boarding", "pet boarding", "kennel", "boarding kennel", "doggy daycare", "dog daycare", "overnight boarding", "holiday boarding", "boarding suite", "play group", "daycare trial", "pet hotel", "pet resort"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+overnight+daycare+book" },
+    { "slug": "services", "role": "boarding+daycare+playgroups" },
+    { "slug": "pricing",  "role": "suite-tier+daycare-tier+holiday-rates" },
+    { "slug": "gallery",  "role": "facility-tour+playgroups" },
+    { "slug": "about",    "role": "story+staff+safety" },
+    { "slug": "faq",      "role": "vaccinations+meet-greet+first-stay" },
+    { "slug": "contact",  "role": "address+hours+drop-off" }
+  ],
+  "compliance_blocks": ["vaccination-records-required", "bordetella-rabies-distemper-required", "liability-waiver-link", "pet-health-disclosure-form", "aggressive-behavior-policy", "cancellation-policy", "holiday-rate-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "LodgingBusiness",
+  "voice_template": "caring, structured, safety-first about vaccinations and group dynamics",
+  "palettes": [
+    { "name": "sky-fern",       "hexes": ["#5B95B5", "#F4F8FB", "#D6E5EE", "#0F2230"] },
+    { "name": "fern-cream",     "hexes": ["#5C8A55", "#FAF8EF", "#E1E9CD", "#152018"] },
+    { "name": "sand-sky",       "hexes": ["#C6A26B", "#F8F4EA", "#DDE7EE", "#1E1A11"] },
+    { "name": "play-yard-blue", "hexes": ["#3F7A9E", "#F5F9FB", "#CADCE7", "#0C1A24"] },
+    { "name": "kennel-cream",   "hexes": ["#8FA85E", "#FFFCF0", "#E9E2BF", "#1A1F0F"] },
+    { "name": "meadow-sand",    "hexes": ["#7BA17B", "#FBF8EE", "#DDE2C5", "#16201A"] }
+  ],
+  "section_library": ["hero", "page-hero", "service-grid", "boarding-suite-card", "daycare-tier-card", "play-group-strip", "facility-tour", "vaccination-checklist", "meet-greet-cta", "first-stay-checklist", "holiday-rate-table", "staff-card", "review-strip", "testimonial-card", "appointment-cta", "phone-cta", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "real facility life. Dogs napping on raised cots, a tech leashing two retrievers for a group walk, the play-yard from a tech's eye-level, a labrador drying off in a kennel dryer after a swim. Show the actual suites — gates, name cards on doors, water bowls. Mixed sizes and breeds, daylight from skylights or play-yard sun. No staged 'pet-hotel-luxury' renders, no glossy paw-print branding shots, no over-cute crate-with-bow framing.",
+  "voice_pet_words": ["overnight", "daycare", "play group", "meet-and-greet", "vaccinations", "suite", "group walk", "drop-off", "pickup", "holiday week"],
+  "primary_keywords": ["dog boarding", "doggy daycare", "kennel", "overnight boarding"]
+}
