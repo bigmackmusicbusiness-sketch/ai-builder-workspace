@@ -7,83 +7,94 @@
 
 ---
 
-## Current state (2026-05-09): Niche expansion Phase 1 — 5/12 batches shipped
+## Current state (2026-05-09): Niche expansion Phase 1 COMPLETE — Phase 2 dispatched to SPS
 
 The active multi-phase plan lives at `~/.claude/plans/eventual-leaping-petal.md`.
-We're mid-Phase-1 (niche library expansion: 10 → 111 manifests).
+**Phase 1 (niche library expansion: 10 → 111 manifests) shipped clean.** Phase 2
+handoff doc dispatched to SignalPointSystems. Phase 3 cross-platform glue is
+gated on SPS write-back (see "OUTBOUND TO SPS" below).
 
-### Cumulative progress
+### Final state — 111 niches on disk, 333 ad-copy patterns
 
-- **Day 0 cross-cutting:** ABW `CLAUDE.md` created; SPS `CLAUDE.md` got the
-  session-start INBOX rule; `notify-handoff.ps1` PowerShell toast script
-  added at `C:/Users/telly/OneDrive/Desktop/AI Ops/scripts/`. Manifest-author
-  prompt template at `apps/api/scripts/manifest-author-prompt.md`.
-- **Batches 1-5 shipped:** 48 net-new niches. Commits: `ac7ab05` (batch 1),
-  `6969cc0` (batch 2), `6f3172d` (batch 3), `900648b` (batch 4),
-  `180b922` (batch 5). Day 0 was `2e741ba`. Checkpoint at `9a39374`.
-- **Total niches on disk: 58** (10 original + 48 new). Catalog grows to 111
-  when the remaining 7 batches land.
-- **Validation tooling:** `apps/api/scripts/validate-niche-batch.mjs` gates
-  every batch — runs Zod against each manifest, slop-blocker against
-  voice/image_directives + the matching ad-copy block, and hex-format check
-  on palettes. Used per batch before commit.
-- **All builds + typechecks green** through 5 batches; production deploy
-  rolled cleanly each commit (api at `https://api.40-160-3-10.sslip.io`).
+- **Catalogue total: 111 niches** (10 original + 101 net-new across batches 1–12).
+- **Ad-copy: 333 framework-shaped patterns** in `apps/api/src/routes/ads/copyPatterns.ts`,
+  one block per niche × 3 frameworks (specific-value-prop / pattern-interrupt / before-after).
+- **All commits green** through Phase 1; api production deploy rolled cleanly
+  each commit (api at `https://api.40-160-3-10.sslip.io`).
+- **Day 0 cross-cutting:** ABW `CLAUDE.md`, SPS `CLAUDE.md` session-start
+  rule, `notify-handoff.ps1` toast script, and `apps/api/scripts/manifest-author-prompt.md`
+  spec template — all in place from commit `2e741ba`.
+- **Validation tooling:** `apps/api/scripts/validate-niche-batch.mjs` gated every
+  batch — Zod schema check + slop-blocker on voice/image_directives/ad-copy +
+  hex-format check on palettes.
 
-### What's left in Phase 1 — 7 batches, 53 niches
+### Phase 1 commit log
 
-| Batch | Category | Slug count | Status |
+| Batch | Category | Niches | Commit |
 |---|---|---|---|
-| 6 | Fitness | 7 | pending |
-| 7 | Health (trimmed) | 5 | pending |
-| 8 | Beauty | 10 | pending |
-| 9 | Pets | 5 | pending |
-| 10 | Events | 6 | pending |
-| 11 | Retail | 9 | pending |
-| 12 | Education + Professional | 11 | pending |
+| 0 | Day 0 cross-cutting | — | `2e741ba` |
+| 1 | Marketing-doc | 8 | `ac7ab05` |
+| 2 | Home-services umbrella + trades A | 13 | `6969cc0` |
+| 3 | Home-services trades B | 12 | `6f3172d` |
+| — | Mid-session checkpoint | — | `9a39374` |
+| 4 | Auto | 9 | `900648b` |
+| 5 | Food + drink | 6 | `180b922` |
+| — | Mid-session checkpoint | — | `080af9c` |
+| 6 | Fitness | 7 | `5f991b6` |
+| 7 | Health (trimmed) | 5 | `3381f37` |
+| 8 | Beauty | 10 | `ae4a84f` |
+| 9 | Pets | 5 | `9e617d2` |
+| 10 | Events | 6 | `c89e20b` |
+| 11 | Retail | 9 | `d999d0c` |
+| 12 | Education + Professional | 11 | `3e6c1c3` |
 
-**Locked slug list per batch (from plan §1.1):**
-- Batch 6: yoga-studio, pilates-studio, crossfit-box, personal-training, dance-studio, martial-arts-school, climbing-gym
-- Batch 7: chiropractor, physical-therapy, veterinary-clinic, optometry-eye-doctor, counseling-therapy
-- Batch 8: barbershop, hair-salon, nail-salon, med-spa, tattoo-studio, day-spa-massage, waxing-studio, lash-brow-studio, makeup-artist, skincare-esthetician
-- Batch 9: pet-grooming, mobile-pet-grooming, pet-boarding-daycare, dog-trainer, pet-sitter-walker
-- Batch 10: wedding-venue, wedding-planner, photography-studio, videography-events, dj-services, event-rental
-- Batch 11: bookstore-independent, bike-shop, outdoor-outfitter, consignment-resale, jewelry-store, furniture-store, vape-smoke-shop, florist, comic-game-shop
-- Batch 12: music-lessons-school, tutoring-service, driving-school, daycare-preschool, art-class-school, language-school, accounting-bookkeeping, insurance-agent, mortgage-broker, home-inspector, acupuncture-clinic
+**Total: 12 batches, 101 net-new niches, all batches passed validate +
+typecheck + build, all pushes rolled cleanly.**
 
-Plus end-of-Phase-1 user-guide work: trim §12 cookbook to 4-5 representative
-prompts, add new §13 "Niche catalogue" (compact table of all 111 niches),
-re-render PDF.
+### Trigger collisions noted (planner SOP follow-up if needed)
 
-### How to resume — exact recipe per batch
+- `crossfit-box` has bare `"crossfit"` trigger that overlaps with the existing
+  `gym-fitness` manifest (which is in scope-locked-as-is per the plan). The
+  more-specific phrase trigger `"crossfit box"` wins by length under the
+  planner's longest-match scan. If the planner ever picks the wrong niche on
+  ambiguous prompts, add a tie-breaker paragraph to
+  `apps/api/src/agent/skills/planners/website.md`.
+- `personal-training` similarly has bare `"personal trainer"` overlap with
+  `gym-fitness` — same resolution.
 
-1. **Read** `apps/api/scripts/manifest-author-prompt.md` (the spec).
-2. **Spawn ONE general-purpose Agent** per batch with the niche list + the
-   spec template path + exemplars. The "single agent producing N niches in
-   one cohesive context" approach in batches 3-4 worked best — quality held,
-   palettes stayed mutually distinctive within the batch, and context cost
-   was lowest. Don't go back to multi-agent batches unless quality drops.
-3. **Validate** the JSON with `node scripts/validate-niche-batch.mjs <slugs...>`
-   from `apps/api/`. Fix any slop / hex / Zod failures before writing.
-4. **Write** the manifests to `apps/api/src/agent/skills/types/website/niches/<slug>.json`.
-5. **Append** the matching ad-copy patterns to
-   `apps/api/src/routes/ads/copyPatterns.ts` (3 per niche: specific-value-prop,
-   pattern-interrupt, before-after).
-6. **Re-validate** the full batch end-to-end:
-   `cd apps/api && node scripts/validate-niche-batch.mjs <all-slugs-in-batch>`.
-7. **Typecheck + build** — `pnpm --filter @abw/api typecheck && pnpm --filter @abw/api build`.
-8. **Commit** with message format `feat(niches): batch N/12 — <category> (<count> niches)`.
-   Include a short list of niche-specific notes in the body.
-9. **Push** — `git push`. Coolify rolls in ~6 min; no need to gate on it
-   between batches.
-10. **Update** this file's "Cumulative progress" section before moving to
-    the next batch.
+### Phase 1 wrap (deferred — single commit when picked up)
 
-### Phase 2 (after all 12 batches): Handoff doc to SignalPointSystems
+Per the plan, the user-guide updates ship as one final Phase 1 commit:
+- **Trim §12 prompt cookbook** to 4–5 representative pattern examples
+  (specific-value-prop / pattern-interrupt / before-after) on a few niches.
+- **Add §13 "Niche catalogue"** — compact 3-page table of all 111 niches:
+  slug, label, 3–5 key trigger words. Reader connects their own prompt to
+  the relevant niche by spotting matching keywords.
+- **Renumber:** old §13 Tips → §14, old §14 Glossary → §15. Update TOC.
+- **Re-render PDF** via `node render-pdf.mjs` from
+  `C:/Users/telly/OneDrive/Desktop/SignalPoint-Docs/`.
 
-Drop file at `C:/Users/telly/OneDrive/Desktop/SignalPointSystems/handoff/INBOUND_FROM_ABW_<date>.md`.
-See plan §2.2 for the doc skeleton. Then mark a `## OUTBOUND TO SPS` section
-in this HANDOFF_NOTES.md.
+This is intentionally not done yet — the source `user-guide.html` lives in a
+separate directory and the PDF re-render step needs the SignalPoint-Docs
+project context. Do this in a focused session.
+
+---
+
+## OUTBOUND TO SPS — 2026-05-09
+
+**Phase 2 handoff doc dispatched.** Dropped at
+`C:/Users/telly/OneDrive/Desktop/SignalPointSystems/handoff/INBOUND_FROM_ABW_2026-05-09.md`
+on 2026-05-09. SPS's CLAUDE.md (cross-cutting Day 0 commit) instructs the
+SPS session to check `handoff/INBOUND_FROM_*.md` on session start.
+
+**Optional notification:** run
+`pwsh "C:/Users/telly/OneDrive/Desktop/AI Ops/scripts/notify-handoff.ps1"`
+to fire a Windows toast pointing the user at the SPS Claude session.
+
+**Phase 3 is gated on SPS write-back.** When SPS finishes its work, its agent
+appends an `## INBOUND FROM SPS — <date>` section to this file with deployed
+migration IDs, embed-edge endpoint URL, and the workspace anon-key location.
+Phase 3 then becomes safe to start — see plan §3 for the work breakdown.
 
 ### Phase 3 (after SPS writes back): Cross-platform glue
 
