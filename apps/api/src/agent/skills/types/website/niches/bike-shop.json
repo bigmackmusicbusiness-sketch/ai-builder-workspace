@@ -1,0 +1,28 @@
+{
+  "niche": "bike-shop",
+  "label": "Bike Shop",
+  "triggers": ["bike shop", "bicycle shop", "bicycle repair", "bike fitting", "tune up", "e-bike", "road bike", "mountain bike", "gravel bike", "commuter bike", "kids bike", "bike service", "wheel build"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+service-bay-status+ride-categories" },
+    { "slug": "services", "role": "tune-up-tiers+repair-menu+fitting" },
+    { "slug": "listings", "role": "bikes-by-discipline" },
+    { "slug": "book",     "role": "service-and-fitting-scheduler" },
+    { "slug": "about",    "role": "shop-story+mechanics" },
+    { "slug": "visit",    "role": "address+hours+turnaround-board" }
+  ],
+  "compliance_blocks": ["repair-turnaround-policy", "damage-and-return-policy", "manufacturer-warranty-disclosure", "gift-card-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "Store",
+  "voice_template": "mechanic-honest, fitting-aware, no snob about tier or component, plain about turnaround days",
+  "palettes": [
+    { "name": "grease-and-chrome",  "hexes": ["#1F1F1F", "#C0C5CC", "#F0F2F4", "#080808"] },
+    { "name": "shop-grey-cobalt",   "hexes": ["#2D3540", "#1F66B8", "#EFF1F4", "#0A0E14"] },
+    { "name": "road-jersey-yellow", "hexes": ["#F2C400", "#1A1B1F", "#F4F2EE", "#000000"] },
+    { "name": "trail-loam",         "hexes": ["#5C3A1E", "#A8B86A", "#F2EBDB", "#160A04"] },
+    { "name": "service-bay-orange", "hexes": ["#E5631C", "#1B1F22", "#F1ECE2", "#070608"] },
+    { "name": "alloy-blue",         "hexes": ["#0E3D6E", "#9AA6B0", "#F0F2F5", "#040E1B"] }
+  ],
+  "section_library": ["hero", "page-hero", "service-bay-status", "tune-up-tier-grid", "repair-menu", "bike-fitting-card", "bike-card", "ride-discipline-grid", "e-bike-callout", "scheduler", "turnaround-board", "warranty-card", "demo-fleet-strip", "mechanic-card", "review-strip", "address-card", "hours-strip", "footer"],
+  "image_directives": "honest shop photography. A mechanic with grease on a knuckle truing a wheel on a stand, a fitter shooting a rider's saddle height with a laser, drivetrains on the parts wall, a row of demo bikes on the rack. Show real builds at real price points — entry-level commuters next to gravel and e-bike. Avoid hero-cyclist sunset stock, AI-perfect carbon frames floating on white, and influencer kit-and-coffee shots.",
+  "voice_pet_words": ["tune-up", "fitting", "drivetrain", "groupset", "wheel build", "tubeless", "service interval", "turnaround"],
+  "primary_keywords": ["bike shop", "bicycle repair", "bike fitting", "e-bike", "tune up"]
+}

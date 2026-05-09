@@ -1,0 +1,28 @@
+{
+  "niche": "comic-game-shop",
+  "label": "Comic & Game Shop",
+  "triggers": ["comic shop", "comic book store", "tabletop game store", "magic the gathering", "pokemon league", "board game store", "FNM", "back issues", "trading cards", "miniatures shop", "rpg store", "graphic novel shop", "new comic day"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+new-comics-wednesday+events-strip" },
+    { "slug": "listings", "role": "comics-tabletop-tcg-by-category" },
+    { "slug": "schedule", "role": "fnm+league-night+game-day-calendar" },
+    { "slug": "services", "role": "subscriptions+pull-list+grading-intake" },
+    { "slug": "about",    "role": "shop-story+staff" },
+    { "slug": "visit",    "role": "address+hours+play-space-rules" }
+  ],
+  "compliance_blocks": ["tournament-and-event-rules", "community-code-of-conduct", "damage-and-return-policy", "gift-card-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "Store",
+  "voice_template": "community-first, gatekeeping-free, new-reader and new-player welcoming, plain about play-space rules",
+  "palettes": [
+    { "name": "ink-and-spot-color",  "hexes": ["#0E0E12", "#E5311E", "#F2EAD6", "#000000"] },
+    { "name": "pulp-paper-cyan",     "hexes": ["#F2E8C8", "#1F66B8", "#1A1B1F", "#0A0E14"] },
+    { "name": "neon-restraint",      "hexes": ["#1F1A2E", "#7A4FE5", "#EFE9DC", "#070410"] },
+    { "name": "kraft-marker-yellow", "hexes": ["#C99A2D", "#1F2226", "#F4ECDC", "#0A0B0D"] },
+    { "name": "dice-table-green",    "hexes": ["#2F4434", "#F2EAD6", "#C8B68A", "#0B130E"] },
+    { "name": "back-issue-blue",     "hexes": ["#22456B", "#E5311E", "#F4F0E4", "#0A1422"] }
+  ],
+  "section_library": ["hero", "page-hero", "new-comics-wednesday-list", "pull-list-card", "back-issue-search", "tabletop-grid", "tcg-singles-strip", "miniatures-grid", "event-calendar", "fnm-card", "league-night-card", "play-space-rules-strip", "code-of-conduct-card", "review-strip", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "real shop and table photography. New-comics rack on Wednesday with bagged-and-boarded back issues behind, a Friday-night Magic table mid-game with sleeved decks and life-pad tracking, a kid getting handed a starter deck at the counter. Show actual long-boxes, actual play space, actual people of varied ages. Avoid superhero-poster wallpaper stock, AI-perfect cardboard renders, and influencer unboxings. Fluorescent over the table is fine; pulp-paper warmth at the back issues.",
+  "voice_pet_words": ["pull list", "FNM", "new-reader", "league night", "back issue", "single", "starter deck", "open table"],
+  "primary_keywords": ["comic shop", "tabletop game store", "magic the gathering", "pokemon league", "board game store"]
+}

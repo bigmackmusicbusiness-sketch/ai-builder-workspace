@@ -1,0 +1,29 @@
+{
+  "niche": "florist",
+  "label": "Florist",
+  "triggers": ["florist", "flower shop", "wedding flowers", "sympathy flowers", "flower delivery", "bouquet", "funeral flowers", "event florist", "local flower farm", "seasonal flowers", "stem bar", "weekly subscription flowers"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+seasonal-stems+delivery-cta" },
+    { "slug": "services", "role": "everyday+wedding+sympathy+subscription" },
+    { "slug": "gallery",  "role": "wedding+event-portfolio" },
+    { "slug": "book",     "role": "wedding-and-event-inquiry" },
+    { "slug": "schedule", "role": "delivery-windows+order-cutoffs" },
+    { "slug": "about",    "role": "designers+stem-sourcing" },
+    { "slug": "visit",    "role": "address+hours+delivery-zones" }
+  ],
+  "compliance_blocks": ["flower-substitution-policy", "delivery-area-and-windows", "funeral-and-sympathy-protocol", "gift-card-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "Florist",
+  "voice_template": "seasonal-honest, stem-source-aware, sympathy work treated with care, no fairytale-gloss",
+  "palettes": [
+    { "name": "botanical-pink-green", "hexes": ["#C28098", "#3F5238", "#FAF4EE", "#0E1410"] },
+    { "name": "peach-parchment",      "hexes": ["#E1A079", "#FBF5EA", "#EFD9C2", "#1B100A"] },
+    { "name": "dusk-mauve-ink",       "hexes": ["#8B5A6E", "#1F1A20", "#F4ECDC", "#0A0608"] },
+    { "name": "field-stem-cream",     "hexes": ["#7A8E54", "#FBF7EE", "#E2DDC2", "#161A0E"] },
+    { "name": "sympathy-bone",        "hexes": ["#544D45", "#F5EFE0", "#D8CFBE", "#16110D"] },
+    { "name": "winter-amaryllis",     "hexes": ["#7A1F22", "#F4ECDC", "#D6BE96", "#180608"] }
+  ],
+  "section_library": ["hero", "page-hero", "seasonal-stem-strip", "everyday-bouquet-grid", "wedding-portfolio-grid", "sympathy-card-block", "subscription-card", "stem-bar-strip", "wedding-inquiry-form", "delivery-window-list", "delivery-zone-map", "order-cutoff-strip", "designer-card", "review-strip", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "real cooler and bench photography. A designer wiring a wedding centerpiece on the worktable, buckets of seasonal stems in the cooler with grower tags, a sympathy spray being delivered to a funeral home doorway. Show actual seasonal availability — no peonies in January. Avoid magazine-fairytale wedding stock, AI-perfect bouquet renders, and influencer flower-hauls. Daylight from the front door, cooler-light blue is welcome, hands and shears in frame.",
+  "voice_pet_words": ["stem", "in season", "field-grown", "substitution", "spray", "sympathy", "bud vase", "designer's choice"],
+  "primary_keywords": ["florist", "flower shop", "wedding flowers", "sympathy flowers", "flower delivery"]
+}

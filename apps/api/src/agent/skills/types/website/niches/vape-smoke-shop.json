@@ -1,0 +1,28 @@
+{
+  "niche": "vape-smoke-shop",
+  "label": "Vape & Smoke Shop",
+  "triggers": ["vape shop", "smoke shop", "e-liquid", "vape juice", "glassware shop", "head shop", "e-cigarette", "disposable vape", "tobacco shop", "hookah shop", "rolling papers", "premium cigars"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "age-gate+hero+device-tier-strip" },
+    { "slug": "listings", "role": "devices-and-e-liquid+glassware-by-category" },
+    { "slug": "services", "role": "device-help+coil-builds+repair" },
+    { "slug": "about",    "role": "shop-story+licenses" },
+    { "slug": "faq",      "role": "regulations+age-verification+returns" },
+    { "slug": "visit",    "role": "address+hours+id-policy" }
+  ],
+  "compliance_blocks": ["age-verification-required-21+", "state-tobacco-license-footer", "flavor-restriction-disclaimer", "nicotine-warning-prop65", "damage-and-return-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "Store",
+  "voice_template": "regulated retail, age-gated, no-influencer-energy, plain about device tiers and ID policy",
+  "palettes": [
+    { "name": "ink-and-neon-restraint", "hexes": ["#0E0E12", "#3D8AFF", "#E8E8EC", "#000000"] },
+    { "name": "deep-purple-bone",       "hexes": ["#3A1E5C", "#E8E2D2", "#C0B0CC", "#0A0410"] },
+    { "name": "charcoal-citrus",        "hexes": ["#1F2226", "#D9C034", "#F0EDE6", "#070608"] },
+    { "name": "smoke-graphite",         "hexes": ["#26282C", "#9AA0A8", "#F0F0F2", "#08090B"] },
+    { "name": "tobacco-leaf",           "hexes": ["#5C3A1E", "#C9A878", "#F2EAD6", "#150A04"] },
+    { "name": "regulated-cobalt",       "hexes": ["#0F2A52", "#C0C5CC", "#F0F2F4", "#040A14"] }
+  ],
+  "section_library": ["hero", "page-hero", "age-gate-modal", "id-policy-strip", "device-tier-grid", "e-liquid-library", "glassware-grid", "accessory-grid", "premium-cigar-strip", "coil-build-card", "device-help-card", "license-badge-strip", "regulatory-disclosure-card", "review-strip", "faq-accordion", "address-card", "hours-strip", "footer-prop65"],
+  "image_directives": "real shop interior. Locked cases with devices and coils, e-liquid wall with brand cards, a clerk checking an ID at the counter, glassware shelves shot at a respectful angle. No models, no influencer cloud-chasing, no flavored-product hero shots that read as kid-targeted. Show clear license placards and the regulatory signage on the door. Tungsten over the case, no neon overload, no party-aesthetic stock.",
+  "voice_pet_words": ["age-verified", "device tier", "ohm", "coil", "license", "compliant", "lab-tested", "regulated"],
+  "primary_keywords": ["vape shop", "smoke shop", "e-liquid", "tobacco shop", "glassware"]
+}

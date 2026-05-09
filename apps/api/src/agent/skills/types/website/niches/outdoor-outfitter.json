@@ -1,0 +1,28 @@
+{
+  "niche": "outdoor-outfitter",
+  "label": "Outdoor Outfitter",
+  "triggers": ["outdoor gear", "outdoor outfitter", "hiking gear", "camping store", "backpacking gear", "climbing gear", "backcountry shop", "tent rental", "trail map shop", "mountain shop", "gear rental", "ranger trained staff", "thru-hike resupply"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+season-check+trip-planning-cta" },
+    { "slug": "listings", "role": "gear-by-activity" },
+    { "slug": "services", "role": "rentals+repairs+trip-planning" },
+    { "slug": "schedule", "role": "clinics+ranger-talks+demo-days" },
+    { "slug": "about",    "role": "shop-story+staff-credentials" },
+    { "slug": "visit",    "role": "address+hours+trailhead-distances" }
+  ],
+  "compliance_blocks": ["damage-and-return-policy", "rental-deposit-and-late-return-policy", "manufacturer-warranty-disclosure", "gift-card-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "Store",
+  "voice_template": "trail-honest, gear-tested in the field, weather-real, no influencer wilderness aesthetic, season-aware",
+  "palettes": [
+    { "name": "forest-and-canvas", "hexes": ["#2F4434", "#D9C9A6", "#F4ECDC", "#0B130E"] },
+    { "name": "granite-pine",      "hexes": ["#4A5560", "#2F4434", "#E6E2D5", "#0F1316"] },
+    { "name": "alpine-sky-snow",   "hexes": ["#3A6BAA", "#F4F8FB", "#CCDAEA", "#0A1422"] },
+    { "name": "dusk-clay",         "hexes": ["#A8552E", "#1F2A2E", "#F0E9DD", "#1B0E08"] },
+    { "name": "topo-mustard",      "hexes": ["#C99A2D", "#1F2418", "#F4ECDC", "#1A140A"] },
+    { "name": "lichen-stone",      "hexes": ["#6E7D4A", "#E8E2D2", "#F5F1E5", "#181A11"] }
+  ],
+  "section_library": ["hero", "page-hero", "season-check-strip", "trip-planning-cta", "gear-by-activity-grid", "product-card", "rental-fleet-strip", "repair-bench-card", "clinic-and-talk-list", "demo-day-card", "trailhead-distance-list", "staff-credential-card", "shop-story-strip", "review-strip", "newsletter-signup", "address-card", "hours-strip", "footer"],
+  "image_directives": "real shop and field photography. Packs loaded for a fitting on the floor, a staff member showing a customer how a stove primes, climbing harnesses on the gear wall, tents pitched in the parking lot for a demo day. Show actual mud, actual snow, actual sunburn. Avoid filtered lifestyle stock of models on a ridge, AI-perfect catalog flat-lays, and matching-outfit influencer hike pictures. Mid-day light and overcast both welcome.",
+  "voice_pet_words": ["field-tested", "shoulder season", "thru-hike", "load", "shakedown", "pack weight", "trailhead", "permit"],
+  "primary_keywords": ["outdoor outfitter", "hiking gear", "camping store", "climbing gear", "gear rental"]
+}

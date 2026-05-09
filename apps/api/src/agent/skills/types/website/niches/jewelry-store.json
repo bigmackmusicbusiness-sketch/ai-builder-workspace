@@ -1,0 +1,29 @@
+{
+  "niche": "jewelry-store",
+  "label": "Jewelry Store",
+  "triggers": ["jewelry store", "jeweler", "engagement ring", "wedding band", "custom jewelry", "watch repair", "jewelry repair", "ring resizing", "diamond appraisal", "estate jewelry", "fine jewelry", "bench jeweler", "GIA"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+engagement-and-repair-cta" },
+    { "slug": "services", "role": "engagement+custom+repair+watch-service" },
+    { "slug": "gallery",  "role": "custom-design-portfolio" },
+    { "slug": "book",     "role": "consultation-and-repair-intake" },
+    { "slug": "about",    "role": "bench-jewelers+shop-story" },
+    { "slug": "faq",      "role": "appraisal+turnaround+warranty" },
+    { "slug": "visit",    "role": "address+hours+parking" }
+  ],
+  "compliance_blocks": ["appraisal-disclaimer", "repair-turnaround-policy", "damage-and-return-policy", "manufacturer-warranty-disclosure", "gift-card-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "JewelryStore",
+  "voice_template": "craft-aware, GIA-grounded, no pressure on engagement, plain about repair turnaround and stone source",
+  "palettes": [
+    { "name": "obsidian-and-gold",  "hexes": ["#0B0B0B", "#C8A24A", "#F2EAD6", "#000000"] },
+    { "name": "ivory-platinum",     "hexes": ["#1F2225", "#E8E5DE", "#F8F6F0", "#0A0B0D"] },
+    { "name": "navy-champagne",     "hexes": ["#1B2A44", "#D8B670", "#FBF7EE", "#070C18"] },
+    { "name": "rose-gold-stone",    "hexes": ["#B07A6A", "#F4ECE2", "#D9C8BA", "#1A0F0A"] },
+    { "name": "bench-graphite",     "hexes": ["#2A2A2E", "#C0A06A", "#F0EBE0", "#0A0A0C"] },
+    { "name": "deep-emerald-cream", "hexes": ["#21443A", "#F5EFE0", "#C8B68A", "#0A1612"] }
+  ],
+  "section_library": ["hero", "page-hero", "engagement-consultation-cta", "custom-design-process", "design-portfolio-grid", "repair-intake-card", "watch-service-card", "bench-jeweler-card", "appraisal-card", "loose-stone-list", "consultation-scheduler", "warranty-card", "review-strip", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "tight-craft photography. A bench jeweler under a loupe setting a stone, a polishing wheel mid-pass, a watchmaker timing a movement on a Witschi machine, a tray of loose stones on a velvet pad. Engagement consults shot quietly across the counter, no staged proposal scenes. Avoid sunset-beach diamond stock, AI-perfect ring renders on white, and influencer hand-pose shots. Tungsten over the bench, daylight at the case.",
+  "voice_pet_words": ["bench", "setting", "appraisal", "remount", "resize", "movement", "loose stone", "GIA report"],
+  "primary_keywords": ["jewelry store", "engagement ring", "custom jewelry", "watch repair", "jewelry repair"]
+}

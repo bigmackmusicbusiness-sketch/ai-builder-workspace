@@ -1,0 +1,28 @@
+{
+  "niche": "furniture-store",
+  "label": "Furniture Store",
+  "triggers": ["furniture store", "sofa", "dining table", "bedroom set", "custom furniture", "interior shop", "made to order furniture", "upholstery shop", "solid wood furniture", "sectional", "mattress store", "home goods store"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+room-categories+lead-time-strip" },
+    { "slug": "listings", "role": "by-room-and-collection" },
+    { "slug": "services", "role": "custom-orders+delivery+upholstery" },
+    { "slug": "gallery",  "role": "in-home-installs" },
+    { "slug": "about",    "role": "shop-story+makers" },
+    { "slug": "visit",    "role": "showroom-address+hours+delivery-zones" }
+  ],
+  "compliance_blocks": ["lead-time-statement", "delivery-and-assembly-policy", "repair-turnaround-policy", "damage-and-return-policy", "manufacturer-warranty-disclosure", "gift-card-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "FurnitureStore",
+  "voice_template": "honest about lead times, fabric and finish-fluent, delivery is part of the work",
+  "palettes": [
+    { "name": "oak-and-bone",         "hexes": ["#7A5A2E", "#FBF6EA", "#E1D4BC", "#1A1108"] },
+    { "name": "walnut-cream",         "hexes": ["#3F2A1C", "#F4ECDC", "#D6BE96", "#0F0805"] },
+    { "name": "slate-and-terracotta", "hexes": ["#3A4754", "#B8553F", "#F0EAD8", "#0A1018"] },
+    { "name": "ash-linen",            "hexes": ["#7E7468", "#F4EFE4", "#D8CFBE", "#1A1612"] },
+    { "name": "ironwood-stone",       "hexes": ["#2A2520", "#C9B89A", "#F2ECDC", "#080604"] },
+    { "name": "indigo-canvas",        "hexes": ["#22456B", "#E8DDC5", "#F5F0E0", "#08111B"] }
+  ],
+  "section_library": ["hero", "page-hero", "room-category-grid", "collection-card", "product-card", "fabric-and-finish-library", "lead-time-table", "custom-order-form", "delivery-zone-map", "delivery-and-assembly-card", "in-home-install-gallery", "maker-card", "warranty-card", "review-strip", "faq-accordion", "address-card", "hours-strip", "footer"],
+  "image_directives": "real showroom and install photography. Sofas under daylight with the fabric swatch on the arm, a dining table with chairs being placed by the delivery crew, an upholstery bench mid-tack-strip. Show real lead-time signage, real swatches, real delivery trucks at the curb. Avoid catalog white-cyc product floats, AI-perfect home renders, and influencer-styled corner vignettes.",
+  "voice_pet_words": ["lead time", "made to order", "delivery window", "white-glove", "swatch", "frame", "joinery", "kiln-dried"],
+  "primary_keywords": ["furniture store", "custom furniture", "sofa", "dining table", "bedroom set"]
+}

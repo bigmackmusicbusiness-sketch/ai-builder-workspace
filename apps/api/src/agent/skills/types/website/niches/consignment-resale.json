@@ -1,0 +1,28 @@
+{
+  "niche": "consignment-resale",
+  "label": "Consignment & Resale",
+  "triggers": ["consignment", "consignment shop", "resale shop", "thrift store", "vintage clothing", "sell my clothes", "consign furniture", "designer resale", "secondhand store", "buy sell trade", "estate consignment", "preowned designer"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+intake-window+new-arrivals" },
+    { "slug": "services", "role": "intake-terms+commission-and-payout" },
+    { "slug": "listings", "role": "current-floor-by-category" },
+    { "slug": "schedule", "role": "intake-appointments" },
+    { "slug": "faq",      "role": "what-we-take+condition+pricing" },
+    { "slug": "visit",    "role": "address+hours+drop-off-info" }
+  ],
+  "compliance_blocks": ["consignment-intake-terms", "commission-and-payout-terms", "unclaimed-item-policy", "damage-and-return-policy", "gift-card-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "Store",
+  "voice_template": "transparent on intake terms and percentages, honest about condition, intake-friendly without pity",
+  "palettes": [
+    { "name": "bone-and-oat",    "hexes": ["#A89A82", "#F5F0E5", "#E2D9C5", "#1A1610"] },
+    { "name": "dusty-rose-navy", "hexes": ["#C9939A", "#1E2A44", "#FAF2EE", "#0A0F1A"] },
+    { "name": "soft-clay-cream", "hexes": ["#B8745A", "#FBF5EC", "#EFD9C8", "#1B0F08"] },
+    { "name": "estate-sage",     "hexes": ["#7E907A", "#F4F0E4", "#D6D8C8", "#141A14"] },
+    { "name": "ledger-ink",      "hexes": ["#1E2533", "#F2EEE5", "#C8C4B8", "#080A0F"] },
+    { "name": "vintage-mustard", "hexes": ["#B8932E", "#F5EEDD", "#E0C8A0", "#1A140A"] }
+  ],
+  "section_library": ["hero", "page-hero", "intake-window-strip", "intake-terms-card", "commission-and-payout-table", "new-arrivals-strip", "category-floor-grid", "condition-grade-legend", "intake-appointment-scheduler", "unclaimed-item-policy-card", "press-quotes", "review-strip", "faq-accordion", "newsletter-signup", "address-card", "hours-strip", "drop-off-card", "footer"],
+  "image_directives": "real floor photography. Hangered racks with tags showing brand, size, and consignor code; a steamer mid-pass on a wool coat; an intake station with a clipboard, brand book, and a pile being graded. Show actual store interiors, actual condition variance, mirror selfies replaced with on-form garments. Avoid model-flat-lay catalog stock, AI-perfect boutique renders, and curated influencer try-on shots.",
+  "voice_pet_words": ["intake", "split", "payout", "consignor", "condition grade", "tagged", "expired", "drop-off"],
+  "primary_keywords": ["consignment shop", "resale", "vintage clothing", "designer resale", "consign furniture"]
+}

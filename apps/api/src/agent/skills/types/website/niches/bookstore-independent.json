@@ -1,0 +1,28 @@
+{
+  "niche": "bookstore-independent",
+  "label": "Independent Bookstore",
+  "triggers": ["bookstore", "indie bookstore", "independent bookstore", "used books", "rare books", "first editions", "reading event", "book signing", "staff pick", "book club", "new releases", "local bookshop", "antiquarian books"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+staff-picks+events-strip" },
+    { "slug": "listings", "role": "section-and-genre-shelves" },
+    { "slug": "schedule", "role": "reading-events+book-club-calendar" },
+    { "slug": "about",    "role": "shop-history+booksellers" },
+    { "slug": "journal",  "role": "staff-pick-writeups+author-Q-and-A" },
+    { "slug": "visit",    "role": "address+hours+parking" }
+  ],
+  "compliance_blocks": ["gift-card-policy", "ada-accessibility-statement"],
+  "schema_org_primary": "Bookstore",
+  "voice_template": "literary-without-pretense, staff-pick first, knows the regulars' taste, plain about edition and condition",
+  "palettes": [
+    { "name": "library-cream-oak", "hexes": ["#7A4F2A", "#FBF6EA", "#E8D6B5", "#1B1108"] },
+    { "name": "ink-and-foxing",    "hexes": ["#1F1A14", "#F2EAD6", "#D2C09A", "#0A0805"] },
+    { "name": "deep-red-cloth",    "hexes": ["#7A1F22", "#FAF4E6", "#E5D2A8", "#1A0608"] },
+    { "name": "endpaper-blue",     "hexes": ["#28486B", "#FBF7EE", "#D4DCE5", "#0A1422"] },
+    { "name": "letterpress-bone",  "hexes": ["#2A2620", "#F5EFE0", "#C8B894", "#0E0B07"] },
+    { "name": "rare-book-green",   "hexes": ["#2F4434", "#F4ECDC", "#C8B68A", "#0B130E"] }
+  ],
+  "section_library": ["hero", "page-hero", "staff-pick-wall", "section-shelf-grid", "new-release-strip", "signed-edition-shelf", "reading-event-list", "event-detail-card", "author-q-and-a", "book-club-card", "bookseller-card", "shop-history-strip", "press-quotes", "newsletter-signup", "address-card", "hours-strip", "gift-card-strip", "footer"],
+  "image_directives": "real shop photography. Stacked tables of new releases, hand-lettered staff-pick shelf-talkers, a bookseller mid-recommendation at the counter, an evening reading with thirty folding chairs in front of a low stage. Show actual spines, dust jackets, and shelf wear — not airbrushed bookshelf rentals. Tungsten interiors, daylight at the front window. Avoid AI-perfect symmetric library stock and stylized flat-lays of coffee-and-book.",
+  "voice_pet_words": ["staff pick", "shelf-talker", "first edition", "signed", "back catalog", "pre-order", "handsell", "out-of-print"],
+  "primary_keywords": ["independent bookstore", "indie bookstore", "staff picks", "book signing", "used books"]
+}

@@ -1670,6 +1670,168 @@ export const COPY_PATTERNS: Record<string, CopyPattern[]> = {
       primary:   'Tents, tables, and linens from three companies means three trucks at your venue. We carry all three, run one load-in, and one strike, on one contract with one damage waiver.',
     },
   ],
+
+  'bookstore-independent': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '80 staff picks. Reordered every Tuesday.',
+      primary:   '80 staff-pick novels on the front table, reordered every Tuesday by nine booksellers who actually read them. Signed first editions on the back wall. Open 10–7, Sundays till 5.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We don't have an algorithm. We have nine booksellers.",
+      primary:   "Tell us a book you loved last year and we'll hand you three you have not heard of by Friday. Every shelf-talker is signed by the bookseller who wrote it.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Algorithm feed → a paragraph from someone who read it.',
+      primary:   'Bestseller lists rank what already sold. Our staff-pick wall ranks what nine readers actually finished and want to talk about. Walk in with one title; walk out with three.',
+    },
+  ],
+
+  'bike-shop': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Tune-ups Tues and Thurs. 90-minute fitting.',
+      primary:   'Three-tier tune-ups from $89 to $215, drop-off Tuesday or Thursday, back by Saturday. 90-minute fitting on a Retul bench by a fitter who has done 1,200 of them. Service-bay status board updated every morning.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'We sell 8 e-bikes for every road bike now.',
+      primary:   'Five years ago road bikes were 60 percent of the floor. Now e-bikes are 40 and growing. We will tell you which class fits your commute and which warranty actually covers a flat at year three.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Closet bike → a 30-day commute, fitted in 90 minutes.',
+      primary:   'A bike that has not moved in three years usually needs a $185 tune, a fitting, and a tube. We can have you riding to work by next Wednesday, with a follow-up at 30 days included.',
+    },
+  ],
+
+  'outdoor-outfitter': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Pack fitted on the floor. Rentals by the weekend.',
+      primary:   'Pack fittings under load on the showroom floor, no appointment needed. Tents, stoves, and sleeping bags rent for $18–$42 a weekend; permits printed at the counter for the four nearest trailheads.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Three of us are former rangers. Ask about permits.',
+      primary:   'Three staff worked seasons at parks within 200 miles. They know which permit lottery opens in February and which trail is mud through May. Bring the trip; we will help you load for it.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Catalog kit → a shakedown that catches the weight.',
+      primary:   'A pack ordered online sits at 38 pounds when it should be 26. Bring it in for a free shakedown — we lay it out, weigh it, and tell you what comes out. Most first-time backpackers leave 9 pounds lighter.',
+    },
+  ],
+
+  'consignment-resale': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '60/40 split. 60-day terms. Intake Wed and Sat.',
+      primary:   'You take 60 percent on items under $100, 70 above. 60-day floor cycle, then a 25-percent markdown for two weeks before payout or pickup. Intake by appointment Wednesday and Saturday — bring 30 pieces or fewer per visit.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'We turn down 4 in 10 pieces at intake.',
+      primary:   'We accept what will sell on our floor in 60 days. About 40 percent of what walks in does not — wrong season, wrong size run, or condition we cannot tag. We tell you on the spot, no donation pile guilt.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Closet purge → a check, not a donation.',
+      primary:   'Two bags in, 18 pieces tagged, payout deposited within a week of sale. The other 12 leave with you the same afternoon. Bring a list of what you brought; we hand back a tagged-item receipt.',
+    },
+  ],
+
+  'jewelry-store': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Bench resize 3–5 days. Watch overhaul 3 weeks.',
+      primary:   'Two bench jewelers on staff, both GIA-graduate gemologists. Ring resize and prong work 3–5 business days; full mechanical watch overhaul 3 weeks with a written estimate before any work starts.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'No engagement-ring quotas, no commission floor.',
+      primary:   'Our staff is salaried. There is no quarterly carat goal and no upsell script. Walk in with a $2k budget or a $20k budget and you get the same hour at the case and the same plain math on stones.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Inherited ring → resized, reset, and worn — for $340.',
+      primary:   'A ring from a grandmother often needs a resize, a polish, and one prong rebuild. Average bench cost runs $260–$420 with a written estimate first and a 6-month warranty on the work.',
+    },
+  ],
+
+  'furniture-store': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Sofas 8–12 weeks. White-glove inside the beltway.',
+      primary:   'Custom sofas 8–12 weeks from order to delivery, depending on fabric. White-glove delivery and assembly included inside our 30-mile zone; outside, we book a freight crew with a 4-hour window.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We don't quote a 'ships in 2 weeks' lie.",
+      primary:   'Online furniture sites quote 14 days and ship in 70. We post real lead times by frame and fabric on every product page and update them weekly. Look for the date; that is the date.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Disposable couch every 4 years → frame for 20.',
+      primary:   'Three flat-pack sofas in a decade run $3,400 with three trips to the dump. One kiln-dried hardwood frame, eight-way hand-tied, runs $2,800 and reupholsters at year ten for $900.',
+    },
+  ],
+
+  'vape-smoke-shop': [
+    {
+      framework: 'specific-value-prop',
+      headline:  '21+ only. State tobacco license posted at the door.',
+      primary:   'Adults 21 and over, ID checked every visit, no exceptions. State tobacco license and current registration posted on the front door. E-liquid lab reports available at the counter on request.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Half our regulars are stepping nicotine down, not up.',
+      primary:   'Most of our walk-in advice is helping adult customers move from 18mg to 6mg to 3mg over a few months. We will work the math with you and we will not push the highest-margin device on the wall.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Disposable a day → adjustable device, plain math on cost.',
+      primary:   'A pack-a-day disposable habit runs roughly $210 a month. An entry-tier refillable device, two coils, and 60ml of e-liquid runs about $48 the first month and $24 after. We will run the line on paper before you buy.',
+    },
+  ],
+
+  'florist': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Order by 11am for same-day inside Zone A.',
+      primary:   'Order by 11am for same-day delivery inside our 6-mile Zone A; by 9am for Zone B (15 miles). Wedding consultations are a $50 booking fee credited to your order. Sympathy work picks up the same morning when funeral home is local.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We don't carry peonies in January. We tell you.",
+      primary:   "Peonies are a 6-week window. Garden roses are not year-round. We update the seasonal-stems board every Monday and offer a designer's-choice option that uses what is actually in the cooler this week.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Grocery bouquet → field-grown stems, $48.',
+      primary:   "A $22 grocery wrap loses half its stems by Wednesday. A $48 designer's-choice from us uses field-grown stems with a 7-day vase life, delivered in water tubes — and you can name the recipient at checkout.",
+    },
+  ],
+
+  'comic-game-shop': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'New comics Wednesday at 11. Pull list runs $0.',
+      primary:   'New comics out at 11am Wednesday, back issues bagged and boarded behind. Pull list service is free — we hold your titles for 14 days. Friday-night Magic at 6, Saturday board-game open table at 1, no buy-in.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  'Our open table seats six. Bring nothing — we lend.',
+      primary:   'Our play space has six tables and a lending shelf of 80 board games. Walk in alone on a Tuesday, and a staff member will teach you a 30-minute game and find you a second player. No buy-in, no judgment.',
+    },
+    {
+      framework: 'before-after',
+      headline:  'Never played → a starter deck and a coach for FNM.',
+      primary:   'Never played Magic? We hand you a $15 starter deck, walk you through three turns at the counter, and pair you with a regular for your first FNM. About 60 percent of our regulars started exactly this way.',
+    },
+  ],
 };
 
 /** Fallback for niches without curated patterns — generic but framework-shaped,
