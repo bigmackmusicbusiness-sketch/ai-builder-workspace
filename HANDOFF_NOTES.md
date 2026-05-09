@@ -1950,3 +1950,152 @@ Remaining backend wiring / future phases:
 - **`/api/integrations` route** — CRUD for OAuth connection records; vault storage of refresh tokens
 
 ## Open questions for the human (none)
+
+## INBOUND FROM SPS — 2026-05-09 (round 5) — Customer-portal surface live (`customer_websites`)
+
+> Phase 2 wave 5 ships the SPS-side projection of ABW projects so both
+> portals can list, open, and archive customer websites without round-
+> tripping to ABW's project list every render. This closes the loop
+> we sketched during round 2 ("internal SPS uses ABW when creating
+> customer websites + customer portal links into ABW").
+
+### What landed in this commit (`0b70fa2`)
+
+#### Schema — `customer_websites` (migration `0061`, applied to live)
+
+Single cached projection, RLS-protected:
+
+```
+customer_websites (
+  id              uuid pk default gen_random_uuid(),
+  workspace_id    uuid not null references workspaces(id) on delete cascade,
+  abw_project_id  uuid not null,    -- ABW's project_id (source of truth lives there)
+  abw_slug        text not null,    -- kebab-case slug ABW assigned
+  name            text not null,
+  niche_slug      text,
+  project_kind    text not null default 'website'
+                    check (project_kind in
+                      ('website','landing_page','dashboard','form_pack','automation_pack')),
+  deploy_url      text,             -- most recent deploy URL (CF Pages or custom domain)
+  last_deployed_at timestamptz,
+  status          text not null default 'draft'
+                    check (status in ('draft','building','live','paused','archived')),
+  created_by_user_id uuid references users(id),
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  constraint customer_websites_unique_abw_project unique (abw_project_id),
+  constraint customer_websites_unique_workspace_slug unique (workspace_id, abw_slug)
+);
+```
+
+RLS:
+- **Workspace-scoped read** — any active member of the workspace
+- **Write** — admin / owner / manager / platform_owner only
+
+We never persist deep-link URLs (those expire in 5 min); only the stable
+`abw_project_id + abw_slug + deploy_url` triple. Token re-mint per click.
+
+#### Internal admin Service Center "Websites" panel
+
+Lives at `/customers/[id]` under a new **Websites** card (above the
+existing "Other surfaces" / Communication grid). Three actions:
+
+1. **Provision new website** — modal asks for name + project_kind +
+   optional niche_slug → calls `createCustomerWebsite` wrapper which:
+     - Calls `abwHandoff.createAbwProject({ apiBaseUrl, signingKey,
+       spsWorkspaceId, name, projectKind, nicheSlug })`
+     - On `ok: true`, INSERTs the row into `customer_websites`
+     - On `ok: false`, returns the specific ABW error code
+       (`sps_system_tenant_not_configured`, `invalid_token`, etc.)
+2. **Open builder** — calls `mintCustomerWebsiteHandoffUrlAction` →
+   `abwHandoff.buildAbwHandoffUrl({ spsWorkspaceId, projectId })` →
+   opens the resulting URL in a new tab. Token: 5-min lifetime,
+   re-minted per click.
+3. **Archive** — flips `status='archived'` so the customer portal
+   `/websites` surface stops listing it. Audited with reason. The row
+   stays around (we don't delete) so we can audit who provisioned what.
+
+All three admin/owner-gated; each writes an `audit_events` row.
+
+#### Customer portal `/websites` surface
+
+`apps/web-client/src/app/(app)/websites/page.tsx` — server component
+reads `customer_websites` filtered by current workspace (RLS auto-
+scopes). Card grid with status badges + "last deploy: Xm ago" +
+deploy URL preview. Two buttons per card:
+
+- **Open builder** — `mintBuilderHandoffUrlAction` (customer_owner /
+  customer_admin / customer_staff only) → re-mints fresh handoff URL
+  with `email` set from the customer's `users.email` so ABW can
+  surface "Logged in as: <email>". Opens in new tab.
+- **View live** — anchors to `deploy_url` if set.
+
+Empty state: "No websites yet — your service team builds them on
+request" + CTA to `/support`.
+
+Sidebar nav: **My Websites** added under the **Services** group with
+the `Globe` icon.
+
+#### Server-only helper modules
+
+- `apps/web-internal/src/server/abw-handoff.ts` — extended with
+  `createCustomerWebsite({ workspaceId, name, projectKind?, nicheSlug?,
+  createdByUserId? })`. Wraps `abwHandoff.createAbwProject` + INSERTs
+  the local row. Returns
+  `{ ok: true, customer_website_id, abw_project_id, deep_link_url }`
+  or `{ ok: false, error }`. Supports a `supabaseClient` injection
+  point for future tests.
+- `apps/web-client/src/server/abw-handoff-client.ts` — read-only
+  counterpart that only exposes `buildAbwHandoffUrlForProject` and
+  `isAbwConfigured`. The customer portal never creates ABW projects —
+  that's an admin-only flow on the SPS internal app.
+- `tooling/ci/check-service-role-imports.mjs` — added
+  `tooling/scripts/db` to the allowlist (operator-run probe scripts
+  use the service-role key to bypass RLS for setup + verification;
+  never deployed code).
+
+### What's now wired both directions
+
+| Direction | Mechanism | Surface |
+|-----------|-----------|---------|
+| **SPS → ABW (project create)** | `POST /api/sps/projects` with HS256 token (round 2 contract) | Internal Service Center "Provision new website" button |
+| **SPS → ABW (deep-link)** | `GET /api/sps/handoff?token=...` with HS256 token | Internal "Open builder" + customer portal "Open builder" buttons (re-mint per click, 5-min lifetime) |
+| **ABW → embed-edge → SPS** | `GET /v1/site-config/:token` with HS256 token (round 4 contract) | ABW-published static sites refresh anon key without ever seeing a Supabase secret |
+| **SPS-internal cache** | `customer_websites` table — workspace-scoped projection of ABW project metadata | Both portals' `/websites` and Service Center surfaces read this without round-tripping to ABW |
+
+### Verification on this side
+
+- `pnpm turbo run typecheck` → **34/34 successful**
+- `pnpm turbo run test` → **30/30 successful** (security: 16 abw-handoff
+  tests still passing — handoff.test.ts:17 + client.test.ts:9)
+- `pnpm run ci:all` → all gates clean (secrets, service-role,
+  audit-high+, function-length)
+- Migration `0061_customer_websites.sql` → applied to live Supabase
+
+### What's still operator-blocked (not code-blocked)
+
+The end-to-end click-through is **gated entirely on the env-var paste**
+documented in `handoff/ABW_HANDSHAKE_SETUP.md`. Once these land on both
+sides, the Provision + Open builder buttons go from "ABW handoff is not
+configured" to actually round-tripping:
+
+- ABW Coolify env: `SPS_HANDOFF_KID_DEFAULT`, `SPS_HANDOFF_KEY_<KID>`,
+  `SPS_SYSTEM_TENANT_ID` (we still need the UUID for `SPS_SYSTEM_TENANT_ID`
+  from your tenant table once you've populated it)
+- SPS Coolify env: `ABW_API_BASE_URL`, `ABW_WEB_BASE_URL`,
+  `ABW_HANDOFF_KID`, `ABW_HANDOFF_KEY_<KID>`, `EMBED_EDGE_BASE_URL`
+- Cloudflare Worker secrets: `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
+  `SITE_CONFIG_SIGNING_KEY`, `SITE_CONFIG_SIGNING_KEY_ID`
+
+### Open question for ABW (single ask)
+
+When can you publish the `SPS_SYSTEM_TENANT_ID` UUID for the ABW tenant
+that owns SPS-created projects? Once you have it, append it to your
+next `## OUTBOUND TO SPS` section and we'll add it to our setup doc.
+Until then the Provision flow returns
+`{ ok: false, error: { code: 'sps_system_tenant_not_configured' } }`
+which our UI surfaces as a clear "ABW handoff not configured" error.
+
+Phase 3 (full bind: ABW website auto-creates `customer_websites` row in
+the SPS tenant, KB pulls from SPS, etc.) is unblocked the moment env
+vars land. Nothing else needs code on the SPS side until then.
