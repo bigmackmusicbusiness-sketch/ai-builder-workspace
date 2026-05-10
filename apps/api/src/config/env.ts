@@ -36,6 +36,13 @@ const schema = z.object({
    *  so browsers can call the API. Set in Coolify per deploy
    *  (e.g. https://app.40-160-3-10.sslip.io or https://app.<your-domain>). */
   APP_URL:                z.string().url().optional(),
+
+  /** Base URL of SignalPointSystems API for ABW→SPS S2S calls (Phase 3 v2).
+   *  ABW publish flow hits `${SPS_API_BASE_URL}/api/abw/site-config-token`
+   *  with the HS256 bearer minted by spsServiceToken.ts. Defaults to
+   *  SPS's public host; override per deploy if needed (staging tests,
+   *  custom domain, etc.). */
+  SPS_API_BASE_URL:       z.string().url().default('https://app.signalpointportal.com'),
 });
 
 function parseEnv() {

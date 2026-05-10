@@ -67,12 +67,14 @@ export class HandoffTokenError extends Error {
 }
 
 // ── Base64URL helpers (Node's built-in atob/btoa wrap base64 without URL-safe chars) ──
+// Exported so the ABW→SPS S2S minter (apps/api/src/security/spsServiceToken.ts)
+// can reuse them. Both directions share the same JWT-compact encoding.
 
-function b64urlEncode(buf: Buffer): string {
+export function b64urlEncode(buf: Buffer): string {
   return buf.toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 
-function b64urlDecodeToBuffer(s: string): Buffer {
+export function b64urlDecodeToBuffer(s: string): Buffer {
   const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
   const pad = b64.length % 4 === 0 ? '' : '='.repeat(4 - (b64.length % 4));
   return Buffer.from(b64 + pad, 'base64');
@@ -85,8 +87,14 @@ function b64urlDecodeToString(s: string): string {
 // ── Key resolution ────────────────────────────────────────────────────────────
 
 /** Resolve a signing key by its kid. The key is base64-encoded in the env var.
- *  Returns null if unknown — the caller throws 401. */
-function resolveKey(kid: string): Buffer | null {
+ *  Returns null if unknown — the caller throws 401.
+ *
+ *  Exported because the ABW→SPS S2S direction uses the SAME shared secret
+ *  (per SPS round 6 INBOUND): both directions read `SPS_HANDOFF_KEY_<KID>`,
+ *  the iss/aud/scope claims create the per-direction gate. Reusing this
+ *  function keeps the kid-sanitisation rules consistent between
+ *  verify-incoming (handoffToken.ts) and mint-outgoing (spsServiceToken.ts). */
+export function resolveKey(kid: string): Buffer | null {
   // Sanitise kid before using as part of an env var name to avoid `KID=../`
   // shenanigans. Restrict to [a-zA-Z0-9_-].
   if (!/^[a-zA-Z0-9_-]{1,64}$/.test(kid)) return null;
