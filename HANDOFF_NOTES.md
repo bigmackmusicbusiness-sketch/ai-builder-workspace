@@ -3500,3 +3500,77 @@ shipment via:
 
 Per the user's standing rule, before disabling the poller, this entry
 already covers the SPS-side close-out for the next agent to see.
+
+---
+
+## Round 8 Feature B contract aligned with SPS wave-8 (2026-05-11, commit `d887d63`)
+
+> SPS shipped Feature B foundation (commit `7d81268` on SPS) within
+> minutes of ABW's first server-side commit (`f64cb4f`). Their actual
+> implementation uses Stripe **Checkout Sessions** (not Invoices) and
+> requires both `project_id` + `project_slug` in the request body —
+> different from the OUTBOUND round-5 sketch. Patched ABW to match.
+
+### What was actually shipped on each side
+
+| Concern | OUTBOUND round 5 sketch | SPS wave-8 actual | ABW fix in `d887d63` |
+|---|---|---|---|
+| Payment primitive | "Stripe invoice" | **Stripe Checkout Session** | All ABW columns + field names switched to session terminology |
+| Body fields | `customer_email, …, project_id` | `project_id, project_slug, customer_email, …` | Wrapper now fetches project.slug + sends both |
+| Response field: payment | `invoice_id, invoice_url` | `stripe_session_id, payment_url` | Zod schema + persist + audit + IDE response all updated |
+| Response field: ids | `workspace_id` | `workspace_id + organization_id + customer_website_id` | All three forwarded to IDE for complete summary |
+| Response field: expiry | `pending_until_iso` | `pending_until` (same shape) | Field name aligned |
+| ABW column names | `pending_invoice_id, pending_invoice_url` | (mirror SPS naming) | Renamed to `pending_stripe_session_id, pending_payment_url` |
+
+Migration 0015 was edited in-place (NOT yet applied — Coolify hasn't
+rolled commits `deb4b53`, `f64cb4f`, `d887d63` yet, so renaming columns
+in the migration source is safe — no data exists in those columns).
+
+### Token shape conformance — still matches (no changes to security layer)
+
+The auth contract did NOT change. ASSIGN_NEW_CUSTOMER_SCOPE +
+TRANSFER_OWNERSHIP_SCOPE are correct on both sides. SPS uses
+`@signalpoint/security/abw-handoff` constants which match
+ABW's `apps/api/src/security/spsServiceToken.ts` constants:
+- `iss='abw', aud='sps', scope='assign-new-customer'` for ABW→SPS
+- `iss='signalpoint-systems', aud='abw', scope='transfer-ownership'` for SPS→ABW
+- 300s lifetime cap on both
+- Same shared HS256 key + KID
+
+### Why the contract drifted
+
+My OUTBOUND round 5 §B answers assumed Stripe Invoices because round 8
+INBOUND used "invoice" in its prose. SPS hit a chicken-and-egg issue:
+the `invoices` table doesn't get a row until after the customer pays
+(via session.completed webhook), so they couldn't store a
+`pending_invoice_id` on the customer_websites row at provision time.
+Switching to Checkout Sessions (which DO get an ID immediately at
+creation) cleanly resolved the issue. SPS's commit message documents
+the early-draft path they tried + abandoned.
+
+Stripe Checkout Sessions are functionally equivalent for our purposes
+(both give a hosted payment URL + an ID we can correlate via webhook).
+No security or UX impact from the switch.
+
+### Where Round 8 stands now
+
+| Component | Status |
+|---|---|
+| Feature A — ABW side (headers + cookie + embedded mode) | ✅ Shipped `deb4b53` |
+| Feature A — SPS side (iframe wiring) | ⏳ Pending SPS commit |
+| Feature B — ABW server-side (mint, endpoints, migration, gate) | ✅ Shipped `f64cb4f` + `d887d63` |
+| Feature B — SPS server-side (endpoint, migration, constants) | ✅ Shipped `7d81268` (SPS) |
+| Feature B — ABW SPA UI (publish menu, modal, banner) | ⏳ Deferred to follow-up |
+| Feature B — SPS Stripe webhook handler + transfer-ownership wrapper | ⏳ Pending SPS wave 9 |
+
+End-to-end is **2 of 6 components from final**. The poller continues
+to watch for SPS Feature A wiring + SPS wave-9 (Stripe webhook +
+transfer-ownership wrapper).
+
+### Commits this round
+
+- `deb4b53` — Feature A: iframe headers/cookie/embedded
+- `6c6cdc4` — OUTBOUND round 5
+- `f64cb4f` — Feature B server-side first pass (contracts from OUTBOUND sketch)
+- `367add6` — Feature B status doc
+- `d887d63` — Contract alignment with SPS wave-8 actual
