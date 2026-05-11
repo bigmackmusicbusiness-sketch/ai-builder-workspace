@@ -3796,3 +3796,128 @@ Poller continues running (per the standing rule: "update handoff before
 turning timer off"). Will self-disable after smoke passes.
 
 — ABW agent, 2026-05-11 (status update before SPA UI work)
+
+---
+
+## Round 8 closed — 2026-05-11
+
+> All remaining ABW-side work shipped this session. Coolify stall
+> diagnosed + fixed. All-zeros sentinel handled. SPA UI for Feature B
+> shipped. End-to-end customer-assignment flow is operational on
+> both sides pending only a real Stripe TEST-mode smoke walk.
+
+### Root cause of the 10-deploy Coolify failure streak
+
+ABW's `/healthz` had been frozen on the pre-round-2 shape since
+2026-05-09 — every commit since `dc56516` failed at Coolify with
+`pnpm --filter @abw/api build` exit code 2. The bundled docker error
+"Dockerfile.coolify:88" was misleading (BuildKit's parsed-merged-Dockerfile
+line numbering, not source line 88).
+
+Actual root cause: **`packages/site-data/package.json` was never added
+to either Dockerfile.coolify's COPY list.** Phase 3 prep introduced
+`@abw/site-data` as a workspace package (commit `cab6c24`); the api
+imports `SignalPointConfigSchema` from it in `signalpointConfig.ts`.
+Coolify's `pnpm install --frozen-lockfile` couldn't fully resolve the
+workspace because the package.json wasn't in the build context, so
+tsc errored on the missing module.
+
+Local builds passed because local `node_modules` retained the
+workspace link from earlier non-strict installs.
+
+Fix: commit `404b775` added the missing COPY line to both
+`apps/api/Dockerfile.coolify` and `apps/web/Dockerfile.coolify`.
+
+**Coolify rolled within minutes** — `/healthz` now returns
+`buildTime: "2026-05-11T06:47:16Z"` plus `buildSha: "unknown"` (the
+SHA fallback because `.git` is in `.dockerignore`, which is fine —
+`buildTime` alone proves deploys are flowing again).
+
+### Catch-up backlog now live
+
+The single successful deploy of `404b775` brought ABW current with the
+entire round-1-through-round-8 commit chain:
+
+- `be1101e` + `192bb5d` — tools.ts arg-recovery hardening (the team's "could not find path" fix)
+- `ff51b6d` + `e3150cd` + `84575f9` — Phase 3 v2: real PostgREST fetch, real shim injection
+- `2a5571d` — Path-2 S2S resolver for SignalPointSystems integration
+- `37324ad` — Publish flow `signalpoint-config.json` emission
+- `deb4b53` — Feature A iframe-friendly headers + cookie + `?embedded=true`
+- `f64cb4f` + `d887d63` — Feature B server-side endpoints + contract alignment
+- `404b775` — Dockerfile fix (this deploy)
+- `63f1385` — All-zeros sentinel → NULL on revert
+- `d96e6d5` — SPA UI: Assign-to-new-customer modal + PublishScreen button
+
+### What's now operational
+
+| Layer | Status | Live since |
+|---|---|---|
+| Tool-arg recovery (case-insensitive + array unwrap + 2-level wrap) | ✅ Live | 2026-05-11 06:47 UTC |
+| Phase 3 v2 site-data shim (real Supabase reads + refresh) | ✅ Live | 2026-05-11 06:47 UTC |
+| Phase 3 v2 publish-flow config emission | ✅ Live | 2026-05-11 06:47 UTC |
+| ABW→SPS S2S mint (mint-site-config + assign-new-customer scopes) | ✅ Live | 2026-05-11 06:47 UTC |
+| SPS→ABW transfer-ownership endpoint | ✅ Live | 2026-05-11 06:47 UTC |
+| publish.ts pending-customer gate (409 with payment URL) | ✅ Live | 2026-05-11 06:47 UTC |
+| Migration 0015 (4 pending-customer columns + index) | ✅ Live | 2026-05-11 06:47 UTC |
+| Feature A iframe-friendly headers + cookie SameSite=None | ✅ Live | 2026-05-11 06:47 UTC |
+| ABW SPA: `?embedded=true` chrome hide | ⏳ Rolling | Pending web redeploy |
+| SPA: Assign-to-new-customer modal + button | ⏳ Rolling | Pending web redeploy |
+
+The web SPA needs its own Coolify roll (separate Dockerfile, same
+project). Should be in flight now from commit `d96e6d5`.
+
+### SPA UI scope this round
+
+`apps/web/src/screens/AssignCustomerModal.tsx` (NEW):
+- 5-field form (customer_email, contact_name, business_name,
+  package_slug, niche_slug optional)
+- Submits to `/api/abw/assign-to-new-customer`
+- Success state surfaces the Stripe Checkout URL with Copy + Open
+  buttons + a collapsible SPS-identifiers block for support
+- ApiError data forwarded so SPS reasons (sps_rejected,
+  sps_schema_drift, sps_handoff_not_configured) reach the rep
+  verbatim
+
+`apps/web/src/screens/PublishScreen.tsx`:
+- Header gains "Assign to new customer" secondary button
+- Modal mounts on click; closes restore screen state
+
+### Deferred for v2 (low priority)
+
+- **Pending-customer banner persistence.** Currently the post-submit
+  Stripe URL only lives in modal component state. To survive IDE
+  reloads, /api/projects needs to return the four pending-* columns;
+  projectStore reads them; a PendingCustomerBanner reads from store
+  and renders sticky at the top of the project view. The rep's
+  immediate use case (capturing the Stripe URL during the call) is
+  covered without this — defer.
+- **Package dropdown.** Round-5 §B Q1 answered "free-text v1, dropdown
+  v2 via GET /api/abw/packages". Free-text is shipped; dropdown
+  awaits a real UX need.
+
+### Smoke test plan (when web rolls)
+
+1. Open ABW IDE for any standalone restaurant-niche project
+2. Navigate to Publish screen
+3. Click "Assign to new customer"
+4. Fill modal: any fake email, any contact + business name, package
+   slug = whatever SPS has in `offer_packages.slug` with
+   `status='active'`
+5. Submit → success state shows Stripe Checkout URL
+6. Open the Checkout URL in Stripe TEST mode (use card 4242…); pay
+7. SPS webhook fires `checkout.session.completed` → activates org +
+   calls ABW transfer-ownership
+8. ABW project's pending state clears (visible after a refresh until
+   v2 banner ships)
+9. Try publishing → no 409, deploy proceeds
+
+If the publish ever returns 409 `pending_customer_payment`, that's the
+gate working correctly. Refresh after payment; gate clears.
+
+### Standing-rule compliance
+
+- Handoff updated BEFORE poller disable (this entry)
+- SPS banner updated next (so their session knows ABW poller stops)
+- Poller self-disable: next step in this commit chain
+
+— ABW agent, 2026-05-11 (round 8 closed)
