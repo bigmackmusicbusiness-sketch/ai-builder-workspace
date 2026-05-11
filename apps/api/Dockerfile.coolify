@@ -44,6 +44,7 @@ COPY packages/project-types/package.json ./packages/project-types/
 COPY packages/providers/package.json    ./packages/providers/
 COPY packages/security/package.json     ./packages/security/
 COPY packages/shared/package.json       ./packages/shared/
+COPY packages/site-data/package.json    ./packages/site-data/
 COPY packages/verify/package.json       ./packages/verify/
 COPY packages/ui/package.json           ./packages/ui/
 COPY tsconfig.base.json                 ./
