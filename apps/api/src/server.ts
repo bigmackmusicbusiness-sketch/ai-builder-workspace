@@ -130,8 +130,11 @@ async function main(): Promise<void> {
   // ── Iframe-friendly headers for routes the IDE legitimately embeds ──────────
   // The Preview tab loads /api/preview/serve/<slug>/ inside an iframe; the
   // public deploys at /api/published/<slug>/ are also iframe-able from the
-  // Visual QA tab + share previews. Helmet's global X-Frame-Options DENY
-  // would make Chrome show "refused to connect."
+  // Visual QA tab + share previews. /api/sps/handoff is loaded inside an
+  // iframe from SPS portals (round 8 Feature A — admin + customer portal
+  // "Open builder" buttons render the IDE inline rather than opening a new
+  // tab). Helmet's global X-Frame-Options DENY would make Chrome show
+  // "refused to connect."
   //
   // IMPORTANT: api and IDE are on DIFFERENT origins (api.* vs app.*) so
   // X-Frame-Options SAMEORIGIN won't help — that header only knows
@@ -141,6 +144,18 @@ async function main(): Promise<void> {
   // origin allow-list. Modern browsers prefer frame-ancestors anyway and
   // will use it when both headers are present, but removing X-F-O avoids
   // any ambiguity for older browsers.
+  //
+  // SPS portal origins are allow-listed via SPS_PORTAL_ORIGINS env (CSV,
+  // optional). Defaults to the production hostnames per SPS round 8 spec.
+  // Override per deploy if SPS moves to different domains.
+  const ABW_DEFAULT_SPS_PORTAL_ORIGINS = [
+    'https://app.signalpointportal.com',
+    'https://client.signalpointportal.com',
+  ];
+  const spsPortalOrigins = (process.env['SPS_PORTAL_ORIGINS'] ?? '')
+    .split(',').map((s) => s.trim()).filter(Boolean);
+  const portalAllowList = (spsPortalOrigins.length ? spsPortalOrigins : ABW_DEFAULT_SPS_PORTAL_ORIGINS).join(' ');
+
   app.addHook('onSend', async (req, reply, payload) => {
     const url = req.url ?? '';
     if (url.startsWith('/api/preview/serve/') || url.startsWith('/api/published/')) {
@@ -149,6 +164,14 @@ async function main(): Promise<void> {
       reply.removeHeader('X-Frame-Options');
       // Replace with frame-ancestors — accepts the IDE origin + same-origin
       reply.header('Content-Security-Policy', `frame-ancestors 'self' ${ideOrigin}`);
+    } else if (url.startsWith('/api/sps/handoff')) {
+      // SPS portal iframe entry-point. The handoff route 302-redirects to
+      // the SPA. For the iframe load to follow that redirect, this 302
+      // response must itself not be X-F-O DENY'd. frame-ancestors covers
+      // both same-origin (the IDE's own preview iframe should anything ever
+      // load handoff from inside the IDE) AND the configured SPS portals.
+      reply.removeHeader('X-Frame-Options');
+      reply.header('Content-Security-Policy', `frame-ancestors 'self' ${portalAllowList}`);
     }
     return payload;
   });

@@ -250,8 +250,16 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
     }
 
     // Set a short-lived hint cookie. Path / so the IDE app reads it on any
-    // page load; max-age matches the handoff window. SameSite=Lax is the
-    // safest default for a redirect-from-different-origin flow.
+    // page load; max-age matches the handoff window.
+    //
+    // **SameSite=None; Secure** is required (not Lax) because the handoff
+    // flow is increasingly invoked inside cross-origin iframes (SPS round 8
+    // Feature A — SPS embeds the IDE inside their admin + customer portals).
+    // In an iframe loaded from a different origin (e.g.
+    // app.signalpointportal.com → app.40-160-3-10.sslip.io), this cookie is
+    // treated as third-party. SameSite=Lax → cookie not sent → auth breaks.
+    // SameSite=None requires Secure (already set) — no functional change for
+    // top-level redirects (browsers send None cookies on top-level nav too).
     const cookieValue = encodeURIComponent(JSON.stringify({
       sps_workspace_id: payload.sps_workspace_id,
       project_id:       payload.project_id,
@@ -263,7 +271,7 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
       `abw_sps_handoff=${cookieValue}; ` +
       `Path=/; ` +
       `Max-Age=${Math.max(60, payload.exp - Math.floor(Date.now() / 1000))}; ` +
-      `SameSite=Lax; ` +
+      `SameSite=None; ` +
       `Secure; ` +
       `HttpOnly`,
     );
@@ -278,6 +286,13 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
       after: { sps_workspace_id: payload.sps_workspace_id, has_email: !!payload.email },
     }).catch(() => { /* best-effort */ });
 
-    return reply.redirect(`${getAppUrl()}/projects/${row.slug}?spsHandoff=1`, 302);
+    // Forward the `embedded=true` query param (round 8 Feature A — iframe
+    // mode flag). SPS sets this on the iframe src to tell the SPA to hide
+    // its top chrome. If the incoming request has it, preserve it on the
+    // redirect; the SPA's Shell.tsx reads it on mount and stashes it in
+    // sessionStorage for the iframe's lifetime.
+    const incomingEmbedded = (req.query as { embedded?: string })?.embedded === 'true';
+    const embeddedSuffix = incomingEmbedded ? '&embedded=true' : '';
+    return reply.redirect(`${getAppUrl()}/projects/${row.slug}?spsHandoff=1${embeddedSuffix}`, 302);
   });
 }
