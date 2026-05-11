@@ -356,6 +356,15 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
         return reply.status(400).send({ error: 'bad_body', issues: parsed.error.issues });
       }
       const newWs = parsed.data.new_sps_workspace_id.toLowerCase();
+      /** SPS round-9 documented the all-zeros UUID as the sentinel for
+       *  "revert to no SPS owner" (the 30-day expiry worker uses this when
+       *  rolling a project back from a never-paid customer to the agency
+       *  tenant). new_sps_workspace_id must be a UUID for our Zod schema,
+       *  so SPS sends 00000000-0000-0000-0000-000000000000; we map it to
+       *  NULL on storage so projects.sps_workspace_id is semantically
+       *  accurate ("not currently SPS-owned"). */
+      const ZERO_UUID = '00000000-0000-0000-0000-000000000000';
+      const isRevert = newWs === ZERO_UUID;
 
       // The token's sps_workspace_id MUST match the body — defends against
       // a token issued for workspace A being used to claim project ownership
@@ -384,15 +393,21 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
       if (!row) return reply.status(404).send({ error: 'project_not_found' });
 
       const oldWs = row.sps_workspace_id;
+      // What we'll WRITE to projects.sps_workspace_id. For the revert
+      // sentinel, NULL is the right value (no SPS owner). Otherwise it's
+      // the new workspace UUID.
+      const writeValue: string | null = isRevert ? null : newWs;
 
-      // Idempotency: same-workspace call is a no-op. Don't write an audit
-      // row for this; just acknowledge.
-      if (oldWs === newWs) {
+      // Idempotency: same-workspace call is a no-op. For revert: compare
+      // against NULL specifically (the all-zeros sentinel maps to NULL on
+      // storage, so a re-revert of an already-NULL project is a no-op).
+      const alreadyAtTarget = isRevert ? oldWs === null : oldWs === newWs;
+      if (alreadyAtTarget) {
         return reply.send({
           ok:                    true,
           project_id:            row.id,
           old_sps_workspace_id:  oldWs,
-          new_sps_workspace_id:  newWs,
+          new_sps_workspace_id:  writeValue,
           no_op:                 true,
         });
       }
@@ -400,7 +415,9 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
       // Update the project + clear all four pending-customer columns. The
       // pending state belongs to the BEFORE-payment phase; once SPS confirms
       // payment + transfer-ownership, the project is "live" in the IDE's
-      // sense (no banner, publish unblocked).
+      // sense (no banner, publish unblocked). On revert (writeValue=null),
+      // pending state is also cleared — the customer didn't pay and the
+      // project is going back to the agency.
       try {
         await sql.unsafe(
           `UPDATE projects
@@ -411,7 +428,7 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
                   pending_until              = NULL,
                   updated_at                 = now()
             WHERE id = $2 AND deleted_at IS NULL`,
-          [newWs, projectId],
+          [writeValue, projectId],
         );
       } catch (err) {
         // eslint-disable-next-line no-console
@@ -420,7 +437,8 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
       }
 
       // Audit — record the before/after workspace mapping. Useful for
-      // operator forensics if a customer disputes ownership.
+      // operator forensics if a customer disputes ownership. `is_revert`
+      // distinguishes payment-success transfers from 30-day-expiry reverts.
       await writeAuditEvent({
         tenantId: row.tenant_id,
         action:   'sps.project.transfer_ownership',
@@ -428,14 +446,15 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
         targetId: row.id,
         env:      'production',
         before:   { sps_workspace_id: oldWs },
-        after:    { sps_workspace_id: newWs, cleared_pending: true },
+        after:    { sps_workspace_id: writeValue, cleared_pending: true, is_revert: isRevert },
       }).catch(() => { /* best-effort */ });
 
       return reply.send({
         ok:                    true,
         project_id:            row.id,
         old_sps_workspace_id:  oldWs,
-        new_sps_workspace_id:  newWs,
+        new_sps_workspace_id:  writeValue,
+        is_revert:             isRevert,
       });
     },
   );
