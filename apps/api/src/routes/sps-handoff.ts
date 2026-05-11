@@ -404,12 +404,12 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
       try {
         await sql.unsafe(
           `UPDATE projects
-              SET sps_workspace_id        = $1,
-                  pending_customer_email  = NULL,
-                  pending_invoice_id      = NULL,
-                  pending_invoice_url     = NULL,
-                  pending_until           = NULL,
-                  updated_at              = now()
+              SET sps_workspace_id           = $1,
+                  pending_customer_email     = NULL,
+                  pending_stripe_session_id  = NULL,
+                  pending_payment_url        = NULL,
+                  pending_until              = NULL,
+                  updated_at                 = now()
             WHERE id = $2 AND deleted_at IS NULL`,
           [newWs, projectId],
         );

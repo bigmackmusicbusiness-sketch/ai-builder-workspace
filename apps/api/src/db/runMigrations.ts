@@ -167,6 +167,14 @@ const MIGRATIONS: Array<{ id: string; sql: string }> = [
     // confirms payment (or when the 30-day expiry reverts the project to
     // the agency tenant).
     //
+    // Column naming mirrors SPS's `customer_websites` table:
+    //   - pending_stripe_session_id (Stripe Checkout Session id)
+    //   - pending_payment_url (Stripe-hosted payment page URL)
+    // SPS uses Stripe Checkout Sessions (not Invoices) for the pay flow —
+    // session.completed fires the webhook that calls our
+    // transfer-ownership endpoint. The session-id naming matches their
+    // wave-8 contract byte-for-byte.
+    //
     // Standalone-IDE guarantee preserved: every column is NULL by default
     // and only populated for projects that opt into the sales-call demo
     // flow. The IDE banner + publish-gate gates trigger on
@@ -174,10 +182,10 @@ const MIGRATIONS: Array<{ id: string; sql: string }> = [
     id: '0015_projects_pending_customer_state',
     sql: `
       ALTER TABLE projects
-        ADD COLUMN IF NOT EXISTS pending_customer_email TEXT,
-        ADD COLUMN IF NOT EXISTS pending_invoice_id     TEXT,
-        ADD COLUMN IF NOT EXISTS pending_invoice_url    TEXT,
-        ADD COLUMN IF NOT EXISTS pending_until          TIMESTAMPTZ;
+        ADD COLUMN IF NOT EXISTS pending_customer_email     TEXT,
+        ADD COLUMN IF NOT EXISTS pending_stripe_session_id  TEXT,
+        ADD COLUMN IF NOT EXISTS pending_payment_url        TEXT,
+        ADD COLUMN IF NOT EXISTS pending_until              TIMESTAMPTZ;
 
       -- Partial index for the "is this project pending?" lookup the IDE
       -- banner + publish-gate use. Only rows actively in pending state

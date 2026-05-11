@@ -221,14 +221,17 @@ export async function publishRoutes(app: FastifyInstance): Promise<void> {
 
     // Round 8 Feature B (pending-customer gate): if this project is in
     // "pending customer payment" state, refuse the deploy with structured
-    // info the IDE banner can render. Customer needs to pay the Stripe
-    // invoice before the site can go live; rep should keep editing until
-    // payment lands (SPS fires the transfer-ownership webhook that clears
-    // this state automatically).
+    // info the IDE banner can render. Customer needs to complete the
+    // Stripe Checkout Session before the site can go live; rep should
+    // keep editing until session.completed fires the webhook that clears
+    // this state automatically.
     try {
       const sql = getRawSql();
       const pendingRows = await sql.unsafe(
-        `SELECT pending_customer_email, pending_invoice_id, pending_invoice_url, pending_until
+        `SELECT pending_customer_email,
+                pending_stripe_session_id,
+                pending_payment_url,
+                pending_until
            FROM projects
           WHERE id = $1 AND deleted_at IS NULL
             AND pending_until IS NOT NULL
@@ -236,20 +239,20 @@ export async function publishRoutes(app: FastifyInstance): Promise<void> {
           LIMIT 1`,
         [projectId],
       ) as Array<{
-        pending_customer_email: string | null;
-        pending_invoice_id:     string | null;
-        pending_invoice_url:    string | null;
-        pending_until:          string | null;
+        pending_customer_email:    string | null;
+        pending_stripe_session_id: string | null;
+        pending_payment_url:       string | null;
+        pending_until:             string | null;
       }>;
       if (pendingRows.length > 0) {
         const p = pendingRows[0]!;
         return reply.status(409).send({
-          error:                  'pending_customer_payment',
-          message:                'Project is pending customer invoice payment. Publishing is blocked until the invoice is paid (or expires).',
-          pending_customer_email: p.pending_customer_email,
-          pending_invoice_id:     p.pending_invoice_id,
-          pending_invoice_url:    p.pending_invoice_url,
-          pending_until:          p.pending_until,
+          error:                     'pending_customer_payment',
+          message:                   'Project is pending customer Stripe Checkout payment. Publishing is blocked until checkout completes (or the 30-day window expires).',
+          pending_customer_email:    p.pending_customer_email,
+          pending_stripe_session_id: p.pending_stripe_session_id,
+          pending_payment_url:       p.pending_payment_url,
+          pending_until:             p.pending_until,
         });
       }
     } catch (err) {

@@ -45,12 +45,20 @@ const AssignToNewCustomerBodySchema = z.object({
   niche_slug:     z.string().min(1).max(60).regex(/^[a-z0-9_-]+$/i).optional(),
 });
 
+/** SPS round-8 wave-8 response shape — Stripe Checkout Session flow.
+ *  See SPS commit 7d81268 for the exact contract. SPS returns
+ *  `payment_url` (Checkout Session URL) + `stripe_session_id`; NOT
+ *  invoice fields (the original spec said "invoice" but SPS shipped
+ *  Sessions because the invoice row doesn't exist until checkout
+ *  completes — chicken-and-egg). */
 const SpsResponseSchema = z.object({
-  ok:                  z.literal(true).optional(),
+  ok:                  z.literal(true),
   workspace_id:        z.string().uuid(),
-  invoice_id:          z.string().min(1),
-  invoice_url:         z.string().url(),
-  pending_until_iso:   z.string().datetime(),
+  organization_id:     z.string().uuid(),
+  customer_website_id: z.string().uuid(),
+  payment_url:         z.string().url(),
+  stripe_session_id:   z.string().min(1),
+  pending_until:       z.string().datetime(),
 });
 
 export async function abwAssignCustomerRoutes(app: FastifyInstance): Promise<void> {
@@ -79,18 +87,20 @@ export async function abwAssignCustomerRoutes(app: FastifyInstance): Promise<voi
 
       // Confirm the project belongs to this rep's tenant before we provision
       // a customer for it. Defends against an IDE bug that submits a wrong
-      // project_id; SPS would otherwise create a real invoice tied to a
-      // project the rep doesn't own.
+      // project_id; SPS would otherwise create a real Stripe Checkout
+      // Session tied to a project the rep doesn't own. We also need the
+      // project's slug to forward to SPS (their endpoint requires both
+      // project_id + project_slug).
       const sql = getRawSql();
-      let project: { id: string; pending_until: string | null } | undefined;
+      let project: { id: string; slug: string; pending_until: string | null } | undefined;
       try {
         const rows = await sql.unsafe(
-          `SELECT id, pending_until
+          `SELECT id, slug, pending_until
              FROM projects
             WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL
             LIMIT 1`,
           [body.project_id, ctx.tenantId],
-        ) as Array<{ id: string; pending_until: string | null }>;
+        ) as Array<{ id: string; slug: string; pending_until: string | null }>;
         project = rows[0];
       } catch (err) {
         // eslint-disable-next-line no-console
@@ -140,12 +150,15 @@ export async function abwAssignCustomerRoutes(app: FastifyInstance): Promise<voi
             'Accept':        'application/json',
           },
           body: JSON.stringify({
+            // SPS round-8 wave-8 contract (commit 7d81268): project_id +
+            // project_slug both required. project_id must be lowercase UUID.
+            project_id:     body.project_id.toLowerCase(),
+            project_slug:   project.slug,
             customer_email: body.customer_email,
             contact_name:   body.contact_name,
             business_name:  body.business_name,
             package_slug:   body.package_slug,
-            niche_slug:     body.niche_slug,
-            abw_project_id: body.project_id,
+            niche_slug:     body.niche_slug ?? null,
           }),
         });
       } catch (err) {
@@ -189,29 +202,36 @@ export async function abwAssignCustomerRoutes(app: FastifyInstance): Promise<voi
       // these four columns. If for some reason they don't exist yet (e.g.
       // migration didn't apply this boot), the update will fail loudly — we
       // surface that as 500 with a hint to the operator.
+      //
+      // Column naming mirrors SPS's `customer_websites` table (round-8 wave-8):
+      // pending_stripe_session_id (Checkout Session id from Stripe) +
+      // pending_payment_url (Stripe-hosted Checkout page).
       try {
         await sql.unsafe(
           `UPDATE projects
-              SET pending_customer_email = $1,
-                  pending_invoice_id     = $2,
-                  pending_invoice_url    = $3,
-                  pending_until          = $4,
-                  updated_at             = now()
+              SET pending_customer_email     = $1,
+                  pending_stripe_session_id  = $2,
+                  pending_payment_url        = $3,
+                  pending_until              = $4,
+                  updated_at                 = now()
             WHERE id = $5 AND tenant_id = $6 AND deleted_at IS NULL`,
-          [body.customer_email, r.invoice_id, r.invoice_url, r.pending_until_iso, body.project_id, ctx.tenantId],
+          [body.customer_email, r.stripe_session_id, r.payment_url, r.pending_until, body.project_id, ctx.tenantId],
         );
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         // eslint-disable-next-line no-console
         console.error(`[assign-customer] failed to persist pending state: ${msg}`);
-        // SPS already created the invoice; we can't roll that back from here.
-        // Surface so the operator can manually reconcile from SPS admin.
+        // SPS already created the Stripe session; we can't roll that back
+        // from here. Surface so the operator can manually reconcile from
+        // SPS admin (cancel session, retry assign).
         return reply.status(500).send({
-          error:           'sps_ok_but_local_persist_failed',
-          warning:         'Invoice was created in SPS but ABW could not record pending-customer state. Reconcile from SPS admin.',
-          sps_workspace_id: r.workspace_id,
-          sps_invoice_id:   r.invoice_id,
-          sps_invoice_url:  r.invoice_url,
+          error:                'sps_ok_but_local_persist_failed',
+          warning:              'Stripe session was created in SPS but ABW could not record pending-customer state. Reconcile from SPS admin.',
+          sps_workspace_id:     r.workspace_id,
+          sps_organization_id:  r.organization_id,
+          sps_customer_website_id: r.customer_website_id,
+          payment_url:          r.payment_url,
+          stripe_session_id:    r.stripe_session_id,
         });
       }
 
@@ -223,21 +243,24 @@ export async function abwAssignCustomerRoutes(app: FastifyInstance): Promise<voi
         targetId: body.project_id,
         env:      'production',
         after:    {
-          customer_email: body.customer_email,
-          business_name:  body.business_name,
-          package_slug:   body.package_slug,
-          sps_workspace_id: r.workspace_id,
-          sps_invoice_id:   r.invoice_id,
-          pending_until:    r.pending_until_iso,
+          customer_email:      body.customer_email,
+          business_name:       body.business_name,
+          package_slug:        body.package_slug,
+          sps_workspace_id:    r.workspace_id,
+          sps_organization_id: r.organization_id,
+          stripe_session_id:   r.stripe_session_id,
+          pending_until:       r.pending_until,
         },
       }).catch(() => { /* best-effort */ });
 
       return reply.send({
-        ok:               true,
-        workspace_id:     r.workspace_id,
-        invoice_id:       r.invoice_id,
-        invoice_url:      r.invoice_url,
-        pending_until:    r.pending_until_iso,
+        ok:                   true,
+        workspace_id:         r.workspace_id,
+        organization_id:      r.organization_id,
+        customer_website_id:  r.customer_website_id,
+        payment_url:          r.payment_url,
+        stripe_session_id:    r.stripe_session_id,
+        pending_until:        r.pending_until,
       });
     },
   );
