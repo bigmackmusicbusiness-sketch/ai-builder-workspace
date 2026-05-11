@@ -295,4 +295,148 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
     const embeddedSuffix = incomingEmbedded ? '&embedded=true' : '';
     return reply.redirect(`${getAppUrl()}/projects/${row.slug}?spsHandoff=1${embeddedSuffix}`, 302);
   });
+
+  /**
+   * POST /api/sps/projects/:id/transfer-ownership
+   *
+   * Round 8 Feature B (IDE-first customer creation with pending invoice).
+   *
+   * Called by SPS when a Stripe invoice for an ABW-built site has been paid
+   * (webhook `invoice.paid`) — re-parents the project from the agency
+   * tenant's spsWorkspaceId to the customer's newly-activated workspace.
+   * Also called by SPS when a pending invoice expires (30 days unpaid) to
+   * revert ownership back to the agency.
+   *
+   * Auth: SPS S2S bearer with
+   *   iss = 'signalpoint-systems'
+   *   aud = 'abw'
+   *   scope = 'transfer-ownership'
+   *   sps_workspace_id = <new workspace UUID> (must match body)
+   *   exp <= iat + 300s
+   *
+   * Body: { new_sps_workspace_id: <uuid> }
+   *
+   * Returns 200: { ok, project_id, old_sps_workspace_id, new_sps_workspace_id, no_op? }
+   * Returns 400: bad body
+   * Returns 401: bad / missing / expired token
+   * Returns 403: body.new_sps_workspace_id != token.sps_workspace_id
+   * Returns 404: project doesn't exist or is soft-deleted
+   *
+   * Idempotent: calling with new_sps_workspace_id == current sps_workspace_id
+   * is a no-op (returns ok=true, no_op=true). Standalone-IDE guarantee held:
+   * pending-state columns are cleared on success, so a re-parented project
+   * returns to standard publish flow.
+   */
+  const TransferOwnershipBodySchema = z.object({
+    new_sps_workspace_id: z.string().uuid(),
+  });
+
+  app.post<{ Params: { id: string }; Body: { new_sps_workspace_id?: string } }>(
+    '/api/sps/projects/:id/transfer-ownership',
+    async (req, reply) => {
+      const token = bearerFrom(req.headers.authorization);
+      if (!token) return reply.status(401).send({ error: 'missing_bearer_token' });
+
+      let payload: HandoffPayload;
+      try {
+        payload = verifyHandoffToken(token, 'transfer-ownership');
+      } catch (err) {
+        const reason = err instanceof HandoffTokenError ? err.reason : 'verification_failed';
+        return reply.status(401).send({ error: 'invalid_token', reason });
+      }
+
+      const projectId = req.params.id;
+      if (typeof projectId !== 'string' ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(projectId)) {
+        return reply.status(400).send({ error: 'invalid_project_id' });
+      }
+
+      const parsed = TransferOwnershipBodySchema.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        return reply.status(400).send({ error: 'bad_body', issues: parsed.error.issues });
+      }
+      const newWs = parsed.data.new_sps_workspace_id.toLowerCase();
+
+      // The token's sps_workspace_id MUST match the body — defends against
+      // a token issued for workspace A being used to claim project ownership
+      // for workspace B. Mirrors the same check on /api/sps/handoff.
+      if (payload.sps_workspace_id.toLowerCase() !== newWs) {
+        return reply.status(403).send({ error: 'workspace_mismatch' });
+      }
+
+      // Lookup current project state.
+      const sql = getRawSql();
+      let row: { id: string; sps_workspace_id: string | null; tenant_id: string } | undefined;
+      try {
+        const rows = await sql.unsafe(
+          `SELECT id, sps_workspace_id, tenant_id
+             FROM projects
+            WHERE id = $1 AND deleted_at IS NULL
+            LIMIT 1`,
+          [projectId],
+        ) as Array<{ id: string; sps_workspace_id: string | null; tenant_id: string }>;
+        row = rows[0];
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(`[sps] transfer-ownership project lookup failed: ${err instanceof Error ? err.message : String(err)}`);
+        return reply.status(500).send({ error: 'project_lookup_failed' });
+      }
+      if (!row) return reply.status(404).send({ error: 'project_not_found' });
+
+      const oldWs = row.sps_workspace_id;
+
+      // Idempotency: same-workspace call is a no-op. Don't write an audit
+      // row for this; just acknowledge.
+      if (oldWs === newWs) {
+        return reply.send({
+          ok:                    true,
+          project_id:            row.id,
+          old_sps_workspace_id:  oldWs,
+          new_sps_workspace_id:  newWs,
+          no_op:                 true,
+        });
+      }
+
+      // Update the project + clear all four pending-customer columns. The
+      // pending state belongs to the BEFORE-payment phase; once SPS confirms
+      // payment + transfer-ownership, the project is "live" in the IDE's
+      // sense (no banner, publish unblocked).
+      try {
+        await sql.unsafe(
+          `UPDATE projects
+              SET sps_workspace_id        = $1,
+                  pending_customer_email  = NULL,
+                  pending_invoice_id      = NULL,
+                  pending_invoice_url     = NULL,
+                  pending_until           = NULL,
+                  updated_at              = now()
+            WHERE id = $2 AND deleted_at IS NULL`,
+          [newWs, projectId],
+        );
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(`[sps] transfer-ownership update failed: ${err instanceof Error ? err.message : String(err)}`);
+        return reply.status(500).send({ error: 'update_failed' });
+      }
+
+      // Audit — record the before/after workspace mapping. Useful for
+      // operator forensics if a customer disputes ownership.
+      await writeAuditEvent({
+        tenantId: row.tenant_id,
+        action:   'sps.project.transfer_ownership',
+        target:   'project',
+        targetId: row.id,
+        env:      'production',
+        before:   { sps_workspace_id: oldWs },
+        after:    { sps_workspace_id: newWs, cleared_pending: true },
+      }).catch(() => { /* best-effort */ });
+
+      return reply.send({
+        ok:                    true,
+        project_id:            row.id,
+        old_sps_workspace_id:  oldWs,
+        new_sps_workspace_id:  newWs,
+      });
+    },
+  );
 }

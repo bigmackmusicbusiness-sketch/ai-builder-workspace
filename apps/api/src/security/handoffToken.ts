@@ -31,8 +31,17 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
  *  so a stolen token can't be replayed for hours. */
 const MAX_TOKEN_LIFETIME_SEC = 5 * 60;
 
-/** Allowed scopes. Tokens carry exactly one. */
-export type HandoffScope = 'project-create' | 'project-handoff';
+/** Allowed scopes. Tokens carry exactly one. Round 8 adds
+ *  `transfer-ownership` (SPS→ABW) for the customer-provision flow:
+ *  SPS calls ABW after a Stripe invoice is paid to re-parent the
+ *  ABW project from the agency tenant to the customer's workspace. */
+export type HandoffScope = 'project-create' | 'project-handoff' | 'transfer-ownership';
+
+/** Exported scope constants for callers + parallel-direction agreement
+ *  with SPS. Single source of truth. */
+export const PROJECT_CREATE_SCOPE     = 'project-create'    as const;
+export const PROJECT_HANDOFF_SCOPE    = 'project-handoff'   as const;
+export const TRANSFER_OWNERSHIP_SCOPE = 'transfer-ownership' as const;
 
 /** Token payload shape. Required fields are enforced by verifyHandoffToken. */
 export interface HandoffPayload {
@@ -44,7 +53,7 @@ export interface HandoffPayload {
   sps_workspace_id:   string;                // uuid; owns the project on the SPS side
   /** Optional fields, semantics vary by scope: */
   email?:             string;                // for project-handoff: user being signed in
-  project_id?:        string;                // for project-handoff: which ABW project to land in
+  project_id?:        string;                // for project-handoff + transfer-ownership: target ABW project
   niche_slug?:        string;                // for project-create: niche to scaffold
   project_kind?:      string;                // for project-create: project type enum value
   project_name?:      string;                // for project-create: display name

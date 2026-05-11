@@ -219,6 +219,51 @@ export async function publishRoutes(app: FastifyInstance): Promise<void> {
 
     if (!target) return reply.status(404).send({ error: 'Publish target not found' });
 
+    // Round 8 Feature B (pending-customer gate): if this project is in
+    // "pending customer payment" state, refuse the deploy with structured
+    // info the IDE banner can render. Customer needs to pay the Stripe
+    // invoice before the site can go live; rep should keep editing until
+    // payment lands (SPS fires the transfer-ownership webhook that clears
+    // this state automatically).
+    try {
+      const sql = getRawSql();
+      const pendingRows = await sql.unsafe(
+        `SELECT pending_customer_email, pending_invoice_id, pending_invoice_url, pending_until
+           FROM projects
+          WHERE id = $1 AND deleted_at IS NULL
+            AND pending_until IS NOT NULL
+            AND pending_until > now()
+          LIMIT 1`,
+        [projectId],
+      ) as Array<{
+        pending_customer_email: string | null;
+        pending_invoice_id:     string | null;
+        pending_invoice_url:    string | null;
+        pending_until:          string | null;
+      }>;
+      if (pendingRows.length > 0) {
+        const p = pendingRows[0]!;
+        return reply.status(409).send({
+          error:                  'pending_customer_payment',
+          message:                'Project is pending customer invoice payment. Publishing is blocked until the invoice is paid (or expires).',
+          pending_customer_email: p.pending_customer_email,
+          pending_invoice_id:     p.pending_invoice_id,
+          pending_invoice_url:    p.pending_invoice_url,
+          pending_until:          p.pending_until,
+        });
+      }
+    } catch (err) {
+      // Migration timing: pending_* columns from 0015 may not exist yet on
+      // an old DB. Don't block publishes on the gate query failing — the
+      // gate is opt-in via assign-to-new-customer; if columns are missing
+      // the gate is a no-op, which is correct for pre-Feature-B projects.
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!/column.*does not exist|relation.*does not exist/i.test(msg)) {
+        // eslint-disable-next-line no-console
+        console.warn(`[publish] pending-customer gate query failed (non-fatal): ${msg}`);
+      }
+    }
+
     // Production deploys require approval
     if (target.env === 'production') {
       return reply.status(202).send({

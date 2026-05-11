@@ -15,7 +15,12 @@ vi.hoisted(() => {
 });
 
 import { createHmac } from 'node:crypto';
-import { mintAbwS2sToken, SpsServiceTokenError } from '../../src/security/spsServiceToken';
+import {
+  ASSIGN_NEW_CUSTOMER_SCOPE,
+  MINT_SITE_CONFIG_SCOPE,
+  SpsServiceTokenError,
+  mintAbwS2sToken,
+} from '../../src/security/spsServiceToken';
 
 const WS = '11111111-2222-3333-4444-555555555555';
 // 32-byte test key, base64-encoded (matches resolveKey's >= 32-byte gate).
@@ -138,5 +143,60 @@ describe('mintAbwS2sToken — env config errors', () => {
   it('throws when kid contains chars outside [a-zA-Z0-9_-]', () => {
     process.env.SPS_HANDOFF_KID_DEFAULT = 'bad/kid';
     expect(() => mintAbwS2sToken({ spsWorkspaceId: WS })).toThrow(/not set, malformed/);
+  });
+});
+
+describe('mintAbwS2sToken — round 8 scope parameter', () => {
+  it('exports correct scope constants', () => {
+    expect(MINT_SITE_CONFIG_SCOPE).toBe('mint-site-config');
+    expect(ASSIGN_NEW_CUSTOMER_SCOPE).toBe('assign-new-customer');
+  });
+
+  it('default scope (omitted) is mint-site-config (backward compat with round 6)', () => {
+    const tok = mintAbwS2sToken({ spsWorkspaceId: WS });
+    const [, payloadB64] = tok.split('.');
+    const payload = JSON.parse(decodeB64Url(payloadB64));
+    expect(payload.scope).toBe('mint-site-config');
+  });
+
+  it('scope=mint-site-config is the same as default (explicit form)', () => {
+    const tok = mintAbwS2sToken({ spsWorkspaceId: WS, scope: MINT_SITE_CONFIG_SCOPE });
+    const [, payloadB64] = tok.split('.');
+    const payload = JSON.parse(decodeB64Url(payloadB64));
+    expect(payload.scope).toBe('mint-site-config');
+  });
+
+  it('scope=assign-new-customer mints with the round-8 scope claim', () => {
+    const tok = mintAbwS2sToken({ spsWorkspaceId: WS, scope: ASSIGN_NEW_CUSTOMER_SCOPE });
+    const [, payloadB64] = tok.split('.');
+    const payload = JSON.parse(decodeB64Url(payloadB64));
+    expect(payload.scope).toBe('assign-new-customer');
+    // Other claims must still be locked per round 6 (iss/aud/lifetime cap)
+    expect(payload.iss).toBe('abw');
+    expect(payload.aud).toBe('sps');
+    expect(payload.exp - payload.iat).toBeLessThanOrEqual(300);
+  });
+
+  it('signature verifies under shared secret for assign-new-customer scope', () => {
+    const tok = mintAbwS2sToken({ spsWorkspaceId: WS, scope: ASSIGN_NEW_CUSTOMER_SCOPE });
+    const [headerB64, payloadB64, sigB64] = tok.split('.');
+    const expected = createHmac('sha256', TEST_KEY_RAW)
+      .update(`${headerB64}.${payloadB64}`)
+      .digest()
+      .toString('base64')
+      .replace(/=+$/, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
+    expect(sigB64).toBe(expected);
+  });
+
+  it('lifetime cap (300s) applies regardless of scope', () => {
+    expect(() => mintAbwS2sToken({ spsWorkspaceId: WS, scope: ASSIGN_NEW_CUSTOMER_SCOPE, lifetimeSec: 301 }))
+      .toThrow(/exceeds SPS cap of 300s/);
+  });
+
+  it('UUID validation applies regardless of scope', () => {
+    expect(() => mintAbwS2sToken({ spsWorkspaceId: 'not-a-uuid', scope: ASSIGN_NEW_CUSTOMER_SCOPE }))
+      .toThrow(/not a UUID/);
   });
 });

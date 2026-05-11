@@ -5,6 +5,12 @@
 // `POST /api/abw/site-config-token` issuer. SPS verifies the bearer and
 // returns the site-config bundle for ABW to bake into the published site.
 //
+// Round 8 (Feature B) adds a second ABW→SPS scope: `assign-new-customer`.
+// Same shared HS256 secret + KID; distinguishing claim is `scope`.
+// SPS verifier accepts both scopes on its respective endpoints
+// (mint-site-config goes to /api/abw/site-config-token, assign-new-customer
+// goes to /api/abw/assign-to-new-customer).
+//
 // **Why we re-use the SPS_HANDOFF_KEY_<KID> shared secret** (per round 6):
 // the same HS256 secret is used for both directions, distinguished only by
 // iss/aud/scope. SPS's verifier requires `iss='abw', aud='sps',
@@ -46,11 +52,28 @@ export class SpsServiceTokenError extends Error {
   }
 }
 
+/** Scopes ABW can mint for ABW→SPS S2S calls. Each scope corresponds to
+ *  a specific SPS endpoint; SPS's verifier rejects mismatched (scope, path)
+ *  combinations to prevent privilege escalation across flows. */
+export type AbwS2sScope = 'mint-site-config' | 'assign-new-customer';
+
+/** Scope constants exported for callers and for parallel-direction
+ *  agreement with SPS. Single source of truth. */
+export const MINT_SITE_CONFIG_SCOPE     = 'mint-site-config'      as const;
+export const ASSIGN_NEW_CUSTOMER_SCOPE  = 'assign-new-customer'   as const;
+
 export interface MintAbwS2sTokenInput {
-  /** UUID of the SPS workspace this token grants access to. SPS's verifier
-   *  enforces `payload.sps_workspace_id === body.workspace_id` on the
-   *  issuer endpoint, so callers must use the same UUID for both. */
+  /** UUID of the SPS workspace this token grants access to. For
+   *  mint-site-config: SPS enforces `payload.sps_workspace_id ===
+   *  body.workspace_id`. For assign-new-customer: no workspace exists
+   *  yet (it's being created), so pass the agency's tenant_id as a
+   *  reference — SPS's verifier accepts any UUID for this scope and
+   *  uses the claim only for audit logging. */
   spsWorkspaceId: string;
+  /** S2S scope claim. Defaults to `mint-site-config` for backward
+   *  compatibility with round-6 callers. Round-8 callers pass
+   *  `assign-new-customer` for the new customer-provision flow. */
+  scope?:         AbwS2sScope;
   /** Optional override for token TTL in seconds. Defaults to 60s. Capped
    *  at MAX_S2S_LIFETIME_SEC (300s) — values above that throw. */
   lifetimeSec?:   number;
@@ -109,7 +132,7 @@ export function mintAbwS2sToken(input: MintAbwS2sTokenInput): string {
     aud:              'sps',
     iat:              now,
     exp:              now + lifetime,
-    scope:            'mint-site-config',
+    scope:            input.scope ?? MINT_SITE_CONFIG_SCOPE,
     sps_workspace_id: input.spsWorkspaceId.toLowerCase(),
   };
 

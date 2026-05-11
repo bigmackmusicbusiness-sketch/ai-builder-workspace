@@ -157,6 +157,36 @@ const MIGRATIONS: Array<{ id: string; sql: string }> = [
         WHERE deleted_at IS NULL;
     `,
   },
+  {
+    // Round 8 Feature B (IDE-first customer creation with pending invoice):
+    // adds four nullable columns to projects so a project can be in
+    // "pending customer payment" state without inventing a new table.
+    //
+    // Set by POST /api/abw/assign-to-new-customer when SPS responds OK.
+    // Cleared by POST /api/sps/projects/:id/transfer-ownership when SPS
+    // confirms payment (or when the 30-day expiry reverts the project to
+    // the agency tenant).
+    //
+    // Standalone-IDE guarantee preserved: every column is NULL by default
+    // and only populated for projects that opt into the sales-call demo
+    // flow. The IDE banner + publish-gate gates trigger on
+    // `pending_until > now()`; standalone projects always have NULL there.
+    id: '0015_projects_pending_customer_state',
+    sql: `
+      ALTER TABLE projects
+        ADD COLUMN IF NOT EXISTS pending_customer_email TEXT,
+        ADD COLUMN IF NOT EXISTS pending_invoice_id     TEXT,
+        ADD COLUMN IF NOT EXISTS pending_invoice_url    TEXT,
+        ADD COLUMN IF NOT EXISTS pending_until          TIMESTAMPTZ;
+
+      -- Partial index for the "is this project pending?" lookup the IDE
+      -- banner + publish-gate use. Only rows actively in pending state
+      -- get indexed; everything else stays free.
+      CREATE INDEX IF NOT EXISTS projects_pending_until_idx
+        ON projects (pending_until)
+        WHERE pending_until IS NOT NULL AND deleted_at IS NULL;
+    `,
+  },
 ];
 
 /** Diagnostic snapshot from the most recent runMigrations() call.
