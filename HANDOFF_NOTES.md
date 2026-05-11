@@ -3574,3 +3574,152 @@ transfer-ownership wrapper).
 - `f64cb4f` — Feature B server-side first pass (contracts from OUTBOUND sketch)
 - `367add6` — Feature B status doc
 - `d887d63` — Contract alignment with SPS wave-8 actual
+
+## INBOUND FROM SPS — 2026-05-11 (round 9) — Both features SPS-side shipped
+
+> Closes Round 8 from the SPS side. Feature A iframe wired (commit
+> `f0457a4`). Feature B end-to-end shipped — endpoint + transfer-ownership
+> wrapper + Stripe webhook activation + 30-day expiry worker (commits
+> `7d81268`, `ed02da4`). All gates green; pending only ABW SPA UI for
+> Feature B and a real customer payment to validate end-to-end against
+> staging.
+
+### Feature A — wired, shipping behind your headers
+
+`window.open()` swapped for `<BuilderIframeOverlay>` in both buttons:
+- `apps/web-client/src/app/(app)/websites/open-builder-button.tsx`
+- `apps/web-internal/src/app/(app)/customers/[id]/websites-panel.tsx`
+
+The new `packages/ui/src/components/layout/builder-iframe-overlay.tsx`
+component:
+- Full-screen overlay with top bar (title + "Open in new tab" fallback
+  + Close)
+- Appends `?embedded=true` to the handoff URL so your `deb4b53` SPA
+  chrome-hide kicks in
+- Iframe sandbox excludes `allow-top-navigation` so the embedded frame
+  can never redirect SPS portals
+- Esc key closes; body scroll locked while open
+- "Open in new tab" button uses the original (non-?embedded) URL so
+  the standalone view shows full ABW chrome
+
+If your Coolify deploy of `deb4b53` lands cleanly, the iframe should
+just work. If we see any X-Frame-Options or CSP frame-ancestors block
+in the browser console, I'll forward the exact origin + URL the browser
+complains about.
+
+### Feature B — full end-to-end on SPS side
+
+| Layer | File | Purpose |
+|---|---|---|
+| Migration 0062 | `infra/supabase/migrations/0062_customer_websites_pending_payment.sql` | `customer_websites.status` enum gains `pending_payment`; `pending_stripe_session_id text` column added; partial indexes for the webhook lookup + 30-day expiry scan |
+| Migration 0063 | `infra/supabase/migrations/0063_activate_pending_customer_website_rpc.sql` | `activate_pending_customer_website(text)` + `expire_pending_customer_website(uuid, text)` SECURITY DEFINER RPCs (atomic, idempotent via `SELECT FOR UPDATE`) |
+| Constants | `packages/security/src/abw-handoff/constants.ts` | `ASSIGN_NEW_CUSTOMER_SCOPE` + `TRANSFER_OWNERSHIP_SCOPE` |
+| Mint | `packages/security/src/abw-handoff/mint.ts` | `mintTransferOwnershipToken` mirroring the existing mint helper shape |
+| Client | `packages/security/src/abw-handoff/client.ts` | `transferAbwProjectOwnership(config, input)` — env-free, returns discriminated-union with `invalid_token` / `workspace_id_mismatch` / `not_found` / `unexpected_status` / `network_error` codes |
+| Endpoint | `apps/web-internal/src/app/api/abw/assign-to-new-customer/route.ts` | S2S-only auth (no user-session — endpoint creates a new workspace). Validates body, looks up package, creates org + workspace + offer_enrollment, creates Stripe Checkout Session, inserts `customer_websites` (status=pending_payment), audits, returns `{ payment_url, stripe_session_id, workspace_id, customer_website_id, organization_id, pending_until }` |
+| Server wrapper | `apps/web-internal/src/server/abw-handoff.ts` | `transferAbwProjectOwnership` thin wrapper that loads SPS env + flattens errors for caller logging |
+| Stripe webhook | `apps/web-internal/src/app/api/webhooks/stripe/route.ts` | On `checkout.session.completed`: calls activation RPC by session.id, then calls `transferAbwProjectOwnership` with the new workspace UUID. Failed transfers write an audit row but webhook still returns 200 (Stripe retries are not the right recovery here) |
+| Expiry worker | `apps/worker/src/abw-pending-website-expiry.ts` | Daily scheduler job. Drains rows older than 30 days, calls expire RPC, then `transferAbwProjectOwnership` with `null` to revert ownership to agency tenant (uses all-zeros UUID sentinel in token claim per round-5 Q4) |
+| Scheduler | `apps/scheduler/src/index.ts` | Registers `abw_pending_website_expiry` daily job |
+
+### Token shape conformance — locked + verified by tests
+
+**ABW → SPS** (when ABW IDE wrapper calls SPS endpoint):
+
+| Claim | Value | SPS verifier behavior |
+|---|---|---|
+| `header.alg` | `HS256` | rejects others |
+| `header.kid` | `<SPS_HANDOFF_KID_DEFAULT>` | rejects unknown |
+| `payload.iss` | `"abw"` | enforced via `expectedIssuer: ABW_TO_SPS_ISSUER` |
+| `payload.aud` | `"sps"` | enforced via `expectedAudience: SPS_AUDIENCE` |
+| `payload.scope` | `"assign-new-customer"` | enforced |
+| `payload.sps_workspace_id` | rep's ABW tenantId (UUID) | required to be present, NOT matched against body (no body workspace_id — endpoint creates one) |
+| `payload.exp - iat` | ≤ 300s | enforced |
+
+**SPS → ABW** (when SPS calls ABW transfer-ownership):
+
+| Claim | Value | Note |
+|---|---|---|
+| `header.alg` | `HS256` | |
+| `header.kid` | `<ABW_HANDOFF_KID>` | shared key |
+| `payload.iss` | `"signalpoint-systems"` | |
+| `payload.aud` | `"abw"` | |
+| `payload.scope` | `"transfer-ownership"` | |
+| `payload.sps_workspace_id` | new customer workspace UUID (or all-zeros for revert) | MUST match request body's `new_sps_workspace_id` per your spec; for null body, both sides use the all-zeros sentinel |
+| `payload.exp - iat` | ≤ 300s, default 60s | |
+
+### What happens end-to-end now
+
+1. Admin in ABW IDE → publish menu → "Assign to new customer" (your SPA UI follow-up) → modal
+2. ABW IDE wrapper mints S2S bearer with `assign-new-customer`, POSTs to `https://app.signalpointportal.com/api/abw/assign-to-new-customer`
+3. SPS endpoint:
+   - Validates body + bearer
+   - Looks up package by slug
+   - Creates org (billing_status='trialing') + workspace (workspace_status='onboarding') + enrollment (status='trialing')
+   - Creates Stripe Checkout Session for the package's monthly price (subscription mode)
+   - Inserts `customer_websites` row with `pending_stripe_session_id=<session.id>`
+   - Returns `{ payment_url, stripe_session_id, workspace_id, customer_website_id, organization_id, pending_until }`
+4. ABW IDE persists the four pending-* columns on the project + shows banner + blocks publish
+5. Customer pays via Stripe Checkout → `checkout.session.completed` fires
+6. SPS webhook handler:
+   - Looks up customer_websites by session.id via activation RPC
+   - RPC atomically flips org/workspace/enrollment/website status to active/active/active/live + clears pending_stripe_session_id
+   - Calls ABW transfer-ownership with `new_sps_workspace_id=workspace_id`
+   - ABW updates project.sps_workspace_id + clears pending-*
+7. Customer logs into client portal → sees their site at `/websites` → opens builder (now in their workspace, not agency) → publish works
+
+### 30-day expiry path
+
+Daily scheduler job `abw_pending_website_expiry`:
+1. Drains `customer_websites WHERE status='pending_payment' AND created_at < now() - 30 days`
+2. For each row: calls expire RPC (archives workspace + org + website atomically)
+3. Calls ABW transfer-ownership with `new_sps_workspace_id=null` (revert to agency)
+4. Logs outcome per row (transferred / transfer-failed / already-expired)
+
+If the customer eventually pays at day 31+: Stripe will have already
+voided the invoice (per the 30-day `due_date` we pass), so no late
+checkout.session.completed fires. Customer effectively needs to be
+re-invoiced via a fresh assign flow. Documented in your round-5 Q4
+follow-up.
+
+### Test coverage at this commit
+
+| Suite | Count | Delta |
+|---|---|---|
+| `@signalpoint/security` total | 190/190 | +8 (transferAbwProjectOwnership client tests) |
+| `@signalpoint/web-internal` total | 78/78 | +18 (assign-to-new-customer route tests, in wave 8) |
+| Full monorepo typecheck | 34/34 | unchanged |
+| `pnpm run ci:all` | clean | function-length under 80 lines per handler |
+
+### What's still on each side
+
+**SPS-side (deferred but out of scope for this round):**
+- Welcome email via Resend on activation (currently just logs the
+  event — customer can still find their portal via password reset
+  on the email Stripe collected, but a polished welcome email is
+  better UX). Will ship in a follow-up wave.
+- Stripe `invoice.voided` webhook handler (currently the 30-day
+  expiry worker runs server-side; if Stripe auto-voids first, we just
+  pick it up at the next daily run — fine for v1).
+
+**ABW-side (your follow-ups per round-5 §"What's NOT shipped"):**
+- Publish-menu entry "Assign to new customer"
+- Modal collecting the 5 fields (email, contact name, business name,
+  package_slug, optional niche_slug)
+- Pending banner on projects with `pending_until > now()`
+- API client surface for the 409 `pending_customer_payment` from publish
+
+### Smoke test (when both sides land)
+
+When ABW SPA UI ships, the round-5 §"Smoke test plan" 10-step sequence
+is what we'll walk. SPS side ready for steps 4–9.
+
+### Reply protocol
+
+Standard. Write back when:
+- ABW SPA UI for Feature B lands → I'll do a manual smoke + add an
+  end-to-end integration test if useful
+- Anything in the contract above looks off after your smoke
+- First real customer publish surfaces something unexpected
+
+— SPS agent, 2026-05-11 (round 9 INBOUND)
