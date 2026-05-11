@@ -2870,3 +2870,109 @@ Step 5 (verifying the ABW→SPS S2S direction). If we ever see a 401 or
 403 with reasons logged on the SPS side, that's the signal to pull the
 key into ABW handoff and look — until then, both sides log on
 exception, nothing on success, no polling needed.
+
+---
+
+## Operator action — 2026-05-11 — embed-edge Worker deployed
+
+> Closes the "deferred" line item from the previous Operator-action
+> entry. Cloudflare Workers `wrangler login` completed via OAuth (no
+> long-lived token needed); KV namespace created; Worker deployed;
+> secrets uploaded; smoke test passes.
+
+### What got deployed
+
+- **Worker name:** `signalpoint-embed-edge`
+- **Workers.dev URL:** `https://signalpoint-embed-edge.signalpoint.workers.dev`
+- **Version ID:** `19aae4a4-2144-4ad2-ba85-59a473f954f3`
+- **Cloudflare account:** `34e162b46cf901fcad9075bf83bf1697`
+  (`Melvin@signalpointsystems.com's Account` — same one ABW already
+  uses for CF Pages, no new account needed)
+- **KV namespace `EMBED_NONCES`**:
+  - production id: `ae2665f592c34e7387ab830e4793da4b`
+  - preview id:    `f42fa18cccb34739a7e213a169482acb`
+
+### Worker secrets uploaded (4)
+
+| Secret | Source |
+|---|---|
+| `SITE_CONFIG_SIGNING_KEY` | Same shared HS256 secret as ABW `SPS_HANDOFF_KEY_KID_2026_05` + SPS `ABW_HANDOFF_KEY_KID_2026_05` |
+| `SITE_CONFIG_SIGNING_KEY_ID` | `kid_2026_05` |
+| `SUPABASE_URL` | `https://kpbaozjekixqxfeeikyw.supabase.co` (same as ABW/SPS — shared Supabase project) |
+| `SUPABASE_ANON_KEY` | Workspace-scoped anon JWT (RLS-protected; safe to bake into a public worker per Supabase design) |
+
+### Smoke test
+
+```
+curl https://signalpoint-embed-edge.signalpoint.workers.dev/v1/site-config/<invalid-token>
+→ HTTP 401
+```
+
+A 401 on an invalid signature proves the verifier path runs end-to-end
+with the shared secret loaded. Worker is correctly wired.
+
+### SPS env adjustment
+
+The previous Operator-action set `EMBED_EDGE_BASE_URL=https://embed.signalpointportal.com`
+on SPS Coolify, but DNS for that host doesn't resolve (no CNAME exists
+pointing to the worker). To unblock the refresh path immediately I
+flipped the SPS env to:
+
+```
+EMBED_EDGE_BASE_URL=https://signalpoint-embed-edge.signalpoint.workers.dev
+```
+
+SPS redeploy `p4gb8vn4005j8exsfj2kwz94` triggered to pick up the change.
+Once rolled, the SPS issuer's `signalpoint-config` response will
+contain the workers.dev URL, and published customer sites refresh
+against that URL.
+
+### Custom-domain follow-up (low priority)
+
+To switch `EMBED_EDGE_BASE_URL` back to a branded URL like
+`embed.signalpointportal.com` later, two steps are needed (both require
+a separate Cloudflare action; wrangler's OAuth scope from `wrangler
+login` includes `zone:read` but not `zone:edit`, so DNS-record creation
+isn't currently possible from the CLI):
+
+1. **In Cloudflare dashboard** (`dash.cloudflare.com` → `signalpointportal.com`
+   zone → DNS → Add record):
+   - Type: `AAAA` (or use Workers route — Cloudflare supports both patterns)
+   - Name: `embed`
+   - Target: `signalpoint-embed-edge.signalpoint.workers.dev` via
+     Workers route, OR `100::` (placeholder for proxied) — depends on
+     route style chosen
+   - Proxy: ON
+2. **In Cloudflare dashboard** (Worker → Settings → Domains & Routes →
+   Add Custom Domain): `embed.signalpointportal.com`
+3. Flip SPS Coolify env back to `EMBED_EDGE_BASE_URL=https://embed.signalpointportal.com`
+4. Redeploy SPS once
+
+OR: use `wrangler@latest` newer commands (`wrangler triggers deploy`) if
+you re-`wrangler login` with broader scope. The Cloudflare dashboard
+path is faster for v1.
+
+### Sequencing
+
+- ABW resolver mints S2S bearer + POSTs to SPS issuer → **works now**
+  (no embed-edge needed for first publish)
+- SPS issuer returns config with `edge_base_url =
+  signalpoint-embed-edge.signalpoint.workers.dev` → **works after SPS
+  redeploy `p4gb8vn4005j8exsfj2kwz94` rolls**
+- ABW publish writes `signalpoint-config.json` containing that URL into
+  the customer bundle → **works now**
+- Customer site loads, reads anon key from config, calls PostgREST →
+  **works now (independent of embed-edge)**
+- Within 24h of `expires_at` (~6.5 days post-publish), shim fetches
+  fresh config from embed-edge → **NOW works** because the worker is
+  deployed + the SPS env points at it
+
+End-to-end is fully wired pending the SPS redeploy. After that, customer
+sites survive past their initial 7-day token expiry automatically.
+
+### Commits this session
+
+- ABW `3b9f9e2` — env-paste documented
+- SPS `3fcac45` — banner updated for env-paste
+- SPS `ac936cd` — wrangler.toml KV IDs filled in (deploy commit)
+- ABW (this commit) — embed-edge deployed + SPS env adjusted
