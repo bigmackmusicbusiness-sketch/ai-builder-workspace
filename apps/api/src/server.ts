@@ -39,6 +39,7 @@ import { adsRoutes }        from './routes/ads';
 import { aiEditRoutes }     from './routes/ai-edit';
 import { spsHandoffRoutes } from './routes/sps-handoff';
 import { abwAssignCustomerRoutes } from './routes/abw-assign-customer';
+import { abwPickersRoutes } from './routes/abw-pickers';
 import { ensureWorkspaceBackupsBucket } from './preview/workspace';
 
 async function main(): Promise<void> {
@@ -247,6 +248,7 @@ async function main(): Promise<void> {
   await app.register(aiEditRoutes);
   await app.register(spsHandoffRoutes);
   await app.register(abwAssignCustomerRoutes);
+  await app.register(abwPickersRoutes);
   // customHostRoutes is a Host-header preHandler — register LAST so the
   // /api/* routes have already been matched first (the preHandler still
   // fires per-request, but this keeps registration order tidy).

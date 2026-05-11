@@ -181,13 +181,32 @@ export async function abwAssignCustomerRoutes(app: FastifyInstance): Promise<voi
         });
       }
 
+      // Read body as text first so we can surface what SPS actually sent
+      // when JSON parsing fails. Without this the IDE error is opaque
+      // ("sps_body_unparseable" with no payload), and the dev has no way
+      // to tell if SPS returned HTML (404 page), an empty body, or
+      // something else weird.
+      let rawText = '';
+      try { rawText = await spsRes.text(); } catch { /* ignore */ }
+      const contentType = spsRes.headers.get('content-type') ?? '';
       let json: unknown;
       try {
-        json = await spsRes.json();
+        json = JSON.parse(rawText);
       } catch (err) {
         // eslint-disable-next-line no-console
-        console.warn(`[assign-customer] SPS body parse failed: ${err instanceof Error ? err.message : String(err)}`);
-        return reply.status(502).send({ error: 'sps_body_unparseable' });
+        console.warn(
+          `[assign-customer] SPS body parse failed status=${spsRes.status} ct=${contentType} ` +
+          `len=${rawText.length} body=${rawText.slice(0, 300)} err=${err instanceof Error ? err.message : String(err)}`,
+        );
+        return reply.status(502).send({
+          error:           'sps_body_unparseable',
+          sps_status:      spsRes.status,
+          sps_content_type: contentType,
+          sps_body_preview: rawText.slice(0, 500),
+          hint: rawText.startsWith('<')
+            ? 'SPS returned HTML instead of JSON — likely an unhandled exception in the endpoint, or the request hit the wrong app/host. Check SPS server logs for the request.'
+            : 'SPS returned non-JSON content. Check SPS server logs.',
+        });
       }
 
       const parsedSps = SpsResponseSchema.safeParse(json);

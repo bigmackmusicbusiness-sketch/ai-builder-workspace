@@ -555,6 +555,30 @@ export function PublishScreen() {
 
 // ── AddTargetDialog ───────────────────────────────────────────────────────────
 
+/** Static descriptions for each provider so the rep knows what they're
+ *  actually picking. Previously the dialog just listed three icons with
+ *  no context, which made the choice opaque. */
+const PROVIDER_INFO: Record<PublishProvider, { icon: string; label: string; tagline: string; detail: string }> = {
+  'cloudflare-pages': {
+    icon:    '☁️',
+    label:   'Cloudflare Pages',
+    tagline: 'Recommended — push to a Cloudflare-hosted site with a free .pages.dev URL.',
+    detail:  'Fastest setup. Cloudflare handles TLS + global CDN automatically. You can attach a custom domain after the first deploy.',
+  },
+  'static-export': {
+    icon:    '📦',
+    label:   'Static Export → Cloudflare zone',
+    tagline: 'Build static HTML/CSS/JS and deploy to a Cloudflare zone you own.',
+    detail:  'For a domain you already own + manage at Cloudflare. On deploy you pick which zone (e.g. clientcafe.com) and which subdomain (e.g. www).',
+  },
+  supabase: {
+    icon:    '🗄',
+    label:   'Supabase Storage',
+    tagline: 'Upload the built bundle to a Supabase storage bucket.',
+    detail:  'For sites served through Supabase\'s CDN. Requires bucket setup in Supabase first.',
+  },
+};
+
 function AddTargetDialog({
   onClose,
   onAdd,
@@ -568,6 +592,23 @@ function AddTargetDialog({
   const [url, setUrl]           = useState('');
   const [saving, setSaving]     = useState(false);
 
+  // Cloudflare zones (only relevant when a domain has to be picked). Loaded
+  // lazily once the rep selects a static-export target.
+  const [zones, setZones]                 = useState<CfZone[]>([]);
+  const [zonesLoading, setZonesLoading]   = useState(false);
+  const [zonesLoaded, setZonesLoaded]     = useState(false);
+
+  useEffect(() => {
+    // We don't need zones until the static-export flow is chosen. Don't
+    // burn an API call for the common Cloudflare Pages path.
+    if (provider !== 'static-export' || zonesLoaded) return;
+    setZonesLoading(true);
+    apiFetch<{ zones: CfZone[] }>('/api/cf/zones')
+      .then((r) => setZones(r.zones))
+      .catch(() => { /* dialog still works — picker runs at deploy time */ })
+      .finally(() => { setZonesLoading(false); setZonesLoaded(true); });
+  }, [provider, zonesLoaded]);
+
   async function handleSave() {
     if (!name.trim()) return;
     setSaving(true);
@@ -580,11 +621,7 @@ function AddTargetDialog({
     setSaving(false);
   }
 
-  const providers: { id: PublishProvider; label: string; icon: string }[] = [
-    { id: 'cloudflare-pages', label: 'Cloudflare Pages', icon: '☁️' },
-    { id: 'static-export',    label: 'Static Export',    icon: '📦' },
-    { id: 'supabase',         label: 'Supabase Storage', icon: '🗄' },
-  ];
+  const activeInfo = PROVIDER_INFO[provider];
 
   return (
     <div className="abw-dialog-backdrop" role="dialog" aria-modal aria-label="Add publish target">
@@ -594,33 +631,67 @@ function AddTargetDialog({
           <button className="abw-dialog__close" onClick={onClose} aria-label="Close">✕</button>
         </div>
         <div className="abw-dialog__body" style={{ gap: 'var(--space-4)' }}>
-          {/* Provider picker */}
+          {/* Top-of-dialog context — what this whole thing does. */}
+          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
+            A <strong>publish target</strong> is a destination you can deploy this
+            project to — like a Cloudflare-hosted URL or a domain you already own.
+            You can have multiple targets per project (e.g. one for preview, one
+            for production).
+          </p>
+
+          {/* Provider picker — full-width cards so each option's context is visible at-a-glance. */}
           <div>
-            <p className="abw-field-label">Provider</p>
-            <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-              {providers.map((p) => (
-                <button
-                  key={p.id}
-                  className={`abw-btn${provider === p.id ? ' abw-btn--secondary' : ' abw-btn--ghost'} abw-btn--sm`}
-                  onClick={() => setProvider(p.id)}
-                  aria-pressed={provider === p.id}
-                >
-                  {p.icon} {p.label}
-                </button>
-              ))}
+            <p className="abw-field-label" style={{ marginBottom: 'var(--space-2)' }}>Where should it deploy?</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+              {(Object.keys(PROVIDER_INFO) as PublishProvider[]).map((id) => {
+                const info = PROVIDER_INFO[id];
+                const isActive = provider === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setProvider(id)}
+                    aria-pressed={isActive}
+                    style={{
+                      display:       'flex',
+                      gap:           'var(--space-3)',
+                      alignItems:    'flex-start',
+                      textAlign:     'left',
+                      padding:       'var(--space-3)',
+                      background:    isActive ? 'rgba(27,142,140,0.12)' : 'transparent',
+                      border:        `1px solid ${isActive ? 'var(--accent-500)' : 'var(--border-base)'}`,
+                      borderRadius:  'var(--radius-field)',
+                      cursor:        'pointer',
+                      color:         'var(--text-primary)',
+                      fontFamily:    'inherit',
+                    }}
+                  >
+                    <span aria-hidden style={{ fontSize: '1.25rem', flexShrink: 0 }}>{info.icon}</span>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{info.label}</span>
+                      <span style={{ fontSize: '0.8125rem', color: 'var(--text-primary)' }}>{info.tagline}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 2 }}>{info.detail}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <div>
-            <label className="abw-field-label" htmlFor="target-name">Name</label>
+            <label className="abw-field-label" htmlFor="target-name">Friendly name for this target</label>
             <input
               id="target-name"
               className="abw-input"
               type="text"
-              placeholder="My site — Cloudflare Pages"
+              placeholder={`${activeInfo.label} — preview`}
               value={name}
               onChange={(e) => setName(e.target.value)}
+              autoFocus
             />
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 4 }}>
+              Just for your reference in the targets list. Examples: "Pages preview", "Live site (www)", "Internal staging".
+            </p>
           </div>
 
           <div>
@@ -631,12 +702,12 @@ function AddTargetDialog({
               value={env}
               onChange={(e) => setEnv(e.target.value as TargetEnv)}
             >
-              <option value="preview">Preview</option>
-              <option value="production">Production</option>
+              <option value="preview">Preview — safe to deploy any time</option>
+              <option value="production">Production — requires approval before deploy</option>
             </select>
             {env === 'production' && (
-              <p style={{ fontSize: '0.75rem', color: 'var(--error-500)', marginTop: 'var(--space-1)' }}>
-                Deploys to this target will require approval.
+              <p style={{ fontSize: '0.75rem', color: 'var(--error-500)', marginTop: 4 }}>
+                Production deploys are gated by the approvals queue. You won't be able to deploy here without an approver clicking through.
               </p>
             )}
           </div>
@@ -644,7 +715,7 @@ function AddTargetDialog({
           {provider === 'cloudflare-pages' && (
             <div>
               <label className="abw-field-label" htmlFor="target-url">
-                Pages URL <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>(optional)</span>
+                Existing Pages URL <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>(optional)</span>
               </label>
               <input
                 id="target-url"
@@ -654,12 +725,74 @@ function AddTargetDialog({
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
               />
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 4 }}>
+                Leave blank to let Cloudflare auto-issue a *.pages.dev URL on first deploy. Only fill this if you've already got a Pages project you want to reuse.
+              </p>
+            </div>
+          )}
+
+          {provider === 'static-export' && (
+            <div>
+              <label className="abw-field-label" htmlFor="target-zone">Cloudflare zone (domain)</label>
+              {zonesLoading ? (
+                <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>Loading your Cloudflare zones…</p>
+              ) : zones.length === 0 ? (
+                <div style={{
+                  fontSize:     '0.8125rem',
+                  color:        'var(--text-primary)',
+                  background:   'rgba(217, 119, 6, 0.10)',
+                  border:       '1px solid rgba(217, 119, 6, 0.30)',
+                  borderRadius: 'var(--radius-field)',
+                  padding:      'var(--space-3)',
+                  lineHeight:   1.5,
+                }}>
+                  No domains found on your Cloudflare account. You can still add
+                  this target — when you click Deploy, you'll get a picker to
+                  choose a zone (or buy a new one through Cloudflare).
+                </div>
+              ) : (
+                <>
+                  <select
+                    id="target-zone"
+                    className="abw-select"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                  >
+                    <option value="">— I'll pick at deploy time —</option>
+                    {zones.map((z) => (
+                      <option key={z.id} value={z.name}>
+                        {z.name} {z.status !== 'active' ? `(${z.status})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 4 }}>
+                    Optional pre-pick — you'll still be able to pick subdomains (www, app, etc.) at deploy time.
+                  </p>
+                </>
+              )}
+            </div>
+          )}
+
+          {provider === 'supabase' && (
+            <div>
+              <label className="abw-field-label" htmlFor="target-url">Supabase bucket URL</label>
+              <input
+                id="target-url"
+                className="abw-input"
+                type="url"
+                placeholder="https://<project>.supabase.co/storage/v1/object/public/<bucket>"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+              />
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 4 }}>
+                The public URL of the Supabase storage bucket where the built bundle gets uploaded.
+              </p>
             </div>
           )}
 
           <div className="abw-callout">
             <span className="abw-callout__icon" aria-hidden>🔐</span>
-            <span>Cloudflare API tokens are stored in the vault — never in this form.</span>
+            <span>Cloudflare + Supabase API tokens are stored in the vault — never typed into this form.</span>
           </div>
         </div>
         <div className="abw-dialog__footer">
