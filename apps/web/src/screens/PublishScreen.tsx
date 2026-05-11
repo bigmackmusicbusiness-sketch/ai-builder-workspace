@@ -2,10 +2,16 @@
 // Manages Cloudflare Pages targets and deployment records via /api/publish/* endpoints.
 // Production deploys surface the approval-required banner instead of deploying directly.
 //
+// May 2026: Publish is reached from the in-builder ▲ Publish button, NOT
+// from a top-level nav tab — the route is per-project so it only makes
+// sense once a project is selected. The "No project selected" empty
+// state below is a defensive fallback for deep-links + stale tabs.
+//
 // Round 8 Feature B: adds an "Assign to new customer" button in the header
 // that launches the AssignCustomerModal — provisions a SPS customer
 // workspace + Stripe Checkout Session, blocks publishes until paid.
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from '@tanstack/react-router';
 import { apiFetch, ApiError } from '../lib/api';
 import { useProjectStore } from '../lib/store/projectStore';
 import { AssignCustomerModal } from './AssignCustomerModal';
@@ -252,13 +258,21 @@ export function PublishScreen() {
   ];
 
   // ── No project selected ───────────────────────────────────────────────────
+  // Defensive fallback only. The ▲ Publish button in the builder topbar is
+  // gated on having an active project, so reps shouldn't hit this state in
+  // normal use — only deep-links or sessions that lost their project hit.
   if (!projectId) {
     return (
       <div className="abw-screen">
         <div className="abw-empty-state">
           <span className="abw-empty-state__icon" aria-hidden>🚀</span>
           <p className="abw-empty-state__label">No project selected</p>
-          <p className="abw-empty-state__sub">Open a project from the Projects screen to manage publish targets.</p>
+          <p className="abw-empty-state__sub">
+            Publish is a per-project surface — open a project first.
+          </p>
+          <Link to="/projects" className="abw-btn abw-btn--primary">
+            Go to Projects
+          </Link>
         </div>
       </div>
     );

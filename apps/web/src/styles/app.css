@@ -1709,6 +1709,42 @@ html, body, #root {
   font-weight: 600;
   letter-spacing: -0.005em;
 }
+/* Crumb-name rendered as a TanStack Link — kills default link chrome,
+   gives a subtle hover so reps can tell it's clickable (use case: back
+   to the builder from /publish). */
+.abw-topbar__crumb-name--link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  margin: 0 -6px; /* hover box doesn't shift layout */
+  border-radius: var(--radius-field);
+  transition: background var(--duration-fast) var(--ease-standard),
+              color      var(--duration-fast) var(--ease-standard);
+}
+.abw-topbar__crumb-name--link:hover {
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+}
+.abw-topbar__crumb-name--link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-500);
+}
+
+/* ▲ Publish button — primary action inside builder mode. Most styling
+   comes from .abw-btn / .abw-btn--primary / .abw-btn--sm; this just
+   keeps the leading triangle icon from collapsing whitespace and adds
+   the on-/publish active tint so the button doubles as a "you're here"
+   indicator. */
+.abw-topbar__publish {
+  flex-shrink: 0;
+  gap: 4px;
+  text-decoration: none;
+}
+.abw-topbar__publish--active {
+  /* Inset ring keeps the button readable on the same accent background. */
+  box-shadow: 0 0 0 2px var(--bg-base) inset;
+}
 
 /* Settings button (gear) */
 .abw-topbar__settings-btn {

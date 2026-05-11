@@ -1,6 +1,8 @@
 // apps/web/src/layout/TopBar/TopBar.tsx — mode-aware top bar.
-// Browse mode (no project open) → 6-item primary nav + project switcher.
-// Builder mode (a project is open) → logo (exits) + project name + env pill + ⚙ + profile only.
+// Browse mode (no project open) → primary nav + project switcher.
+// Builder mode (a project is open) → logo (exits) + project name + env pill +
+// ▲ Publish + ⚙ + profile. Publish lives here (NOT in primary nav) because it's
+// a per-project action: you can only publish the project you're working in.
 // The settings gear and profile are reachable in BOTH modes.
 import { useEffect, useRef, useState } from 'react';
 import { Link, useRouter, useRouterState } from '@tanstack/react-router';
@@ -9,27 +11,31 @@ import { useProjectStore } from '../../lib/store/projectStore';
 import { useAuthStore } from '../../lib/store/authStore';
 
 /** Primary nav items shown in BROWSE mode. The Workspace tab is gone — it's
- *  implicit when you click into a project. */
+ *  implicit when you click into a project. Publish was removed in May 2026:
+ *  it's a per-project action so it lives as a button inside builder mode
+ *  instead of a top-level nav item that forced users to pick a project. */
 const NAV_ITEMS = [
   { to: '/projects',  label: 'Projects'   },
   { to: '/templates', label: 'Templates'  },
   { to: '/create',    label: 'Create'     },
   { to: '/video',     label: 'Video'      },
   { to: '/ads',       label: 'Ads'        },
-  { to: '/publish',   label: 'Publish'    },
   { to: '/approvals', label: 'Approvals'  },
 ] as const;
 
 /** Routes that always render the BROWSE topbar shape, even if a project is
  *  currently selected. Visiting these screens means the user is browsing —
  *  the project context lives in the store and gets re-applied when they go
- *  back to /. */
+ *  back to /.
+ *
+ *  `/publish` is intentionally NOT in this list: it's a per-project surface
+ *  reached from the in-builder ▲ Publish button, so the topbar keeps the
+ *  project crumb + chat panel context while the rep manages targets. */
 const BROWSE_ROUTE_PREFIXES = [
   '/projects',
   '/templates',
   '/create',
   '/ads',
-  '/publish',
   '/approvals',
   '/integrations',
   '/env-secrets',
@@ -118,15 +124,39 @@ export function TopBar() {
 
       {isBuilderMode ? (
         <>
-          {/* Builder mode: project name + env pill */}
+          {/* Builder mode: clickable project name (→ /) + env pill. Linking
+              the crumb back to the workspace gives reps a clear way out of
+              /publish without exiting the project entirely (logo click does
+              that). On `/` itself it's a no-op. */}
           <div className="abw-topbar__crumb" aria-label="Active project">
             <span className="abw-topbar__crumb-sep" aria-hidden>/</span>
-            <span className="abw-topbar__crumb-name">{activeProject!.name}</span>
+            <Link
+              to="/"
+              className="abw-topbar__crumb-name abw-topbar__crumb-name--link"
+              title="Back to builder"
+            >
+              {activeProject!.name}
+            </Link>
             <EnvBadge env={activeEnv} />
           </div>
 
-          {/* Spacer pushes settings + profile to the right */}
+          {/* Spacer pushes Publish + settings + profile to the right */}
           <div className="abw-topbar__spacer" aria-hidden />
+
+          {/* Publish — primary action for the active project. Lives inside
+              builder mode only (no project = nothing to publish). Active
+              state highlights when the rep is already on /publish so the
+              button doubles as a back-to-targets affordance. */}
+          <Link
+            to="/publish"
+            className={`abw-btn abw-btn--primary abw-btn--sm abw-topbar__publish${
+              activePath.startsWith('/publish') ? ' abw-topbar__publish--active' : ''
+            }`}
+            aria-current={activePath.startsWith('/publish') ? 'page' : undefined}
+            title="Publish this project (targets, deploys, history)"
+          >
+            <span aria-hidden>▲</span> Publish
+          </Link>
         </>
       ) : (
         <>

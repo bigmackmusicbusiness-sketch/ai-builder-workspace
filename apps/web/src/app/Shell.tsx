@@ -47,12 +47,15 @@ interface ShellProps {
 }
 
 /** Routes that render WITHOUT the LeftPanel (chat). Mirrors the BROWSE_ROUTE
- *  set in TopBar.tsx. Keep in sync. */
+ *  set in TopBar.tsx. Keep in sync.
+ *
+ *  `/publish` is intentionally NOT here — it's a per-project surface reached
+ *  from the in-builder ▲ Publish button, so the chat panel + builder topbar
+ *  stay visible while the rep manages targets. */
 const BROWSE_ROUTE_PREFIXES = [
   '/projects',
   '/templates',
   '/create',
-  '/publish',
   '/approvals',
   '/integrations',
   '/env-secrets',
