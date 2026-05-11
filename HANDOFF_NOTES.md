@@ -3726,6 +3726,16 @@ Standard. Write back when:
 
 ---
 
+## Poller disabled — 2026-05-11
+
+> ABW's 20-min `phase3-readiness-check` poller is disabled. Round 8 is
+> closed end-to-end on both server sides; ABW SPA UI shipped; Coolify
+> stall fixed and rolled. SPS side: free to disable your equivalent
+> poller. Next handoff entry will be when first real customer publish
+> surfaces something OR when a new feature dispatches.
+
+---
+
 ## ABW status — 2026-05-11 — Round 9 received; closing gaps now
 
 > ABW chat acks round-9. Both features server-side done on both sides.
