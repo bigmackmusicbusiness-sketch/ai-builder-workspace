@@ -3379,3 +3379,124 @@ Re-enabling `phase3-readiness-check` with new triggers:
 When either fires, poller reads + acts per the next session's plan.
 
 — ABW agent, 2026-05-11 (round 5 OUTBOUND)
+
+---
+
+## Round 8 Feature B — ABW server-side shipped (2026-05-11)
+
+> Commit `f64cb4f`. Server-side end-to-end complete (6 layers + 19 new
+> unit tests). SPA UI (publish-menu + modal + pending banner) deferred
+> to a follow-up commit; SPS-side endpoint can build to the locked
+> contracts in parallel without it.
+
+### Commits this round so far
+
+- `deb4b53` — Feature A: iframe-friendly headers + cookie SameSite=None + ?embedded=true mode
+- `6c6cdc4` — OUTBOUND round 5: Feature A ready + Feature B Q1-Q4 answered
+- `f64cb4f` — Feature B server-side (this entry)
+
+### Feature B server-side surface
+
+| Layer | File | Purpose |
+|---|---|---|
+| Scope constants (mint) | `apps/api/src/security/spsServiceToken.ts` | `MINT_SITE_CONFIG_SCOPE` + `ASSIGN_NEW_CUSTOMER_SCOPE` exports; `mintAbwS2sToken` gains `scope` param (defaults to `mint-site-config` for backward compat) |
+| Scope constants (verify) | `apps/api/src/security/handoffToken.ts` | `TRANSFER_OWNERSHIP_SCOPE` added to `HandoffScope` union; verifier already type-driven so no other changes needed |
+| Migration | `0015_projects_pending_customer_state` in `apps/api/src/db/runMigrations.ts` | Adds 4 nullable columns to `projects` + partial index on `pending_until` |
+| New endpoint (SPS→ABW) | `apps/api/src/routes/sps-handoff.ts` | `POST /api/sps/projects/:id/transfer-ownership` — verifies SPS bearer, updates `sps_workspace_id` + clears pending-*, idempotent |
+| New endpoint (IDE→SPS) | `apps/api/src/routes/abw-assign-customer.ts` (NEW) | `POST /api/abw/assign-to-new-customer` — session-authed, mints S2S bearer with `assign-new-customer` scope, forwards to SPS, persists pending-* on success |
+| Publish-gate | `apps/api/src/routes/publish.ts` | `/api/publish/deploy` returns 409 `pending_customer_payment` with invoice details if `pending_until > now()`; graceful column-not-exists for pre-migration safety |
+
+### Round-8 contract conformance — locked
+
+**ABW → SPS S2S token** (when calling SPS's `/api/abw/assign-to-new-customer`):
+
+| Claim | Value | Note |
+|---|---|---|
+| `header.alg` | `HS256` | Same as round-6 |
+| `header.kid` | `<SPS_HANDOFF_KID_DEFAULT>` | Same shared key |
+| `payload.iss` | `"abw"` | |
+| `payload.aud` | `"sps"` | |
+| `payload.scope` | `"assign-new-customer"` | NEW round-8 |
+| `payload.sps_workspace_id` | rep's ABW `tenantId` (lowercased UUID) | No customer workspace exists yet (it's being created); claim used for SPS audit. SPS verifier accepts any UUID format for this scope. |
+| `payload.iat / exp` | exp − iat ≤ 300s, defaults to 60s | Same 5-min cap as round-6 |
+
+**SPS → ABW token** (when calling ABW's `/api/sps/projects/:id/transfer-ownership`):
+
+| Claim | Value | Note |
+|---|---|---|
+| `header.alg` | `HS256` | |
+| `header.kid` | `<ABW_HANDOFF_KID>` | Same shared key |
+| `payload.iss` | `"signalpoint-systems"` | |
+| `payload.aud` | `"abw"` | |
+| `payload.scope` | `"transfer-ownership"` | NEW round-8 |
+| `payload.sps_workspace_id` | new customer workspace UUID (lowercased) | MUST match request body's `new_sps_workspace_id` — 403 on mismatch |
+| `payload.iat / exp` | exp − iat ≤ 300s | Same 5-min cap |
+
+### Test coverage at this commit
+
+API integration: 18 (unchanged) — standalone-regression 5 + standalone-bundle 2 + shim-injection 11.
+
+API unit: 78
+- `tools-arg-recovery` 31
+- `sps-service-token` 21 (was 14; +7 for round-8 scope param)
+- `signalpoint-config-resolver` 14
+- `handoff-token-transfer-ownership` 12 (NEW)
+
+site-data unit: 20.
+
+**Total green:** 116/116 across 8 files. Typecheck + build clean.
+
+### What's NOT shipped this round (ABW-side follow-ups)
+
+The SPA UI for Feature B is deferred to a follow-up commit:
+
+1. **Publish menu entry** "Assign to new customer" — likely in
+   `apps/web/src/screens/PublishScreen.tsx` or wherever the publish
+   action menu lives.
+2. **Modal component** collecting 5 fields (customer_email,
+   contact_name, business_name, package_slug, niche_slug optional).
+   Posts to `/api/abw/assign-to-new-customer`.
+3. **Pending banner** rendered when `project.pending_until > now()`.
+   Reads project from existing project store. Shows email + invoice
+   URL + "view invoice" link + dismissable for the session.
+4. **API client update** to surface 409 `pending_customer_payment`
+   gracefully from publish flow.
+
+None of these depend on SPS-side work — purely consumer-side. They
+can ship in a separate commit when SPA work cycles around.
+
+### What SPS needs to ship for Feature B
+
+Per round 8 §B SPS-side spec:
+- Migration: `pending_payment` enum + `pending_invoice_id` column on `customer_websites`
+- New endpoint: `POST /api/abw/assign-to-new-customer` (session OR S2S auth)
+- New SPS→ABW S2S call wrapper `transferAbwProjectOwnership`
+- Stripe webhook handler extension on `invoice.paid` + `invoice.voided`
+- Tests on the new endpoint + the wrapper
+
+**Smoke test plan when both sides ship:**
+
+1. Rep creates a demo project in ABW IDE (no SPS context).
+2. Clicks "Assign to new customer" (once SPA UI lands), fills modal.
+3. ABW mints S2S bearer with `assign-new-customer`, POSTs to SPS.
+4. SPS creates org + workspace + Stripe invoice (in TEST mode!) + customer_websites row.
+5. ABW persists pending-* columns.
+6. Rep tries to publish — gets 409.
+7. Rep simulates payment via Stripe test-mode webhook.
+8. SPS webhook calls ABW `/api/sps/projects/:id/transfer-ownership`.
+9. ABW clears pending-* + updates sps_workspace_id.
+10. Rep publishes successfully — site goes live.
+
+### Poller (still running)
+
+`phase3-readiness-check` continues per round-5 OUTBOUND triggers. It
+will detect SPS-side Feature A iframe wiring + Feature B endpoint
+shipment via:
+- ABW commits showing the SPA UI ship (this side)
+- SPS commits to web-internal/customers/[id]/websites-panel.tsx or
+  web-client/(app)/websites/open-builder-button.tsx (Feature A wiring)
+- SPS commit adding apps/web-internal/src/app/api/abw/assign-to-new-customer/route.ts
+- New `## INBOUND FROM SPS — round 9` in HANDOFF_NOTES.md
+
+Per the user's standing rule, before disabling the poller, this entry
+already covers the SPS-side close-out for the next agent to see.
