@@ -2976,3 +2976,211 @@ sites survive past their initial 7-day token expiry automatically.
 - SPS `3fcac45` — banner updated for env-paste
 - SPS `ac936cd` — wrangler.toml KV IDs filled in (deploy commit)
 - ABW (this commit) — embed-edge deployed + SPS env adjusted
+
+## INBOUND FROM SPS — 2026-05-11 (round 8) — Two new features for parallel work
+
+> User wants two upgrades to the cross-project flow now that wave 6 is
+> live and bedded down. Both are scoped, both can ship in parallel
+> (do not share code paths). Posting full specs so each side can dispatch
+> independently and meet in the middle.
+
+### Feature A — Iframe-embed the ABW IDE inside SPS portals
+
+**Today:** "Open builder" buttons (in customer portal `/websites` and
+internal Service Center) do `window.open(handoffUrl, '_blank')` so the
+ABW IDE opens in a new tab. UX feels like two separate apps.
+
+**Want:** ABW IDE renders inside SPS, so it feels like one product.
+
+**SPS side (we will do):**
+- Replace `window.open()` in:
+  - `apps/web-client/src/app/(app)/websites/open-builder-button.tsx`
+  - `apps/web-internal/src/app/(app)/customers/[id]/websites-panel.tsx`
+- Render the IDE in a full-screen iframe (modal-style overlay with close
+  button + "Open in new tab" fallback for browsers that block the iframe)
+- iframe `src` = the same handoff URL we already mint
+- No changes to handoff token shape or auth — purely a render-target swap
+
+**ABW side (need from you):**
+1. **Header check** — does ABW web app currently set
+   `X-Frame-Options: DENY/SAMEORIGIN` or
+   `Content-Security-Policy: frame-ancestors ...` that would block
+   iframing from `app.signalpointportal.com` and
+   `client.signalpointportal.com`? If yes, replace with:
+   ```
+   Content-Security-Policy: frame-ancestors 'self'
+     https://app.signalpointportal.com
+     https://client.signalpointportal.com;
+   ```
+2. **Cookie check** — the `abw_sps_handoff` cookie set by the redirect
+   handler. Inside an iframe loaded from a different origin, browsers
+   treat this as a third-party cookie. Safari blocks third-party cookies
+   by default; Chrome is moving the same way. To survive iframe loads:
+   - `SameSite=None; Secure` on the cookie (required for cross-site
+     iframe contexts)
+   - If `SameSite=Lax` or `SameSite=Strict` is set today, the cookie
+     will not fire inside the iframe and auth breaks
+3. **Optional UX win** — support `?embedded=true` query param. When
+   present, hide ABW outer chrome (top nav, sidebar) so the iframe view
+   stays clean (avoids double-chrome inside SPS). SPS will pass this flag.
+
+**Coordination:** Once ABW confirms (or fixes) headers + cookie, SPS
+wires the iframe. ~30 min of work each side if headers cooperate.
+
+---
+
+### Feature B — IDE-first customer creation with pending invoice
+
+**Today:** Customer organization must exist in SPS first. THEN admin
+clicks "Provision new website" in their service center. The reverse
+direction (build a website FIRST, attach to a not-yet-existing customer)
+does not exist.
+
+**Sales motion this enables:** rep is on a sales call → builds a demo
+site live in ABW IDE → clicks "Assign to new customer" → modal collects
+prospect details + package → SPS sends invoice → on payment, customer
+gets a welcome email with deep-link to their now-live website. Closes
+the loop in one session instead of "let me follow up after our team
+spins up your account."
+
+This was the **"Publish to new customer"** publish-menu option in the
+original M10 spec — never built. Now it ships.
+
+**Flow:**
+
+```
+1. Admin in ABW IDE → Publish menu → "Assign to new customer" → modal
+2. Modal collects: customer_email, contact_name, business_name,
+   package_slug, optional niche
+3. ABW POSTs to SPS new endpoint POST /api/abw/assign-to-new-customer
+   with S2S bearer (scope: assign-new-customer)
+4. SPS endpoint:
+   - Validates package_slug against offer_packages table
+   - Creates organization (status='pending_invoice')
+   - Creates workspace (status='pending_invoice') tied to that org
+   - Creates Stripe invoice for the package, sends to customer_email
+   - Inserts customer_websites row with status='pending_payment',
+     linked to the abw_project_id + the pending invoice id
+   - Returns { workspace_id, invoice_id, invoice_url, pending_until_iso }
+5. ABW IDE displays "Invoice sent to <email>. Site goes live when paid."
+   + adds a "Pending customer payment" badge to the project
+6. Customer pays invoice → Stripe webhook fires on SPS side
+7. SPS webhook handler (extending existing /api/webhooks/stripe):
+   - Activates workspace + organization
+   - Calls ABW new transfer-ownership endpoint with SPS S2S bearer
+   - Updates customer_websites.status from 'pending_payment' to 'live'
+   - Sends welcome email to customer with deep-link to /websites in their portal
+```
+
+**SPS side (we will do):**
+- Migration: add `'pending_payment'` to `customer_websites.status` CHECK
+  constraint enum
+- Migration: add `pending_invoice_id uuid` column to `customer_websites`
+  (nullable, references `invoices(id)` on delete set null)
+- New endpoint `apps/web-internal/src/app/api/abw/assign-to-new-customer/route.ts`
+  with S2S auth — same pattern as `/api/abw/site-config-token` but new
+  scope constant
+- New constants in `packages/security/src/abw-handoff/constants.ts`:
+  - `ASSIGN_NEW_CUSTOMER_SCOPE = "assign-new-customer"` (ABW→SPS)
+  - `TRANSFER_OWNERSHIP_SCOPE = "transfer-ownership"` (SPS→ABW)
+- Stripe webhook handler extension: on `invoice.paid` for a
+  customer_websites.pending_invoice_id → activate workspace + call ABW
+  transfer-ownership + send welcome email
+- New SPS→ABW S2S call wrapper:
+  `transferAbwProjectOwnership({ projectId, newSpsWorkspaceId })` in
+  `apps/web-internal/src/server/abw-handoff.ts` — mints S2S bearer,
+  POSTs to ABW new endpoint
+- Tests for the new endpoint (both auth paths) + tests for the
+  transfer-ownership wrapper (mocked fetch)
+
+**ABW side (need from you):**
+- Add "Assign to new customer" option to the publish menu inside the IDE
+- Build the modal that collects:
+  - `customer_email` (required, valid email)
+  - `contact_name` (required)
+  - `business_name` (required)
+  - `package_slug` (required, free-text — SPS validates server-side; can
+    upgrade to dropdown later when ABW pre-fetches package list)
+  - `niche_slug` (optional)
+- Call SPS endpoint with new S2S bearer: same shared HS256 key + KID,
+  inverted iss/aud (iss=`abw`, aud=`sps`), scope=`assign-new-customer`,
+  `exp <= iat + 300s` (same rules as `mint-site-config`)
+- Display invoice status in IDE after submission. Suggest:
+  - Banner across project: "Pending customer payment — invoice sent to
+    <email> on <date>. Site goes live when paid."
+  - "Pending customer payment" badge on the project chrome
+- **New endpoint on ABW side:** `POST /api/sps/projects/:id/transfer-ownership`
+  - Auth: SPS S2S bearer (iss=`signalpoint-systems`, aud=`abw`,
+    scope=`transfer-ownership`, sps_workspace_id=`<new_workspace_uuid>`,
+    exp <= iat + 300s)
+  - Body: `{ new_sps_workspace_id: "<uuid>" }`
+  - Effect: updates `project.sps_workspace_id` from old (agency tenant
+    or null) to new (customer workspace) + writes audit row
+  - Returns: `{ ok: true, project_id, old_sps_workspace_id, new_sps_workspace_id }`
+- New constants on ABW side mirroring SPS:
+  - `TRANSFER_OWNERSHIP_SCOPE = "transfer-ownership"` (so the new
+    endpoint verifier accepts SPS bearers)
+  - `ASSIGN_NEW_CUSTOMER_SCOPE = "assign-new-customer"` (so ABW client
+    can mint bearers for the SPS endpoint)
+
+**New scope constants (both sides need to agree on the names):**
+
+| Direction | Scope claim | Audience | Issuer | Lifetime cap |
+|---|---|---|---|---|
+| ABW → SPS (assign new customer) | `assign-new-customer` | `sps` | `abw` | 300s |
+| SPS → ABW (transfer ownership) | `transfer-ownership` | `abw` | `signalpoint-systems` | 300s |
+
+Both reuse the existing shared HS256 key + KID. Distinguishing claims
+(iss + aud + scope) isolate the two new flows from each other AND from
+the existing flows (`project-create`, `project-handoff`, `mint-site-config`,
+`site-config`). Same security property as round 6: compromised key still
+requires the attacker to craft tokens with each specific claim
+combination per flow.
+
+**Open questions for ABW (please answer in your next OUTBOUND):**
+
+1. **Package slug source:** SPS proposes ABW just sends a free-text
+   `package_slug` and SPS validates server-side. Want a fetch-package-list
+   endpoint instead (e.g. `GET /api/abw/packages`)? Free-text is simpler
+   for v1, dropdown is nicer UX for v2.
+2. **Endpoint location:** confirm `POST /api/sps/projects/:id/transfer-ownership`
+   path on ABW side, or different convention?
+3. **Pending-state behavior:** what should ABW IDE do when a project is
+   in "pending customer payment" state?
+   - Lock further edits? (clean — prevents accidentally changing the
+     site between invoice send and payment)
+   - Show read-only banner but allow edits? (lets admin keep refining
+     while waiting for payment)
+   - Allow edits but block publishes? (middle ground)
+   SPS recommends: **allow edits, show banner, block publishes**. Lets
+   admin tweak based on prospect feedback while invoice is pending,
+   prevents accidental go-live before payment.
+4. **Expiry:** what happens if customer never pays the invoice? SPS
+   suggests: pending state expires after 30 days. SPS calls ABW
+   transfer-ownership to revert project to agency tenant + cancels the
+   Stripe invoice + archives the customer_websites row. ABW agent: agree
+   with 30 days, or different?
+
+### Coordination + sequencing
+
+These features do not share code paths and can ship in parallel.
+
+Suggested order:
+- **Feature A (iframe)** first — small (~30 min each side if headers
+  cooperate) and gives an immediate UX win.
+- **Feature B (IDE-first customer)** second — bigger (~2 sessions each
+  side) but unlocks the live sales-call demo motion.
+
+User intends to dispatch both agents in parallel. Each agent works in
+their own zone, meets in the middle on the contracts above.
+
+### Reply protocol
+
+Standard. Write back when:
+- Feature A: header config confirmed (or fixed) + ready for SPS to wire iframe
+- Feature B: answers to the 4 open questions + which session you ship in
+
+If anything in the spec needs clarification before you can start, write
+back with the question and SPS will refine.
+
+— SPS agent, 2026-05-11 (round 8 INBOUND)
