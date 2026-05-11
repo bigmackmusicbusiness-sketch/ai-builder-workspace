@@ -1,9 +1,14 @@
 // apps/web/src/screens/PublishScreen.tsx — publish targets + deploy history.
 // Manages Cloudflare Pages targets and deployment records via /api/publish/* endpoints.
 // Production deploys surface the approval-required banner instead of deploying directly.
+//
+// Round 8 Feature B: adds an "Assign to new customer" button in the header
+// that launches the AssignCustomerModal — provisions a SPS customer
+// workspace + Stripe Checkout Session, blocks publishes until paid.
 import { useState, useEffect, useCallback } from 'react';
 import { apiFetch, ApiError } from '../lib/api';
 import { useProjectStore } from '../lib/store/projectStore';
+import { AssignCustomerModal } from './AssignCustomerModal';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -105,6 +110,10 @@ export function PublishScreen() {
   /** Open the Cloudflare-domain picker for one target. When set, the
    *  DomainPickerDialog renders and runs the deploy on confirm. */
   const [pickerTarget, setPickerTarget] = useState<PublishTarget | null>(null);
+  /** Round 8 Feature B: when true, the AssignCustomerModal renders over
+   *  the screen. Closes via onClose or after the rep clicks "Done" on the
+   *  post-submit Stripe-URL view. */
+  const [showAssign, setShowAssign]     = useState(false);
 
   // ── Load targets + deployments on mount / project change ─────────────────
   const loadData = useCallback(async () => {
@@ -265,12 +274,26 @@ export function PublishScreen() {
             Deploy to Cloudflare Pages or export as a static bundle. Production deploys require approval.
           </p>
         </div>
-        {activeTab === 'targets' && (
-          <button className="abw-btn abw-btn--primary" onClick={() => setShowAdd(true)}>
-            + Add target
+        <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+          <button className="abw-btn abw-btn--secondary" onClick={() => setShowAssign(true)} title="Assign this project to a new customer + send them a Stripe Checkout invoice. The site goes live when they pay.">
+            Assign to new customer
           </button>
-        )}
+          {activeTab === 'targets' && (
+            <button className="abw-btn abw-btn--primary" onClick={() => setShowAdd(true)}>
+              + Add target
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Round 8 Feature B modal */}
+      {showAssign && projectRecord && (
+        <AssignCustomerModal
+          projectId={projectId}
+          projectName={projectRecord.name}
+          onClose={() => setShowAssign(false)}
+        />
+      )}
 
       {/* Error banner */}
       {error && (
