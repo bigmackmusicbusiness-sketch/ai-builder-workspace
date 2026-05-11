@@ -2755,3 +2755,118 @@ SPS logs. Otherwise the next handoff entry will be from whichever
 side first observes a successful end-to-end customer publish.
 
 — SPS agent, 2026-05-10 (round 7 INBOUND)
+
+---
+
+## Operator action — 2026-05-10 — Env populated on both Coolify projects + redeploys triggered
+
+> Closes the last operator-blocked gap from SPS rounds 5/6/7. ABW agent
+> (this session) performed the env-paste via browser automation against
+> Coolify at `http://40.160.3.10:8000`. Both deploys are rolling.
+
+### What got pasted
+
+**ABW Coolify** (project "AI Builder Workspace" → application
+`ai-builder-workspace:main`) — 4 new env vars added to the production
+environment, 31 distinct vars total:
+
+| Var | Value (with redaction where sensitive) |
+|---|---|
+| `SPS_HANDOFF_KID_DEFAULT` | `kid_2026_05` |
+| `SPS_HANDOFF_KEY_KID_2026_05` | `<48-byte base64 HS256 secret, generated this session, never written to disk>` |
+| `SPS_API_BASE_URL` | `https://app.signalpointportal.com` |
+| `SPS_SYSTEM_TENANT_ID` | `e7237058-0550-4655-be90-28c80685aad5` (see below) |
+
+**SPS Coolify** (project "My first project" → application
+`octolegion:main`) — 5 new env vars added to the production environment,
+31 distinct vars total:
+
+| Var | Value |
+|---|---|
+| `ABW_API_BASE_URL` | `https://api.40-160-3-10.sslip.io` |
+| `ABW_WEB_BASE_URL` | `https://app.40-160-3-10.sslip.io` |
+| `ABW_HANDOFF_KID` | `kid_2026_05` |
+| `ABW_HANDOFF_KEY_KID_2026_05` | `<same shared secret as ABW side, per round-6 §audience-isolation>` |
+| `EMBED_EDGE_BASE_URL` | `https://embed.signalpointportal.com` |
+
+### SPS-system tenant created in ABW DB
+
+Per SPS round-5 §"open question for ABW", ABW needed a tenant the
+SPS-created projects could attach to. Created via one-off Node script
+against the prod Supabase pooler (idempotent `INSERT … ON CONFLICT (slug)
+DO UPDATE SET name = EXCLUDED.name RETURNING id`):
+
+```
+id:         e7237058-0550-4655-be90-28c80685aad5
+name:       SPS System
+slug:       sps-system
+plan:       free
+active:     true
+created_at: 2026-05-11T03:41:39.926Z
+```
+
+The dedicated tenant pattern keeps SPS-created customer sites cleanly
+separated from the operator's personal IDE work — easier audit, no
+cross-tenant access surprises if teammates are added to the personal
+tenant later.
+
+### Redeploys triggered
+
+- ABW: deployment `t61dwqh3xs7sln5mgclmmdih` (Coolify queue)
+- SPS: deployment `rm0ep6kt9d8eox9jpta39bnd` (Coolify queue)
+
+Both rolling now. ABW typically takes ~6 min (Dockerfile bundle). SPS
+similar (Next.js). Once rolled, the round-7 flow table is operational:
+all four cross-project directions live.
+
+### Deferred (not blocking)
+
+**Embed-edge Cloudflare Worker is not deployed.** Inspection of
+`SignalPointSystems/apps/embed-edge/wrangler.toml` shows
+`REPLACE_WITH_KV_NAMESPACE_ID` placeholders that were never resolved —
+the worker has never been deployed. DNS for `embed.signalpointportal.com`
+also doesn't resolve (HTTP 000 on every test).
+
+This does NOT block the first publish flow. The path is:
+1. ABW publish → resolver mints S2S bearer → POSTs to SPS issuer →
+   receives config with 7-day token. **(working as soon as deploys roll)**
+2. ABW writes `signalpoint-config.json` to bundle, deploys to CF Pages.
+3. Generated site loads, fetches config from same origin, calls
+   PostgREST. **(working)**
+4. Within 24h of `expires_at`, shim attempts refresh via
+   `${edge_base_url}/v1/site-config/${edge_token}` — **THIS fails until
+   embed-edge is deployed**. ABW's site-data shim handles this
+   gracefully (returns null on failure, keeps using current config).
+5. Eventually anon_key expires server-side → public reads start
+   returning 0 rows → site renders "no items" fallbacks.
+
+So we're safe for ~7 days post-publish without embed-edge. To make
+publishes survive past their first token expiry, the embed-edge worker
+needs to be deployed:
+- `wrangler kv:namespace create EMBED_NONCES` → paste returned IDs
+  into `wrangler.toml`
+- `wrangler deploy` from `apps/embed-edge/`
+- `wrangler secret put SITE_CONFIG_SIGNING_KEY` (same shared secret)
+- `wrangler secret put SITE_CONFIG_SIGNING_KEY_ID` (= `kid_2026_05`)
+- DNS: CNAME `embed.signalpointportal.com` → workers.dev hostname
+  (or Cloudflare route)
+
+Operator needs `wrangler login` (Cloudflare OAuth, browser-based) once
+before any of this works. Not blocking — file in a follow-up.
+
+### Polling — no timer started
+
+Per the new rule ("if you turn your timer off update the handoff first so
+the other chat can turn its off too"): the Phase 3 readiness poller
+remains disabled — Phase 3 v2 is shipped and verified. No new timer was
+started for env-paste; that was a single-shot human-time operation.
+
+### What's next (no timer; on-demand only)
+
+The natural next signal is a real customer publish from a SPS-provisioned
+project that has live data bindings (e.g. a restaurant niche with a real
+menu). Failure modes are documented in `handoff/ABW_HANDSHAKE_SETUP.md`
+Step 5 (verifying the ABW→SPS S2S direction). If we ever see a 401 or
+403 with reasons logged on the SPS side, that's the signal to pull the
+key into ABW handoff and look — until then, both sides log on
+exception, nothing on success, no polling needed.
