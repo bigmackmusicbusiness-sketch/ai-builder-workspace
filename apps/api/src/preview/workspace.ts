@@ -80,7 +80,20 @@ export async function writeWorkspaceFile(
   return { bytes: Buffer.byteLength(content, 'utf8') };
 }
 
-/** Write a binary file (Buffer) at `path` — used for AI-generated images and other assets. */
+/** Write a binary file (Buffer) at `path` — used for AI-generated images and other assets.
+ *
+ *  Coolify (and any container deploy) wipes the local filesystem on every
+ *  rollout. Without a durable copy, an image generated 30 minutes ago is
+ *  gone the moment we redeploy the api. So after writing to disk we also
+ *  fire-and-forget a backup to the workspace-backups bucket, mirroring
+ *  what writeWorkspaceFile does for text. The restore path below pulls
+ *  binaries back when the workspace is empty (post-restart).
+ *
+ *  Prior to May 2026 this path didn't back up — the comment in the
+ *  backup section claimed binaries were "already stored as assets", but
+ *  gen_image only writes to the workspace tree, never to the assets
+ *  bucket. Every redeploy silently destroyed every AI-generated image
+ *  in every project as a result. */
 export async function writeWorkspaceFileBuffer(
   ws: WorkspaceHandle,
   relPath: string,
@@ -93,6 +106,8 @@ export async function writeWorkspaceFileBuffer(
   await mkdir(dirname(abs), { recursive: true });
   await writeFile(abs, buffer);
   emitPreviewEvent(ws.tenantId, ws.projectSlug, { type: 'file-changed', path: relPath });
+  // Fire-and-forget durable backup so the file survives container restarts.
+  backupFileBufferToStorage(ws, relPath, buffer).catch(() => { /* non-fatal */ });
   return { bytes: buffer.length };
 }
 
@@ -147,14 +162,21 @@ export async function clearWorkspace(ws: WorkspaceHandle): Promise<void> {
 }
 
 // ── Supabase Storage backup / restore ─────────────────────────────────────────
-// Text workspace files are backed up to Supabase Storage so they survive
-// server restarts (Railway's container filesystem is ephemeral).
-// Binary files (images) are excluded — they're already stored as assets.
+// Workspace files (text AND binary) are backed up to Supabase Storage so they
+// survive server restarts — Coolify's container filesystem is ephemeral and
+// the workspace tree under ~/.abw-workspaces is wiped on every rollout.
 //
 // IMPORTANT: this bucket MUST be private. Workspace files include tenant
 // source code, sometimes with leftover environment-style references, and
 // must not be exposed via public URL. Restore uses the service-role key
 // to download directly — no signed URLs needed for server-to-server reads.
+//
+// May 2026 fix: binaries are now backed up alongside text. Before this,
+// the comment claimed binaries were "already stored as assets", but
+// gen_image (and other binary writers) only hit the workspace filesystem
+// — every redeploy silently destroyed every AI-generated image in every
+// project. The new write path backs up text + binary alike; the restore
+// path reads bytes and dispatches by extension.
 //
 // See B1 of the security plan: prior versions stored these in
 // `project-assets` (a public bucket) which leaked text files to anyone with
@@ -170,10 +192,39 @@ const TEXT_EXTENSIONS = new Set([
   // path (manual upload), we don't want it backed up to storage.
 ]);
 
+/** Binary file types we durably back up. SVG is intentionally treated as
+ *  text (see TEXT_EXTENSIONS) so it's restored as a string. */
+const BINARY_EXTENSIONS: Record<string, string> = {
+  '.jpg':  'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png':  'image/png',
+  '.webp': 'image/webp',
+  '.gif':  'image/gif',
+  '.ico':  'image/x-icon',
+  '.avif': 'image/avif',
+  '.mp4':  'video/mp4',
+  '.webm': 'video/webm',
+  '.mp3':  'audio/mpeg',
+  '.wav':  'audio/wav',
+  '.pdf':  'application/pdf',
+  '.woff':  'font/woff',
+  '.woff2': 'font/woff2',
+};
+
 function isTextFile(relPath: string): boolean {
   const dot = relPath.lastIndexOf('.');
   if (dot < 0) return false;
   return TEXT_EXTENSIONS.has(relPath.slice(dot).toLowerCase());
+}
+
+/** Return the binary content-type for `relPath` if its extension is on
+ *  the allowlist, else null (text files + unknown types skip the binary
+ *  backup path). */
+function binaryMime(relPath: string): string | null {
+  const dot = relPath.lastIndexOf('.');
+  if (dot < 0) return null;
+  const ext = relPath.slice(dot).toLowerCase();
+  return BINARY_EXTENSIONS[ext] ?? null;
 }
 
 function backupStoragePath(ws: WorkspaceHandle, relPath: string): string {
@@ -196,6 +247,30 @@ export async function backupFileToStorage(
   const path = backupStoragePath(ws, relPath);
   await supabase.storage.from(BACKUP_BUCKET).upload(path, Buffer.from(content, 'utf-8'), {
     contentType: 'text/plain; charset=utf-8',
+    upsert:      true,
+  });
+}
+
+/**
+ * Back up a single binary file (image, video, audio, pdf, font) to Supabase
+ * Storage. Fire-and-forget — called automatically from writeWorkspaceFileBuffer
+ * so AI-generated images don't disappear on container restart.
+ *
+ * Unknown binary extensions are skipped silently — the allowlist in
+ * BINARY_EXTENSIONS is intentionally narrow so we don't accidentally
+ * back up node_modules junk or other build artifacts.
+ */
+export async function backupFileBufferToStorage(
+  ws: WorkspaceHandle,
+  relPath: string,
+  buffer: Buffer,
+): Promise<void> {
+  const mime = binaryMime(relPath);
+  if (!mime) return;
+  const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+  const path = backupStoragePath(ws, relPath);
+  await supabase.storage.from(BACKUP_BUCKET).upload(path, buffer, {
+    contentType: mime,
     upsert:      true,
   });
 }
@@ -249,8 +324,18 @@ async function doRestoreWorkspaceFromStorage(ws: WorkspaceHandle): Promise<void>
             .from(bucket)
             .download(`${prefix}${file.name}`);
           if (dlErr || !blob) return;
-          const text = await blob.text();
-          await writeWorkspaceFile(ws, file.name, text);
+          // Dispatch by extension: binary (image/video/audio/pdf/font) is
+          // restored byte-for-byte via writeWorkspaceFileBuffer; everything
+          // else is treated as utf-8 text. Both helpers fire-and-forget the
+          // bucket re-upload, but since the bucket already has the bytes,
+          // those calls are no-ops.
+          if (binaryMime(file.name)) {
+            const ab = await blob.arrayBuffer();
+            await writeWorkspaceFileBuffer(ws, file.name, Buffer.from(ab));
+          } else {
+            const text = await blob.text();
+            await writeWorkspaceFile(ws, file.name, text);
+          }
           restored++;
         }),
     );
