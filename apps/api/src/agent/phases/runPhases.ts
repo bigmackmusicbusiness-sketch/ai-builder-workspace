@@ -225,7 +225,16 @@ async function buildExecutionDirective(plan: PlanType, projectSlug: string, proj
     : '(none specified by planner)';
   const typeChecklist = await loadTypeSecurityChecklist(projectTypeId);
 
+  // Today's date — same line the planner sees, mirrored here so the
+  // executor doesn't fall back to training-cutoff defaults when writing
+  // copyright footers / "as of YYYY" lines / seasonal copy. Without this
+  // the LLM consistently writes "© 2024" in 2026.
+  const today = new Date().toISOString().slice(0, 10);
+  const currentYear = today.slice(0, 4);
+
   return [
+    `## Today: ${today}`,
+    ``,
     `## BUILD PLAN (follow exactly)`,
     ``,
     `A planning subagent has analyzed the brief and produced this plan. **Build it page by page using write_file.** The plan has been validated; you do not need to re-plan.`,
@@ -251,6 +260,15 @@ async function buildExecutionDirective(plan: PlanType, projectSlug: string, proj
     ...(typeChecklist
       ? [`### Type-specific security checklist (\`${projectTypeId}\`)`, ``, typeChecklist, ``]
       : []),
+    `### Content rules`,
+    `- **Use the brief as the source of truth.** If the user gave a phone, email, address, or business name in the brief, use those values exactly. Do not paraphrase or "polish" real contact info.`,
+    `- **When the brief omits contact info** (common in test builds), use these clearly-marked placeholders so the user knows what to swap before going live:`,
+    `    - phone:   \`(555) 010-1234\`  ← the NANP reserved-for-fiction range. **Never** \`555-555-5555\`, \`555-1234\`, or any other made-up number.`,
+    `    - email:   \`hello@yourbusiness.com\`. **Never** \`info@example.com\`, \`contact@example.org\`, \`@placeholder.com\`, or \`@test.com\`.`,
+    `    - address: \`Your Business Address\` (or \`Your City, ST 00000\` if a multi-line address is needed). **Never** \`123 Main Street\`, \`123 Main St\`, or \`1234 Anywhere Ave\`.`,
+    `- **Never write Lorem ipsum, TODO, FIXME, "[your text here]", "coming soon", or "lorem"** in user-facing copy. Write real niche-appropriate sentences from the planner's voice + section spec above.`,
+    `- **Copyright footer:** use **${currentYear}** (the year from \`## Today\` above). Never hardcode \`2024\` or any other stale year.`,
+    ``,
     `## EXECUTION ORDER`,
     `1. \`list_files\` to see what exists.`,
     `2. \`write_file\` for each page in the sitemap above. Each page must have:`,

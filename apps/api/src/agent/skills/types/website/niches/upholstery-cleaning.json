@@ -1,0 +1,28 @@
+{
+  "niche": "upholstery-cleaning",
+  "label": "Upholstery Cleaning",
+  "triggers": ["upholstery cleaning", "sofa cleaning", "couch cleaning", "fabric cleaning", "leather conditioning", "stain removal upholstery", "pet odor upholstery", "water damage upholstery", "mattress cleaning", "dining chair cleaning", "auto upholstery cleaning", "office chair cleaning", "drapery cleaning", "microfiber cleaning"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+before-after-strip+free-quote-cta" },
+    { "slug": "services", "role": "service-list+fabric-types-grid" },
+    { "slug": "pricing",  "role": "per-piece-pricing+bundle-discount" },
+    { "slug": "work",     "role": "before-after-gallery" },
+    { "slug": "faq",      "role": "fabric-care-faq" },
+    { "slug": "contact",  "role": "online-booking-form+phone" }
+  ],
+  "compliance_blocks": ["license-insurance-footer", "satisfaction-guarantee-disclaimer", "ada-accessibility-statement"],
+  "schema_org_primary": "CleaningService",
+  "voice_template": "warm, careful with fabrics and pets, honest about what stains lift and what doesn't",
+  "palettes": [
+    { "name": "soft-linen",       "hexes": ["#7A6B5D", "#FAF6EE", "#E6DFD2", "#1F1810"] },
+    { "name": "velvet-plum",      "hexes": ["#4E2A4A", "#FBF6F8", "#E7D5E0", "#1B0E1A"] },
+    { "name": "ocean-teal",       "hexes": ["#1B6E7A", "#F2F8F8", "#CFE5E6", "#0B1E22"] },
+    { "name": "espresso-cream",   "hexes": ["#5A3A22", "#FAF4EB", "#E4D3BD", "#1E140A"] },
+    { "name": "sage-quiet",       "hexes": ["#6A7F5B", "#F4F6EE", "#D5DDC9", "#1C231A"] },
+    { "name": "warm-charcoal",    "hexes": ["#2F3338", "#F4F4F4", "#CBCDD0", "#0A0B0D"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "services-grid", "fabric-types-grid", "before-after-gallery", "per-piece-pricing-table", "stain-removal-card", "testimonial-card", "review-strip", "service-area-map", "online-booking-form", "faq-accordion", "hours-strip", "address-card", "footer"],
+  "image_directives": "real living rooms and offices, not catalog setups. Steam wands working into a sofa cushion, a tech vacuuming a chair, a before-and-after side-by-side on a real fabric piece, pets out of frame but pet hair visible before. Show real wear: pet stains, kids' juice, coffee, sunlight fade. Avoid sterile staged shots and fake-stain stock photos.",
+  "voice_pet_words": ["fiber", "soiling", "soil retardant", "hot-water extraction", "encapsulation", "spot", "dye lot", "delicate", "Scotchgard", "drying time"],
+  "primary_keywords": ["upholstery cleaning", "sofa cleaning", "couch cleaning near me", "fabric cleaning", "pet stain removal"]
+}

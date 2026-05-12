@@ -2030,6 +2030,62 @@ export const COPY_PATTERNS: Record<string, CopyPattern[]> = {
       primary:   'Chronic low back pain is rarely a single fix. A typical course is 6 to 8 weekly sessions, with most patients reporting meaningful change by visit three. Detailed intake, written notes, and we adjust the plan if it stalls.',
     },
   ],
+
+  // ── Logic-gap round (2026-05-11) — small-business cleaning niches ──────────
+
+  'upholstery-cleaning': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Sofa cleaning. $189 flat, any 7-foot couch.',
+      primary:   'Hot-water extraction, pet-safe enzyme prespray, fabric protector add-on $35. Dry in 4-6 hours. Evening + weekend slots. Free spot-test before we start so you know what will and will not lift.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "Some stains don't come out. We'll tell you which.",
+      primary:   "Old set-in pet urine, hair dye, and bleach spots usually do not lift fully. We test a hidden corner first and tell you the realistic outcome before we plug anything in. No surprise charges on a job we knew would not work.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Pet-stained couch → back in the living room by dinner.',
+      primary:   'A 12-year-old microfiber sofa with cat-urine corners and a dog-paw armrest. Two hours, a hot-water extractor, and an enzyme prespray later, it dries by dinner and the smell is gone. Photos of each piece, before and after, included.',
+    },
+  ],
+
+  'dryer-vent-cleaning': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Flat $149. Front-to-back vent cleanout.',
+      primary:   'Rooftop or sidewall, single-family home, flat $149. Includes the lint trap housing, transition hose, full run, and termination cap. Photos of the pulled lint before and after, every job. NFPA-recommended yearly.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We'll tell you if your vent doesn't need cleaning.",
+      primary:   "If your dryer dries in one cycle and the outdoor cap flap moves freely, you do not need us yet. We will say so on the phone for free instead of selling you a service you do not need today. Most homes are a 12-18 month cadence.",
+    },
+    {
+      framework: 'before-after',
+      headline:  '78-minute cycle → 38 minutes.',
+      primary:   'A dryer running two cycles to dry one load is the vent telling you it is clogged. One cleanout typically cuts cycle time in half and lowers the fire risk that comes with packed lint behind the drum. Same-day appointments in the metro.',
+    },
+  ],
+
+  'gutter-cleaning-maintenance': [
+    {
+      framework: 'specific-value-prop',
+      headline:  'Single-story $129. Two-story $189. Flat.',
+      primary:   'Hand-scoop every run, flush every downspout, bag the debris. Single-story ranches $129; two-story colonials $189. Photos of every miter and downspout before and after, included. Spring and fall slots fill 3 weeks out — book early.',
+    },
+    {
+      framework: 'pattern-interrupt',
+      headline:  "We don't sell gutter guards.",
+      primary:   "We are cleaners, not installers, so when we say guards are not worth it on your roof pitch you can trust we are not selling against ourselves. Some homes benefit; most do not. We will tell you which yours is on the first visit.",
+    },
+    {
+      framework: 'before-after',
+      headline:  'Overflowing on the porch → quiet downspouts.',
+      primary:   'Twice-a-year cleanouts — late spring after the pollen drop, late fall after the leaves — keep your fascia dry and your basement from flooding. Book both at once and the second visit is $20 off, locked in for next season.',
+    },
+  ],
 };
 
 /** Fallback for niches without curated patterns — generic but framework-shaped,

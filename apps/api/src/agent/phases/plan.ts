@@ -212,8 +212,16 @@ export async function runPlanner(input: PlanInput): Promise<PlanResult> {
       ).join('\n')
     : '(no niches available — use niche="generic")';
 
+  // Inject today's date so the planner picks current-year voice/seasonality
+  // and doesn't default to its training-cutoff year (the bug the user saw:
+  // footers consistently rendering "© 2024" in May 2026). Same line is
+  // mirrored into the executor directive below.
+  const today = new Date().toISOString().slice(0, 10);
+
   const systemMessage = [
     sop,
+    '',
+    `## Today: ${today}`,
     '',
     '## Available niches for this project type',
     nicheSummary,

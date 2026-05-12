@@ -1,0 +1,28 @@
+{
+  "niche": "gutter-cleaning-maintenance",
+  "label": "Gutter Cleaning & Maintenance",
+  "triggers": ["gutter cleaning", "gutter maintenance", "leaf removal", "downspout cleaning", "gutter flush", "seasonal cleanup", "roof debris", "gutter guard installation", "gutter inspection", "rain gutter cleaning", "clogged gutter", "overflowing gutter", "pine needles gutter", "spring cleaning gutter", "fall cleanup gutter"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+seasonal-cta+free-quote" },
+    { "slug": "services", "role": "service-list+gutter-guard-option" },
+    { "slug": "pricing",  "role": "linear-foot-pricing+two-story-surcharge" },
+    { "slug": "work",     "role": "before-after-debris-photos" },
+    { "slug": "faq",      "role": "frequency-and-safety-faq" },
+    { "slug": "contact",  "role": "online-booking-form+phone" }
+  ],
+  "compliance_blocks": ["license-insurance-footer", "ladder-safety-disclaimer", "ada-accessibility-statement"],
+  "schema_org_primary": "HomeAndConstructionBusiness",
+  "voice_template": "down-to-earth, weather-aware, honest about a two-story surcharge and what gutter guards actually do",
+  "palettes": [
+    { "name": "autumn-leaves",    "hexes": ["#8C3B1A", "#FBF5EE", "#EDD2BC", "#1F0D04"] },
+    { "name": "copper-trim",      "hexes": ["#B45309", "#FBF5EA", "#F2DDB5", "#1F1306"] },
+    { "name": "slate-roof",       "hexes": ["#334155", "#F2F5F9", "#CBD5E1", "#0B1220"] },
+    { "name": "moss-stone",       "hexes": ["#4F6634", "#F4F6EE", "#D7DEC9", "#15200F"] },
+    { "name": "rain-blue",        "hexes": ["#1E3A8A", "#F2F4FB", "#CDD4EF", "#0A1024"] },
+    { "name": "fresh-pine",       "hexes": ["#2F5D3A", "#F2F7F2", "#CFE0CF", "#0A1A0E"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "services-grid", "seasonal-callout", "before-after-gallery", "linear-foot-pricing-table", "gutter-guard-comparison", "testimonial-card", "review-strip", "service-area-map", "online-booking-form", "ladder-safety-callout", "faq-accordion", "hours-strip", "address-card", "footer"],
+  "image_directives": "real homes, real ladders, real piles of leaves. Crew on an extension ladder scooping handfuls of wet leaves, a downspout flushing clean water, a before-and-after of an overflowing gutter, gutter guards installed mid-run with a few leaves resting on top. Mix one-story ranches and two-story colonials. Avoid pristine showroom roofs and over-saturated autumn-leaf stock photos.",
+  "voice_pet_words": ["downspout", "fascia", "soffit", "splash block", "linear foot", "guard", "flush", "miter", "elbow", "scoop", "two-story"],
+  "primary_keywords": ["gutter cleaning", "gutter maintenance", "leaf removal", "gutter guard installation", "seasonal gutter cleanup"]
+}

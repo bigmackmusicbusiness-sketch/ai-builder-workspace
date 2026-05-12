@@ -1,0 +1,28 @@
+{
+  "niche": "dryer-vent-cleaning",
+  "label": "Dryer Vent Cleaning",
+  "triggers": ["dryer vent cleaning", "dryer vent", "lint removal", "dryer fire prevention", "vent inspection", "lint trap", "dryer exhaust", "clogged dryer vent", "dryer not drying", "long dryer cycle", "burning smell dryer", "bird nest vent", "rooftop vent cleaning", "vent reroute"],
+  "default_sitemap": [
+    { "slug": "index",    "role": "hero+safety-explainer+book-cta" },
+    { "slug": "services", "role": "service-list+signs-vent-is-clogged" },
+    { "slug": "pricing",  "role": "flat-rate-pricing+annual-plan" },
+    { "slug": "work",     "role": "before-after-lint-photos" },
+    { "slug": "faq",      "role": "fire-safety-faq" },
+    { "slug": "contact",  "role": "online-booking-form+phone" }
+  ],
+  "compliance_blocks": ["license-insurance-footer", "fire-safety-disclaimer", "ada-accessibility-statement"],
+  "schema_org_primary": "HomeAndConstructionBusiness",
+  "voice_template": "calm, safety-first, no scare tactics, clear about how often a vent really needs cleaning",
+  "palettes": [
+    { "name": "warning-amber",    "hexes": ["#B45309", "#FBF5EA", "#F2DDB5", "#1F1306"] },
+    { "name": "safety-red",       "hexes": ["#B91C1C", "#FBF4F4", "#F1CBCB", "#220A0A"] },
+    { "name": "clean-navy",       "hexes": ["#1E3A8A", "#F2F4FB", "#CDD4EF", "#0A1024"] },
+    { "name": "fresh-air-sky",    "hexes": ["#1D4ED8", "#F2F6FC", "#CADBF1", "#08132A"] },
+    { "name": "service-gray",     "hexes": ["#374151", "#F4F4F5", "#D1D5DB", "#0A0B0E"] },
+    { "name": "lint-cream",       "hexes": ["#7C5B2F", "#FBF6EA", "#E8DABA", "#1E1408"] }
+  ],
+  "section_library": ["hero", "page-hero", "phone-cta-bar", "services-grid", "signs-checklist", "before-after-gallery", "flat-rate-pricing-table", "safety-callout", "testimonial-card", "review-strip", "service-area-map", "online-booking-form", "annual-plan-card", "faq-accordion", "hours-strip", "address-card", "footer"],
+  "image_directives": "real cleanouts, not stock photos. Tech with a long brush rod at the back of a dryer, a pile of compacted lint pulled from a vent, the rooftop cap removed with a nest inside, a before-and-after of vent airflow. Crew in real uniforms, drop cloths down, real laundry rooms. Avoid sterile staged shots and fire-stock-photos with flames.",
+  "voice_pet_words": ["lint", "exhaust run", "rigid vent", "transition", "vent cap", "airflow", "rooftop", "termination", "blockage", "drying time"],
+  "primary_keywords": ["dryer vent cleaning", "lint removal", "dryer vent inspection", "dryer fire prevention", "clogged dryer vent"]
+}

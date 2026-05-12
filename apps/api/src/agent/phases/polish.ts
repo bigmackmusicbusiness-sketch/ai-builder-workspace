@@ -29,6 +29,43 @@ export interface PolishResult {
   error?:    string;
 }
 
+/**
+ * Rewrite stale hardcoded copyright years in a chunk of source. Handles:
+ *   - `© 2024`, `© YEAR`, `© {year}`           → `© <currentYear>`
+ *   - `&copy; 2024`, `&copy; YEAR`             → `&copy; <currentYear>` (HTML entity form)
+ *   - `(c) 2024`, `(C) 2024`                   → `(c) <currentYear>`
+ *   - `Copyright © 2024`, `Copyright 2024`     → `Copyright © <currentYear>`
+ *   - Year ranges like `© 2020 - 2024`          → `© 2020 - <currentYear>` (preserve start)
+ *
+ * Deliberately does NOT touch:
+ *   - JSX expressions like `{currentYear}` / `{new Date().getFullYear()}`
+ *     (no literal 4-digit number in the year slot)
+ *   - Years that aren't immediately adjacent to a ©-style marker (so we
+ *     don't accidentally rewrite "founded in 2024" body copy)
+ *   - The current year (no-op when the file already has it right)
+ *
+ * Lives at module scope so both the HTML loop and the JSX/TS code-file
+ * loop can share one implementation without code drift.
+ */
+export function applyYearFixes(content: string, currentYear: number): string {
+  let out = content;
+  // Year range FIRST: preserve start year, replace trailing year.
+  // Matches "© 2020 - 2024", "© 2020 – 2024", "&copy; 2020-2024", etc.
+  out = out.replace(
+    /(©|&copy;|\(c\)|\(C\))(\s*)(\d{4})(\s*[-–]\s*)(\d{4})/g,
+    (_m, marker, sp1, startYear, sep) => `${marker}${sp1}${startYear}${sep}${currentYear}`,
+  );
+  // Single-year © / &copy; / (c) form. Negative lookahead `(?!\s*[-–]\s*\d{4})`
+  // prevents the regex from clobbering the start-year of a range we just
+  // half-rewrote (e.g. "© 2020 - 2026" must NOT become "© 2026 - 2026").
+  out = out.replace(/©\s*(?:\d{4}|YEAR|\{year\})(?!\s*[-–]\s*\d{4})/gi, `© ${currentYear}`);
+  out = out.replace(/&copy;\s*(?:\d{4}|YEAR|\{year\})(?!\s*[-–]\s*\d{4})/gi, `&copy; ${currentYear}`);
+  out = out.replace(/\(c\)\s*(?:\d{4}|YEAR|\{year\})(?!\s*[-–]\s*\d{4})/gi, `(c) ${currentYear}`);
+  // "Copyright [©] 2024" / "Copyright YEAR".
+  out = out.replace(/copyright\s+(?:©\s*|&copy;\s*)?(?:\d{4}|YEAR|\{year\})(?!\s*[-–]\s*\d{4})/gi, `Copyright © ${currentYear}`);
+  return out;
+}
+
 // Patterns matching common niche-specific compliance disclaimers. The check
 // below flags a page when sibling pages contain one of these phrases but the
 // page itself doesn't — catches iterative rewrites that strip required text.
@@ -125,6 +162,13 @@ export async function runInlinePolish(ws: WorkspaceHandle): Promise<PolishResult
   try {
     const files = await listWorkspaceFiles(ws);
     const htmlFiles = files.filter((p) => /\.html?$/i.test(p));
+    // React/Vite projects keep their footer JSX in .tsx/.jsx (and sometimes
+    // .js/.ts helper files). The HTML-only year-fix sub-pass missed those
+    // entirely — that's why the user kept seeing "© 2024" on regenerated
+    // sites even though polish was "running". We scan these for the year
+    // fix only, NOT the security / a11y passes below (those are HTML-shaped
+    // and would corrupt JSX).
+    const codeFiles = files.filter((p) => /\.(tsx|jsx|ts|js)$/i.test(p));
 
     // ── Read the build plan to learn the niche ─────────────────────────────
     // _plan.json lives at workspace root and is written by the planner phase.
@@ -250,10 +294,14 @@ export async function runInlinePolish(ws: WorkspaceHandle): Promise<PolishResult
       }
 
       // ── Auto-fix: copyright year ───────────────────────────────────────────
-      // Replace ©? \d{4} or ©? YEAR placeholders with the current year
+      // Catches every common rendering of the copyright year so a stale "©
+      // 2024" gets rewritten to the current year. We DO NOT touch JSX
+      // expressions like `{currentYear}` or `{new Date().getFullYear()}` —
+      // those don't match because they don't contain a literal 4-digit year
+      // in the year slot. Year-range case (e.g. "© 2020-2024") preserves
+      // the start year and only updates the trailing year.
       const yearBefore = updated;
-      updated = updated.replace(/©\s*(?:\d{4}|YEAR|\{year\})/gi, `© ${currentYear}`);
-      updated = updated.replace(/copyright\s+(?:©\s*)?(?:\d{4}|YEAR|\{year\})/gi, `Copyright © ${currentYear}`);
+      updated = applyYearFixes(updated, currentYear);
       if (yearBefore !== updated) {
         findings.push({ level: 'auto-fixed', category: 'consistency', page: path, message: `Set copyright year to ${currentYear}` });
       }
@@ -387,6 +435,30 @@ export async function runInlinePolish(ws: WorkspaceHandle): Promise<PolishResult
       if (updated !== original) {
         await writeWorkspaceFile(ws, path, updated);
         filesTouched++;
+      }
+    }
+
+    // ── React / JS code-file year-fix pass ─────────────────────────────────
+    // The HTML loop above doesn't touch .tsx / .jsx / .ts / .js, but most
+    // current projects are Vite + React with the footer in a Footer.tsx
+    // component. We run ONLY the copyright-year fix over these files —
+    // the security / a11y / SEO passes are HTML-specific and would
+    // mangle JSX. JSX expressions like `{currentYear}` / `{new Date()...}`
+    // are untouched by the regex set (they have no literal year digits in
+    // the year slot).
+    for (const path of codeFiles) {
+      const original = await readWorkspaceFile(ws, path);
+      if (!original) continue;
+      const updated = applyYearFixes(original, currentYear);
+      if (updated !== original) {
+        await writeWorkspaceFile(ws, path, updated);
+        filesTouched++;
+        findings.push({
+          level:    'auto-fixed',
+          category: 'consistency',
+          page:     path,
+          message:  `Set copyright year to ${currentYear}`,
+        });
       }
     }
 
