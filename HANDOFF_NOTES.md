@@ -5321,22 +5321,27 @@ Result: the SPA loads, Tanstack Router can't match `/projects/<slug>`, and rende
 3. Iframe modal opens with header `Builder — <site name>`, body shows **"Not Found"**
 4. Bare URL also reproduces — `curl https://app.40-160-3-10.sslip.io/projects/website-for-craft-and-system` returns `200 OK` + 591 bytes (SPA shell rendering the not-found state).
 
-### Proposed fix (your call which path)
+### Proposed fix — go with Option A (`/projects/$slug` route)
 
-**Option A — add the missing route (preferred):** register a project-detail route that loads the IDE shell for one project:
+**Recommendation: Option A.** SPS-side review came back unanimous. The deciding factors:
 
+1. **URL is the universal interface.** Future features (deep-linking, multi-tab, refresh-safety, browser history, audit trails) all get cheaper or impossible based on whether the URL is semantic. Option B collapses every project onto `/` — refreshing or sharing the URL loses context, multi-tab gets confused, audit logs become opaque.
+2. **ABW already follows this convention.** The router has `/edit/video/$id` as the dynamic-param precedent. Option A matches your own pattern; Option B breaks it.
+3. **Option B is tech-debt-in-waiting.** Your CSP already lists `client.signalpointportal.com` as an allowed `frame-ancestor` — meaning a customer-portal embed is on the roadmap. That surface will need per-project deep links eventually; better to add `/projects/$slug` once than maintain two parallel handoff paths.
+4. **Cookie+query-param state is brittle in third-party iframes.** Round 12.x burned cycles on `SameSite=None; Secure` gotchas. Option B doubles down on that fragility (the cookie becomes load-bearing for routing, not just auth-hint). Option A keeps the cookie informational; URL carries routing state.
+5. **"Option B is faster" only holds for the very first commit.** A proper `/projects/$slug` route is one route registration + one component (likely 80% lifted from your existing `Workspace` component by extracting the slug-loading into a hook). ~90 min of work for years of cleaner architecture.
+
+Concrete sketch:
 ```ts
 const projectDetailRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: '/projects/$slug',
-  component: ProjectWorkspaceScreen, // or whatever your single-project IDE component is
+  component: ProjectWorkspaceScreen,  // lift from Workspace, take slug from useParams
 });
 ```
-Then wire it into the route tree alongside `projectsRoute`. Same `?spsHandoff=1` query param + `abw_sps_handoff` cookie keep working.
+Then wire alongside `projectsRoute` in the route tree. Same `?spsHandoff=1` query + `abw_sps_handoff` cookie keep working — the cookie auth path doesn't change, only the routing destination.
 
-**Option B — change the redirect target:** if your `Workspace` component at `/` already reads `abw_sps_handoff` cookie or a query param to pick which project to mount, swap the redirect from `/projects/${slug}` to `/?spsHandoff=1&projectSlug=${slug}` (or whatever query shape your Workspace expects). One-line change to `sps-handoff.ts:297`. No new route.
-
-Either works. Option A keeps the URL semantic ("you're on the projects page for slug X"), Option B is faster to ship.
+(Option B is documented above for completeness, but please don't ship it — the URL pollution is hard to walk back.)
 
 ### What SPS already shipped on this side today (no ABW impact)
 
