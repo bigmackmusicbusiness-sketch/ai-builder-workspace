@@ -195,6 +195,62 @@ const MIGRATIONS: Array<{ id: string; sql: string }> = [
         WHERE pending_until IS NOT NULL AND deleted_at IS NULL;
     `,
   },
+  {
+    // Round 12 — Project kickoff messages table. Backs the
+    // POST /api/sps/projects/:projectId/kickoff endpoint that SPS's
+    // auto-onboarding pipeline calls to seed a project's first chat
+    // message + fire the eager (Option B) server-side agent build.
+    //
+    // Drizzle schema is in packages/db/schema/projects.ts. The migration
+    // here is the raw SQL applied at boot — schema and SQL must stay in
+    // lockstep (current pattern across the whole _migrations list).
+    //
+    // Idempotency: a unique partial index on (project_id, onboarding_flow_id)
+    // gives us O(1) "has this flow already kicked off this project?" lookup
+    // without scanning. The partial WHERE clause skips NULL flow ids since
+    // those are pre-SPS-integration test rows we don't dedupe.
+    id: '0016_project_kickoff_messages',
+    sql: `
+      DO $$ BEGIN
+        CREATE TYPE kickoff_status AS ENUM
+          ('queued', 'running', 'completed', 'failed', 'cancelled');
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+      CREATE TABLE IF NOT EXISTS project_kickoff_messages (
+        id                   UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+        project_id           UUID         NOT NULL REFERENCES projects(id),
+        tenant_id            UUID         NOT NULL REFERENCES tenants(id),
+        content              TEXT         NOT NULL,
+        metadata             JSONB        NOT NULL DEFAULT '{}'::jsonb,
+        status               kickoff_status NOT NULL DEFAULT 'queued',
+        agent_run_id         UUID,
+        onboarding_flow_id   TEXT,
+        qc_artifact_id       TEXT,
+        started_at           TIMESTAMPTZ,
+        completed_at         TIMESTAMPTZ,
+        error                TEXT,
+        created_at           TIMESTAMPTZ  NOT NULL DEFAULT now(),
+        updated_at           TIMESTAMPTZ  NOT NULL DEFAULT now(),
+        deleted_at           TIMESTAMPTZ
+      );
+
+      -- Idempotency key. Same SPS onboarding_flow_id targeting the same
+      -- ABW project = the same kickoff (200 returns the original row).
+      -- Partial index skips NULLs so dev/test rows without a flow id
+      -- don't collide.
+      CREATE UNIQUE INDEX IF NOT EXISTS project_kickoff_messages_flow_idx
+        ON project_kickoff_messages (project_id, onboarding_flow_id)
+        WHERE onboarding_flow_id IS NOT NULL AND deleted_at IS NULL;
+
+      -- Per-project "is there an active kickoff?" lookup. Used by the
+      -- 409 already_kicked_off defense — if any non-terminal kickoff
+      -- exists for the project, a different onboarding_flow_id is
+      -- rejected so we don't accidentally fire two parallel agent runs.
+      CREATE INDEX IF NOT EXISTS project_kickoff_messages_active_idx
+        ON project_kickoff_messages (project_id, status)
+        WHERE status IN ('queued', 'running') AND deleted_at IS NULL;
+    `,
+  },
 ];
 
 /** Diagnostic snapshot from the most recent runMigrations() call.

@@ -1,6 +1,7 @@
 // packages/db/schema/projects.ts — projects, files, blobs, components, pages, routes, services.
 import {
   pgTable, text, timestamp, boolean, uuid, integer, jsonb, pgEnum,
+  // (pgEnum already imported — kept for the new kickoffStatusEnum below)
 } from 'drizzle-orm/pg-core';
 import { timestamps, tenants, users } from './core';
 
@@ -125,5 +126,58 @@ export const services = pgTable('services', {
   filePath:    text('file_path').notNull(),
   /** JSON: { port, baseUrl, env, bindings } */
   config:      jsonb('config').notNull().default({}),
+  ...timestamps,
+});
+
+// ── Project kickoff messages (round 12 — SPS auto-onboarding) ──────
+//
+// SPS's auto-onboarding pipeline drops a single seed message into a
+// project's chat via POST /api/sps/projects/:projectId/kickoff. The
+// row records the seed + tracks the eager (Option B) server-side
+// agent run that builds the site from it. The IDE re-renders from
+// the resulting agent_runs / agent_steps when the customer eventually
+// opens the project — they don't need to click "send" to start the
+// build; it's already done (or running).
+//
+// Idempotency: `onboarding_flow_id` is the SPS-side flow uuid. A
+// second POST with the same flow id is a no-op (returns the original
+// kickoff_id + current status). Different flow ids on the same project
+// produce a 409 — by design, each project gets exactly one kickoff
+// across its lifetime.
+//
+// Standalone-IDE guarantee: rows here are only inserted by the
+// /api/sps/projects/:projectId/kickoff endpoint. Standalone projects
+// (no SPS workspace) never trigger this code path; the table stays
+// empty for them.
+export const kickoffStatusEnum = pgEnum('kickoff_status', [
+  'queued', 'running', 'completed', 'failed', 'cancelled',
+]);
+
+export const projectKickoffMessages = pgTable('project_kickoff_messages', {
+  id:                 uuid('id').primaryKey().defaultRandom(),
+  projectId:          uuid('project_id').notNull().references(() => projects.id),
+  tenantId:           uuid('tenant_id').notNull().references(() => tenants.id),
+  /** The seed message — typically the QC-approved website-build prompt
+   *  produced by SPS's per-package generator agent. Hard-capped at 16KB
+   *  by the route handler so a 1MB blob can't slip through. */
+  content:            text('content').notNull(),
+  /** Free-form metadata from SPS: { source, onboarding_flow_id,
+   *  qc_approved_at?, qc_artifact_id? }. JSON so SPS can evolve their
+   *  pipeline without forcing migrations on ABW. */
+  metadata:           jsonb('metadata').notNull().default({}),
+  status:             kickoffStatusEnum('status').notNull().default('queued'),
+  /** Set when the eager runner starts the agent loop. References
+   *  agent_runs.id but not declared as a FK to avoid an import cycle
+   *  through agent.ts. */
+  agentRunId:         uuid('agent_run_id'),
+  /** Idempotency key from the SPS caller. Same flow id = same kickoff
+   *  (200 returns the original); different flow id = 409. */
+  onboardingFlowId:   text('onboarding_flow_id'),
+  /** Audit pointer back to the QC artifact on SPS side. Optional. */
+  qcArtifactId:       text('qc_artifact_id'),
+  startedAt:          timestamp('started_at',  { withTimezone: true }),
+  completedAt:        timestamp('completed_at', { withTimezone: true }),
+  /** Captured error message when status='failed'. NULL otherwise. */
+  error:              text('error'),
   ...timestamps,
 });

@@ -31,17 +31,32 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
  *  so a stolen token can't be replayed for hours. */
 const MAX_TOKEN_LIFETIME_SEC = 5 * 60;
 
-/** Allowed scopes. Tokens carry exactly one. Round 8 adds
- *  `transfer-ownership` (SPS→ABW) for the customer-provision flow:
- *  SPS calls ABW after a Stripe invoice is paid to re-parent the
- *  ABW project from the agency tenant to the customer's workspace. */
-export type HandoffScope = 'project-create' | 'project-handoff' | 'transfer-ownership';
+/** Allowed scopes. Tokens carry exactly one.
+ *
+ *  - `project-create`: SPS → ABW; mints a new project in ABW for a SPS
+ *    workspace (used when SPS Service Center provisions a website).
+ *  - `project-handoff`: SPS → ABW; deep-links a customer into an existing
+ *    project's IDE (used for the "Manage my site" iframe flow).
+ *  - `transfer-ownership`: SPS → ABW (round 8); re-parents an ABW project
+ *    from the agency tenant to the customer's SPS workspace after Stripe
+ *    checkout completes.
+ *  - `project-kickoff`: SPS → ABW (round 12); seeds an existing ABW
+ *    project's chat with a one-shot kickoff message from SPS's
+ *    auto-onboarding pipeline. Eager mode (Option B): the kickoff
+ *    endpoint fires the agent run server-side so the site is already
+ *    built when the customer first opens the IDE. */
+export type HandoffScope =
+  | 'project-create'
+  | 'project-handoff'
+  | 'transfer-ownership'
+  | 'project-kickoff';
 
 /** Exported scope constants for callers + parallel-direction agreement
  *  with SPS. Single source of truth. */
 export const PROJECT_CREATE_SCOPE     = 'project-create'    as const;
 export const PROJECT_HANDOFF_SCOPE    = 'project-handoff'   as const;
 export const TRANSFER_OWNERSHIP_SCOPE = 'transfer-ownership' as const;
+export const PROJECT_KICKOFF_SCOPE    = 'project-kickoff'   as const;
 
 /** Token payload shape. Required fields are enforced by verifyHandoffToken. */
 export interface HandoffPayload {

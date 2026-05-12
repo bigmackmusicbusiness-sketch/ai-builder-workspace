@@ -37,6 +37,7 @@ import {
   HandoffTokenError,
   type HandoffPayload,
 } from '../security/handoffToken';
+import { runEagerKickoff } from '../agent/kickoffRunner';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -455,6 +456,264 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
         old_sps_workspace_id:  oldWs,
         new_sps_workspace_id:  writeValue,
         is_revert:             isRevert,
+      });
+    },
+  );
+
+  /**
+   * POST /api/sps/projects/:projectId/kickoff
+   *
+   * Round 12 — SPS auto-onboarding seeds an existing ABW project's first
+   * chat message via this endpoint. Eager mode (Option B): we persist
+   * the row + immediately fire the agent run server-side. The customer
+   * arrives to a finished site, not a "click here to start" stub.
+   *
+   * Auth: HS256 with scope='project-kickoff'. Token must carry
+   *   sps_workspace_id (UUID) AND project_id (UUID). The token's
+   *   project_id MUST match the path param (path-bind defense, same
+   *   strictness as transfer-ownership) AND the project's stored
+   *   sps_workspace_id MUST match the token's claim. ≤ 5min lifetime.
+   *
+   * Body:
+   *   {
+   *     content: string ≤ 16KB,
+   *     metadata?: {
+   *       source: 'sps_onboarding_v1' | …,
+   *       onboarding_flow_id: string,
+   *       qc_approved_at?: ISO8601,
+   *       qc_artifact_id?: string
+   *     }
+   *   }
+   *
+   * Idempotency:
+   *   - Same `onboarding_flow_id` for the same project: 200 with the
+   *     ORIGINAL kickoff_id + CURRENT status. SPS can safely retry on
+   *     transient network failures (per their round 12.1 request).
+   *   - Different `onboarding_flow_id` while a kickoff is queued/running
+   *     on the same project: 409 already_kicked_off. Prevents
+   *     accidentally firing two parallel agent runs.
+   *   - Different `onboarding_flow_id` after the previous one is
+   *     completed/failed/cancelled: 200, a new run kicks off.
+   *
+   * Returns 200: { ok: true, kickoff_id, project_id, status }
+   * Returns 400/401/403/404/409/500 — all JSON, never HTML.
+   */
+  app.post<{
+    Params: { projectId: string };
+    Body:   { content?: unknown; metadata?: unknown };
+  }>(
+    '/api/sps/projects/:projectId/kickoff',
+    async (req, reply) => {
+      const projectIdParam = (req.params as { projectId?: string }).projectId;
+      if (!projectIdParam) {
+        return reply.status(400).send({ ok: false, error: 'missing_project_id_path_param' });
+      }
+
+      const token = bearerFrom(req.headers.authorization);
+      if (!token) return reply.status(401).send({ ok: false, error: 'missing_bearer_token' });
+
+      let payload: HandoffPayload;
+      try {
+        payload = verifyHandoffToken(token, 'project-kickoff');
+      } catch (err) {
+        const reason = err instanceof HandoffTokenError ? err.reason : 'verification_failed';
+        return reply.status(401).send({ ok: false, error: 'invalid_token', reason });
+      }
+
+      if (!payload.project_id) {
+        return reply.status(400).send({ ok: false, error: 'missing_project_id_in_token' });
+      }
+      if (payload.project_id.toLowerCase() !== projectIdParam.toLowerCase()) {
+        return reply.status(403).send({ ok: false, error: 'project_mismatch' });
+      }
+
+      // Body validation. Content is required + size-capped; metadata is
+      // optional but normalised to a flat object we can json-stringify.
+      const bodyParse = z.object({
+        content:  z.string().min(1).max(16_384),
+        metadata: z.object({
+          source:             z.string().max(120).optional(),
+          onboarding_flow_id: z.string().min(1).max(120).optional(),
+          qc_approved_at:     z.string().datetime().optional(),
+          qc_artifact_id:     z.string().max(120).optional(),
+        }).passthrough().optional(),
+      }).safeParse(req.body);
+      if (!bodyParse.success) {
+        return reply.status(400).send({
+          ok:     false,
+          error:  'bad_body',
+          issues: bodyParse.error.format(),
+        });
+      }
+      const body = bodyParse.data;
+      const onboardingFlowId = body.metadata?.onboarding_flow_id ?? null;
+      const qcArtifactId     = body.metadata?.qc_artifact_id     ?? null;
+      const metadataJson     = body.metadata ?? {};
+
+      // Look up the project + verify the token's sps_workspace_id matches
+      // what's stored on the project. Same defense as transfer-ownership:
+      // a token issued for workspace A must not be able to drive workspace
+      // B's project.
+      const sql = getRawSql();
+      let proj: { id: string; tenant_id: string; sps_workspace_id: string | null } | undefined;
+      try {
+        const rows = await sql.unsafe(
+          `SELECT id, tenant_id, sps_workspace_id
+             FROM projects
+            WHERE id = $1 AND deleted_at IS NULL
+            LIMIT 1`,
+          [projectIdParam],
+        ) as Array<{ id: string; tenant_id: string; sps_workspace_id: string | null }>;
+        proj = rows[0];
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(`[kickoff] project lookup failed: ${err instanceof Error ? err.message : String(err)}`);
+        return reply.status(500).send({ ok: false, error: 'project_lookup_failed' });
+      }
+      if (!proj) return reply.status(404).send({ ok: false, error: 'project_not_found' });
+      if (proj.sps_workspace_id !== payload.sps_workspace_id) {
+        return reply.status(403).send({ ok: false, error: 'workspace_mismatch' });
+      }
+
+      // Idempotency lookup. If the same (project_id, onboarding_flow_id)
+      // already exists, return the ORIGINAL row's id + current status
+      // (per SPS round 12.1 request). Skipped when no flow id was sent —
+      // that's a dev/test path; we don't try to dedupe without a key.
+      if (onboardingFlowId) {
+        try {
+          const existing = await sql.unsafe(
+            `SELECT id, status FROM project_kickoff_messages
+              WHERE project_id = $1 AND onboarding_flow_id = $2 AND deleted_at IS NULL
+              LIMIT 1`,
+            [proj.id, onboardingFlowId],
+          ) as Array<{ id: string; status: string }>;
+          if (existing.length > 0) {
+            return reply.send({
+              ok:         true,
+              kickoff_id: existing[0]!.id,
+              project_id: proj.id,
+              status:     existing[0]!.status,
+              idempotent: true,
+            });
+          }
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn(`[kickoff] idempotency lookup failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+
+      // 409 guard: a kickoff is already queued/running on this project
+      // under a different flow id. Reject so we don't accidentally fire
+      // two parallel agent runs. Completed / failed / cancelled rows do
+      // not block a fresh kickoff.
+      try {
+        const active = await sql.unsafe(
+          `SELECT id, status, onboarding_flow_id
+             FROM project_kickoff_messages
+            WHERE project_id = $1
+              AND status IN ('queued', 'running')
+              AND deleted_at IS NULL
+            LIMIT 1`,
+          [proj.id],
+        ) as Array<{ id: string; status: string; onboarding_flow_id: string | null }>;
+        if (active.length > 0) {
+          return reply.status(409).send({
+            ok:                       false,
+            error:                    'already_kicked_off',
+            existing_kickoff_id:      active[0]!.id,
+            existing_status:          active[0]!.status,
+            existing_onboarding_flow_id: active[0]!.onboarding_flow_id,
+          });
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn(`[kickoff] active-kickoff lookup failed (non-fatal, proceeding): ${err instanceof Error ? err.message : String(err)}`);
+      }
+
+      // Insert the kickoff row. Drizzle would work too but raw SQL keeps
+      // us defensive against migration timing — the table only landed in
+      // 0016 and we'd rather a clear error than a silently-failing typed
+      // insert if the migration hasn't applied yet on a given env.
+      let kickoffId: string;
+      try {
+        const inserted = await sql.unsafe(
+          `INSERT INTO project_kickoff_messages
+             (project_id, tenant_id, content, metadata, status,
+              onboarding_flow_id, qc_artifact_id)
+           VALUES ($1, $2, $3, $4::jsonb, 'queued', $5, $6)
+           RETURNING id`,
+          [
+            proj.id,
+            proj.tenant_id,
+            body.content,
+            JSON.stringify(metadataJson),
+            onboardingFlowId,
+            qcArtifactId,
+          ],
+        ) as Array<{ id: string }>;
+        kickoffId = inserted[0]!.id;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        // Unique violation on (project_id, onboarding_flow_id) — handle
+        // the race where two concurrent requests with the same flow id
+        // pass the SELECT but both try to INSERT. Re-fetch + return.
+        if (onboardingFlowId && /duplicate key value|unique constraint/i.test(msg)) {
+          try {
+            const refetch = await sql.unsafe(
+              `SELECT id, status FROM project_kickoff_messages
+                WHERE project_id = $1 AND onboarding_flow_id = $2 AND deleted_at IS NULL
+                LIMIT 1`,
+              [proj.id, onboardingFlowId],
+            ) as Array<{ id: string; status: string }>;
+            if (refetch.length > 0) {
+              return reply.send({
+                ok:         true,
+                kickoff_id: refetch[0]!.id,
+                project_id: proj.id,
+                status:     refetch[0]!.status,
+                idempotent: true,
+              });
+            }
+          } catch { /* fall through to 500 */ }
+        }
+        // eslint-disable-next-line no-console
+        console.error(`[kickoff] insert failed: ${msg}`);
+        return reply.status(500).send({ ok: false, error: 'insert_failed' });
+      }
+
+      // Fire the eager runner. Fire-and-forget — the response goes back
+      // immediately with status='running'; the runner persists progress
+      // into agent_runs + agent_steps + flips the kickoff row to
+      // completed/failed when done. Errors inside the runner are
+      // swallowed (logged + persisted to the row); they never bubble
+      // out of the route handler.
+      void runEagerKickoff(kickoffId).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error(`[kickoff] runner crashed for ${kickoffId}: ${err instanceof Error ? err.message : String(err)}`);
+      });
+
+      // Audit. Content hash only — the brief can contain customer info
+      // we don't want denormalised into the audit log.
+      await writeAuditEvent({
+        tenantId: proj.tenant_id,
+        action:   'sps.project.kickoff',
+        target:   'project',
+        targetId: proj.id,
+        env:      'production',
+        after: {
+          kickoff_id:          kickoffId,
+          sps_workspace_id:    payload.sps_workspace_id,
+          onboarding_flow_id:  onboardingFlowId,
+          qc_artifact_id:      qcArtifactId,
+          content_bytes:       body.content.length,
+        },
+      }).catch(() => { /* best-effort */ });
+
+      return reply.send({
+        ok:         true,
+        kickoff_id: kickoffId,
+        project_id: proj.id,
+        status:     'running',
       });
     },
   );
