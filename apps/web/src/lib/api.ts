@@ -31,6 +31,14 @@ export async function apiFetch<T = unknown>(
   const token = await getToken();
   const res = await fetch(`${BASE}${path}`, {
     ...init,
+    // Include cookies on cross-origin calls so the api can read the
+    // `abw_sps_handoff` cookie set by /api/sps/handoff. /api/projects
+    // (and any future route that scopes by SPS workspace) reads it to
+    // filter results to the customer's own workspace, preventing the
+    // shared SPS proxy user from seeing every workspace's projects.
+    // Server CORS already has `credentials: true` so this round-trips
+    // cleanly. No effect on requests without the cookie (normal users).
+    credentials: 'include',
     headers: {
       'Content-Type':     'application/json',
       Authorization:      `Bearer ${token}`,
@@ -63,6 +71,7 @@ export async function apiFetchForm<T = unknown>(
   const token = await getToken();
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
+    credentials: 'include', // see apiFetch comment — keeps SPS workspace cookie scoped
     headers: {
       Authorization:      `Bearer ${token}`,
       'X-Requested-With': 'fetch',

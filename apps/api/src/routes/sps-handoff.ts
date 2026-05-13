@@ -38,6 +38,7 @@ import {
   type HandoffPayload,
 } from '../security/handoffToken';
 import { runEagerKickoff } from '../agent/kickoffRunner';
+import { mintSpsHandoffMagicLink } from '../security/spsAuthBridge';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -294,7 +295,34 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
     // sessionStorage for the iframe's lifetime.
     const incomingEmbedded = (req.query as { embedded?: string })?.embedded === 'true';
     const embeddedSuffix = incomingEmbedded ? '&embedded=true' : '';
-    return reply.redirect(`${getAppUrl()}/projects/${row.slug}?spsHandoff=1${embeddedSuffix}`, 302);
+    const projectUrl = `${getAppUrl()}/projects/${row.slug}?spsHandoff=1${embeddedSuffix}`;
+
+    // Round 13.2 — Option C session bridge.
+    //
+    // Instead of redirecting directly to the SPA (which would land
+    // unauthenticated and 401 on every api call), we redirect through a
+    // Supabase magic-link verify URL. Supabase mints a real session for
+    // the shared SPS proxy user, then 302s to the SPA URL above with
+    // access + refresh tokens in the URL fragment. The SPA's Supabase
+    // client (configured detectSessionInUrl: true) picks them up and
+    // hydrates the session, so apiFetch works for the rest of the
+    // iframe's lifetime.
+    //
+    // If the magic-link mint fails (Supabase admin error, env not
+    // configured, etc.) we fall back to the bare redirect with a flag
+    // so the SPA can show a clearer error than the silent "Project
+    // not found" state. Better to land with an obvious "couldn't sign
+    // you in" message than a misleading routing-looks-broken UX.
+    try {
+      const { actionLink } = await mintSpsHandoffMagicLink({ redirectTo: projectUrl });
+      return reply.redirect(actionLink, 302);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(
+        `[sps-handoff] magic-link mint failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return reply.redirect(`${projectUrl}&spsAuthFailed=1`, 302);
+    }
   });
 
   /**

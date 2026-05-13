@@ -6,6 +6,7 @@ import { eq, and, or, isNull } from 'drizzle-orm';
 import { getDb, getRawSql } from '../db/client';
 import { projects } from '@abw/db';
 import { authMiddleware, requireRole, type AuthContext } from '../security/authz';
+import { readSpsHandoffCookie } from '../security/spsAuthBridge';
 import { writeAuditEvent } from '../security/audit';
 
 declare module 'fastify' {
@@ -35,25 +36,37 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
   /** GET /api/projects — list projects visible to the current user.
    *  Visible = (created by them) OR (shared with the tenant). Within the same tenant.
    *  Falls back to tenant-scoped filter if the is_shared column doesn't exist yet
-   *  (i.e., before the 0008_project_sharing migration has been applied). */
+   *  (i.e., before the 0008_project_sharing migration has been applied).
+   *
+   *  Round 13.2 — SPS iframe scoping: when the request carries the
+   *  `abw_sps_handoff` cookie (set by /api/sps/handoff), we ADDITIONALLY
+   *  filter by `projects.sps_workspace_id` matching the cookie's claim.
+   *  Stops the shared SPS proxy user from seeing every workspace's
+   *  projects in the system tenant. Outside the SPS-iframe path this is
+   *  a no-op. */
   app.get('/api/projects', async (req) => {
     const ctx = req.authCtx!;
     const db = getDb();
+    const spsScope = readSpsHandoffCookie(req.headers.cookie);
     try {
+      const baseConditions = and(
+        eq(projects.tenantId, ctx.tenantId),
+        // Hide soft-deleted rows. Migration 0012 soft-deletes
+        // duplicate-slug rows; this filter prevents them resurfacing
+        // in the dashboard.
+        isNull(projects.deletedAt),
+        or(
+          eq(projects.createdBy, ctx.userId),
+          eq(projects.isShared, true),
+        ),
+      );
+      const where = spsScope
+        ? and(baseConditions, eq(projects.spsWorkspaceId, spsScope.sps_workspace_id))
+        : baseConditions;
       const rows = await db
         .select()
         .from(projects)
-        .where(and(
-          eq(projects.tenantId, ctx.tenantId),
-          // Hide soft-deleted rows. Migration 0012 soft-deletes
-          // duplicate-slug rows; this filter prevents them resurfacing
-          // in the dashboard.
-          isNull(projects.deletedAt),
-          or(
-            eq(projects.createdBy, ctx.userId),
-            eq(projects.isShared, true),
-          ),
-        ))
+        .where(where)
         .orderBy(projects.createdAt);
       return { projects: rows };
     } catch (err) {
@@ -67,6 +80,8 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
       console.warn(`[projects] visibility-aware query failed (${code} ${msg}) — falling back to raw SQL.`);
       try {
         const sql = getRawSql();
+        const spsClause = spsScope ? ' AND sps_workspace_id = $2' : '';
+        const params    = spsScope ? [ctx.tenantId, spsScope.sps_workspace_id] : [ctx.tenantId];
         const rows = await sql.unsafe(
           `SELECT id, tenant_id AS "tenantId", created_by AS "createdBy",
                   name, slug, type, description, config,
@@ -74,9 +89,9 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
                   created_at AS "createdAt", updated_at AS "updatedAt"
              FROM projects
             WHERE tenant_id = $1
-              AND deleted_at IS NULL
+              AND deleted_at IS NULL${spsClause}
             ORDER BY created_at`,
-          [ctx.tenantId],
+          params,
         ) as Array<Record<string, unknown>>;
         return { projects: rows };
       } catch (fallbackErr) {
