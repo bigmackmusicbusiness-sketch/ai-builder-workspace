@@ -206,16 +206,33 @@ export async function filesRoutes(app: FastifyInstance): Promise<void> {
     }
     try {
       const ws = await getWorkspace(ctx.tenantId, slug);
+      // Discriminate restore states so the SPA can distinguish "you have no files"
+      // from "we tried to restore from Storage and came up empty/failed". Without
+      // this, both cases render as "No files yet" — indistinguishable to the user.
+      //   'skipped'       FS already populated; no restore needed (hot path)
+      //   'success'       FS was empty; restore brought files back
+      //   'empty-backup'  FS was empty; restore ran clean but Storage had nothing
+      //   'failed'        FS was empty; restore threw — usually Supabase transient
+      let restored: 'skipped' | 'success' | 'failed' | 'empty-backup' = 'skipped';
+      let restoreError: string | undefined;
       if (!(await workspaceExists(ws))) {
         // eslint-disable-next-line no-console
         console.log(`[files/workspace] empty FS for ${slug} — restoring from Storage`);
-        await restoreWorkspaceFromStorage(ws).catch((err) => {
-          // eslint-disable-next-line no-console
-          console.warn(`[files/workspace] restore failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`);
-        });
+        try {
+          await restoreWorkspaceFromStorage(ws);
+          const after = await listWorkspaceFiles(ws);
+          restored = after.length > 0 ? 'success' : 'empty-backup';
+        } catch (err) {
+          restored = 'failed';
+          restoreError = err instanceof Error ? err.message : String(err);
+          req.log.warn(
+            { slug, tenantId: ctx.tenantId, err: restoreError },
+            'workspace_restore_failed',
+          );
+        }
       }
       const files = await listWorkspaceFiles(ws);
-      return { files };
+      return { files, restored, ...(restoreError ? { restoreError } : {}) };
     } catch (err) {
       return reply.status(400).send({ error: (err as Error).message });
     }
@@ -242,10 +259,16 @@ export async function filesRoutes(app: FastifyInstance): Promise<void> {
         if (!(await workspaceExists(ws))) {
           // eslint-disable-next-line no-console
           console.log(`[files/workspace/content] empty FS for ${slug} — restoring from Storage`);
-          await restoreWorkspaceFromStorage(ws).catch((err) => {
-            // eslint-disable-next-line no-console
-            console.warn(`[files/workspace/content] restore failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`);
-          });
+          try {
+            await restoreWorkspaceFromStorage(ws);
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            req.log.warn(
+              { slug, tenantId: ctx.tenantId, err: msg },
+              'workspace_restore_failed',
+            );
+            // fall through — readWorkspaceFile below will return null and we'll 404
+          }
         }
         const content = await readWorkspaceFile(ws, path);
         if (content === null) return reply.status(404).send({ error: 'File not found in workspace' });

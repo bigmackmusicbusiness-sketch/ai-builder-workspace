@@ -54,31 +54,70 @@ function buildTree(paths: string[]): FileNode[] {
   return root.children ?? [];
 }
 
+/** Restore state from /api/files/workspace. Optional for backward-compat with
+ *  older api versions during a deploy roll — when undefined, treat as
+ *  'skipped' so we render the same "No files yet" copy as before. */
+type RestoreState = 'skipped' | 'success' | 'failed' | 'empty-backup' | undefined;
+type FilesResp    = { files: string[]; restored?: RestoreState; restoreError?: string };
+
 export function FilesMode() {
   const [search, setSearch] = useState('');
   const [files, setFiles] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [restoreState, setRestoreState] = useState<RestoreState>(undefined);
+  // One-shot retry counter — bumped by the 3s timeout when restore comes back
+  // empty/failed. Re-running the effect gives Storage time to propagate in
+  // multi-replica deploys before we tell the user "No files yet."
+  const [retryCount, setRetryCount] = useState(0);
 
   const currentProjectId = useProjectStore((s) => s.currentProjectId);
   const projects         = useProjectStore((s) => s.projects);
   const slug = currentProjectId !== 'global' ? projects[currentProjectId]?.slug : undefined;
 
-  // Refetch on project change.
+  // Refetch on project change OR when retryCount bumps.
   useEffect(() => {
     if (!slug) {
       setFiles([]);
       setError(null);
+      setRestoreState(undefined);
+      setRetryCount(0);
       return;
     }
-    let cancelled = false;
+    let cancelled    = false;
+    let retryTimerId: ReturnType<typeof setTimeout> | undefined;
     setLoading(true);
     setError(null);
-    apiFetch<{ files: string[] }>(`/api/files/workspace?slug=${encodeURIComponent(slug)}`)
-      .then((res) => { if (!cancelled) setFiles(res.files); })
+    apiFetch<FilesResp>(`/api/files/workspace?slug=${encodeURIComponent(slug)}`)
+      .then((res) => {
+        if (cancelled) return;
+        setFiles(res.files);
+        setRestoreState(res.restored);
+        // One-shot retry on "files empty + restore not skipped" — gives the
+        // Supabase Storage list a few seconds to propagate in multi-replica
+        // deploys. Don't loop: if the retry also comes back empty, we render
+        // the typed "Workspace is syncing" copy instead of "No files yet."
+        if (
+          res.files.length === 0
+          && (res.restored === 'empty-backup' || res.restored === 'failed')
+          && retryCount === 0
+        ) {
+          retryTimerId = setTimeout(() => {
+            if (!cancelled) setRetryCount(1);
+          }, 3000);
+        }
+      })
       .catch((err) => { if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load files'); })
       .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (retryTimerId) clearTimeout(retryTimerId);
+    };
+  }, [slug, retryCount]);
+
+  // Reset retry budget when the project changes.
+  useEffect(() => {
+    setRetryCount(0);
   }, [slug]);
 
   const tree = useMemo(() => buildTree(files), [files]);
@@ -118,7 +157,14 @@ export function FilesMode() {
           </div>
         ) : tree.length === 0 ? (
           <div style={{ padding: 'var(--space-3)', color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>
-            No files yet. Ask the AI to build something.
+            {/* Empty-state copy depends on what the server told us about restore.
+                'empty-backup' / 'failed' on a fresh container means Storage either
+                hadn't propagated or the restore threw — give the user a clear
+                "syncing" signal instead of the misleading "no files." Falls back
+                to the original copy when restored==='skipped' or undefined. */}
+            {restoreState === 'empty-backup' || restoreState === 'failed'
+              ? 'Workspace is syncing — refresh in a moment.'
+              : 'No files yet. Ask the AI to build something.'}
           </div>
         ) : (
           <FileTree nodes={tree} searchQuery={search} />
