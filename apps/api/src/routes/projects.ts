@@ -49,20 +49,28 @@ export async function projectsRoutes(app: FastifyInstance): Promise<void> {
     const db = getDb();
     const spsScope = readSpsHandoffCookie(req.headers.cookie);
     try {
-      const baseConditions = and(
-        eq(projects.tenantId, ctx.tenantId),
-        // Hide soft-deleted rows. Migration 0012 soft-deletes
-        // duplicate-slug rows; this filter prevents them resurfacing
-        // in the dashboard.
-        isNull(projects.deletedAt),
-        or(
-          eq(projects.createdBy, ctx.userId),
-          eq(projects.isShared, true),
-        ),
+      const tenantClause = eq(projects.tenantId, ctx.tenantId);
+      // Hide soft-deleted rows. Migration 0012 soft-deletes
+      // duplicate-slug rows; this filter prevents them resurfacing
+      // in the dashboard.
+      const notDeleted   = isNull(projects.deletedAt);
+      // Standalone path's visibility OR: created-by-me OR shared.
+      // NOT applied in the SPS iframe path — see below.
+      const standaloneVisibility = or(
+        eq(projects.createdBy, ctx.userId),
+        eq(projects.isShared, true),
       );
+      // Round 13.3 fix: when the SPS handoff cookie is present, the
+      // cookie's sps_workspace_id IS the visibility scope. We do NOT
+      // apply the createdBy/isShared OR on top, because SPS-created
+      // projects have createdBy=NULL + isShared=false and the OR
+      // would zero them out — which was the exact bug SPS reported
+      // (list returned empty, by-id returned the project). Tenant
+      // clause stays (system tenant), workspace clause replaces the
+      // visibility OR.
       const where = spsScope
-        ? and(baseConditions, eq(projects.spsWorkspaceId, spsScope.sps_workspace_id))
-        : baseConditions;
+        ? and(tenantClause, notDeleted, eq(projects.spsWorkspaceId, spsScope.sps_workspace_id))
+        : and(tenantClause, notDeleted, standaloneVisibility);
       const rows = await db
         .select()
         .from(projects)
