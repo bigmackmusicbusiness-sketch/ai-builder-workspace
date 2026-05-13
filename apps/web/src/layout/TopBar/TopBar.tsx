@@ -71,7 +71,11 @@ export function TopBar() {
   const activePath  = routerState.location.pathname;
 
   const activeProject  = currentProjectId !== 'global' ? projects[currentProjectId] : null;
-  const isBrowseRoute  = BROWSE_ROUTE_PREFIXES.some((p) => activePath.startsWith(p));
+  // Exact match — NOT startsWith — because `/projects` is a browse route
+  // (the project list) but `/projects/$slug` is a per-project IDE landing
+  // (round 13, SPS iframe-handoff target) that needs the builder topbar.
+  // A prefix match would wrongly bucket project detail as a browse route.
+  const isBrowseRoute  = BROWSE_ROUTE_PREFIXES.some((p) => activePath === p);
   // Builder mode = a project is selected AND we're NOT on a browse-mode route.
   // /projects, /templates, settings screens etc. always show browse-mode topbar
   // even if a project is in the store.

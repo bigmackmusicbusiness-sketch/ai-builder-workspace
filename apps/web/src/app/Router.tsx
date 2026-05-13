@@ -25,6 +25,7 @@ import { ApprovalsScreen }            from '../screens/ApprovalsScreen';
 import { OnboardingAutomationScreen } from '../screens/OnboardingAutomationScreen';
 import { LogsHealthScreen }           from '../screens/LogsHealthScreen';
 import { ProjectsScreen }             from '../screens/ProjectsScreen';
+import { ProjectBySlugScreen }        from '../screens/ProjectBySlugScreen';
 import { PublishScreen }              from '../screens/PublishScreen';
 import { IntegrationsScreen }         from '../screens/IntegrationsScreen';
 import { AgentRunsScreen }            from '../screens/AgentRunsScreen';
@@ -99,6 +100,16 @@ const projectsRoute = createRoute({
   getParentRoute: () => shellRoute,
   path: '/projects',
   component: ProjectsScreen,
+});
+
+// Per-project IDE landing — matches `/projects/$slug` from the SPS
+// iframe-handoff flow (POST /api/sps/handoff redirects here after
+// setting the auth cookie). TanStack Router resolves more-specific
+// routes first, so `/projects` still matches the list page.
+const projectDetailRoute = createRoute({
+  getParentRoute: () => shellRoute,
+  path: '/projects/$slug',
+  component: ProjectBySlugScreen,
 });
 
 const templatesRoute = createRoute({
@@ -239,6 +250,7 @@ const routeTree = rootRoute.addChildren([
   shellRoute.addChildren([
     workspaceRoute,
     projectsRoute,
+    projectDetailRoute,
     templatesRoute,
     agentRunsRoute,
     versionsRoute,

@@ -79,7 +79,11 @@ export function Shell({ children }: ShellProps) {
   // param OR sessionStorage (sticky across navigations within the iframe).
   const [embedded] = useState<boolean>(() => readEmbeddedFlag());
 
-  const onBrowseRoute = BROWSE_ROUTE_PREFIXES.some((p) => path.startsWith(p));
+  // Exact match — NOT startsWith — because `/projects` is a browse route
+  // (the project list) but `/projects/$slug` is a per-project IDE landing
+  // (round 13, SPS iframe-handoff target) that needs builder chrome.
+  // A prefix match would hide the LeftPanel chat on project detail pages.
+  const onBrowseRoute = BROWSE_ROUTE_PREFIXES.some((p) => path === p);
   const isBuilderMode = currentProjectId !== 'global' && !onBrowseRoute;
 
   // Keyboard shortcut: Cmd/Ctrl + \
