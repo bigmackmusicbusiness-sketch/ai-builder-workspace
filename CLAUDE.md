@@ -49,6 +49,12 @@
 - **Secrets server-side only.** The browser never sees a secret value.
 - **Repository pattern for DB access**; no `db.*` calls in routes.
 - **Every non-trivial file starts with a 1-line purpose comment.**
+- **Every new public-schema table MUST `ENABLE ROW LEVEL SECURITY`**
+  in the same migration that creates it. No policies needed by default
+  — the api uses service-role (bypasses RLS) and the SPA never queries
+  public tables directly. Migration 0017 enabled RLS on all
+  pre-existing tables in one sweep; that migration won't re-run to
+  catch a missed one.
 
 ## SOP rules — every commit
 

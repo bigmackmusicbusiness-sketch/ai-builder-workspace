@@ -251,6 +251,49 @@ const MIGRATIONS: Array<{ id: string; sql: string }> = [
         WHERE status IN ('queued', 'running') AND deleted_at IS NULL;
     `,
   },
+  {
+    // Enable Row Level Security on every public-schema table.
+    //
+    // Supabase's automated security scanner pings projects when RLS is
+    // disabled on public tables — even when the only legitimate access
+    // is via service role. The api uses SUPABASE_SERVICE_ROLE_KEY for
+    // every DB call (postgres-js, drizzle, getRawSql all go through it)
+    // and service-role bypasses RLS regardless. The SPA never queries
+    // public-schema tables directly — it only uses
+    // `supabase.auth.signInWithPassword()` against the `auth` schema.
+    // Confirmed by grep: zero `supabase.from(...)` calls in apps/web/src/.
+    //
+    // So the correct config is: RLS enabled on every table, NO policies.
+    // The anon role and the standalone `authenticated` role get default
+    // deny (RLS-enabled + no policy = no rows visible). The service
+    // role used by the api keeps full access (bypasses RLS by design).
+    //
+    // The migration uses a procedural FOR loop over `pg_tables` so we
+    // don't have to hand-maintain a hardcoded list — it covers every
+    // table that exists in public at the time it runs, including the
+    // `_migrations` tracking table itself. Idempotent:
+    // `ENABLE ROW LEVEL SECURITY` is a no-op when RLS is already on.
+    //
+    // Standing rule for future migrations: every new table created in
+    // public MUST enable RLS in the same migration that creates it.
+    // This migration won't re-run to catch a missed one. The runtime
+    // cost is zero (RLS check is essentially free for service role).
+    id: '0017_enable_rls_all_public_tables',
+    sql: `
+      DO $$
+      DECLARE
+        r RECORD;
+      BEGIN
+        FOR r IN
+          SELECT tablename FROM pg_tables
+          WHERE schemaname = 'public'
+            AND tablename NOT LIKE 'pg_%'
+        LOOP
+          EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', r.tablename);
+        END LOOP;
+      END $$;
+    `,
+  },
 ];
 
 /** Diagnostic snapshot from the most recent runMigrations() call.
