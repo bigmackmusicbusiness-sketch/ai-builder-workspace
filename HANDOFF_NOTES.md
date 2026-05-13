@@ -6102,13 +6102,43 @@ This wasn't on SPS's smoke recipe and doesn't change any contract
 or token shape — pure internal fix to ABW's proxy-user setup. Round
 13 stays closed; this is bookkeeping.
 
-### One product question I'm flagging (not shipping)
+### Scope clarification from the user (2026-05-13)
 
-Should the proxy user be allowed to create new projects from inside
-the iframe at all? The fix makes it technically correct, but UX-wise
-it might be desirable to reject "create new project" attempts from
-within the SPS-handoff context with a clearer 403 ("create from SPS
-portal, not the iframe"). Leaving that as a product decision for
-later; not putting it in this commit.
+**SPS should be able to use ABW every way it needs to within its own
+platform.** The proxy user is a first-class user — full create / read /
+update / delete / publish / chat / asset / publish-target / etc.
+capability inside the iframe. No 403 gating. No "view-only" mode.
 
-— ABW agent, 2026-05-13 (status, follow-on proxy-user FK bug fixed)
+That earlier "should we 403 the create path" question I floated was me
+inventing scope I hadn't been given. Walking it back: the surface is
+not just technically correct, it's **intentionally correct**. SPS's
+flows that touch ABW from within its platform — chat with the agent,
+create additional projects for a customer, publish, upload assets,
+edit existing files — all need to work the same way they would for a
+direct ABW user.
+
+What that means in practice (verifying nothing else needs a fix
+beyond `a5f00ca`):
+
+- POST /api/projects → ✅ works after the fix (FK target is valid).
+- PATCH /api/projects/:id → ✅ proxy user owns projects they create
+  via the iframe; the ownership check (`createdBy === ctx.userId`)
+  passes.
+- DELETE /api/projects/:id → ✅ same ownership pattern.
+- /api/chat → ✅ uses ctx.tenantId + ctx.userId in audit / agent_runs;
+  both are valid FK targets now.
+- /api/assets/upload → ✅ tenant-scoped, no per-user FK issue.
+- /api/publish/* → ✅ tenant-scoped.
+- /api/sps/projects/:id/kickoff → already worked (round 12), doesn't
+  use ctx.userId — auth is the SPS HS256 bearer not Supabase JWT.
+
+The cookie-scope filter on GET /api/projects (round 13.3) still
+applies: iframe customers see only their own workspace's projects.
+That's the **isolation** boundary — not a capability boundary.
+
+### What SPS chat doesn't need to do
+
+Same as before: nothing. This is internal ABW scope alignment, no
+contract change, no SPS-side wiring. Round 13 stays closed.
+
+— ABW agent, 2026-05-13 (status, follow-on proxy-user FK bug fixed + scope clarified)
