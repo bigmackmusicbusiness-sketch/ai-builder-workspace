@@ -29,14 +29,15 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { env } from '../config/env';
+import { getRawSql } from '../db/client';
 
 /** Email of the shared proxy user. Deterministic so the
  *  ensure-or-create flow can upsert idempotently. */
 const PROXY_EMAIL = 'sps-handoff-proxy@signalpoint.test';
 
-/** Cached proxy user id after the first ensure call. Resets on api
- *  restart, which is fine — the next call re-resolves it. */
-let cachedProxyUserId: string | null = null;
+/** Cached proxy user auth UID (auth.users.id) after the first ensure
+ *  call. Resets on api restart; the next call re-resolves it. */
+let cachedProxyAuthUid: string | null = null;
 
 /** Lazy Supabase admin client. Built with service-role key. */
 function adminClient() {
@@ -50,16 +51,36 @@ function adminClient() {
 
 /**
  * Find or create the proxy user that all SPS iframe handoffs sign in
- * as. Idempotent — calling repeatedly returns the same user_id. The
- * user is created without a password (magic-link-only) and tagged with
- * the system tenant in user_metadata so authMiddleware's tenant check
- * passes when the SPA hits the api.
+ * as. Idempotent — calling repeatedly returns the same auth UID. The
+ * proxy user has TWO halves wired up here:
  *
- * Safe to call from server boot or lazily on first handoff. Best-effort
- * caching avoids the listUsers round-trip on every handoff.
+ *   1. **auth.users** row (Supabase Admin API). Tagged with the
+ *      system tenant + member role in user_metadata so authMiddleware
+ *      accepts the JWT. No password — magic-link only.
+ *
+ *   2. **public.users** row (our own table, FK target for
+ *      projects.created_by, audit_events.actor, etc.). Created on
+ *      first ensure if missing. Its id gets stamped into the auth
+ *      user's `user_metadata.internal_user_id` so authMiddleware can
+ *      read it on every request without an extra DB lookup.
+ *
+ * The public.users row is the missing piece in v1 of this bridge
+ * (round 13.2). Without it, ctx.userId fell back to the auth UID,
+ * which violated the FK on every INSERT that referenced it (POST
+ * /api/projects → 500). Found round 13.3 when the user tried to
+ * create a project from inside the iframe.
+ *
+ * Migration-safe: if the proxy user already exists (created in
+ * round 13.2 before this fix) but is missing either the public.users
+ * row OR the internal_user_id metadata, this function lazily fixes
+ * it on the next call. No manual remediation script needed.
+ *
+ * Safe to call from server boot or lazily on first handoff. The
+ * cache only caches the auth UID; the rest is short-circuited by an
+ * idempotent SELECT-then-INSERT pattern.
  */
 export async function ensureSpsProxyUser(): Promise<string> {
-  if (cachedProxyUserId) return cachedProxyUserId;
+  if (cachedProxyAuthUid) return cachedProxyAuthUid;
 
   const systemTenantId = process.env['SPS_SYSTEM_TENANT_ID'];
   if (!systemTenantId) {
@@ -71,11 +92,11 @@ export async function ensureSpsProxyUser(): Promise<string> {
 
   const supabase = adminClient();
 
-  // Look up the proxy user. listUsers is paginated; we filter the
-  // first page for the email. The proxy user is the only one with
-  // this address, so it lands on page 1 of the first 1000 users
-  // unless the user table has grown past that — at which point we
-  // bump perPage.
+  // ── 1. Find or create the auth.users row ─────────────────────────
+  // listUsers is paginated; we filter the first page for the email.
+  // The proxy user is the only one with this address, so it lands on
+  // page 1 of the first 1000 users unless the user table has grown
+  // past that — at which point we'd bump perPage.
   const { data: list, error: listErr } = await supabase.auth.admin.listUsers({
     page:    1,
     perPage: 1000,
@@ -83,30 +104,101 @@ export async function ensureSpsProxyUser(): Promise<string> {
   if (listErr) {
     throw new Error(`Supabase admin listUsers failed: ${listErr.message}`);
   }
-  const existing = list.users.find((u) => u.email === PROXY_EMAIL);
-  if (existing) {
-    cachedProxyUserId = existing.id;
-    return existing.id;
+  let authUser = list.users.find((u) => u.email === PROXY_EMAIL);
+  if (!authUser) {
+    const { data: created, error: createErr } = await supabase.auth.admin.createUser({
+      email:          PROXY_EMAIL,
+      email_confirm:  true,
+      user_metadata: {
+        tenant_id: systemTenantId,
+        role:      'member',
+        kind:      'sps-handoff-proxy',
+      },
+    });
+    if (createErr || !created?.user) {
+      throw new Error(
+        `Supabase admin createUser failed for proxy: ${createErr?.message ?? 'no user returned'}`,
+      );
+    }
+    authUser = created.user;
   }
 
-  // Not found — create it. No password (magic-link only). Tagged with
-  // the system tenant + member role so authMiddleware accepts the JWT.
-  const { data: created, error: createErr } = await supabase.auth.admin.createUser({
-    email:          PROXY_EMAIL,
-    email_confirm:  true,
-    user_metadata: {
-      tenant_id: systemTenantId,
-      role:      'member',
-      kind:      'sps-handoff-proxy',
-    },
-  });
-  if (createErr || !created?.user) {
-    throw new Error(
-      `Supabase admin createUser failed for proxy: ${createErr?.message ?? 'no user returned'}`,
-    );
+  // ── 2. Find or create the public.users row ───────────────────────
+  // FK target for projects.created_by, audit_events.actor, etc. The
+  // existing user_metadata.internal_user_id (if any) is the source
+  // of truth — we trust the stamp and verify the row still exists;
+  // re-create it only if missing.
+  const sql = getRawSql();
+  const stampedInternalId =
+    (authUser.user_metadata as Record<string, unknown> | null | undefined)?.['internal_user_id'];
+  let internalUserId: string | null = null;
+
+  // First try by stamped id (cheapest path — one indexed PK lookup).
+  if (typeof stampedInternalId === 'string') {
+    const rows = await sql.unsafe(
+      `SELECT id FROM users WHERE id = $1 LIMIT 1`,
+      [stampedInternalId],
+    ) as Array<{ id: string }>;
+    if (rows[0]) internalUserId = rows[0].id;
   }
-  cachedProxyUserId = created.user.id;
-  return created.user.id;
+
+  // Fall back to a lookup by supabase_uid (existing row, never stamped).
+  if (!internalUserId) {
+    const rows = await sql.unsafe(
+      `SELECT id FROM users WHERE supabase_uid = $1 LIMIT 1`,
+      [authUser.id],
+    ) as Array<{ id: string }>;
+    if (rows[0]) internalUserId = rows[0].id;
+  }
+
+  // Still nothing — insert the row. Race-safe via ON CONFLICT on the
+  // supabase_uid uniqueness index: a parallel ensure call that wins
+  // the insert leaves the loser with a no-op (RETURNING returns the
+  // winner's row).
+  if (!internalUserId) {
+    const rows = await sql.unsafe(
+      `INSERT INTO users (tenant_id, supabase_uid, email, name)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (supabase_uid) DO UPDATE
+         SET email = EXCLUDED.email
+       RETURNING id`,
+      [systemTenantId, authUser.id, PROXY_EMAIL, 'SPS Handoff Proxy'],
+    ) as Array<{ id: string }>;
+    if (!rows[0]) {
+      throw new Error('Failed to insert/upsert proxy user public.users row');
+    }
+    internalUserId = rows[0].id;
+  }
+
+  // ── 3. Stamp internal_user_id into user_metadata if missing ──────
+  // authMiddleware reads it to set ctx.userId without a DB hit per
+  // request. One updateUserById on first ensure, then noop forever.
+  if (stampedInternalId !== internalUserId) {
+    const existingMeta = (authUser.user_metadata as Record<string, unknown> | null | undefined) ?? {};
+    const { error: updateErr } = await supabase.auth.admin.updateUserById(authUser.id, {
+      user_metadata: {
+        ...existingMeta,
+        tenant_id:        existingMeta['tenant_id'] ?? systemTenantId,
+        role:             existingMeta['role']      ?? 'member',
+        kind:             existingMeta['kind']      ?? 'sps-handoff-proxy',
+        internal_user_id: internalUserId,
+      },
+    });
+    if (updateErr) {
+      // Non-fatal — the JWT minted for THIS handoff still works
+      // (authMiddleware falls back to payload.sub if metadata is
+      // missing), but subsequent handoffs would re-do this update.
+      // Log loudly so we notice.
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[spsAuthBridge] Failed to stamp internal_user_id on proxy user metadata: ${updateErr.message}. ` +
+        `JWT will carry stale metadata until next ensure call.`,
+      );
+    }
+  }
+
+  cachedProxyAuthUid = authUser.id;
+  return authUser.id;
 }
 
 /**
