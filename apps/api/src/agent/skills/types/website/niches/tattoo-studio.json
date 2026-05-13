@@ -1,7 +1,7 @@
 {
   "niche": "tattoo-studio",
   "label": "Tattoo Studio",
-  "triggers": ["tattoo studio", "tattoo shop", "tattoo artist", "custom tattoo", "flash tattoo", "walk-in tattoo", "fine line tattoo", "traditional tattoo", "blackwork", "neo traditional", "japanese tattoo", "guest artist", "tattoo consultation"],
+  "triggers": ["tattoo", "tattoo studio", "tattoo shop", "tattoo artist", "custom tattoo", "flash tattoo", "walk-in tattoo", "fine line tattoo", "traditional tattoo", "blackwork", "neo traditional", "japanese tattoo", "guest artist", "tattoo consultation"],
   "default_sitemap": [
     { "slug": "index",    "role": "hero+artist-roster+book" },
     { "slug": "team",     "role": "resident-artists+styles" },

@@ -1,7 +1,7 @@
 {
   "niche": "climbing-gym",
   "label": "Climbing Gym",
-  "triggers": ["climbing gym", "bouldering gym", "rock climbing", "top rope", "lead climbing", "indoor climbing", "auto belay", "v-grade", "boulder problems", "climbing membership", "youth climbing team", "climbing day pass", "belay class"],
+  "triggers": ["climbing", "bouldering", "climbing gym", "bouldering gym", "rock climbing", "top rope", "lead climbing", "indoor climbing", "auto belay", "v-grade", "boulder problems", "climbing membership", "youth climbing team", "climbing day pass", "belay class"],
   "default_sitemap": [
     { "slug": "index",    "role": "hero+route-set+day-pass-cta" },
     { "slug": "programs", "role": "intro+belay-cert+youth-team+clinics" },

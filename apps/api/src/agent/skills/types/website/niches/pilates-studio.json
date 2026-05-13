@@ -2,6 +2,7 @@
   "niche": "pilates-studio",
   "label": "Pilates Studio",
   "triggers": [
+    "pilates",
     "pilates studio",
     "reformer pilates",
     "mat pilates",

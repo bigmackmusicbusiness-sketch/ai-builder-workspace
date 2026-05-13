@@ -2,6 +2,7 @@
   "niche": "yoga-studio",
   "label": "Yoga Studio",
   "triggers": [
+    "yoga",
     "yoga studio",
     "vinyasa",
     "ashtanga",
@@ -15,7 +16,8 @@
     "kundalini",
     "yoga school",
     "ytt",
-    "drop-in yoga"
+    "drop-in yoga",
+    "beginners welcome"
   ],
   "default_sitemap": [
     {

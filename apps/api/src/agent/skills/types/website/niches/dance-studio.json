@@ -2,6 +2,8 @@
   "niche": "dance-studio",
   "label": "Dance Studio",
   "triggers": [
+    "dancing",
+    "dance lessons",
     "dance studio",
     "ballet classes",
     "jazz dance",

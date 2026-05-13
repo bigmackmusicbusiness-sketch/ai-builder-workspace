@@ -15,6 +15,14 @@ been given. Score by overlap. Pick the highest-scoring niche if score ≥ 2
 trigger words. Below that, set `niche` to `"generic"` and use the default
 sitemap from the type SOP.
 
+When scoring overlap, count a trigger as matched if any whole-word substring
+of length ≥ 4 from the trigger appears as a whole word in the brief. For
+example, a brief containing `yoga` matches the trigger `yoga studio`
+because `yoga` appears as a whole word in the brief. A brief containing
+`vinyasa` matches the trigger `vinyasa` outright. Whole-word matches only —
+don't count `art` inside `smartphone`. Single-letter and short-word matches
+(`a`, `the`, `of`, etc.) don't count.
+
 ## Output schema
 
 Your `propose_plan` call MUST validate against this Zod-shaped schema:

@@ -2,6 +2,7 @@
   "niche": "martial-arts-school",
   "label": "Martial Arts School",
   "triggers": [
+    "martial arts",
     "karate",
     "taekwondo",
     "kung fu",
