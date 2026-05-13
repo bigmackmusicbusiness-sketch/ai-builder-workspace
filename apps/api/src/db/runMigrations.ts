@@ -294,6 +294,53 @@ const MIGRATIONS: Array<{ id: string; sql: string }> = [
       END $$;
     `,
   },
+  {
+    // Round 14 — chat_messages table. Server-side message log for
+    // projects driven from outside the IDE iframe (specifically SPS's
+    // autonomous build-driver agent). Standalone-IDE projects never
+    // write here.
+    //
+    // Drizzle schema lives at packages/db/schema/projects.ts; this is
+    // the boot-time apply.
+    //
+    // RLS: enabled with no policies (default deny). The api uses
+    // service-role for all reads/writes — bypasses RLS. Matches the
+    // standing rule from 0017.
+    id: '0018_chat_messages',
+    sql: `
+      DO $$ BEGIN
+        CREATE TYPE chat_role AS ENUM ('user', 'assistant', 'tool', 'system');
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+        project_id    UUID         NOT NULL REFERENCES projects(id),
+        tenant_id     UUID         NOT NULL REFERENCES tenants(id),
+        role          chat_role    NOT NULL,
+        content       TEXT         NOT NULL,
+        tool_calls    JSONB,
+        tool_call_id  TEXT,
+        metadata      JSONB        NOT NULL DEFAULT '{}'::jsonb,
+        agent_run_id  UUID,
+        created_at    TIMESTAMPTZ  NOT NULL DEFAULT now()
+      );
+
+      -- The "GET messages since cursor" query on the SPS driver poll
+      -- loop hits this every 10s per active build. Cover the common
+      -- (project_id, created_at) range scan.
+      CREATE INDEX IF NOT EXISTS chat_messages_project_created_idx
+        ON chat_messages (project_id, created_at DESC);
+
+      -- The "what's the current agent run on this project" lookup the
+      -- 409 concurrency guard on POST uses. Filtered for non-null
+      -- runs so the index stays small.
+      CREATE INDEX IF NOT EXISTS chat_messages_run_idx
+        ON chat_messages (agent_run_id)
+        WHERE agent_run_id IS NOT NULL;
+
+      ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+    `,
+  },
 ];
 
 /** Diagnostic snapshot from the most recent runMigrations() call.

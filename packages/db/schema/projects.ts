@@ -153,6 +153,53 @@ export const kickoffStatusEnum = pgEnum('kickoff_status', [
   'queued', 'running', 'completed', 'failed', 'cancelled',
 ]);
 
+// ── Chat messages (round 14 — SPS build-driver) ────────────────────
+//
+// Multi-turn conversation log for projects driven from outside the
+// IDE iframe — specifically SPS's autonomous build-driver agent which
+// POSTs messages via /api/sps/projects/:id/chat and polls the GET
+// version for the agent's responses + done signal.
+//
+// Why a new table (and not reuse the IDE's existing chat which is
+// stateless on the server): the SPA-driven /api/chat path holds the
+// conversation in zustand on the client and re-sends the full thread
+// each turn. There's no server-side log of human-driven chats — by
+// design, to keep the IDE simple. The build-driver path doesn't have
+// a client; it polls. So it needs server-side persistence.
+//
+// Scope: rows are only inserted for projects whose chat is being
+// driven via the round-14 SPS endpoints OR by the kickoff runner.
+// Standalone-IDE projects (no SPS workspace, no driver) never write
+// here — the table stays empty for them. The IDE doesn't read from
+// it on standalone projects either.
+//
+// Role enum mirrors `ChatMessage.role` in @abw/providers.
+export const chatRoleEnum = pgEnum('chat_role', [
+  'user', 'assistant', 'tool', 'system',
+]);
+
+export const chatMessages = pgTable('chat_messages', {
+  id:           uuid('id').primaryKey().defaultRandom(),
+  projectId:    uuid('project_id').notNull().references(() => projects.id),
+  tenantId:     uuid('tenant_id').notNull().references(() => tenants.id),
+  role:         chatRoleEnum('role').notNull(),
+  content:      text('content').notNull(),
+  /** OpenAI-style tool_calls array on assistant turns. JSON blob —
+   *  shape matches the chat-completion API's tool_calls field. */
+  toolCalls:    jsonb('tool_calls'),
+  /** Set on `role='tool'` messages: which tool_call_id this is the
+   *  response to. Mirrors the chat-completion API's `tool_call_id`. */
+  toolCallId:   text('tool_call_id'),
+  /** Free-form metadata: { source, onboarding_flow_id, qc_artifact_id }
+   *  on user messages from SPS; empty object on agent responses. */
+  metadata:     jsonb('metadata').notNull().default({}),
+  /** Set when the message is part of an agent run (assistant + tool
+   *  messages produced by the chat runner). Lets the GET endpoint
+   *  group messages by run for the SPS driver. */
+  agentRunId:   uuid('agent_run_id'),
+  createdAt:    timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const projectKickoffMessages = pgTable('project_kickoff_messages', {
   id:                 uuid('id').primaryKey().defaultRandom(),
   projectId:          uuid('project_id').notNull().references(() => projects.id),

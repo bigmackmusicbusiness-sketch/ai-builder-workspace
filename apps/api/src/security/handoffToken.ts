@@ -44,12 +44,20 @@ const MAX_TOKEN_LIFETIME_SEC = 5 * 60;
  *    project's chat with a one-shot kickoff message from SPS's
  *    auto-onboarding pipeline. Eager mode (Option B): the kickoff
  *    endpoint fires the agent run server-side so the site is already
- *    built when the customer first opens the IDE. */
+ *    built when the customer first opens the IDE.
+ *  - `project-chat`: SPS → ABW (round 14); drives a multi-turn
+ *    conversation with ABW's agent from SPS's autonomous
+ *    build-driver. POST appends a user message and (default) fires
+ *    the agent. GET polls messages since a cursor + agent status +
+ *    file count so the driver can detect "build complete." Replaces
+ *    the silent-fail mode of the kickoff endpoint with an observable
+ *    chat loop. */
 export type HandoffScope =
   | 'project-create'
   | 'project-handoff'
   | 'transfer-ownership'
-  | 'project-kickoff';
+  | 'project-kickoff'
+  | 'project-chat';
 
 /** Exported scope constants for callers + parallel-direction agreement
  *  with SPS. Single source of truth. */
@@ -57,6 +65,7 @@ export const PROJECT_CREATE_SCOPE     = 'project-create'    as const;
 export const PROJECT_HANDOFF_SCOPE    = 'project-handoff'   as const;
 export const TRANSFER_OWNERSHIP_SCOPE = 'transfer-ownership' as const;
 export const PROJECT_KICKOFF_SCOPE    = 'project-kickoff'   as const;
+export const PROJECT_CHAT_SCOPE       = 'project-chat'      as const;
 
 /** Token payload shape. Required fields are enforced by verifyHandoffToken. */
 export interface HandoffPayload {

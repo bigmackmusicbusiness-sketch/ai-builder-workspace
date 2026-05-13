@@ -38,6 +38,7 @@ import {
   type HandoffPayload,
 } from '../security/handoffToken';
 import { runEagerKickoff } from '../agent/kickoffRunner';
+import { runChatTurn } from '../agent/chatRunner';
 import { mintSpsHandoffMagicLink } from '../security/spsAuthBridge';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -742,6 +743,346 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
         kickoff_id: kickoffId,
         project_id: proj.id,
         status:     'running',
+      });
+    },
+  );
+
+  /**
+   * POST /api/sps/projects/:projectId/chat
+   *
+   * Round 14 — SPS's autonomous build-driver agent posts a user
+   * message into the project's chat. By default (`trigger_agent: true`)
+   * the ABW agent runs synchronously inside this request, persisting
+   * its assistant + tool messages back to `chat_messages` so the
+   * driver's GET poll sees them. The 200 response carries the new
+   * `message_id` + the `agent_run_id` (or null when trigger_agent=false).
+   *
+   * Auth: HS256 `project-chat` scope. Token must carry
+   *   sps_workspace_id + project_id (path-bound). ≤ 5min lifetime.
+   *
+   * Body:
+   *   {
+   *     role:    "user",                       // required, must be "user"
+   *     content: "<text, ≤ 16KB>",
+   *     trigger_agent: true                    // optional, default true
+   *   }
+   *
+   * 200:  { ok, message_id, appended_at, agent_run_id | null }
+   * 400:  bad_body / message_too_large / unsupported_role
+   * 401:  invalid_token (signature, expiry, audience, issuer, scope)
+   * 403:  wrong_project / workspace_mismatch
+   * 404:  project_not_found
+   * 409:  agent_run_in_progress (with current_run_id + started_at)
+   * 500:  internal_error
+   */
+  app.post<{
+    Params: { projectId: string };
+    Body:   { role?: unknown; content?: unknown; trigger_agent?: unknown };
+  }>(
+    '/api/sps/projects/:projectId/chat',
+    async (req, reply) => {
+      const projectIdParam = (req.params as { projectId?: string }).projectId;
+      if (!projectIdParam) {
+        return reply.status(400).send({ ok: false, error: 'missing_project_id_path_param' });
+      }
+
+      const token = bearerFrom(req.headers.authorization);
+      if (!token) return reply.status(401).send({ ok: false, error: 'missing_bearer_token' });
+
+      let payload: HandoffPayload;
+      try {
+        payload = verifyHandoffToken(token, 'project-chat');
+      } catch (err) {
+        const reason = err instanceof HandoffTokenError ? err.reason : 'verification_failed';
+        return reply.status(401).send({ ok: false, error: 'invalid_token', reason });
+      }
+
+      if (!payload.project_id) {
+        return reply.status(400).send({ ok: false, error: 'missing_project_id_in_token' });
+      }
+      if (payload.project_id.toLowerCase() !== projectIdParam.toLowerCase()) {
+        return reply.status(403).send({ ok: false, error: 'wrong_project' });
+      }
+
+      // Body validation. Role must be "user" (assistant/tool/system
+      // messages come from the agent runner, not from external posts).
+      const bodyParse = z.object({
+        role:          z.literal('user').optional().default('user'),
+        content:       z.string().min(1).max(16_384),
+        trigger_agent: z.boolean().optional().default(true),
+      }).safeParse(req.body);
+      if (!bodyParse.success) {
+        return reply.status(400).send({
+          ok:     false,
+          error:  'bad_body',
+          issues: bodyParse.error.format(),
+        });
+      }
+      const body = bodyParse.data;
+
+      // Look up the project + verify workspace claim. Same defense as
+      // the kickoff endpoint.
+      const sql = getRawSql();
+      let proj: { id: string; tenant_id: string; sps_workspace_id: string | null } | undefined;
+      try {
+        const rows = await sql.unsafe(
+          `SELECT id, tenant_id, sps_workspace_id
+             FROM projects
+            WHERE id = $1 AND deleted_at IS NULL
+            LIMIT 1`,
+          [projectIdParam],
+        ) as Array<{ id: string; tenant_id: string; sps_workspace_id: string | null }>;
+        proj = rows[0];
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(`[chat] project lookup failed: ${err instanceof Error ? err.message : String(err)}`);
+        return reply.status(500).send({ ok: false, error: 'project_lookup_failed' });
+      }
+      if (!proj) return reply.status(404).send({ ok: false, error: 'project_not_found' });
+      if (proj.sps_workspace_id !== payload.sps_workspace_id) {
+        return reply.status(403).send({ ok: false, error: 'workspace_mismatch' });
+      }
+
+      // 409 concurrency guard: if there's a running agent_run on this
+      // project, reject. SPS's driver polls; it'll see agent_status
+      // = 'idle' before retrying.
+      if (body.trigger_agent) {
+        try {
+          const active = await sql.unsafe(
+            `SELECT id, started_at FROM agent_runs
+              WHERE project_id = $1 AND status = 'running'
+              LIMIT 1`,
+            [proj.id],
+          ) as Array<{ id: string; started_at: string }>;
+          if (active.length > 0) {
+            return reply.status(409).send({
+              ok:                     false,
+              error:                  'agent_run_in_progress',
+              current_run_id:         active[0]!.id,
+              current_run_started_at: active[0]!.started_at,
+            });
+          }
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn(`[chat] active-run lookup failed (non-fatal, proceeding): ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+
+      // Persist the user message.
+      let messageId: string;
+      let appendedAt: string;
+      try {
+        const inserted = await sql.unsafe(
+          `INSERT INTO chat_messages (project_id, tenant_id, role, content, metadata)
+           VALUES ($1, $2, 'user', $3, '{}'::jsonb)
+           RETURNING id, created_at`,
+          [proj.id, proj.tenant_id, body.content],
+        ) as Array<{ id: string; created_at: string }>;
+        messageId = inserted[0]!.id;
+        appendedAt = inserted[0]!.created_at;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        // eslint-disable-next-line no-console
+        console.error(`[chat] insert user message failed: ${msg}`);
+        return reply.status(500).send({ ok: false, error: 'insert_failed' });
+      }
+
+      // Fire the agent if requested. Runs synchronously inside this
+      // request so we can include the agent_run_id in the response.
+      // The runner persists its own assistant + tool messages to
+      // chat_messages so the SPS driver's GET poll sees them.
+      let agentRunId: string | null = null;
+      if (body.trigger_agent) {
+        try {
+          const result = await runChatTurn({
+            projectId:        proj.id,
+            newUserMessageId: messageId,
+          });
+          agentRunId = result.agentRunId;
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error(`[chat] runChatTurn threw (will return 200 with null run id): ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+
+      // Audit. Content hash only — chat content may carry customer info.
+      await writeAuditEvent({
+        tenantId: proj.tenant_id,
+        action:   'sps.project.chat',
+        target:   'project',
+        targetId: proj.id,
+        env:      'production',
+        after: {
+          message_id:       messageId,
+          sps_workspace_id: payload.sps_workspace_id,
+          content_bytes:    body.content.length,
+          trigger_agent:    body.trigger_agent,
+          agent_run_id:     agentRunId,
+        },
+      }).catch(() => { /* best-effort */ });
+
+      return reply.send({
+        ok:           true,
+        message_id:   messageId,
+        appended_at:  appendedAt,
+        agent_run_id: agentRunId,
+      });
+    },
+  );
+
+  /**
+   * GET /api/sps/projects/:projectId/chat?since=<iso8601>&limit=50
+   *
+   * Round 14 — SPS's build-driver poll endpoint. Returns chat
+   * messages newer than the `since` cursor + current agent_status +
+   * files_present count so the driver can detect "build complete."
+   *
+   * Auth: same `project-chat` scope as POST.
+   *
+   * Query params:
+   *   since:  ISO8601 timestamp (optional; default = epoch zero = all messages)
+   *   limit:  integer 1..200 (optional; default 50)
+   *
+   * 200:  { messages: [...], agent_status, current_run_id, files_present }
+   * 400/401/403/404: same shapes as POST
+   * 500:  internal_error
+   */
+  app.get<{
+    Params:      { projectId: string };
+    Querystring: { since?: string; limit?: string };
+  }>(
+    '/api/sps/projects/:projectId/chat',
+    async (req, reply) => {
+      const projectIdParam = (req.params as { projectId?: string }).projectId;
+      if (!projectIdParam) {
+        return reply.status(400).send({ ok: false, error: 'missing_project_id_path_param' });
+      }
+
+      const token = bearerFrom(req.headers.authorization);
+      if (!token) return reply.status(401).send({ ok: false, error: 'missing_bearer_token' });
+
+      let payload: HandoffPayload;
+      try {
+        payload = verifyHandoffToken(token, 'project-chat');
+      } catch (err) {
+        const reason = err instanceof HandoffTokenError ? err.reason : 'verification_failed';
+        return reply.status(401).send({ ok: false, error: 'invalid_token', reason });
+      }
+
+      if (!payload.project_id) {
+        return reply.status(400).send({ ok: false, error: 'missing_project_id_in_token' });
+      }
+      if (payload.project_id.toLowerCase() !== projectIdParam.toLowerCase()) {
+        return reply.status(403).send({ ok: false, error: 'wrong_project' });
+      }
+
+      // Project lookup + workspace defense.
+      const sql = getRawSql();
+      let proj: { id: string; sps_workspace_id: string | null } | undefined;
+      try {
+        const rows = await sql.unsafe(
+          `SELECT id, sps_workspace_id FROM projects
+            WHERE id = $1 AND deleted_at IS NULL
+            LIMIT 1`,
+          [projectIdParam],
+        ) as Array<{ id: string; sps_workspace_id: string | null }>;
+        proj = rows[0];
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(`[chat-get] project lookup failed: ${err instanceof Error ? err.message : String(err)}`);
+        return reply.status(500).send({ ok: false, error: 'project_lookup_failed' });
+      }
+      if (!proj) return reply.status(404).send({ ok: false, error: 'project_not_found' });
+      if (proj.sps_workspace_id !== payload.sps_workspace_id) {
+        return reply.status(403).send({ ok: false, error: 'workspace_mismatch' });
+      }
+
+      // Parse query. since defaults to epoch zero, limit defaults to
+      // 50, capped at 200.
+      const since = req.query.since ?? '1970-01-01T00:00:00Z';
+      const limitRaw = Number.parseInt(req.query.limit ?? '50', 10);
+      const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 200) : 50;
+
+      // Read messages since cursor.
+      let messages: Array<{
+        id:           string;
+        role:         string;
+        content:      string;
+        tool_calls:   unknown;
+        tool_call_id: string | null;
+        agent_run_id: string | null;
+        created_at:   string;
+      }> = [];
+      try {
+        messages = await sql.unsafe(
+          `SELECT id, role, content, tool_calls, tool_call_id, agent_run_id, created_at
+             FROM chat_messages
+            WHERE project_id = $1 AND created_at > $2::timestamptz
+            ORDER BY created_at ASC
+            LIMIT $3`,
+          [proj.id, since, limit],
+        ) as typeof messages;
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(`[chat-get] message read failed: ${err instanceof Error ? err.message : String(err)}`);
+        return reply.status(500).send({ ok: false, error: 'message_read_failed' });
+      }
+
+      // Agent status: most recent agent_run on this project.
+      let agentStatus: string = 'idle';
+      let currentRunId: string | null = null;
+      try {
+        const runRows = await sql.unsafe(
+          `SELECT id, status FROM agent_runs
+            WHERE project_id = $1
+            ORDER BY started_at DESC NULLS LAST, created_at DESC
+            LIMIT 1`,
+          [proj.id],
+        ) as Array<{ id: string; status: string }>;
+        if (runRows[0]) {
+          // Map agent_runs.status enum to the simple states SPS expects.
+          const s = runRows[0].status;
+          if (s === 'running') { agentStatus = 'running'; currentRunId = runRows[0].id; }
+          else if (s === 'awaiting_approval' || s === 'blocked' || s === 'paused') {
+            agentStatus = 'awaiting_input'; currentRunId = runRows[0].id;
+          }
+          else if (s === 'failed' || s === 'killed') { agentStatus = 'failed'; }
+          else { agentStatus = 'idle'; }
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn(`[chat-get] agent_runs lookup failed (non-fatal, defaulting idle): ${err instanceof Error ? err.message : String(err)}`);
+      }
+
+      // files_present: count of files in the project's workspace files
+      // table. The build-driver uses this as a cheap "did the agent
+      // actually write anything yet" probe.
+      let filesPresent = 0;
+      try {
+        const fileRows = await sql.unsafe(
+          `SELECT COUNT(*)::int AS n FROM files
+            WHERE project_id = $1 AND (deleted_at IS NULL OR deleted_at IS NULL)`,
+          [proj.id],
+        ) as Array<{ n: number }>;
+        filesPresent = fileRows[0]?.n ?? 0;
+      } catch {
+        filesPresent = 0;
+      }
+
+      return reply.send({
+        ok:              true,
+        messages:        messages.map((m) => ({
+          id:           m.id,
+          role:         m.role,
+          content:      m.content,
+          tool_calls:   m.tool_calls,
+          tool_call_id: m.tool_call_id,
+          agent_run_id: m.agent_run_id,
+          created_at:   m.created_at,
+        })),
+        agent_status:    agentStatus,
+        current_run_id:  currentRunId,
+        files_present:   filesPresent,
       });
     },
   );
