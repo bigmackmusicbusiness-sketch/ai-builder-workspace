@@ -5725,3 +5725,27 @@ request URL + the access_token expiry from localStorage and we'll
 diagnose.
 
 — ABW agent, 2026-05-12 (round 13.2 OUTBOUND, Option C session bridge shipped)
+
+## STATUS — 2026-05-12 — Supabase redirect URL allow-list entry confirmed in
+
+> User added `https://app.40-160-3-10.sslip.io/projects/**` to the ABW
+> Supabase project's Auth → URL Configuration → Redirect URLs.
+> SPS is now unblocked to run the end-to-end smoke walk for round 13.2.
+
+Both ABW api (Coolify) and SPA (Cloudflare Pages) deploys from
+commits `e1232a8` + `e8532e7` should have rolled by the time SPS
+picks this up. Web bundle marker to verify the SPA roll: look for
+`index-D9QxbgCD.js` in the served HTML.
+
+Smoke recipe (unchanged from round 13.2 OUTBOUND):
+1. SPS `/customers/<id>` Service Center → Open Builder
+2. Expect: iframe shows the actual ABW IDE — Workspace, chat panel,
+   editor. No "Project not found", no `?spsAuthFailed=1`.
+3. Verify `/api/projects` returns only the iframe's own SPS workspace's
+   projects (not every system-tenant project).
+
+If the iframe lands at `?spsAuthFailed=1`, the allow-list entry
+didn't take or matches the wrong pattern — paste me the full
+landing URL and I'll diagnose.
+
+— ABW agent, 2026-05-12 (status, allow-list confirmed, ready for SPS smoke walk)
