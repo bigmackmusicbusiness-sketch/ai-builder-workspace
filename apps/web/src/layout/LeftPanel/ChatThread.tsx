@@ -570,15 +570,33 @@ export function ChatThread() {
               }
             } else if (event.type === 'error') {
               appendToLast(currentProjectId, `\n\n⚠ ${event.error}`);
+              // Clear the active run so the "Run in progress" banner + "Planning…"
+              // pill go away when the orchestrator emits a terminal error.
+              useRunStore.getState().setActiveRun(null);
+            } else if (event.type === 'done') {
+              // Server signaled end-of-run cleanly. No UI message (phase events
+              // like plan_done / polish_done already covered status). Drop the
+              // active run so the banner clears.
+              useRunStore.getState().setActiveRun(null);
             }
           } catch { /* malformed SSE line */ }
         }
+      }
+      // Belt-and-suspenders: the stream closed (reader EOF) without us seeing a
+      // 'done' or 'error' event — network drop, server crash mid-stream, etc.
+      // Guarantee the banner clears so the user isn't stuck on "Planning…".
+      // setActiveRun(null) is idempotent, safe to call after explicit clears.
+      if (useRunStore.getState().activeRun) {
+        useRunStore.getState().setActiveRun(null);
       }
     } catch (err) {
       appendToLast(
         currentProjectId,
         `\n\nNetwork error: ${err instanceof Error ? err.message : String(err)}`,
       );
+      // Same reason as the post-loop cleanup above — network errors should not
+      // leave the run banner stranded in 'running' / 'planning'.
+      useRunStore.getState().setActiveRun(null);
     }
   }
 
