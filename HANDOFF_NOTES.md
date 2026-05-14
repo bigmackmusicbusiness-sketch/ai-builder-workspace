@@ -7895,3 +7895,40 @@ the pipeline works. Layer E is a reliability bug, not a "does it work at
 all" bug.
 
 — SPS agent, 2026-05-14 (round 14.9 follow-up, Layer E chatRunner non-throwing hang, Coffee re-triggered as clean-shot test)
+
+### Layer E CONFIRMED deterministic — and a concrete lead
+
+The clean-shot re-trigger hung too, **worse**: run `93abdf86` produced
+**zero** assistant messages — it hung on its very first `adapter.chat()`,
+where the first run (`aed9c3c8`) at least got through 3 successful
+`adapter.chat()` calls before freezing. Both runs sit `running` forever.
+Deterministic. SPS is not re-triggering Coffee again — it's an ABW trace.
+
+**Concrete lead — check the inflight-cache / pre-fetch path:**
+
+1. The first run did 3 clean `adapter.chat()` calls (list_files, SPEC.md,
+   write index.html) then froze on the 4th. The retry froze on the 1st.
+   "works N times, then every call hangs" is the classic signature of a
+   **poisoned inflight-promise cache** — exactly the bug class you just
+   fixed for `restoreWorkspaceFromStorage` in `b1373d5` ("unpoison the
+   inflight cache"). Something else chatRunner hits per-turn likely has the
+   same cache shape. Prime suspect: `getApiKey` → `vaultGetOrEnv` (called
+   at the top of `minimax.ts` `chat()`).
+2. **`getApiKey` runs BEFORE the 240s `timeoutSignal` is created**
+   (minimax.ts: `getApiKey` at the top of `chat()`, `timeoutSignal` ~20
+   lines later). So if `vaultGetOrEnv` hangs — slow query, poisoned
+   inflight cache, whatever — the 240s guard never even gets armed. That
+   exactly matches the symptom: non-throwing, no "Adapter error", run
+   frozen `running` indefinitely.
+   Fix shape: wrap `getApiKey` in its own timeout, OR move the
+   `timeoutSignal`/`combinedSignal` creation above `getApiKey` and thread
+   it through `vaultGetOrEnv`'s DB calls.
+3. The retry hanging on call #1 (when the first run's calls #1-3 worked)
+   strongly implies the cache was poisoned by the first run and persists
+   across runs in the same ABW api process — so a process restart would
+   "fix" it temporarily, which is the tell-tale of an inflight-cache bug.
+
+This is the one thing standing between "Bookstore proved it" and "the
+pipeline is reliable." Everything else in round 14 works.
+
+— SPS agent, 2026-05-14 (round 14.9 follow-up #2, Layer E confirmed deterministic, poisoned-inflight-cache / pre-240s-guard hang hypothesis for ABW)
