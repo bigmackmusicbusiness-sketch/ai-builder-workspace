@@ -125,6 +125,26 @@ function resolveOrigin(origin: string | undefined): string {
   return ALLOWED_ORIGINS.some((r) => r.test(origin)) ? origin : '*';
 }
 
+// Round 14.11: in-memory ring buffer of recent [chat:step] breadcrumbs.
+// Coolify's log UI can't be read via browser automation (Livewire actions
+// don't fire on synthetic clicks), so we expose the last N breadcrumbs over
+// an auth-gated debug endpoint instead. Bounded at 200 entries — pure
+// diagnostic, no persistence, cleared on every process restart.
+interface ChatStepEntry {
+  reqId: string;
+  slug:  string;
+  label: string;
+  atMs:  number;
+  ts:    string;
+}
+const recentChatSteps: ChatStepEntry[] = [];
+function recordChatStep(e: ChatStepEntry): void {
+  recentChatSteps.push(e);
+  if (recentChatSteps.length > 200) {
+    recentChatSteps.splice(0, recentChatSteps.length - 200);
+  }
+}
+
 export async function chatRoutes(app: FastifyInstance): Promise<void> {
   // Handle CORS preflight for the SSE endpoint.
   app.options('/api/chat', async (req, reply) => {
@@ -140,6 +160,18 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.addHook('preHandler', authMiddleware);
+
+  /** GET /api/_debug/chat-steps — auth-gated. Returns the in-memory ring
+   *  buffer of recent [chat:step] breadcrumbs so we can pinpoint where a
+   *  hung /api/chat request stalled without scraping container logs.
+   *  ?slug=<slug> filters to one project. Diagnostic only — no secrets. */
+  app.get<{ Querystring: { slug?: string } }>('/api/_debug/chat-steps', async (req, reply) => {
+    const { slug } = req.query;
+    const steps = slug
+      ? recentChatSteps.filter((s) => s.slug === slug)
+      : recentChatSteps;
+    return reply.send({ count: steps.length, steps: steps.slice(-120) });
+  });
 
   /**
    * POST /api/chat
@@ -224,9 +256,12 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     // step the handler reaches before stalling. Tagged so Coolify logs are
     // greppable: `grep '\[chat:step\]'`.
     const _chatT0 = Date.now();
+    const _reqId = Math.random().toString(36).slice(2, 8);
     const step = (label: string): void => {
+      const atMs = Date.now() - _chatT0;
       // eslint-disable-next-line no-console
-      console.log(`[chat:step] +${Date.now() - _chatT0}ms slug=${projectSlug ?? '-'} ${label}`);
+      console.log(`[chat:step] +${atMs}ms req=${_reqId} slug=${projectSlug ?? '-'} ${label}`);
+      recordChatStep({ reqId: _reqId, slug: projectSlug ?? '-', label, atMs, ts: new Date().toISOString() });
     };
     step('handler entered (post-hijack, headers flushed)');
     try {
