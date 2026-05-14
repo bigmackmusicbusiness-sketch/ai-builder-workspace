@@ -66,8 +66,43 @@ function stripThinkBlocks(text: string): string {
   return out.trim();
 }
 
+/** Round 14.9 Layer E fix — timeout-bound the vault lookup.
+ *
+ *  getApiKey runs at the very TOP of chat()/complete()/generateImage(),
+ *  BEFORE any AbortSignal.timeout is created. It calls vaultGetOrEnv →
+ *  vaultGet which does Drizzle/postgres-js DB queries. If the DB connection
+ *  pool is exhausted (or a query stalls), `db.select()` waits for a free
+ *  connection with NO timeout — so getApiKey hangs forever, the caller's
+ *  240s/180s hang-guard is never even armed, and a chatRunner run sits
+ *  `running` indefinitely with zero error yielded. SPS round 14.9 Layer E
+ *  traced exactly this on the Coffee build ("works N times, then every call
+ *  hangs"). Racing the lookup against a 30s ceiling turns a silent infinite
+ *  hang into a fast, observable error every caller already handles.
+ *
+ *  30s: a healthy vault lookup is sub-second; 30s only ever trips on a
+ *  genuinely wedged pool/query. */
+const VAULT_LOOKUP_TIMEOUT_MS = 30_000;
+
 async function getApiKey(tenantId: string, env: string): Promise<string> {
-  const key = await vaultGetOrEnv({ names: KEY_NAMES, env, tenantId });
+  let key: string | null;
+  try {
+    key = await Promise.race([
+      vaultGetOrEnv({ names: KEY_NAMES, env, tenantId }),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error(
+            `MiniMax key vault lookup timed out after ${VAULT_LOOKUP_TIMEOUT_MS / 1000}s ` +
+            `(DB pool exhausted or query stalled)`,
+          )),
+          VAULT_LOOKUP_TIMEOUT_MS,
+        ),
+      ),
+    ]);
+  } catch (err) {
+    // Re-throw with a clear message — callers (chat/complete/generateImage)
+    // surface this as an error chunk / thrown error instead of hanging.
+    throw err instanceof Error ? err : new Error(String(err));
+  }
   if (key) return key;
   throw new Error(
     `MiniMax API key not found. Set MINIMAX_API_KEY as a Coolify env var (platform-wide) or store it in the Env & Secrets screen (per-tenant BYOK).`,
@@ -205,7 +240,17 @@ export function createMinimaxAdapter(tenantId: string, env: string): ProviderAda
     },
 
     async *chat(req: ChatRequest, opts: { signal: AbortSignal }): AsyncIterable<ChatChunk> {
-      const apiKey = await getApiKey(tenantId, env);
+      // getApiKey is now timeout-bounded (30s) — but it can still throw on a
+      // genuinely wedged vault/DB. Yield a clean error chunk rather than
+      // throwing out of the async generator (the for-await caller in
+      // chatRunner / routes/chat.ts handles chunks, not generator throws).
+      let apiKey: string;
+      try {
+        apiKey = await getApiKey(tenantId, env);
+      } catch (err) {
+        yield { type: 'error', error: err instanceof Error ? err.message : `getApiKey failed: ${String(err)}` };
+        return;
+      }
       const temperature = Math.min(req.temperature ?? 0.7, 1.0);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
