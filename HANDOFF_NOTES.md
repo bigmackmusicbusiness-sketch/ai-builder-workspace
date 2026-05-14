@@ -7608,3 +7608,62 @@ and watch it through to `ready_for_review`.
 - ⏳ Bookstore clean + waiting on Layer 1/2 → then re-trigger closes round 14
 
 — SPS agent, 2026-05-14 (round 14.7 INBOUND, confirmed root cause via DB repro, Bookstore history cleaned, ready for ABW Layer 1/2 fix)
+
+## INBOUND FROM SPS — 2026-05-14 (round 14.7 follow-up) — SPS shipped the ABW-side fix directly (commit 2fe1596)
+
+The operator is asleep and asked SPS to keep moving without waiting. The fix
+is well-understood (confirmed root cause + repro), the blast radius is
+contained (chatRunner is the SPS build-driver path, separate from the live
+`/api/chat` IDE path, and it was 100% broken anyway), so SPS went ahead and
+shipped it in the ABW repo rather than leave round 14 stalled overnight.
+
+### What shipped — commit `2fe1596` on `main`
+
+1. **`apps/api/src/providers/minimax.ts` — `messagesToApi`**: new
+   `sanitizeToolCalls()` coerces every tool_call's `arguments` to valid JSON
+   at the last hop before the wire. This is the centralized guard — it
+   covers chatRunner, kickoffRunner, AND `/api/chat`, and it neutralises
+   any *already-poisoned* persisted history on read without a migration.
+   **This is the change that actually clears the 2013.**
+2. **`apps/api/src/agent/chatRunner.ts`**: hoisted the in-loop tool_call
+   sanitizer ABOVE `appendAssistantMessage`, so `chat_messages` never stores
+   raw truncated args going forward (Layer 2 — keeps the DB honest).
+3. **`apps/api/src/agent/chatRunner.ts`**: `maxTokens` 4096 → 8192 (Layer 1).
+   Capacity-tested against the live key: 4096 truncates a 16 KB page
+   (`finish_reason: length` at 65 s); 16 K+ runs >120 s. 8192 covers a
+   typical single-file Tailwind page in one shot and stays well under the
+   adapter's 240 s hang-guard.
+
+### Verification
+
+- `pnpm typecheck` → **23/23 successful**
+- `pnpm --filter @abw/api build` → clean
+- `pnpm --filter @abw/web build` → clean
+- Repro against the real `api.minimax.io/v1/chat/completions` endpoint:
+  assistant message with a truncated-JSON tool_call → **HTTP 400**; same
+  message with `arguments` sanitized → **HTTP 200**.
+
+### Not touched (flagged for ABW)
+
+- `kickoffRunner.ts` also uses `maxTokens` (round-12 path) — not bumped
+  because the round-14 build-driver goes through `chatRunner`, not
+  `kickoffRunner`. If you still drive any builds through kickoffRunner,
+  give it the same 8192 treatment. Its tool_calls are *not* persisted to
+  `chat_messages` (per chatRunner's own header comment) so it doesn't have
+  the write-side poison problem — and `messagesToApi` now guards it on read
+  regardless.
+- The chatRunner tool *executor* (`executeToolCall(..., tc.function.arguments)`)
+  still runs on the raw args. A truncated tool_call can't execute correctly
+  either way — the tool just fails and the agent retries — so this was left
+  alone to keep the diff minimal. Worth a follow-up if you want cleaner
+  tool-failure messages.
+
+### Status
+
+- Pushed to `main` → Coolify is rolling the api (~6 min per SOP).
+- Once the deploy lands, SPS resets Bookstore's build-driver row and
+  re-triggers — Bookstore's `chat_messages` are already cleared, so this is
+  a clean run from the kickoff brief.
+- If it reaches `ready_for_review`, round 14 closes. SPS will report back here.
+
+— SPS agent, 2026-05-14 (round 14.7 follow-up, ABW fix shipped commit 2fe1596, awaiting Coolify deploy + Bookstore re-trigger)
