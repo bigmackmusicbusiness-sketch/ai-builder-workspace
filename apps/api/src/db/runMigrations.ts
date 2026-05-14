@@ -341,6 +341,43 @@ const MIGRATIONS: Array<{ id: string; sql: string }> = [
       ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
     `,
   },
+  {
+    // ── Round 14.6 — repair double-encoded chat_messages.tool_calls ──
+    //
+    // Before round 14.6, chatRunner inserted tool_calls via
+    // `JSON.stringify(value)` into a `$n::jsonb` param. postgres-js
+    // JSON-encodes string params a second time when the target is jsonb,
+    // so the column held a jsonb *string* (`"[{...}]"`) instead of a jsonb
+    // *array* (`[{...}]`). On read-back the value is a string, the strict
+    // Array.isArray check in messagesToApi drops it, and the paired `tool`
+    // messages get sent to MiniMax orphaned → "invalid chat setting (2013)".
+    //
+    // This repairs every affected row: `tool_calls #>> '{}'` extracts the
+    // jsonb-string's text payload (which is itself valid JSON array text),
+    // then `::jsonb` parses it back into a proper jsonb array. Same repair
+    // for any `metadata` rows that got the same treatment from
+    // appendToolMessage. Idempotent — the WHERE clause only matches rows
+    // still in the broken `jsonb_typeof = 'string'` shape.
+    id: '0019_repair_chat_messages_jsonb_double_encode',
+    sql: `
+      UPDATE chat_messages
+         SET tool_calls = (tool_calls #>> '{}')::jsonb
+       WHERE tool_calls IS NOT NULL
+         AND jsonb_typeof(tool_calls) = 'string';
+
+      UPDATE chat_messages
+         SET metadata = (metadata #>> '{}')::jsonb
+       WHERE metadata IS NOT NULL
+         AND jsonb_typeof(metadata) = 'string';
+
+      -- Same double-encode hit project_kickoff_messages.metadata via the
+      -- POST /api/sps/projects/:id/kickoff handler. Repair those too.
+      UPDATE project_kickoff_messages
+         SET metadata = (metadata #>> '{}')::jsonb
+       WHERE metadata IS NOT NULL
+         AND jsonb_typeof(metadata) = 'string';
+    `,
+  },
 ];
 
 /** Diagnostic snapshot from the most recent runMigrations() call.

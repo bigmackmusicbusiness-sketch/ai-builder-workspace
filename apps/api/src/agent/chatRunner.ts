@@ -148,13 +148,21 @@ async function runChatBody(proj: ProjectRow, runId: string | null): Promise<void
   }
 
   // Load existing chat_messages for this project.
+  //
+  // `normalizeToolCalls` handles rows written by the pre-round-14.6 double-encode
+  // bug — those have `tool_calls` stored as a jsonb *string* and come back from
+  // the driver as a string. We parse them back to arrays here so the
+  // assistant↔tool message pairing survives. Without this, the strict
+  // Array.isArray check in messagesToApi drops the malformed value and the
+  // following `tool` messages get sent to MiniMax orphaned.
   const existing = await loadProjectMessages(proj.id);
   for (const m of existing) {
     if (m.role === 'system') continue; // we already injected system prelude/hint
+    const toolCalls = normalizeToolCalls(m.tool_calls);
     history.push({
       role:    m.role,
       content: m.content,
-      ...(m.tool_calls ? { tool_calls: m.tool_calls as unknown as ToolCall[] } : {}),
+      ...(toolCalls ? { tool_calls: toolCalls } : {}),
       ...(m.tool_call_id ? { tool_call_id: m.tool_call_id } : {}),
     });
   }
@@ -327,6 +335,27 @@ interface DbChatMessage {
   tool_call_id: string | null;
 }
 
+/** Coerce a chat_messages.tool_calls value into a clean ToolCall[] or null.
+ *  Handles three shapes:
+ *    - null / undefined            → null (no tool calls on this turn)
+ *    - ToolCall[]                  → returned as-is (the correct, post-fix shape)
+ *    - string (double-encode bug)  → JSON.parse'd back to an array
+ *  Anything that doesn't resolve to a non-empty array becomes null so it's
+ *  simply omitted from the outgoing MiniMax payload. */
+function normalizeToolCalls(raw: unknown): ToolCall[] | null {
+  if (raw == null) return null;
+  if (Array.isArray(raw)) return raw.length > 0 ? (raw as ToolCall[]) : null;
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) && parsed.length > 0 ? (parsed as ToolCall[]) : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 async function loadProjectMessages(projectId: string): Promise<DbChatMessage[]> {
   try {
     const rows = await getRawSql().unsafe(
@@ -391,6 +420,15 @@ async function openAgentRun(opts: {
   }
 }
 
+// jsonb insert note (round 14.6 fix): postgres-js double-encodes when you
+// pass `JSON.stringify(value)` into a `$n::jsonb` param — the already-stringified
+// text gets JSON-encoded a SECOND time, so the column ends up holding a jsonb
+// *string* (`"[{...}]"`) instead of a jsonb *array* (`[{...}]`). On read-back
+// the value comes out as a string, messagesToApi's Array.isArray check drops
+// it, and the paired `tool` messages become orphaned → MiniMax "invalid chat
+// setting (2013)". The fix is `sql.json(value)` with NO `::jsonb` cast — that
+// marks the param as JSON so postgres-js serializes it exactly once.
+
 async function appendAssistantMessage(
   projectId: string,
   tenantId:  string,
@@ -399,10 +437,17 @@ async function appendAssistantMessage(
   toolCalls: ToolCall[] | null = null,
 ): Promise<void> {
   try {
-    await getRawSql().unsafe(
+    const sql = getRawSql();
+    // `sql.json(...)` cast through unknown — postgres-js's JSONValue type is
+    // stricter than ToolCall[] (no string index signature) but the runtime
+    // shape is plain JSON, so the cast is safe.
+    const tcParam = toolCalls
+      ? sql.json(toolCalls as unknown as Parameters<typeof sql.json>[0])
+      : null;
+    await sql.unsafe(
       `INSERT INTO chat_messages (project_id, tenant_id, role, content, tool_calls, agent_run_id)
-       VALUES ($1, $2, 'assistant', $3, $4::jsonb, $5)`,
-      [projectId, tenantId, content, toolCalls ? JSON.stringify(toolCalls) : null, agentRunId],
+       VALUES ($1, $2, 'assistant', $3, $4, $5)`,
+      [projectId, tenantId, content, tcParam, agentRunId],
     );
   } catch (err) {
     // eslint-disable-next-line no-console
@@ -419,10 +464,11 @@ async function appendToolMessage(
   agentRunId: string | null,
 ): Promise<void> {
   try {
-    await getRawSql().unsafe(
+    const sql = getRawSql();
+    await sql.unsafe(
       `INSERT INTO chat_messages (project_id, tenant_id, role, content, tool_call_id, agent_run_id, metadata)
-       VALUES ($1, $2, 'tool', $3, $4, $5, $6::jsonb)`,
-      [projectId, tenantId, content, toolCallId, agentRunId, JSON.stringify({ tool_name: toolName })],
+       VALUES ($1, $2, 'tool', $3, $4, $5, $6)`,
+      [projectId, tenantId, content, toolCallId, agentRunId, sql.json({ tool_name: toolName })],
     );
   } catch (err) {
     // eslint-disable-next-line no-console

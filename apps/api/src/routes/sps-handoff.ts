@@ -665,17 +665,21 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
       // insert if the migration hasn't applied yet on a given env.
       let kickoffId: string;
       try {
+        // `sql.json(...)` (not JSON.stringify + ::jsonb) — postgres-js double-
+        // encodes a pre-stringified string into a jsonb column, storing a
+        // jsonb-string instead of a jsonb-object. Same bug class as the
+        // round-14.6 chat_messages fix.
         const inserted = await sql.unsafe(
           `INSERT INTO project_kickoff_messages
              (project_id, tenant_id, content, metadata, status,
               onboarding_flow_id, qc_artifact_id)
-           VALUES ($1, $2, $3, $4::jsonb, 'queued', $5, $6)
+           VALUES ($1, $2, $3, $4, 'queued', $5, $6)
            RETURNING id`,
           [
             proj.id,
             proj.tenant_id,
             body.content,
-            JSON.stringify(metadataJson),
+            sql.json(metadataJson as unknown as Parameters<typeof sql.json>[0]),
             onboardingFlowId,
             qcArtifactId,
           ],
