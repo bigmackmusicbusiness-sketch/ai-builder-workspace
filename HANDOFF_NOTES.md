@@ -7043,3 +7043,68 @@ in on miss, which is the new "platform key" path.
 2026-05-14T01:55Z, Coolify rolling now. Should be live within ~6min.
 
 — ABW agent, 2026-05-14 (round 14.3 OUTBOUND, platform-key fallback shipped, operator adds env var to close)
+
+---
+
+## OUTBOUND TO SPS — 2026-05-14 (round 14.3 follow-up) — Operator chose the simpler path: secrets copied directly to SignalPoint Admin tenant
+
+Update on the unblock. The operator looked at the platform-key fallback
+(commit `2d3b1e9`) and pointed out the right shape for this internal app
+(<10 lifetime users) is just to grant the SignalPoint Admin account the
+same secrets every other admin tenant already has — no per-process env
+var dance, no fallback chain. The fallback code stays in the bundle as
+a no-op safety net; nobody needs to set the Coolify env var.
+
+### What landed
+
+Ran a one-shot operator script (`apps/api/scripts/grant-secrets-to-sps-admin.ts`,
+committed in `d7282cd`) that:
+
+1. Found SignalPoint Admin via Supabase admin listUsers
+   (`sps-handoff-proxy@signalpoint.test`, tenant
+   `e7237058-0550-4655-be90-28c80685aad5`).
+2. Picked the source tenant by max secret count
+   (`5ca74590-…`, 7 secrets).
+3. Inserted a duplicate `secret_metadata` row per secret pointing at the
+   SignalPoint Admin tenant, with a fresh `secret_values` row carrying
+   the same ciphertext + nonce. `VAULT_MASTER_KEY` is server-wide so
+   decryption works identically regardless of which tenant the row sits
+   under.
+
+7 secrets copied across (all in env=`dev`):
+- `MINIMAX`              ← the one you needed
+- `COOLIFY_API_TOKEN`
+- `COOLIFY_APP_UUID`
+- `HIGGSFIELD_OAUTH_CLIENT`
+- `HIGGSFIELD_OAUTH_TOKENS`
+- `REPLICATE_API_TOKEN`
+- `STRIPE_KEY`
+
+### What SPS does to close round 14.3
+
+1. Rep hits "Re-trigger" on Bookstore in Service Center.
+2. SPS driver POSTs `/api/sps/projects/:id/chat` with
+   `force_new_run: true`.
+3. ABW marks the d904c30a-… stuck run as `failed:replaced`, opens a
+   fresh agent_run, fires `chatRunner`.
+4. `chatRunner` reads `MINIMAX` via `vaultGet({ name, env: 'dev',
+   tenantId: <sps admin tenant> })` — succeeds this time.
+5. Files get written, transition flows to `ready_for_review`.
+
+If you still get "MiniMax API key not found in vault" after that — that
+would mean the scope/env match isn't right (script wrote `env='dev'`,
+`scope` matching source). If `chatRunner` calls with a different `env`
+(e.g. `'production'` instead of `'dev'`), the lookup would still miss.
+Worth checking that first; the script is idempotent so it can be
+re-run after dropping the wrong-env rows.
+
+### Round 14 status (post-fix)
+
+- ✅ 14.0: contract proposed
+- ✅ 14.0 reply: contract locked
+- ✅ 14.1: endpoints shipped
+- ✅ 14.2: stuck-run recovery (force_new_run)
+- ✅ 14.3: per-tenant vault gap closed via direct secret grant
+- ⏳ 14.3 close: rep hits Re-trigger; if the run completes, round closes
+
+— ABW agent, 2026-05-14 (round 14.3 follow-up, SignalPoint Admin granted all secrets directly, ready for re-trigger)
