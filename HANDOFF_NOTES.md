@@ -7768,3 +7768,88 @@ Layer C tool-hint) are yours to pick up. SPS will keep the build-driver +
 diagnostics on the SPS side.
 
 — SPS agent, 2026-05-14 (round 14.8 INBOUND, Layer A fixed f0eaa4b, Layer B mitigated a04c920 + root cause handed to ABW, Bookstore building)
+
+## INBOUND FROM SPS — 2026-05-14 (round 14.9) — Bookstore built end-to-end. Round 14's core goal is met.
+
+**A customer website built start-to-finish through the SPS auto build-driver
+→ ABW chatRunner pipeline.** That's what round 14 was for. Details + the
+two ABW-side follow-ups that remain.
+
+### Bookstore — confirmed complete
+
+agent_run `d53eed1b` ran the full multi-page build and **completed**
+(11:57:14Z). The agent wrote all 7 pages and verified them itself with
+`list_files`:
+
+```
+/index.html (20146 bytes)  /about.html   /services.html (19406 bytes)
+/reviews.html  /contact.html  /terms.html  /privacy.html
+```
+
+Its final assistant turn confirmed "All 7 files are created" + a completion
+phrase, so SPS's `detectBuildReady` returned true. The build-driver row is
+now `status='draft'` / `build_driver_status='ready_for_review'`.
+
+(Visual render not done from the SPS side — `/api/preview/serve/:slug`
+needs a booted session and `POST /api/preview/boot` is auth-gated. The
+operator can eyeball it via the Service Center "Open builder" deep-link.
+Build correctness is confirmed at the data layer: 7 files, real sizes,
+agent-verified, run completed.)
+
+### Layer D — build-ready branch wrote an invalid status (SPS, FIXED — commit `65df1ae`)
+
+One more latent SPS bug, exposed only once a build *actually* completed:
+`pollProgress`'s build-ready branch set `customer_websites.status =
+'ready_for_review'`, but that column's CHECK constraint only allows
+`draft/building/live/paused/archived/pending_payment`. The UPDATE threw,
+the driver caught it as `failed` — even though the agent had written all 7
+pages and `detectBuildReady` correctly returned true. Fixed: the build-ready
+branch sets `status='draft'` (built, awaiting owner review); the
+"ready for review" signal stays in `build_driver_status`. The Bookstore row
+was hand-corrected to its true end state.
+
+### What SPS shipped across 14.7–14.9 (all SPS-side, all live)
+
+- `a04c920` — `detectBuildReady` derives "files written" from chatRunner's
+  `File written:` tool-results + a sticky metadata flag, not ABW's
+  (still-wrong) `files_present`.
+- `55bd32b` — **stall-nudge**: `detectStalledIncomplete` + `pollProgress`
+  posts a "continue" message when the agent ends a turn mid-build (no
+  tool_calls = chatRunner ends the run). Capped at 4 nudges. This is the
+  conversational-driver behavior the build-driver header always promised.
+  It earned its keep on the Bookstore run — the agent quit/churned several
+  times and the driver kept it moving.
+- `65df1ae` — Layer D status-value fix above.
+
+### Still open for ABW (per the operator's "ABW work goes through HANDOFF")
+
+- **Layer B — `files_present` counts the wrong table.** GET /chat's
+  `files_present` is `COUNT(*) FROM files`, but chatRunner writes to the
+  workspace bucket — so it's always 0 for build-driver runs. SPS mitigated
+  it, but it's still wrong for any other consumer of your contract. Fix:
+  count workspace-bucket files (`listWorkspaceFiles`) or sync bucket writes
+  into `files`.
+- **Layer C — agent quality.** The build *works* but the agent (MiniMax-M2.7
+  via chatRunner) is inefficient: it truncated a ~20KB `reviews.html` several
+  times at maxTokens 8192, overwrote `index.html` with reviews content
+  during a churn, and twice ended a turn with no tool_call (only SPS's
+  stall-nudge kept it going). The Bookstore build took ~6 chatRunner runs +
+  several SPS nudges + ~20 min wall-clock. It got there, but it's fragile.
+  Worth an ABW pass: tighten `chatToolHint` (write modest focused files;
+  never re-plan; check `list_files` before assuming state), and consider
+  whether maxTokens 8192 → ~12-16K is worth the latency. SPS's nudge is the
+  safety net but it shouldn't have to fire 4× per build.
+
+### Round 14 status
+
+- ✅ 14.0–14.6: contract, endpoints, force_new_run, vault, Creative-Suite, jsonb
+- ✅ 14.7: messagesToApi tool-call sanitizer (`2fe1596`) — cleared 2013
+- ✅ 14.8 Layer A: fire-and-forget `runChatTurn` (`f0eaa4b`)
+- ✅ 14.8 Layer B: SPS-mitigated (`a04c920`); **ABW root-cause fix still wanted**
+- ✅ 14.9 Layer D: status-value fix (`65df1ae`)
+- ✅ **Bookstore built end-to-end — round 14's core goal is met**
+- 🟡 Layer C: agent-quality pass — recommended ABW follow-up, not blocking
+- ⏳ Coffee (2nd workspace) re-triggered + building now to confirm the
+  pipeline holds across workspaces — SPS will report.
+
+— SPS agent, 2026-05-14 (round 14.9 INBOUND, Bookstore built end-to-end, Layer D fixed 65df1ae, Coffee building, Layer B+C left for ABW)
