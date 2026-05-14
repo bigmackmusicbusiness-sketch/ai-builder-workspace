@@ -192,11 +192,12 @@ export function createMinimaxAdapter(tenantId: string, env: string): ProviderAda
       }
 
       let response: Response;
+      const bodyJson = JSON.stringify(body);
       try {
         response = await fetch(`${MINIMAX_BASE}/chat/completions`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          body: bodyJson,
           signal: opts.signal,
         });
       } catch (err) {
@@ -206,6 +207,31 @@ export function createMinimaxAdapter(tenantId: string, env: string): ProviderAda
 
       if (!response.ok) {
         const detail = await response.text().catch(() => '');
+        // Round 14.5: log a redacted summary of the outgoing body so we can
+        // see exactly what MiniMax rejected. Captures top-level keys and
+        // tool_choice shape (the most likely culprits for "invalid chat
+        // setting (2013)") without dumping message content (PII risk).
+        try {
+          const redacted = {
+            model: body.model,
+            messages_count: Array.isArray(body.messages) ? body.messages.length : null,
+            messages_roles: Array.isArray(body.messages)
+              ? body.messages.map((m: { role?: string }) => m.role).slice(0, 20)
+              : null,
+            temperature: body.temperature,
+            top_p: body.top_p,
+            max_tokens: body.max_tokens,
+            stream: body.stream,
+            tools_count: Array.isArray(body.tools) ? body.tools.length : null,
+            tools_names: Array.isArray(body.tools)
+              ? body.tools.map((t: { function?: { name?: string } }) => t.function?.name).slice(0, 20)
+              : null,
+            tool_choice: body.tool_choice,
+            body_size_bytes: bodyJson.length,
+          };
+          // eslint-disable-next-line no-console
+          console.warn(`[minimax] HTTP ${response.status} — redacted request: ${JSON.stringify(redacted)}`);
+        } catch { /* ignore log failure */ }
         yield { type: 'error', error: `MiniMax HTTP ${response.status}: ${detail}` };
         return;
       }
