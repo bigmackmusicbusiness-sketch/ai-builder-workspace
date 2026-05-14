@@ -1,5 +1,7 @@
 // apps/api/src/providers/minimax.ts — MiniMax M2.7 adapter (server-side only).
-// API key fetched from vault, never from process.env in the request path.
+// API key resolved via `vaultGetOrEnv`: vault first (per-tenant BYOK override),
+// then process.env (platform-level — typical for this internal app where a
+// single Coolify env var serves every tenant).
 //
 // Endpoint: https://api.minimax.io/v1/chat/completions  (OpenAI-compatible)
 // Models:   MiniMax-M2.7 | MiniMax-M2.7-highspeed | MiniMax-M2.5 | MiniMax-M2.1
@@ -15,7 +17,7 @@ import type {
   ImageGenRequest, ImageGenResponse,
   ToolCall,
 } from '@abw/providers';
-import { vaultGet } from '../security/vault';
+import { vaultGetOrEnv } from '../security/vault';
 
 const MINIMAX_BASE = 'https://api.minimax.io/v1';
 
@@ -65,13 +67,10 @@ function stripThinkBlocks(text: string): string {
 }
 
 async function getApiKey(tenantId: string, env: string): Promise<string> {
-  for (const name of KEY_NAMES) {
-    try {
-      return await vaultGet({ name, env, tenantId });
-    } catch { /* try next name */ }
-  }
+  const key = await vaultGetOrEnv({ names: KEY_NAMES, env, tenantId });
+  if (key) return key;
   throw new Error(
-    `MiniMax API key not found in vault. Store it as MINIMAX_API_KEY in the Env & Secrets screen.`,
+    `MiniMax API key not found. Set MINIMAX_API_KEY as a Coolify env var (platform-wide) or store it in the Env & Secrets screen (per-tenant BYOK).`,
   );
 }
 

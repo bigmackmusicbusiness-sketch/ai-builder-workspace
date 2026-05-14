@@ -8,7 +8,7 @@ import { eq, and, desc } from 'drizzle-orm';
 import { createMinimaxAdapter } from '../providers/minimax';
 import { createOllamaAdapter }  from '../providers/ollama';
 import { env }                  from '../config/env';
-import { vaultGet }             from '../security/vault';
+import { vaultGetOrEnv }       from '../security/vault';
 import { concatMp3WithCrossfade, mp3ToWav } from '../lib/ffmpeg';
 import { buildZip }             from '../lib/zipper';
 import { uploadBufferAsAsset }  from '../lib/assetUpload';
@@ -106,19 +106,15 @@ function planPrompt(input: GenerateInput): string {
 
 // ── Music generation via MiniMax music-01 ────────────────────────────────────
 
-/** Try the same name+env fallback chain the chat-side getApiKey uses,
- *  so music doesn't fail with "MINIMAX_API_KEY not found" when the vault
- *  has the key under MINIMAX / MINIMAX_KEY / minimax.api_key instead. */
+/** Resolve the MiniMax key via the same platform-key path the chat/agent uses:
+ *  vault first (per-tenant BYOK), then process.env fallback (Coolify-level). */
 const MINIMAX_KEY_NAMES = ['MINIMAX_API_KEY', 'MINIMAX', 'minimax.api_key', 'MINIMAX_KEY'];
 async function getMinimaxKey(tenantId: string): Promise<string> {
-  for (const name of MINIMAX_KEY_NAMES) {
-    try {
-      return await vaultGet({ name, env: 'dev', tenantId });
-    } catch { /* try next */ }
-  }
+  const key = await vaultGetOrEnv({ names: MINIMAX_KEY_NAMES, env: 'dev', tenantId });
+  if (key) return key;
   throw new Error(
-    `MiniMax API key not found in vault (tried ${MINIMAX_KEY_NAMES.join(', ')}). ` +
-    `Add it under Env & Secrets, then retry.`,
+    `MiniMax API key not found (tried ${MINIMAX_KEY_NAMES.join(', ')} in vault and env). ` +
+    `Set MINIMAX_API_KEY in Coolify env vars (platform-wide) or Env & Secrets (per-tenant).`,
   );
 }
 
@@ -360,9 +356,13 @@ export async function musicRoutes(app: FastifyInstance): Promise<void> {
 
       let stems: Awaited<ReturnType<typeof separateStems>> | null = null;
       let replicateToken: string | null = null;
-      try {
-        replicateToken = await vaultGet({ name: 'MUSIC_REPLICATE_TOKEN', env: 'dev', tenantId: ctx.tenantId });
-      } catch { /* key missing */ }
+      // Platform-key resolution — falls back to MUSIC_REPLICATE_TOKEN in process.env
+      // for internal-app deploys where one Replicate token serves all tenants.
+      replicateToken = await vaultGetOrEnv({
+        names: ['MUSIC_REPLICATE_TOKEN'],
+        env: 'dev',
+        tenantId: ctx.tenantId,
+      });
 
       if (replicateToken) {
         try {

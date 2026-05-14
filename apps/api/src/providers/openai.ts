@@ -8,16 +8,13 @@
 //
 // Not a full ProviderAdapter — just the narrow surface we need for repair.
 
-import { vaultGet } from '../security/vault';
+import { vaultGetOrEnv } from '../security/vault';
 
 const OPENAI_BASE = 'https://api.openai.com/v1';
 const KEY_NAMES   = ['OPENAI_API_KEY', 'OPENAI', 'openai.api_key'];
 
 async function getOpenAIKey(tenantId: string, env: string): Promise<string | null> {
-  for (const name of KEY_NAMES) {
-    try { return await vaultGet({ name, env, tenantId }); } catch { /* try next */ }
-  }
-  return null;
+  return vaultGetOrEnv({ names: KEY_NAMES, env, tenantId });
 }
 
 export async function openAIAvailable(tenantId: string, env: string): Promise<boolean> {

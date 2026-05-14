@@ -12,7 +12,7 @@
 // Auth: vault[REPLICATE_API_TOKEN] (or REPLICATE_KEY / replicate.api_token).
 
 import Replicate from 'replicate';
-import { vaultGet } from '../security/vault';
+import { vaultGetOrEnv } from '../security/vault';
 
 const REPLICATE_BASE = 'https://api.replicate.com/v1';
 const POLL_INTERVAL_MS = 5_000;
@@ -147,10 +147,10 @@ export type ReplicateVideoModelKey = keyof typeof REPLICATE_VIDEO_MODELS;
 const VIDEO_KEY_NAMES = ['REPLICATE_API_TOKEN', 'REPLICATE_KEY', 'REPLICATE', 'replicate.api_token'];
 
 async function getReplicateKey(tenantId: string, env: string): Promise<string | null> {
-  for (const name of VIDEO_KEY_NAMES) {
-    try { return await vaultGet({ name, env, tenantId }); } catch { /* try next */ }
-  }
-  return null;
+  // Platform-key resolution: vault first, then process.env. Lets internal-app
+  // deploys set REPLICATE_API_TOKEN once in Coolify env vars for all tenants
+  // without needing a vault entry per tenant.
+  return vaultGetOrEnv({ names: VIDEO_KEY_NAMES, env, tenantId });
 }
 
 export async function replicateAvailable(tenantId: string, env: string): Promise<boolean> {

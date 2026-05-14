@@ -21,7 +21,7 @@
 //   WRITE → array of objects: [{"name":"api","domain":"https://a.com,https://b.com"},...]
 //   Each service's `domain` is a comma-separated list of full URLs.
 
-import { vaultGet } from '../security/vault';
+import { vaultGetOrEnv } from '../security/vault';
 
 const TOKEN_NAMES = ['COOLIFY_API_TOKEN', 'COOLIFY_TOKEN', 'coolify.api_token'];
 const UUID_NAMES  = ['COOLIFY_APP_UUID', 'COOLIFY_API_APP_UUID', 'coolify.api_app_uuid'];
@@ -41,23 +41,14 @@ interface CoolifyConfig {
  *  Returns null if any required secret is missing — caller should treat
  *  Coolify integration as a no-op rather than failing the whole deploy. */
 export async function getCoolifyConfig(tenantId: string, env: string): Promise<CoolifyConfig | null> {
-  let token: string | null = null;
-  for (const name of TOKEN_NAMES) {
-    try { token = await vaultGet({ name, env, tenantId }); break; } catch { /* try next */ }
-  }
+  // Platform-key resolution: vault first (BYOK), then process.env (Coolify-level
+  // for internal-app deploys where one operator manages a single Coolify cluster).
+  const token = await vaultGetOrEnv({ names: TOKEN_NAMES, env, tenantId });
   if (!token) return null;
-
-  let appUuid: string | null = null;
-  for (const name of UUID_NAMES) {
-    try { appUuid = await vaultGet({ name, env, tenantId }); break; } catch { /* try next */ }
-  }
+  const appUuid = await vaultGetOrEnv({ names: UUID_NAMES, env, tenantId });
   if (!appUuid) return null;
-
-  let baseUrl = DEFAULT_COOLIFY_URL;
-  for (const name of URL_NAMES) {
-    try { baseUrl = (await vaultGet({ name, env, tenantId })).replace(/\/$/, ''); break; } catch { /* keep default */ }
-  }
-
+  const rawUrl = await vaultGetOrEnv({ names: URL_NAMES, env, tenantId });
+  const baseUrl = (rawUrl ?? DEFAULT_COOLIFY_URL).replace(/\/$/, '');
   return { token, appUuid, baseUrl };
 }
 

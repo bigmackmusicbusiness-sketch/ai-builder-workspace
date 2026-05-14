@@ -21,7 +21,7 @@ import { getDb } from '../db/client';
 import { assets } from '@abw/db';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '../config/env';
-import { vaultGet } from '../security/vault';
+import { vaultGetOrEnv } from '../security/vault';
 import { aiEditText } from '../providers/ideogramReplicate';
 
 declare module 'fastify' {
@@ -77,13 +77,14 @@ export async function aiEditRoutes(app: FastifyInstance): Promise<void> {
     if (!imagePart.mimetype.startsWith('image/')) return reply.status(400).send({ error: 'image must be image/*' });
     if (!maskPart.mimetype.startsWith('image/'))  return reply.status(400).send({ error: 'mask must be image/*' });
 
-    // Pull the Replicate token from the tenant's vault. Following the same
-    // path as music.ts/replicate.ts — tenants without the secret get a
-    // friendly 412 instead of a hard crash.
-    let replicateToken: string | null = null;
-    try {
-      replicateToken = await vaultGet({ name: 'REPLICATE_API_TOKEN', env: 'dev', tenantId: ctx.tenantId });
-    } catch { /* fall through */ }
+    // Pull the Replicate token via platform-key resolution: vault first (BYOK),
+    // then process.env (Coolify-level for internal-app deploys). Tenants
+    // without the secret get a friendly 412 instead of a hard crash.
+    const replicateToken = await vaultGetOrEnv({
+      names: ['REPLICATE_API_TOKEN', 'REPLICATE_KEY', 'REPLICATE', 'replicate.api_token'],
+      env: 'dev',
+      tenantId: ctx.tenantId,
+    });
     if (!replicateToken) {
       return reply.status(412).send({
         error: 'replicate_token_missing',

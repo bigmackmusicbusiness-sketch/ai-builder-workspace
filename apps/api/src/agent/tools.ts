@@ -19,7 +19,7 @@ import { buildEbookHtml, buildEpubChapters, styleToTrim, type EbookStyle, type E
 import { renderEpub } from '../lib/epub';
 import { concatMp3WithCrossfade, mp3ToWav } from '../lib/ffmpeg';
 import { buildZip } from '../lib/zipper';
-import { vaultGet } from '../security/vault';
+import { vaultGetOrEnv } from '../security/vault';
 import { scanForCredentials, stripCredentials } from './security';
 import { eq } from 'drizzle-orm';
 
@@ -1061,8 +1061,15 @@ export async function executeToolCall(
               : `${musMood ? musMood + ' ' : ''}cinematic score`;
             const fullPrompt = musPrompt ?? `${modeDesc} — ${musTitle}`;
 
-            // Generate via MiniMax music-01
-            const apiKey = await vaultGet({ name: 'MINIMAX_API_KEY', env: 'dev', tenantId: ctx.tenantId! });
+            // Generate via MiniMax music-01.
+            // Platform-key resolution: vault first (per-tenant BYOK), then env-var
+            // fallback so a single Coolify MINIMAX_API_KEY serves every tenant.
+            const apiKey = await vaultGetOrEnv({
+              names: ['MINIMAX_API_KEY', 'MINIMAX', 'minimax.api_key', 'MINIMAX_KEY'],
+              env: 'dev',
+              tenantId: ctx.tenantId!,
+            });
+            if (!apiKey) throw new Error('MiniMax API key not found (vault or env)');
             const segCount = Math.ceil(musDur / 60);
             const mp3Buffers: Buffer[] = [];
 

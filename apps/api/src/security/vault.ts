@@ -98,6 +98,41 @@ export async function vaultPut(opts: {
   return meta.id;
 }
 
+/**
+ * Resolve a platform-level secret. Tries the vault first (preserves any
+ * tenant-level BYOK override) for each candidate name, then falls back to
+ * `process.env[name]` for the same names.
+ *
+ * Use this for provider API keys in this app, which is internal/single-operator
+ * — the operator sets one key as a Coolify env var and expects it to work for
+ * every tenant. The per-tenant vault model in `vaultGet` is the wrong shape
+ * here: SPS-driven projects run on the proxy-user tenant; IDE projects run on
+ * the signed-in user's tenant; both should resolve the same MINIMAX_API_KEY
+ * without needing a vault entry per tenant.
+ *
+ * Returns null when neither vault nor env yields a value, letting the caller
+ * decide whether to throw or treat the provider as unavailable.
+ */
+export async function vaultGetOrEnv(opts: {
+  names: string[];
+  env: string;
+  tenantId: string;
+}): Promise<string | null> {
+  // Vault first — preserves any explicit per-tenant BYOK setup.
+  for (const name of opts.names) {
+    try {
+      return await vaultGet({ name, env: opts.env, tenantId: opts.tenantId });
+    } catch { /* try next vault name */ }
+  }
+  // Platform-level env-var fallback. Coolify env vars surface here in prod;
+  // local .env.local for dev.
+  for (const name of opts.names) {
+    const v = process.env[name];
+    if (v && v.length > 0) return v;
+  }
+  return null;
+}
+
 /** Retrieve a plaintext secret. Server-side only. */
 export async function vaultGet(opts: {
   name: string;
