@@ -295,11 +295,31 @@ export async function backupFileBufferToStorage(
  */
 const inflightRestores = new Map<string, Promise<void>>();
 
+/** Hard ceiling on a single restore. Supabase Storage list/download calls
+ *  have NO built-in timeout — if one hangs, doRestoreWorkspaceFromStorage
+ *  hangs, and because the result is cached in inflightRestores, EVERY
+ *  subsequent build for the same project hangs on the same dead promise
+ *  (a request-killing poison). Healthy restores finish in well under 10s;
+ *  60s catches a genuine hang while giving big-project restores headroom. */
+const RESTORE_TIMEOUT_MS = 60_000;
+
 export function restoreWorkspaceFromStorage(ws: WorkspaceHandle): Promise<void> {
   const key = `${ws.tenantId}/${ws.projectSlug}`;
   const existing = inflightRestores.get(key);
   if (existing) return existing;
-  const p = doRestoreWorkspaceFromStorage(ws).finally(() => {
+  // Race the restore against a hard timeout. On timeout the promise rejects,
+  // the .finally() clears the inflightRestores entry so the next caller
+  // retries fresh instead of awaiting the same dead promise, and all callers
+  // already treat a restore failure as non-fatal (.catch on the call site).
+  const p = Promise.race([
+    doRestoreWorkspaceFromStorage(ws),
+    new Promise<void>((_, reject) =>
+      setTimeout(
+        () => reject(new Error(`workspace restore timed out after ${RESTORE_TIMEOUT_MS / 1000}s`)),
+        RESTORE_TIMEOUT_MS,
+      ),
+    ),
+  ]).finally(() => {
     inflightRestores.delete(key);
   });
   inflightRestores.set(key, p);
