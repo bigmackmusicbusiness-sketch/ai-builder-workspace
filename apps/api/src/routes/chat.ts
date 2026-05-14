@@ -196,9 +196,32 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     const controller = new AbortController();
     req.raw.once('close', () => controller.abort());
 
+    // SSE writer — defined up here so the pre-loop catch below can use it.
+    function send(obj: unknown): void {
+      raw.write(`data: ${JSON.stringify(obj)}\n\n`);
+    }
+
+    // Round 14.8: everything from here to the iteration loop runs AFTER
+    // reply.hijack(). An unhandled throw in this section (workspace restore,
+    // planner subagent, prelude reads, etc.) escapes into Fastify's error
+    // handler, which CANNOT write to a hijacked reply — so the SSE socket
+    // stays open forever and the IDE shows "Run in progress" with no events
+    // and no end. Wrap the whole pre-loop section so any failure surfaces as
+    // an SSE error event + closes the stream, instead of an infinite hang.
+    //
+    // These are declared out here (not inside the try) because the loop's
+    // own try block + the finally both reference them.
+    let toolsActive = false;
+    let ws: Awaited<ReturnType<typeof getWorkspace>> | null = null;
+    let toolCtx!: ToolContext;
+    let history: ChatMessage[] = [];
+    let plannedPageSlugs: string[] = [];
+    let toolList: ReturnType<typeof getAgentTools> = [];
+    try {
+
     // ── Workspace + image gen for tool calls ─────────────────────────────────
-    const toolsActive = enableTools && !!projectSlug;
-    const ws = toolsActive ? await getWorkspace(ctx.tenantId, projectSlug!) : null;
+    toolsActive = enableTools && !!projectSlug;
+    ws = toolsActive ? await getWorkspace(ctx.tenantId, projectSlug!) : null;
     // Restore from Supabase Storage if workspace is empty (e.g. after server restart)
     if (ws && !(await workspaceExists(ws))) {
       await restoreWorkspaceFromStorage(ws).catch(() => {}); // non-fatal
@@ -262,7 +285,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     // Tool execution context — shared across all tool calls in the loop.
     // tenantId + adapter are passed so Creative Suite tools (compose_email,
     // create_ebook, create_document, generate_music) can run without HTTP round-trips.
-    const toolCtx: ToolContext = {
+    toolCtx = {
       ws: ws!,
       generateImage: hasImageGen
         ? (prompt: string) => adapter.generateImage!({ prompt, signal: controller.signal })
@@ -275,7 +298,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
 
     // Build the running message history the model sees. We inject the tool hint
     // as an extra system message so the user's chat system prompt is preserved.
-    const history: ChatMessage[] = parsed.data.messages.map((m) => ({
+    history = parsed.data.messages.map((m) => ({
       role:    m.role,
       content: m.content,
       ...(m.tool_call_id ? { tool_call_id: m.tool_call_id } : {}),
@@ -364,11 +387,10 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     // gets injected as a system message + plan.json file. Falls back silently
     // to the unenhanced loop if the type has no agentInstructions or planner fails.
     let planAvailable = false;
-    /** Slugs of every page the planner committed to building (e.g.
-     *  ['index','listings','contact']). Empty when the planner skipped /
-     *  failed. Used by the nudge logic so the agent can't silently exit
-     *  after writing one page when the plan calls for more. */
-    let plannedPageSlugs: string[] = [];
+    // plannedPageSlugs (hoisted above): slugs of every page the planner
+    // committed to building. Empty when the planner skipped / failed. Used by
+    // the nudge logic so the agent can't silently exit after writing one page
+    // when the plan calls for more.
     if (toolsActive && projectTypeId) {
       const projectType = listProjectTypes().find((pt) => pt.id === (projectTypeId as ProjectTypeId));
       if (projectType?.agentInstructions) {
@@ -430,10 +452,18 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     // round 14.4 INBOUND in HANDOFF_NOTES.md.
     const CREATIVE_PROJECT_TYPES = new Set(['ebook', 'document', 'email_composer', 'music_studio']);
     const creativeSuiteEnabled = !projectTypeId || CREATIVE_PROJECT_TYPES.has(projectTypeId);
-    const toolList = getAgentTools({ designSkillsEnabled, replicateEnabled, creativeSuiteEnabled });
+    toolList = getAgentTools({ designSkillsEnabled, replicateEnabled, creativeSuiteEnabled });
 
-    function send(obj: unknown): void {
-      raw.write(`data: ${JSON.stringify(obj)}\n\n`);
+    } catch (preErr) {
+      // Pre-loop setup failed (workspace restore, planner subagent, prelude
+      // read, attachment copy, etc.). Without this catch the throw would
+      // escape the hijacked reply and hang the SSE socket forever. Surface it
+      // as a normal error event so the IDE shows the failure and stops.
+      // eslint-disable-next-line no-console
+      console.error(`[chat] pre-loop setup failed: ${preErr instanceof Error ? (preErr.stack ?? preErr.message) : String(preErr)}`);
+      send({ type: 'error', error: preErr instanceof Error ? preErr.message : String(preErr) });
+      raw.end();
+      return undefined;
     }
 
     try {
