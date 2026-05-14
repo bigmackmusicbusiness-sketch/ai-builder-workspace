@@ -24,6 +24,11 @@
   `C:/Users/telly/OneDrive/Desktop/SignalPointSystems`. Its CLAUDE.md is
   the source of truth for that codebase. Cross-project handoff happens via
   `HANDOFF_NOTES.md` (here) and `handoff/INBOUND_FROM_ABW_*.md` (there).
+- Secrets / API keys / cross-tenant grants:
+  **`docs/operator/SECRETS_AND_VAULT.md`** — explains the per-tenant vault
+  model, the dormant platform-key env-var fallback (`vaultGetOrEnv`), the
+  cross-tenant grant script (`apps/api/scripts/grant-secrets-to-sps-admin.ts`),
+  and the well-known tenant IDs.
 
 ## Repo facts
 
