@@ -145,6 +145,12 @@ function recordChatStep(e: ChatStepEntry): void {
   }
 }
 
+/** Speed-bump key for GET /api/_debug/chat-steps. NOT a secret — the
+ *  endpoint exposes only ephemeral, non-sensitive step labels. This just
+ *  keeps random scanners out. Temporary diagnostic constant; removed with
+ *  the endpoint once round 14.12 lands. */
+const DEBUG_STEPS_KEY = 'abw-diag-r14';
+
 export async function chatRoutes(app: FastifyInstance): Promise<void> {
   // Handle CORS preflight for the SSE endpoint.
   app.options('/api/chat', async (req, reply) => {
@@ -161,17 +167,33 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
 
   app.addHook('preHandler', authMiddleware);
 
-  /** GET /api/_debug/chat-steps — auth-gated. Returns the in-memory ring
-   *  buffer of recent [chat:step] breadcrumbs so we can pinpoint where a
-   *  hung /api/chat request stalled without scraping container logs.
-   *  ?slug=<slug> filters to one project. Diagnostic only — no secrets. */
-  app.get<{ Querystring: { slug?: string } }>('/api/_debug/chat-steps', async (req, reply) => {
-    const { slug } = req.query;
-    const steps = slug
-      ? recentChatSteps.filter((s) => s.slug === slug)
-      : recentChatSteps;
-    return reply.send({ count: steps.length, steps: steps.slice(-120) });
-  });
+  /** GET /api/_debug/chat-steps?key=<DEBUG_STEPS_KEY>[&slug=<slug>] — returns
+   *  the in-memory ring buffer of recent [chat:step] breadcrumbs so we can
+   *  pinpoint where a hung /api/chat request stalled without scraping
+   *  container logs.
+   *
+   *  `skipAuth` + a hardcoded speed-bump key (NOT a secret — just keeps
+   *  randoms out) instead of the Supabase-JWT auth path: the auth path
+   *  needs a browser-issued token, and reading this from the browser kept
+   *  getting confounded by the per-host connection limit (accumulated hung
+   *  SSE streams) + lost page state. skipAuth lets it be curl'd directly.
+   *  The payload is ephemeral, non-secret step labels + slugs + timings.
+   *  TEMPORARY — delete this route once the IDE-hang bug (round 14.12) is
+   *  fixed. */
+  app.get<{ Querystring: { slug?: string; key?: string } }>(
+    '/api/_debug/chat-steps',
+    { config: { skipAuth: true } },
+    async (req, reply) => {
+      if (req.query.key !== DEBUG_STEPS_KEY) {
+        return reply.status(403).send({ error: 'bad or missing ?key' });
+      }
+      const { slug } = req.query;
+      const steps = slug
+        ? recentChatSteps.filter((s) => s.slug === slug)
+        : recentChatSteps;
+      return reply.send({ count: steps.length, steps: steps.slice(-120) });
+    },
+  );
 
   /**
    * POST /api/chat
