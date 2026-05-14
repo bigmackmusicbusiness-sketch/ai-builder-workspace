@@ -40,6 +40,7 @@ import {
 import { runEagerKickoff } from '../agent/kickoffRunner';
 import { runChatTurn } from '../agent/chatRunner';
 import { mintSpsHandoffMagicLink } from '../security/spsAuthBridge';
+import { getWorkspace, listWorkspaceFiles, workspaceExists } from '../preview/workspace';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1035,14 +1036,14 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
 
       // Project lookup + workspace defense.
       const sql = getRawSql();
-      let proj: { id: string; sps_workspace_id: string | null } | undefined;
+      let proj: { id: string; sps_workspace_id: string | null; tenant_id: string; slug: string } | undefined;
       try {
         const rows = await sql.unsafe(
-          `SELECT id, sps_workspace_id FROM projects
+          `SELECT id, sps_workspace_id, tenant_id, slug FROM projects
             WHERE id = $1 AND deleted_at IS NULL
             LIMIT 1`,
           [projectIdParam],
-        ) as Array<{ id: string; sps_workspace_id: string | null }>;
+        ) as Array<{ id: string; sps_workspace_id: string | null; tenant_id: string; slug: string }>;
         proj = rows[0];
       } catch (err) {
         // eslint-disable-next-line no-console
@@ -1111,17 +1112,27 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
         console.warn(`[chat-get] agent_runs lookup failed (non-fatal, defaulting idle): ${err instanceof Error ? err.message : String(err)}`);
       }
 
-      // files_present: count of files in the project's workspace files
-      // table. The build-driver uses this as a cheap "did the agent
-      // actually write anything yet" probe.
+      // files_present: count of files the agent has actually written.
+      //
+      // Round 14.8 Layer B fix: chatRunner's write_file tool persists via
+      // writeWorkspaceFile() → the per-tenant workspace BUCKET, NOT the
+      // `files` DB table (that table is only written by the separate
+      // fs.write.ts path). Counting `files` returned 0 for every
+      // build-driver run even after the agent wrote a full site, so the
+      // driver could never see "files written". Count the workspace
+      // filesystem instead — the same source listWorkspaceFiles serves the
+      // IDE Files panel. Self-heals from Storage if the FS is cold (mirrors
+      // /api/files/workspace).
       let filesPresent = 0;
       try {
-        const fileRows = await sql.unsafe(
-          `SELECT COUNT(*)::int AS n FROM files
-            WHERE project_id = $1 AND (deleted_at IS NULL OR deleted_at IS NULL)`,
-          [proj.id],
-        ) as Array<{ n: number }>;
-        filesPresent = fileRows[0]?.n ?? 0;
+        const ws = await getWorkspace(proj.tenant_id, proj.slug);
+        if (!(await workspaceExists(ws))) {
+          // restoreWorkspaceFromStorage is timeout-bounded (workspace.ts) so
+          // a cold/empty bucket can't hang this probe.
+          const { restoreWorkspaceFromStorage } = await import('../preview/workspace');
+          await restoreWorkspaceFromStorage(ws).catch(() => { /* non-fatal */ });
+        }
+        filesPresent = (await listWorkspaceFiles(ws)).length;
       } catch {
         filesPresent = 0;
       }

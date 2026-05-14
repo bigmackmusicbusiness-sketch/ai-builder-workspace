@@ -525,6 +525,20 @@ function chatToolHint(slug: string, hasImageGen: boolean): string {
     `3. Forbidden frameworks: Next.js, Remix, Astro, Nuxt, SvelteKit, app/ directory. Static HTML + Tailwind CDN, or Vite React SPA.`,
     `4. When build is done, write ONE short summary message including a completion phrase ("site is ready", "build complete", "ready to publish", or "draft is live"). No tool calls in the final assistant turn.`,
     ``,
+    // Round 14.9 Layer C — agent-quality guardrails. The Bookstore build
+    // took ~6 chatRunner runs because the agent truncated a 20KB file
+    // repeatedly, overwrote index.html with the wrong content during a
+    // churn, and twice ended a turn with no tool_call. These rules steer
+    // it toward focused files + correct state handling.
+    `FILE-SIZE DISCIPLINE:`,
+    `5. Keep every write_file UNDER ~10KB of content. A large page truncates mid-write (the model's output budget runs out) and the tool_call arrives as invalid JSON. If a page would be big, split it: write the <head> + hero + first section, then use a SECOND write_file to append the rest is NOT possible — instead, write a LEANER page (fewer inline comments, compact markup, Tailwind utility classes over long custom CSS).`,
+    `6. ONE file per write_file call. Never bundle multiple pages into one call.`,
+    ``,
+    `STATE DISCIPLINE:`,
+    `7. Call list_files FIRST, before assuming what exists. A "Building…" stub index.html may already be there — treat it as a placeholder to overwrite, not as real state.`,
+    `8. NEVER overwrite a file you already wrote with different content. index.html stays the home page; reviews go in reviews.html; etc. If you catch yourself about to re-plan or rewrite a finished file, STOP — move to the next unwritten page instead.`,
+    `9. Every assistant turn during a build MUST either call a tool OR be the final summary. Do NOT end a turn with prose like "Now I'll write the next page" without actually calling write_file — that ends the run prematurely and the external driver has to nudge you.`,
+    ``,
     `Project slug: "${slug}".`,
   ].join('\n');
 }
