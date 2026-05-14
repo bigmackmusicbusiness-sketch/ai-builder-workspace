@@ -312,11 +312,22 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
         const { getDb } = await import('../db/client');
         const { projects } = await import('@abw/db');
         const { eq, and } = await import('drizzle-orm');
-        const [row] = await getDb()
-          .select({ id: projects.id })
-          .from(projects)
-          .where(and(eq(projects.tenantId, ctx.tenantId), eq(projects.slug, projectSlug)))
-          .limit(1);
+        // Timeout-bound — same bug class as Layer E (minimax getApiKey): a
+        // raw `db.select()` waits for a pool connection with NO timeout, so
+        // if the postgres-js pool is exhausted this hangs the pre-loop
+        // unbounded (non-throwing — the try/catch can't catch a hang). Race
+        // it against 15s; on timeout, fall through with resolvedProjectId
+        // null (it's non-fatal — only used for asset association).
+        const [row] = await Promise.race([
+          getDb()
+            .select({ id: projects.id })
+            .from(projects)
+            .where(and(eq(projects.tenantId, ctx.tenantId), eq(projects.slug, projectSlug)))
+            .limit(1),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('project-id lookup timed out after 15s (DB pool)')), 15_000),
+          ),
+        ]);
         if (row) resolvedProjectId = row.id;
       } catch { /* non-fatal — tools that need projectId fall back to null */ }
       step('project-id lookup done');
