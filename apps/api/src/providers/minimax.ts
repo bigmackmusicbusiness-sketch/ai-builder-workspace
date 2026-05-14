@@ -106,6 +106,36 @@ async function* parseSSE(
   }
 }
 
+/** MiniMax (OpenAI-compatible) rejects the ENTIRE conversation with
+ *  "invalid params, invalid chat setting (2013)" if any assistant tool_call
+ *  carries an `arguments` string that is not parseable JSON. That happens
+ *  when an upstream response was truncated mid-arguments (output token limit
+ *  hit) and the raw tool_call got persisted to chat_messages, then hydrated
+ *  back into a later request. chatRunner has an in-loop sanitizer, but it
+ *  runs AFTER the persist — so the poison still reaches the API on the next
+ *  run. Centralising the guard here covers every caller (chatRunner,
+ *  kickoffRunner, /api/chat) at the last hop before the wire. */
+function sanitizeToolCalls(toolCalls: ToolCall[]): ToolCall[] {
+  return toolCalls.map((tc) => {
+    const args = tc?.function?.arguments;
+    if (typeof args !== 'string') {
+      return { ...tc, function: { ...tc.function, arguments: '{}' } };
+    }
+    try {
+      JSON.parse(args);
+      return tc;                               // already valid — pass through
+    } catch {
+      return {
+        ...tc,
+        function: {
+          ...tc.function,
+          arguments: '{"error":"arguments were not valid JSON (truncated upstream)"}',
+        },
+      };
+    }
+  });
+}
+
 /** Messages passed to the model include optional tool_calls + tool_call_id.
  *  MiniMax rejects empty-string content on assistant messages that carry
  *  tool_calls with "invalid chat setting (2013)". OpenAI-compat wants `null`
@@ -127,7 +157,8 @@ function messagesToApi(messages: ChatRequest['messages']): unknown[] {
         ? m.content                            // vision: pass ContentPart[] directly
         : (hasToolCalls && !m.content ? null : m.content),  // text: null on empty+tool_calls
     };
-    if (hasToolCalls)    out.tool_calls   = m.tool_calls;
+    // Sanitise tool_call `arguments` to valid JSON — see sanitizeToolCalls above.
+    if (hasToolCalls)    out.tool_calls   = sanitizeToolCalls(m.tool_calls as ToolCall[]);
     if (m.tool_call_id)  out.tool_call_id = m.tool_call_id;
     if (m.name)          out.name         = m.name;
     return out;

@@ -213,7 +213,13 @@ async function runChatBody(proj: ProjectRow, runId: string | null): Promise<void
 
     for await (const chunk of adapter.chat({
       messages: history, model: 'MiniMax-M2.7',
-      temperature: 0.7, maxTokens: 4096,
+      // 4096 was too small: a full single-file Tailwind page is ~16 KB
+      // (~4 K tokens of content) and the model also spends tokens on its
+      // <think> trace, so write_file calls truncated mid-arguments — which
+      // then poisoned the persisted history. 8192 covers a typical page in
+      // one shot; M2.7's context window is 204 K so headroom is fine, and
+      // the adapter's 240 s hang-guard absorbs the extra latency.
+      temperature: 0.7, maxTokens: 8192,
       tools: toolList, toolChoice: 'auto',
     }, { signal: ctrl.signal })) {
       if (chunk.type === 'delta')      { assistantText += chunk.delta; }
@@ -227,27 +233,13 @@ async function runChatBody(proj: ProjectRow, runId: string | null): Promise<void
     }
     if (hadError) break;
 
-    // Persist the assistant turn to chat_messages so SPS sees it.
-    // Empty assistantText is OK (model can emit only tool_calls).
-    if (assistantText || toolCalls.length > 0) {
-      await appendAssistantMessage(
-        proj.id,
-        proj.tenantId,
-        assistantText,
-        runId,
-        toolCalls.length > 0 ? toolCalls : null,
-      );
-    }
-
-    if (toolCalls.length === 0) {
-      // Agent ended its turn (no tool calls). Loop exits — SPS's
-      // poll will see assistant message + agent_status='idle' and
-      // can decide whether to follow up or call it done.
-      history.push({ role: 'assistant', content: assistantText });
-      return;
-    }
-
-    // Sanitize tool_call arguments.
+    // Sanitize tool_call arguments BEFORE anything else. A truncated /
+    // invalid-JSON `arguments` string (model hit the output token limit
+    // mid-call) must never be persisted raw — once it lands in
+    // chat_messages it poisons every later run's hydrated history and
+    // MiniMax rejects the whole conversation ("invalid chat setting
+    // (2013)"). messagesToApi also guards this at the wire; persisting
+    // clean keeps the DB honest so future hydrations start sane.
     const sanitizedCalls = toolCalls.map((tc) => {
       let safeArgs = tc.function.arguments;
       try {
@@ -260,6 +252,27 @@ async function runChatBody(proj: ProjectRow, runId: string | null): Promise<void
       }
       return { ...tc, function: { ...tc.function, arguments: safeArgs } };
     });
+
+    // Persist the assistant turn to chat_messages so SPS sees it.
+    // Empty assistantText is OK (model can emit only tool_calls).
+    // Persist the SANITIZED calls, never the raw ones.
+    if (assistantText || sanitizedCalls.length > 0) {
+      await appendAssistantMessage(
+        proj.id,
+        proj.tenantId,
+        assistantText,
+        runId,
+        sanitizedCalls.length > 0 ? sanitizedCalls : null,
+      );
+    }
+
+    if (toolCalls.length === 0) {
+      // Agent ended its turn (no tool calls). Loop exits — SPS's
+      // poll will see assistant message + agent_status='idle' and
+      // can decide whether to follow up or call it done.
+      history.push({ role: 'assistant', content: assistantText });
+      return;
+    }
 
     history.push({
       role:       'assistant',
