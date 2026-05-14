@@ -420,7 +420,17 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     void higgsfieldEnabled;
 
     // Compute the per-request tool list (gates design + Replicate tools by flag).
-    const toolList = getAgentTools({ designSkillsEnabled, replicateEnabled });
+    //
+    // `creativeSuiteEnabled` gates compose_email/create_ebook/create_document/
+    // generate_music. They're only useful when the user's project type is a
+    // creative deliverable (ebook, document, email_composer, music_studio).
+    // For build-style projects (website/landing_page/saas_app/etc.), shipping
+    // those schemas inflates the MiniMax payload past a Go-side parser
+    // threshold and produces "Mismatch type []*OaiToolCalls" 400s — see
+    // round 14.4 INBOUND in HANDOFF_NOTES.md.
+    const CREATIVE_PROJECT_TYPES = new Set(['ebook', 'document', 'email_composer', 'music_studio']);
+    const creativeSuiteEnabled = !projectTypeId || CREATIVE_PROJECT_TYPES.has(projectTypeId);
+    const toolList = getAgentTools({ designSkillsEnabled, replicateEnabled, creativeSuiteEnabled });
 
     function send(obj: unknown): void {
       raw.write(`data: ${JSON.stringify(obj)}\n\n`);
