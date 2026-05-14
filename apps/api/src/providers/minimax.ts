@@ -191,6 +191,14 @@ export function createMinimaxAdapter(tenantId: string, env: string): ProviderAda
         body.tool_choice = req.toolChoice ?? 'auto';
       }
 
+      // Hang guard: the caller's signal only fires on client disconnect — if
+      // MiniMax accepts the connection but never sends data (or stalls
+      // mid-stream), the request hangs forever and the IDE shows "Run in
+      // progress" indefinitely. Combine the caller's signal with a hard
+      // 240s ceiling so a wedged upstream call fails fast instead.
+      const timeoutSignal = AbortSignal.timeout(240_000);
+      const combinedSignal = AbortSignal.any([opts.signal, timeoutSignal]);
+
       let response: Response;
       const bodyJson = JSON.stringify(body);
       try {
@@ -198,10 +206,13 @@ export function createMinimaxAdapter(tenantId: string, env: string): ProviderAda
           method: 'POST',
           headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
           body: bodyJson,
-          signal: opts.signal,
+          signal: combinedSignal,
         });
       } catch (err) {
-        yield { type: 'error', error: `MiniMax fetch failed: ${err}` };
+        const isTimeout = timeoutSignal.aborted;
+        yield { type: 'error', error: isTimeout
+          ? 'MiniMax request timed out after 240s (no response from upstream)'
+          : `MiniMax fetch failed: ${err}` };
         return;
       }
 
@@ -240,59 +251,72 @@ export function createMinimaxAdapter(tenantId: string, env: string): ProviderAda
       // Each chunk may contribute a function name + partial arguments by index.
       const toolAcc = new Map<number, { id: string; name: string; args: string }>();
 
-      for await (const event of parseSSE(response, opts.signal)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const choice = (event['choices'] as any[])?.[0];
-        if (!choice) continue;
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const delta: any = choice['delta'] ?? {};
-
-        if (typeof delta.content === 'string' && delta.content.length > 0) {
-          yield { type: 'delta', delta: delta.content };
-        }
-
-        // Streamed tool call: { index, id?, function: { name?, arguments? } }
-        if (Array.isArray(delta.tool_calls)) {
-          for (const tc of delta.tool_calls) {
-            const idx = typeof tc.index === 'number' ? tc.index : 0;
-            const prev = toolAcc.get(idx) ?? { id: '', name: '', args: '' };
-            if (typeof tc.id === 'string' && tc.id.length > 0) prev.id = tc.id;
-            if (tc.function?.name)       prev.name  = tc.function.name;
-            if (tc.function?.arguments)  prev.args += tc.function.arguments;
-            toolAcc.set(idx, prev);
-          }
-        }
-
-        const finish = choice['finish_reason'];
-        if (finish === 'tool_calls') {
-          // Emit each accumulated tool call, then done
-          for (const acc of toolAcc.values()) {
-            const call: ToolCall = {
-              id:   acc.id || `call_${Math.random().toString(36).slice(2, 10)}`,
-              type: 'function',
-              function: { name: acc.name, arguments: acc.args || '{}' },
-            };
-            yield { type: 'tool_call', toolCall: call };
-          }
-          yield { type: 'done' };
-          return;
-        }
-
-        if (finish === 'stop' || finish === 'length') {
+      // parseSSE also gets combinedSignal so a mid-stream stall (headers
+      // arrived, then upstream goes silent) trips the same 240s ceiling.
+      // Wrap the consume loop so an abort (timeout or client disconnect)
+      // surfaces as a clean error chunk instead of an unhandled rejection
+      // that propagates out of the generator.
+      try {
+        for await (const event of parseSSE(response, combinedSignal)) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const usage = event['usage'] as any;
-          yield {
-            type: 'done',
-            usage: usage
-              ? {
-                  promptTokens:     usage['prompt_tokens']     ?? 0,
-                  completionTokens: usage['completion_tokens'] ?? 0,
-                }
-              : undefined,
-          };
-          return;
+          const choice = (event['choices'] as any[])?.[0];
+          if (!choice) continue;
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const delta: any = choice['delta'] ?? {};
+
+          if (typeof delta.content === 'string' && delta.content.length > 0) {
+            yield { type: 'delta', delta: delta.content };
+          }
+
+          // Streamed tool call: { index, id?, function: { name?, arguments? } }
+          if (Array.isArray(delta.tool_calls)) {
+            for (const tc of delta.tool_calls) {
+              const idx = typeof tc.index === 'number' ? tc.index : 0;
+              const prev = toolAcc.get(idx) ?? { id: '', name: '', args: '' };
+              if (typeof tc.id === 'string' && tc.id.length > 0) prev.id = tc.id;
+              if (tc.function?.name)       prev.name  = tc.function.name;
+              if (tc.function?.arguments)  prev.args += tc.function.arguments;
+              toolAcc.set(idx, prev);
+            }
+          }
+
+          const finish = choice['finish_reason'];
+          if (finish === 'tool_calls') {
+            // Emit each accumulated tool call, then done
+            for (const acc of toolAcc.values()) {
+              const call: ToolCall = {
+                id:   acc.id || `call_${Math.random().toString(36).slice(2, 10)}`,
+                type: 'function',
+                function: { name: acc.name, arguments: acc.args || '{}' },
+              };
+              yield { type: 'tool_call', toolCall: call };
+            }
+            yield { type: 'done' };
+            return;
+          }
+
+          if (finish === 'stop' || finish === 'length') {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const usage = event['usage'] as any;
+            yield {
+              type: 'done',
+              usage: usage
+                ? {
+                    promptTokens:     usage['prompt_tokens']     ?? 0,
+                    completionTokens: usage['completion_tokens'] ?? 0,
+                  }
+                : undefined,
+            };
+            return;
+          }
         }
+      } catch (err) {
+        const isTimeout = timeoutSignal.aborted;
+        yield { type: 'error', error: isTimeout
+          ? 'MiniMax stream stalled — aborted after 240s with no completion'
+          : `MiniMax stream error: ${err instanceof Error ? err.message : String(err)}` };
+        return;
       }
     },
 
