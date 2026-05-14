@@ -756,10 +756,13 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
    *
    * Round 14 — SPS's autonomous build-driver agent posts a user
    * message into the project's chat. By default (`trigger_agent: true`)
-   * the ABW agent runs synchronously inside this request, persisting
-   * its assistant + tool messages back to `chat_messages` so the
-   * driver's GET poll sees them. The 200 response carries the new
-   * `message_id` + the `agent_run_id` (or null when trigger_agent=false).
+   * the ABW agent run is opened synchronously (so the response can carry
+   * the `agent_run_id`) but the tool loop itself runs FIRE-AND-FORGET in
+   * the background — a real build takes minutes, longer than SPS's HTTP
+   * timeout. The runner persists its assistant + tool messages back to
+   * `chat_messages` so the driver's GET poll sees progress. The 200
+   * response carries the new `message_id` + the `agent_run_id` (or null
+   * when trigger_agent=false).
    *
    * Auth: HS256 `project-chat` scope. Token must carry
    *   sps_workspace_id + project_id (path-bound). ≤ 5min lifetime.
@@ -934,10 +937,11 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
         return reply.status(500).send({ ok: false, error: 'insert_failed' });
       }
 
-      // Fire the agent if requested. Runs synchronously inside this
-      // request so we can include the agent_run_id in the response.
-      // The runner persists its own assistant + tool messages to
-      // chat_messages so the SPS driver's GET poll sees them.
+      // Fire the agent if requested. runChatTurn opens the agent_run
+      // synchronously (fast — one INSERT) so we can include the
+      // agent_run_id in the response, then fire-and-forgets the tool
+      // loop. The runner persists its own assistant + tool messages to
+      // chat_messages so the SPS driver's GET poll sees progress.
       let agentRunId: string | null = null;
       if (body.trigger_agent) {
         try {

@@ -77,26 +77,39 @@ export async function runChatTurn(opts: {
     goal:      'SPS chat turn',
   });
 
-  try {
-    await runChatBody(proj, runId);
-    if (runId) {
-      await getRawSql().unsafe(
-        `UPDATE agent_runs SET status = 'completed', ended_at = now() WHERE id = $1`,
-        [runId],
-      ).catch(() => { /* non-fatal */ });
+  // Fire-and-forget the build body. A real build runs the tool loop for
+  // several minutes — far longer than SPS's postProjectChatMessage HTTP
+  // timeout — so the route MUST return the agent_run_id now and let SPS's
+  // build-driver track progress via GET /chat polling. The runner persists
+  // its own assistant + tool messages and flips agent_runs to
+  // completed/failed when done. Mirrors the /kickoff route's
+  // runEagerKickoff fire-and-forget pattern. (Before this, the route
+  // awaited the whole build and SPS's post timed out at ~300s mid-build.)
+  void (async () => {
+    try {
+      await runChatBody(proj, runId);
+      if (runId) {
+        await getRawSql().unsafe(
+          `UPDATE agent_runs SET status = 'completed', ended_at = now() WHERE id = $1`,
+          [runId],
+        ).catch(() => { /* non-fatal */ });
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      // eslint-disable-next-line no-console
+      console.error(`[chatRunner] run ${runId} threw: ${msg}`);
+      await appendAssistantMessage(proj.id, proj.tenantId, `Run failed: ${msg.slice(0, 500)}`, runId);
+      if (runId) {
+        await getRawSql().unsafe(
+          `UPDATE agent_runs SET status = 'failed', ended_at = now(), summary = $2 WHERE id = $1`,
+          [runId, msg.slice(0, 500)],
+        ).catch(() => { /* non-fatal */ });
+      }
     }
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+  })().catch((err) => {
     // eslint-disable-next-line no-console
-    console.error(`[chatRunner] run ${runId} threw: ${msg}`);
-    await appendAssistantMessage(proj.id, proj.tenantId, `Run failed: ${msg.slice(0, 500)}`, runId);
-    if (runId) {
-      await getRawSql().unsafe(
-        `UPDATE agent_runs SET status = 'failed', ended_at = now(), summary = $2 WHERE id = $1`,
-        [runId, msg.slice(0, 500)],
-      ).catch(() => { /* non-fatal */ });
-    }
-  }
+    console.error(`[chatRunner] background run ${runId} crashed: ${err instanceof Error ? err.message : String(err)}`);
+  });
 
   // Suppress unused-var lint on the new user message id — kept in the
   // signature for future use (e.g., correlation in agent_steps).
