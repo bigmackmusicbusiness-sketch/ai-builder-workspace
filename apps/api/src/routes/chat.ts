@@ -217,14 +217,32 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     let history: ChatMessage[] = [];
     let plannedPageSlugs: string[] = [];
     let toolList: ReturnType<typeof getAgentTools> = [];
+
+    // Round 14.10: step breadcrumbs. The IDE-build hang surfaces as the SSE
+    // socket sitting open with zero events — and it's a non-throwing await
+    // (the round-14.8 try/catch catches nothing). These logs pin the exact
+    // step the handler reaches before stalling. Tagged so Coolify logs are
+    // greppable: `grep '\[chat:step\]'`.
+    const _chatT0 = Date.now();
+    const step = (label: string): void => {
+      // eslint-disable-next-line no-console
+      console.log(`[chat:step] +${Date.now() - _chatT0}ms slug=${projectSlug ?? '-'} ${label}`);
+    };
+    step('handler entered (post-hijack, headers flushed)');
     try {
 
     // ── Workspace + image gen for tool calls ─────────────────────────────────
     toolsActive = enableTools && !!projectSlug;
+    step(`toolsActive=${toolsActive} — getWorkspace…`);
     ws = toolsActive ? await getWorkspace(ctx.tenantId, projectSlug!) : null;
+    step('getWorkspace done — workspaceExists…');
     // Restore from Supabase Storage if workspace is empty (e.g. after server restart)
     if (ws && !(await workspaceExists(ws))) {
+      step('workspace empty — restoreWorkspaceFromStorage…');
       await restoreWorkspaceFromStorage(ws).catch(() => {}); // non-fatal
+      step('restoreWorkspaceFromStorage done');
+    } else {
+      step('workspace exists (or no ws) — skip restore');
     }
 
     // Look up the project's UUID from its slug so per-project asset writes
@@ -232,6 +250,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     // outputs with the right project. Falls back to null on lookup miss.
     let resolvedProjectId: string | null = null;
     if (toolsActive && projectSlug) {
+      step('project-id lookup — dynamic imports + DB query…');
       try {
         const { getDb } = await import('../db/client');
         const { projects } = await import('@abw/db');
@@ -243,6 +262,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
           .limit(1);
         if (row) resolvedProjectId = row.id;
       } catch { /* non-fatal — tools that need projectId fall back to null */ }
+      step('project-id lookup done');
     }
 
     // Auto-scaffold a stub index.html if the workspace is genuinely empty.
@@ -254,10 +274,12 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     // (empty path, alias keys, JSON-in-content) for 5+ iterations before
     // finally getting it right — burning the iteration budget.
     if (ws) {
+      step('auto-scaffold — listWorkspaceFiles…');
       const existing = await listWorkspaceFiles(ws);
       const hasEntry = existing.some((p) =>
         /\/(index\.html?|main\.tsx|main\.jsx)$/i.test(p),
       );
+      step(`listWorkspaceFiles done (${existing.length} files, hasEntry=${hasEntry})`);
       if (!hasEntry) {
         const stubHtml = [
           `<!DOCTYPE html>`,
@@ -278,9 +300,11 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
           ``,
         ].join('\n');
         await writeWorkspaceFile(ws, 'index.html', stubHtml).catch(() => { /* best-effort */ });
+        step('auto-scaffold stub written');
       }
     }
     const hasImageGen = toolsActive && typeof adapter.generateImage === 'function';
+    step('toolCtx + history build…');
 
     // Tool execution context — shared across all tool calls in the loop.
     // tenantId + adapter are passed so Creative Suite tools (compose_email,
@@ -391,6 +415,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     // committed to building. Empty when the planner skipped / failed. Used by
     // the nudge logic so the agent can't silently exit after writing one page
     // when the plan calls for more.
+    step(`preludes done — planner phase (projectTypeId=${projectTypeId ?? '-'})`);
     if (toolsActive && projectTypeId) {
       const projectType = listProjectTypes().find((pt) => pt.id === (projectTypeId as ProjectTypeId));
       if (projectType?.agentInstructions) {
@@ -399,6 +424,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
         const brief = typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : '';
 
         if (brief) {
+          step('runPrePhase (planner subagent) starting…');
           const emit = (event: PhaseEvent) => send(event);
           const preResult = await runPrePhase({
             brief,
@@ -409,6 +435,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
             signal: controller.signal,
             emit,
           });
+          step(`runPrePhase done (planAvailable=${preResult.planAvailable})`);
 
           if (preResult.planAvailable && preResult.enhancedSystemMessage && preResult.plan) {
             planAvailable = true;
@@ -453,6 +480,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     const CREATIVE_PROJECT_TYPES = new Set(['ebook', 'document', 'email_composer', 'music_studio']);
     const creativeSuiteEnabled = !projectTypeId || CREATIVE_PROJECT_TYPES.has(projectTypeId);
     toolList = getAgentTools({ designSkillsEnabled, replicateEnabled, creativeSuiteEnabled });
+    step(`pre-loop complete — entering iteration loop (${toolList.length} tools)`);
 
     } catch (preErr) {
       // Pre-loop setup failed (workspace restore, planner subagent, prelude
@@ -481,6 +509,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
           ? { messages: history, model, temperature: 0.7, maxTokens: 4096, tools: toolList, toolChoice: 'auto' as const }
           : { messages: history, model, temperature: 0.7, maxTokens: 4096 };
 
+        step(`iter ${iter} — adapter.chat() opening stream (${history.length} msgs)`);
         for await (const chunk of adapter.chat(chatReq, { signal: controller.signal })) {
           if (controller.signal.aborted) break;
           if (chunk.type === 'delta') {
