@@ -1252,16 +1252,33 @@ import { designRunHuashuToolDefinition } from './tools/design';
 import { VIDEO_EDIT_TOOL_DEFINITIONS } from './tools/video-edit';
 import { REPLICATE_TOOL_DEFINITIONS, executeReplicateVideo } from './tools/replicate';
 
+/** Set of Creative Suite tool names — used to filter them out when a build
+ *  surface doesn't need them. Website + webapp builds run via chatRunner
+ *  don't call compose_email/create_ebook/create_document/generate_music, so
+ *  shipping their schemas to MiniMax just inflates request size and trips
+ *  the Go-side parser on the trailing `(optional).` description in the
+ *  generate_music tool (round 14.4 bug). */
+const CREATIVE_TOOL_NAMES: ReadonlySet<string> = new Set(
+  CREATIVE_TOOLS.map((t) => t.function.name),
+);
+
 export interface GetToolsOpts {
   designSkillsEnabled?: boolean;
   /** When the user is on the video editor screen, expose timeline ops. */
   videoEditEnabled?:    boolean;
   /** Replicate video generation. Gated by REPLICATE_API_TOKEN in vault. */
   replicateEnabled?:    boolean;
+  /** When false, strip Creative Suite tools (compose_email, create_ebook,
+   *  create_document, generate_music). Default true (kept for the SPA's
+   *  /api/chat path which exposes the full set). chatRunner sets false. */
+  creativeSuiteEnabled?: boolean;
 }
 
 export function getAgentTools(opts: GetToolsOpts = {}): ToolDefinition[] {
-  const tools: ToolDefinition[] = [...AGENT_TOOLS];
+  let tools: ToolDefinition[] = [...AGENT_TOOLS];
+  if (opts.creativeSuiteEnabled === false) {
+    tools = tools.filter((t) => !CREATIVE_TOOL_NAMES.has(t.function.name));
+  }
   if (opts.designSkillsEnabled) tools.push(designRunHuashuToolDefinition as ToolDefinition);
   if (opts.videoEditEnabled)    tools.push(...VIDEO_EDIT_TOOL_DEFINITIONS);
   if (opts.replicateEnabled)    tools.push(...REPLICATE_TOOL_DEFINITIONS);

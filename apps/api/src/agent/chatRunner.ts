@@ -186,7 +186,16 @@ async function runChatBody(proj: ProjectRow, runId: string | null): Promise<void
 
   // Tool loop. Each assistant + tool message gets appended to
   // chat_messages so SPS's GET poll sees it.
-  const toolList = getAgentTools({ designSkillsEnabled: false, replicateEnabled: false });
+  //
+  // `creativeSuiteEnabled: false` strips compose_email/create_ebook/
+  // create_document/generate_music — neither website nor webapp builds
+  // call those, and shipping their schemas inflated the MiniMax request
+  // past a serialization threshold (see round 14.4 INBOUND).
+  const toolList = getAgentTools({
+    designSkillsEnabled:  false,
+    replicateEnabled:     false,
+    creativeSuiteEnabled: false,
+  });
   const ctrl = new AbortController();
 
   for (let iter = 0; iter < MAX_ITERATIONS; iter++) {

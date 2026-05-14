@@ -115,7 +115,11 @@ async function* parseSSE(
  *  and understands image_url blocks for vision inputs). */
 function messagesToApi(messages: ChatRequest['messages']): unknown[] {
   return messages.map((m) => {
-    const hasToolCalls = !!m.tool_calls && m.tool_calls.length > 0;
+    // Strict array check — protects against malformed tool_calls leaking in
+    // from DB roundtrips, accidental string coercion, or null values. MiniMax's
+    // Go-side parser rejects with "Mismatch type []*OaiToolCalls" when this
+    // field isn't a proper array of OpenAI-shaped tool_call objects.
+    const hasToolCalls = Array.isArray(m.tool_calls) && m.tool_calls.length > 0;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const out: any = {
       role: m.role,

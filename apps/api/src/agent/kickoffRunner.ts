@@ -225,7 +225,13 @@ async function runKickoffBody(row: KickoffRow, project: ProjectRow): Promise<voi
 
   // Iterate the tool loop. Identical structure to chat.ts but writing
   // to agent_steps instead of an SSE stream.
-  const toolList = getAgentTools({ designSkillsEnabled: false, replicateEnabled: false });
+  //
+  // Same Creative-Suite filter as chatRunner — round 14.4 fix.
+  const toolList = getAgentTools({
+    designSkillsEnabled:  false,
+    replicateEnabled:     false,
+    creativeSuiteEnabled: false,
+  });
   // No client connection to abort; provide a placeholder signal the
   // adapter never actually uses. If we ever need to cancel a runaway
   // kickoff (e.g., from an admin endpoint), wire this to a controller.
