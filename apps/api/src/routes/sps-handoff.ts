@@ -764,20 +764,31 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
    *   {
    *     role:    "user",                       // required, must be "user"
    *     content: "<text, ≤ 16KB>",
-   *     trigger_agent: true                    // optional, default true
+   *     trigger_agent:  true,                  // optional, default true
+   *     force_new_run:  false                  // optional, default false
    *   }
    *
-   * 200:  { ok, message_id, appended_at, agent_run_id | null }
+   * `force_new_run` (round 14.2 unblock): opt-out for the 409 concurrency
+   * guard. When `true` and a `running` agent_run exists for this project,
+   * ABW marks that run as `failed` (summary appended with replacement
+   * marker) and proceeds with the new turn. Use case: SPS's "Re-trigger"
+   * button — operator knows a previous run is wedged. Default behavior
+   * (`false` / omitted) preserves the strict 409 contract for the
+   * automated build-driver.
+   *
+   * 200:  { ok, message_id, appended_at, agent_run_id | null,
+   *         replaced_run_id? }       // replaced_run_id set iff force_new_run cleared a run
    * 400:  bad_body / message_too_large / unsupported_role
    * 401:  invalid_token (signature, expiry, audience, issuer, scope)
    * 403:  wrong_project / workspace_mismatch
    * 404:  project_not_found
    * 409:  agent_run_in_progress (with current_run_id + started_at)
-   * 500:  internal_error
+   *         — never returned when force_new_run is true
+   * 500:  internal_error / force_new_run_mark_failed
    */
   app.post<{
     Params: { projectId: string };
-    Body:   { role?: unknown; content?: unknown; trigger_agent?: unknown };
+    Body:   { role?: unknown; content?: unknown; trigger_agent?: unknown; force_new_run?: unknown };
   }>(
     '/api/sps/projects/:projectId/chat',
     async (req, reply) => {
@@ -806,10 +817,14 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
 
       // Body validation. Role must be "user" (assistant/tool/system
       // messages come from the agent runner, not from external posts).
+      // `force_new_run` (round 14.2 unblock) lets the caller clear a
+      // stuck `running` agent_run for this project — see endpoint doc
+      // comment above for the use case.
       const bodyParse = z.object({
         role:          z.literal('user').optional().default('user'),
         content:       z.string().min(1).max(16_384),
         trigger_agent: z.boolean().optional().default(true),
+        force_new_run: z.boolean().optional().default(false),
       }).safeParse(req.body);
       if (!bodyParse.success) {
         return reply.status(400).send({
@@ -845,7 +860,11 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
 
       // 409 concurrency guard: if there's a running agent_run on this
       // project, reject. SPS's driver polls; it'll see agent_status
-      // = 'idle' before retrying.
+      // = 'idle' before retrying. `force_new_run` (round 14.2 unblock)
+      // is the opt-out — caller asserts the previous run is wedged and
+      // explicitly wants to replace it. We mark the stale run as
+      // failed:replaced and proceed.
+      let replacedRunId: string | null = null;
       if (body.trigger_agent) {
         try {
           const active = await sql.unsafe(
@@ -855,12 +874,36 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
             [proj.id],
           ) as Array<{ id: string; started_at: string }>;
           if (active.length > 0) {
-            return reply.status(409).send({
-              ok:                     false,
-              error:                  'agent_run_in_progress',
-              current_run_id:         active[0]!.id,
-              current_run_started_at: active[0]!.started_at,
-            });
+            if (body.force_new_run) {
+              // Mark the stuck run as failed so the next read sees it
+              // terminated and our new run can claim the project. Append
+              // the replacement marker to `summary` so post-hoc audits
+              // can correlate "why did this run die?".
+              try {
+                await sql.unsafe(
+                  `UPDATE agent_runs
+                      SET status   = 'failed',
+                          ended_at = NOW(),
+                          summary  = COALESCE(summary, '')
+                                  || ' [replaced by force_new_run at '
+                                  || NOW()::text || ']'
+                    WHERE id = $1`,
+                  [active[0]!.id],
+                );
+                replacedRunId = active[0]!.id;
+              } catch (err) {
+                // eslint-disable-next-line no-console
+                console.error(`[chat] force_new_run mark-failed failed: ${err instanceof Error ? err.message : String(err)}`);
+                return reply.status(500).send({ ok: false, error: 'force_new_run_mark_failed' });
+              }
+            } else {
+              return reply.status(409).send({
+                ok:                     false,
+                error:                  'agent_run_in_progress',
+                current_run_id:         active[0]!.id,
+                current_run_started_at: active[0]!.started_at,
+              });
+            }
           }
         } catch (err) {
           // eslint-disable-next-line no-console
@@ -906,6 +949,9 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
       }
 
       // Audit. Content hash only — chat content may carry customer info.
+      // `force_new_run` + `replaced_run_id` recorded so post-hoc analysis
+      // can correlate "operator-initiated replace" events with stuck-run
+      // patterns over time.
       await writeAuditEvent({
         tenantId: proj.tenant_id,
         action:   'sps.project.chat',
@@ -918,6 +964,8 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
           content_bytes:    body.content.length,
           trigger_agent:    body.trigger_agent,
           agent_run_id:     agentRunId,
+          force_new_run:    body.force_new_run,
+          ...(replacedRunId ? { replaced_run_id: replacedRunId } : {}),
         },
       }).catch(() => { /* best-effort */ });
 
@@ -926,6 +974,7 @@ export async function spsHandoffRoutes(app: FastifyInstance): Promise<void> {
         message_id:   messageId,
         appended_at:  appendedAt,
         agent_run_id: agentRunId,
+        ...(replacedRunId ? { replaced_run_id: replacedRunId } : {}),
       });
     },
   );
