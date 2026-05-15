@@ -14,6 +14,8 @@ import { env } from '../config/env';
 import { getWorkspace, writeWorkspaceFile, writeWorkspaceFileBuffer, listWorkspaceFiles, workspaceExists, restoreWorkspaceFromStorage } from '../preview/workspace';
 import { AGENT_TOOLS, executeToolCall, getAgentTools, type ToolContext } from '../agent/tools';
 import { runPrePhase, runPostPhase, type PhaseEvent } from '../agent/phases/runPhases';
+import { runCompletionPhase } from '../agent/phases/complete';
+import type { PlanType } from '../agent/phases/plan';
 import type { ChatMessage, ContentPart, ToolCall } from '@abw/providers';
 import { listProjectTypes } from '@abw/project-types';
 import type { ProjectTypeId } from '@abw/project-types';
@@ -217,6 +219,10 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     let history: ChatMessage[] = [];
     let plannedPageSlugs: string[] = [];
     let toolList: ReturnType<typeof getAgentTools> = [];
+    // Hoisted for the post-loop completion phase: when the planner subagent
+    // returns a validated plan, we keep a reference here so the completion
+    // phase can iterate plan.sitemap and fill any missing pages on disk.
+    let planForCompletion: PlanType | null = null;
 
     try {
 
@@ -434,6 +440,8 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
             // Capture the sitemap slugs so the nudge logic can detect
             // partial completion (agent emits done after writing 1 of N pages).
             plannedPageSlugs = (preResult.plan.sitemap ?? []).map((p) => p.slug);
+            // Keep the full plan for the post-loop completion phase.
+            planForCompletion = preResult.plan;
           }
         }
       }
@@ -696,6 +704,36 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     } catch (err) {
       send({ type: 'error', error: err instanceof Error ? err.message : String(err) });
     } finally {
+      // ── Phase B-complete: deterministic page-completion pass ──────────────
+      // The iter loop's existing nudge logic (lines ~552-647 above) tries to
+      // herd the model back to writing missing pages, but it relies on prompt
+      // steering — when the model refuses to comply, it can exhaust
+      // MAX_ITERATIONS without finishing the build. This phase runs once
+      // here, after the loop, and guarantees every planned page exists on
+      // disk via one focused single-shot model call per missing page +
+      // a deterministic templated stub fallback. Bounded, idempotent, and
+      // a no-op when every page is already on disk. See apps/api/src/agent/
+      // phases/complete.ts for the full design rationale.
+      if (toolsActive && ws && planForCompletion && !controller.signal.aborted) {
+        try {
+          await runCompletionPhase({
+            ws,
+            plan:        planForCompletion,
+            history,
+            adapter,
+            model,
+            signal:      controller.signal,
+            toolList,
+            toolCtx,
+            projectSlug: projectSlug ?? '',
+            send,
+          });
+        } catch (completionErr) {
+          // eslint-disable-next-line no-console
+          console.warn(`[chat] completion phase failed (non-fatal): ${completionErr instanceof Error ? completionErr.message : String(completionErr)}`);
+        }
+      }
+
       // ── Phase B' + C: Inline post-process humanizer + polish ──────────────
       // Runs after the iteration loop completes (success or partial). Inline,
       // regex-based, no extra MiniMax calls. Surfaces audit findings as SSE.
