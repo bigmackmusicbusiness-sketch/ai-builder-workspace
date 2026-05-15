@@ -191,21 +191,62 @@ export async function bundleProject(input: BundleInput): Promise<BundleOutput> {
       }
     } else {
       // React/Vite and vanilla: use esbuild
-      const result = await buildWithEsbuild(input);
+      let esbuildProducedNothing = false;
+      try {
+        const result = await buildWithEsbuild(input);
 
-      for (const file of result.outputFiles ?? []) {
-        const rel = '/' + relative(join(input.rootDir, 'dist'), file.path).replace(/\\/g, '/');
-        assets.set(rel, file.contents);
+        for (const file of result.outputFiles ?? []) {
+          const rel = '/' + relative(join(input.rootDir, 'dist'), file.path).replace(/\\/g, '/');
+          assets.set(rel, file.contents);
+        }
+
+        for (const w of result.warnings) {
+          warnings.push(redactString(w.text));
+        }
+        for (const e of result.errors) {
+          errors.push(redactString(e.text));
+        }
+
+        // esbuild can return an empty outputFiles list (e.g. when scaffolded
+        // React deps aren't in the monorepo's node_modules and every import
+        // resolves to undefined). Without the explicit signal below this is
+        // a silent failure — the bundler returns an empty asset map, the
+        // preview-serve route fabricates an index.html that references
+        // `/main.js` which doesn't exist, and the browser shows a blank
+        // dark screen. Detect that case and fall back to static collection.
+        const hasJs = Array.from(assets.keys()).some((k) => k.endsWith('.js'));
+        if (!hasJs && (result.outputFiles?.length ?? 0) === 0) {
+          esbuildProducedNothing = true;
+        }
+      } catch (esbuildErr) {
+        // esbuild threw outright (resolution failure, syntax error in
+        // a workspace file, etc.). Capture the error and fall through to
+        // static collection so the user sees SOMETHING — either the agent's
+        // HTML pages or a stub message, never a silent dark void.
+        errors.push(redactString(String(esbuildErr instanceof Error ? esbuildErr.message : esbuildErr)));
+        esbuildProducedNothing = true;
       }
 
-      for (const w of result.warnings) {
-        warnings.push(redactString(w.text));
-      }
-      for (const e of result.errors) {
-        errors.push(redactString(e.text));
+      if (esbuildProducedNothing) {
+        warnings.push(
+          `esbuild produced no output for "${input.entryPoint}" — falling back to static asset collection. ` +
+          `This usually means scaffolded React deps weren't installed (workspace has src/main.tsx but no node_modules). ` +
+          `Serving whatever HTML/CSS/JS files the agent wrote directly.`,
+        );
+        // Clear errors that came from the esbuild attempt — they're now
+        // a warning, not a fatal. The fallback IS the recovery path.
+        errors.length = 0;
+        try {
+          await collectStaticFiles(input.rootDir, input.rootDir, assets);
+        } catch (collectErr) {
+          errors.push(redactString(String(collectErr instanceof Error ? collectErr.message : collectErr)));
+        }
       }
 
-      // Inject a minimal index.html if none was produced
+      // Inject a minimal index.html if none was produced — but only if we
+      // truly have no HTML at all. If the static fallback above grabbed a
+      // user-written index.html, that takes precedence over the synthetic
+      // one that imports a nonexistent `/main.js`.
       if (!assets.has('/index.html')) {
         assets.set('/index.html', encodeText(buildIndexHtml(input)));
       }
