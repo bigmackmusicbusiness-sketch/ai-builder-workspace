@@ -2,6 +2,8 @@
 // Tracks active preview sessions: build status, logs, process PIDs.
 // Persisted to preview_sessions table; in-memory map for fast log streaming.
 
+import type { BundleInput } from './bundler';
+
 export type SessionStatus =
   | 'queued'
   | 'bundling'
@@ -31,6 +33,12 @@ export interface PreviewSession {
   error?: string;
   /** Bundled assets stored in memory for local-dev serving (no Cloudflare KV needed). */
   assets?: Map<string, Uint8Array>;
+  /** The exact BundleInput used at boot. Stored so the serve route can
+   *  re-bundle on cache miss (e.g. after gen_image wrote a new asset that
+   *  the boot-time bundle didn't include) without re-running framework
+   *  detection or workspace restore. The bundler's own BUNDLE_CACHE
+   *  (mtime-keyed) keeps subsequent rebuilds fast when nothing changed. */
+  bundleInput?: BundleInput;
 }
 
 export interface LogEntry {
@@ -76,6 +84,18 @@ export function storeAssets(sessionId: string, assets: Map<string, Uint8Array>):
 
 export function getAssets(sessionId: string): Map<string, Uint8Array> | undefined {
   return sessions.get(sessionId)?.assets;
+}
+
+/** Persist the BundleInput used at boot so the serve route can re-bundle
+ *  on cache miss. Paired with storeAssets — called from the boot handler
+ *  right before bundleProject(). */
+export function storeBundleInput(sessionId: string, input: BundleInput): void {
+  const s = sessions.get(sessionId);
+  if (s) s.bundleInput = input;
+}
+
+export function getBundleInput(sessionId: string): BundleInput | undefined {
+  return sessions.get(sessionId)?.bundleInput;
 }
 
 /** Look up the MOST RECENT booted session for a project slug (for the serve endpoint).

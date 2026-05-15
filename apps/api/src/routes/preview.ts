@@ -15,6 +15,7 @@ import {
   createSession, getSession, listSessions, updateSession,
   appendLog, getLogs, stopSession, deleteSession,
   storeAssets, getAssets, getSessionBySlug, evictSessionsBySlug,
+  storeBundleInput, getBundleInput,
 } from '../preview/sessionManager';
 import { bundleProject } from '../preview/bundler';
 import { scaffoldHelloWorld } from '../preview/scaffold';
@@ -173,7 +174,13 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
           ? (hasCF ? `/${projectSlug}/` : `/api/preview/serve/${projectSlug}/`)
           : '/';
 
-        const result = await bundleProject({ projectId, projectSlug, rootDir: resolvedRoot, entryPoint, framework: resolvedFramework, serveBasePath });
+        const bundleInput = { projectId, projectSlug, rootDir: resolvedRoot, entryPoint, framework: resolvedFramework, serveBasePath };
+        // Persist the input so the serve route can re-bundle on cache miss
+        // (e.g. after gen_image wrote a new asset that boot's bundle didn't
+        // include). The bundler's own BUNDLE_CACHE keeps no-op re-bundles
+        // sub-5ms; the only cost is the workspace tree walk + mtime check.
+        storeBundleInput(sessionId, bundleInput);
+        const result = await bundleProject(bundleInput);
 
         for (const w of result.warnings) {
           appendLog(sessionId, { level: 'warn', source: 'bundler', message: w });
@@ -513,10 +520,33 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
         return reply.status(404).send('Preview not booted. Click Boot in the workspace.');
       }
 
-      const assets = getAssets(session.sessionId);
-      const content = assets?.get(assetPath);
+      let assets  = getAssets(session.sessionId);
+      let content = assets?.get(assetPath);
+
+      // Cache miss: workspace may have changed since boot (e.g. gen_image
+      // wrote a new asset that boot's bundle didn't include). Re-bundle
+      // using the stored BundleInput and refresh the session cache. The
+      // bundler's own mtime-keyed BUNDLE_CACHE keeps this O(1) when the
+      // tree hasn't changed, and only re-walks/re-builds when it has.
       if (!content) {
-        // Fallback to index.html for SPA client-side routing
+        const bundleInput = getBundleInput(session.sessionId);
+        if (bundleInput) {
+          try {
+            const fresh = await bundleProject(bundleInput);
+            storeAssets(session.sessionId, fresh.assets);
+            assets  = fresh.assets;
+            content = fresh.assets.get(assetPath);
+          } catch (err) {
+            // Re-bundle failed (filesystem race, esbuild blowup, etc).
+            // Fall through to SPA fallback below.
+            req.log.warn({ err: err instanceof Error ? err.message : String(err), slug }, 'preview serve re-bundle failed');
+          }
+        }
+      }
+
+      if (!content) {
+        // Real miss after refresh — SPA fallback to index.html for
+        // client-side routing.
         const index = assets?.get('/index.html');
         if (index) {
           return reply.type('text/html').send(injectBase(index, slug));
@@ -539,9 +569,27 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
     async (req, reply) => {
       const session = getSessionBySlug(req.params.slug);
       if (!session) return reply.status(404).send('Preview not booted.');
-      const assets = getAssets(session.sessionId);
-      const index  = assets?.get('/index.html');
-      if (!index)  return reply.status(404).send('index.html not found');
+      let assets = getAssets(session.sessionId);
+      let index  = assets?.get('/index.html');
+
+      // Same cache-miss-refresh as the wildcard handler — covers the case
+      // where boot bundled before the agent finished writing index.html
+      // (gen_image -> write_file race, agent finishing post-boot, etc).
+      if (!index) {
+        const bundleInput = getBundleInput(session.sessionId);
+        if (bundleInput) {
+          try {
+            const fresh = await bundleProject(bundleInput);
+            storeAssets(session.sessionId, fresh.assets);
+            assets = fresh.assets;
+            index  = fresh.assets.get('/index.html');
+          } catch (err) {
+            req.log.warn({ err: err instanceof Error ? err.message : String(err), slug: req.params.slug }, 'preview serve re-bundle failed');
+          }
+        }
+      }
+
+      if (!index) return reply.status(404).send('index.html not found');
       return reply.type('text/html').send(injectBase(index, req.params.slug));
     },
   );
