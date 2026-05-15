@@ -171,6 +171,16 @@ export async function hydrateChatFromServer(opts: {
   token:       string;
 }): Promise<void> {
   const { projectId, projectSlug, apiBase, token } = opts;
+  // Snapshot what was already in local state BEFORE we issue the fetch.
+  // The hydration window (~200-800ms) overlaps with user activity — if the
+  // user sends a message during this window, `addMessage` appends to the
+  // tail of `messagesByProject[projectId]`. After the fetch resolves we
+  // diff `localAfter` against `localBefore` to recover anything added
+  // mid-flight, so the server's authoritative history doesn't clobber a
+  // just-sent user message. Without this guard, opening a project and
+  // immediately typing produces a phantom-message bug: the SSE reply
+  // still arrives but the user's prompt bubble disappears from the panel.
+  const localBefore = useChatStore.getState().messagesByProject[projectId] ?? [];
   try {
     const res = await fetch(`${apiBase}/api/projects/${encodeURIComponent(projectSlug)}/chat-history`, {
       method:  'GET',
@@ -189,7 +199,15 @@ export async function hydrateChatFromServer(opts: {
     const mapped = body.messages
       .map((row, i) => rowToChatMessage(row, i))
       .filter((m): m is ChatMessage => m !== null);
-    useChatStore.getState().setProjectMessages(projectId, mapped);
+    // Find any messages added to local state during the fetch window.
+    // Zustand's addMessage always appends, so they sit at the tail past
+    // the localBefore.length boundary.
+    const localAfter        = useChatStore.getState().messagesByProject[projectId] ?? [];
+    const addedDuringFetch  = localAfter.slice(localBefore.length);
+    // Splice them after the server's authoritative history so the user
+    // sees: [persisted server messages] → [their in-flight new message].
+    const merged = [...mapped, ...addedDuringFetch];
+    useChatStore.getState().setProjectMessages(projectId, merged);
     useChatStore.getState().markHydrated(projectId);
   } catch (err) {
     // eslint-disable-next-line no-console
