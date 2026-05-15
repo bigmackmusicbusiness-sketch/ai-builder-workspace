@@ -197,6 +197,18 @@ async function loadTypeSecurityChecklist(typeId: string): Promise<string> {
 async function buildExecutionDirective(plan: PlanType, projectSlug: string, projectTypeId: string): Promise<string> {
   const pagesPlan = plan.sitemap.map((p) => {
     const sectionsList = p.sections.map((s) => `\`${s}\``).join(', ');
+    // Per-page image list — every shared_asset whose `used_in` includes this
+    // page slug. Rendered inline so the model knows exactly which `<img src>`
+    // references belong on this specific page WHEN IT IS FIRST WRITTEN.
+    // The image bytes are filled in later by gen_image (the paths are
+    // deterministic and stable across runs), but the HTML must reference
+    // them from the initial write — that's the difference between a real
+    // page with photos and a page that needs a second rewrite-pass to add
+    // images (which is where the model's JSON-escape failure mode lives).
+    const pageImages = (plan.shared_assets ?? []).filter((a) => a.used_in.includes(p.slug));
+    const pageImagesBlock = pageImages.length > 0
+      ? pageImages.map((a) => `    - \`<img src="/images/${a.id}.jpg" alt="${a.prompt.replace(/"/g, '\\"').slice(0, 80)}" />\``).join('\n')
+      : '    (no images for this page)';
     // NOTE on `role`: this is structural metadata (a `+`-separated list of
     // section-type tokens like "hero+wod-of-day+free-intro-cta"). It's the
     // planner's shorthand for what the page IS, not copy to render. Prior
@@ -210,7 +222,9 @@ async function buildExecutionDirective(plan: PlanType, projectSlug: string, proj
 - **Sections (in order):** ${sectionsList}
 - **SEO title:** ${p.seo.title}
 - **Meta description:** ${p.seo.meta_description}
-- **Schema.org:** ${(p.schema_org ?? []).join(', ') || '(none)'}`;
+- **Schema.org:** ${(p.schema_org ?? []).join(', ') || '(none)'}
+- **Embed these img tags in this page's HTML on the FIRST write — exact src paths required, don't invent your own:**
+${pageImagesBlock}`;
   }).join('\n\n');
 
   const assetsList = plan.shared_assets.length > 0
@@ -254,7 +268,8 @@ async function buildExecutionDirective(plan: PlanType, projectSlug: string, proj
     ``,
     pagesPlan,
     ``,
-    `### Shared images (call gen_image for each AFTER all pages are written):`,
+    `### Shared images`,
+    `Each \`<img src>\` path below is **deterministic and stable** — the file shows up at that path after \`gen_image\` runs. **Reference these paths directly when you write each page**; do NOT wait until images are generated and then rewrite pages to add \`<img>\` tags (that requires a full file re-emit, which is the path most likely to fail with truncated tool args).`,
     ``,
     assetsList,
     ``,
@@ -278,14 +293,15 @@ async function buildExecutionDirective(plan: PlanType, projectSlug: string, proj
     ``,
     `## EXECUTION ORDER`,
     `1. \`list_files\` to see what exists.`,
-    `2. \`write_file\` for each page in the sitemap above. Each page must have:`,
+    `2. \`write_file\` for each page in the sitemap above **in one shot per page**. Each page must have:`,
     `   - Tailwind via CDN: \`<script src="https://cdn.tailwindcss.com"></script>\``,
     `   - The voice and tone described above`,
     `   - The exact sections listed for that page`,
     `   - Required SEO meta tags + Schema.org JSON-LD`,
+    `   - **The \`<img src="/images/...">\` tags listed for that page above — embedded directly in the appropriate sections (hero, feature, gallery, etc.) on this FIRST write. Don't write the page first and rewrite it later to add images; that's the path that fails with truncated args.**`,
     `   - Compliance blocks in footer where applicable`,
     `   - Security patterns from the checklist above (where applicable to a static or dynamic page)`,
-    `3. \`gen_image\` for each shared asset, saving to \`/images/<asset-id>.jpg\``,
+    `3. \`gen_image\` for each shared asset, saving to \`/images/<asset-id>.jpg\`. This generates the bytes the \`<img src>\` references already point at — no page rewrites needed afterward.`,
     `4. One short summary in chat (2-3 sentences max).`,
     ``,
     `Project slug: "${projectSlug}".`,
