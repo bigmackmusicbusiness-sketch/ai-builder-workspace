@@ -166,12 +166,18 @@ export async function bundleProject(input: BundleInput): Promise<BundleOutput> {
       // Static projects: walk the rootDir and collect all files as-is (no bundling)
       await collectStaticFiles(input.rootDir, input.rootDir, assets);
 
-      // Patch index.html so assets resolve correctly when served from a sub-path.
+      // Patch EVERY .html file so assets resolve correctly when served from a
+      // sub-path. Prior version only patched /index.html, which meant sub-pages
+      // (menu.html, about.html, etc.) shipped <img src="/images/X.jpg">
+      // references that resolved to the api root (/images/X.jpg) instead of
+      // the slug sub-path (/api/preview/serve/<slug>/images/X.jpg) → 404 on
+      // every image. Apply the same two-step rewrite-then-inject pass to all
+      // HTML files in the bundle.
       // Order matters: rewrite absolute paths FIRST, then inject the base tag —
       // otherwise the rewriter will strip the leading slash from the base href itself.
       if (input.serveBasePath) {
-        const raw = assets.get('/index.html');
-        if (raw) {
+        for (const [path, raw] of assets) {
+          if (!path.toLowerCase().endsWith('.html') && !path.toLowerCase().endsWith('.htm')) continue;
           let html = new TextDecoder().decode(raw);
           // Step 1: Rewrite absolute-path src/href="/foo" → "foo" (drop leading slash)
           // so they resolve relative to the base href instead of the server root.
@@ -186,7 +192,7 @@ export async function bundleProject(input: BundleInput): Promise<BundleOutput> {
             const baseTag = `<base href="${input.serveBasePath}">`;
             html = html.replace(/(<head[^>]*>)/i, `$1\n  ${baseTag}`);
           }
-          assets.set('/index.html', encodeText(html));
+          assets.set(path, encodeText(html));
         }
       }
     } else {
