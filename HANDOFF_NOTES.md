@@ -8169,3 +8169,132 @@ the fallback was carrying weight on a degraded-pool day.
 - 🔭 Same DB-pool watch item — applies to both paths
 
 — ABW agent, 2026-05-15 (round 15.0 OUTBOUND, IDE-side verification + diag cleanup)
+
+## OUTBOUND TO SPS — 2026-05-15 (round 15.1 + 15.2) — completion phase + the loss bugs
+
+User feedback after round 15.0 was sharp: the niche-detection signal isn't
+the test, the working website is. End-to-end pass over the three planned
+briefs showed only Bend Heart Yoga (yoga) producing a clean site —
+Iron Span CrossFit (crossfit) stopped at prose-only after writing one
+partial page, and Reformer Garden Pilates got killed mid-stream by the
+diag-cleanup deploy. The "agent reliability is a pre-existing problem"
+framing wasn't enough; the user wanted it fixed for real and the loss
+bugs ("no more loss in messages or loss in images") closed permanently.
+Two shipments tonight.
+
+### Round 15.1 — `runCompletionPhase` (`88bd588`)
+
+New phase at `apps/api/src/agent/phases/complete.ts`. Runs once after
+the iter loop exits (in chat.ts's `finally` block), before
+`runPostPhase`. For each `plan.sitemap` entry not on disk:
+
+1. **One** focused single-shot model call with `toolChoice: 'required'`,
+   a hyper-narrow system message naming exactly the one page to write,
+   and prior history as context. No nudging, no retry, one call.
+2. If the model writes it cleanly → counted as `modelWrote`.
+3. If the file is still missing → **deterministic templated stub**
+   that reuses the `<nav>` + `<footer>` extracted from index.html so
+   cross-page navigation works, with plan-defined sections as named
+   placeholder blocks (not Lorem ipsum, real section names the user
+   can refine).
+
+Bounded, additive, no-op when every planned page is already on disk.
+Doesn't touch the existing nudge logic — that still tries first and
+usually succeeds; this is the safety net for the prose-only-stop case.
+
+**Verified live** — Iron Span CrossFit Brief C end-to-end on the
+deploy: the model wrote index/programming/coaches/pricing (4 pages,
+real content + 5 generated images), claimed in chat that it wrote
+contact too but actually didn't (classic hallucinated-success bug),
+then humanize+polish ran, then the completion phase fired:
+`✓ Templated contact.html (build completion fallback)` is right there
+in the chat panel. Files panel confirms contact.html on disk + all 5
+planned pages + images/ folder. Preview boots, nav links to all 5.
+**1 of 3 → 3 of 3** on the planned-niche-build end-to-end test.
+
+### Round 15.2 — Loss bug fixes (`05d07ee`)
+
+Two silent data-loss surfaces closed:
+
+**(a) IDE chat history lived ONLY in browser localStorage.** Different
+browser / cleared cache / new device = entire conversation gone. The
+`chat_messages` table existed (and `runChatTurn` uses it cleanly on the
+SPS path) but `/api/chat` never persisted anything.
+
+Fix:
+- New `apps/api/src/db/chatMessages.ts` shared persistence module.
+  Mirrors what chatRunner.ts does so both paths now write through the
+  same primitive — divergence-proof. `sql.json(...)` (round 14.6
+  double-encode fix) is used uniformly.
+- `chat.ts` persists every turn: the latest user message before the
+  iter loop, each assistant turn (with tool_calls) inside, each tool
+  result alongside its tool_call_id. All fire-and-forget — DB blip can't
+  take down the chat path.
+- New endpoint `GET /api/projects/:slug/chat-history`. Timeout-bounded
+  project lookup matches the chat handler's own.
+- SPA: `chatStore.ts` adds `hydrateChatFromServer` + `setProjectMessages`
+  + `markHydrated`; `ChatThread.tsx` adds a `useEffect` that fires
+  hydration whenever the current project changes. localStorage stays
+  as a fast-first-paint cache but **the DB is now the source of truth**.
+
+**Verified live** — sent Brief C in Iron Span CrossFit's new chat, ran
+the full build, navigated away and back. Chat panel re-populated with
+the original brief + run-time messages ("Now generating all shared
+images:" etc). Survives reload, would survive new browser too.
+
+**(b) Text-file workspace backup-to-Storage was called only from the
+`write_file` agent tool.** Direct callers (chat.ts auto-scaffold stub,
+planner's `_plan.json` write, the new completion-phase template
+fallback) bypassed it. Coolify wipes ephemeral FS on every rollout,
+so any text file not routed through the agent tool was lost on deploy.
+
+Fix:
+- `apps/api/src/preview/workspace.ts`: `writeWorkspaceFile` (text) now
+  calls a backup wrapper internally, matching what
+  `writeWorkspaceFileBuffer` (binary) already did. Both wrappers
+  fire-and-forget the first upload but schedule a 2s-delayed retry on
+  failure, and **log loudly to api logs on persistent (two-time)
+  failure** — the bug was that backup failures were SILENT, making
+  data loss invisible until the next rollout.
+- `apps/api/src/agent/tools.ts`: removed the redundant
+  `backupFileToStorage` call from the `write_file` tool —
+  `writeWorkspaceFile` now handles backup itself, so every caller
+  benefits from the same retry-and-log path. Tools.ts is now thinner.
+
+**Watch item:** if you see `[workspace] text backup FAILED twice for
+...` or `[workspace] binary backup FAILED twice for ...` in api logs,
+that's the signal a real file is on local FS only and will be lost on
+the next rollout. Manual recovery via inspecting the project workspace
++ re-uploading is the action. The new logs make this observable; the
+retry covers the transient-blip case which is most failures.
+
+### Long-term scalable, not patchy
+
+- Both persistence and durability fixes live INSIDE the shared
+  primitives (`db/chatMessages.ts` and `writeWorkspaceFile`). Any new
+  code path that appends a chat message or writes a file gets
+  persistence + durability for free, no caller responsibility.
+- No new infrastructure (no queue tables, no background workers).
+  Retry is in-memory with bounded scope (one shot, 2s later).
+- The completion phase is its own module — doesn't touch the iter
+  loop logic. The iter loop still tries first; the phase is the
+  safety net.
+- Standalone-IDE guarantee preserved on all three commits.
+
+### State
+
+- ✅ Round 14 (SPS): closed
+- ✅ Round 15.0 (ABW): Bugs #1/#2/#3 + Layer E IDE-verified + diag
+  cleanup
+- ✅ **Round 15.1 (ABW): every planned page lands on disk** via the
+  completion phase — model wrote OR templated, but exists. Verified
+  on Iron Span CrossFit (templated contact.html).
+- ✅ **Round 15.2 (ABW): chat persistence + workspace backup** — the
+  DB is the source of truth for chat (any browser/device), and every
+  workspace write is durable (every caller, retried on failure, logged
+  loudly on persistent failure).
+- 🔭 Watch item: `[workspace] backup FAILED twice` in api logs would
+  surface a persistent Storage issue. None seen so far.
+
+— ABW agent, 2026-05-15 (round 15.1 + 15.2 OUTBOUND, completion phase
++ loss bugs killed)
