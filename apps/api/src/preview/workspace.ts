@@ -393,34 +393,72 @@ async function doRestoreWorkspaceFromStorage(ws: WorkspaceHandle): Promise<void>
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   const prefix   = `${ws.tenantId}/workspaces/${ws.projectSlug}/`;
 
+  // Recursively enumerate every file under `prefix`. Supabase Storage's
+  // .list() does NOT recurse by default — at each prefix it returns direct
+  // children only, with subdirectories appearing as folder entries
+  // (id === null) instead of their contents. Before this walk, files inside
+  // any subdir (e.g. `images/hero.jpg`) silently vanished on every Coolify
+  // FS wipe because the prior implementation only listed the top level and
+  // then tried to "download" the `images` folder name as if it were a file,
+  // 404'ing and swallowing the error. BFS by relative path so the result
+  // is deterministic; cap depth + branch count defensively.
+  const MAX_LIST_PAGE  = 1000;  // Supabase per-call limit
+  const MAX_DEPTH      = 8;     // workspaces are flat — 2-3 levels in practice
+  const MAX_TOTAL_FILES = 5000; // sanity guard
+  const enumerateAllFiles = async (bucket: string): Promise<string[]> => {
+    const allRelPaths: string[] = [];
+    type Frame = { relDir: string; depth: number };
+    const queue: Frame[] = [{ relDir: '', depth: 0 }];
+    while (queue.length > 0) {
+      const { relDir, depth } = queue.shift()!;
+      if (depth > MAX_DEPTH) continue;
+      if (allRelPaths.length > MAX_TOTAL_FILES) break;
+      const currentPrefix = relDir ? `${prefix}${relDir}` : prefix;
+      const { data, error } = await supabase.storage.from(bucket).list(currentPrefix, {
+        limit: MAX_LIST_PAGE, sortBy: { column: 'name', order: 'asc' },
+      });
+      if (error || !data?.length) continue;
+      for (const item of data) {
+        if (!item.name) continue;
+        // Supabase Storage folder entries have id === null + metadata === null.
+        // Real files have a populated id and metadata.size.
+        const isFolder = item.id === null;
+        if (isFolder) {
+          queue.push({ relDir: `${relDir}${item.name}/`, depth: depth + 1 });
+        } else {
+          // Skip the placeholder folder marker some storage layouts create.
+          if (item.name.endsWith('/')) continue;
+          allRelPaths.push(`${relDir}${item.name}`);
+        }
+      }
+    }
+    return allRelPaths;
+  };
+
   const downloadFromBucket = async (bucket: string): Promise<number> => {
-    const { data, error } = await supabase.storage.from(bucket).list(prefix, {
-      limit: 200, sortBy: { column: 'name', order: 'asc' },
-    });
-    if (error || !data?.length) return 0;
+    const relPaths = await enumerateAllFiles(bucket);
+    if (relPaths.length === 0) return 0;
     let restored = 0;
     await Promise.allSettled(
-      data
-        .filter((f) => f.name && !f.name.endsWith('/'))
-        .map(async (file) => {
-          const { data: blob, error: dlErr } = await supabase.storage
-            .from(bucket)
-            .download(`${prefix}${file.name}`);
-          if (dlErr || !blob) return;
-          // Dispatch by extension: binary (image/video/audio/pdf/font) is
-          // restored byte-for-byte via writeWorkspaceFileBuffer; everything
-          // else is treated as utf-8 text. Both helpers fire-and-forget the
-          // bucket re-upload, but since the bucket already has the bytes,
-          // those calls are no-ops.
-          if (binaryMime(file.name)) {
-            const ab = await blob.arrayBuffer();
-            await writeWorkspaceFileBuffer(ws, file.name, Buffer.from(ab));
-          } else {
-            const text = await blob.text();
-            await writeWorkspaceFile(ws, file.name, text);
-          }
-          restored++;
-        }),
+      relPaths.map(async (relPath) => {
+        const { data: blob, error: dlErr } = await supabase.storage
+          .from(bucket)
+          .download(`${prefix}${relPath}`);
+        if (dlErr || !blob) return;
+        // Dispatch by extension: binary (image/video/audio/pdf/font) is
+        // restored byte-for-byte via writeWorkspaceFileBuffer; everything
+        // else is treated as utf-8 text. Both helpers fire-and-forget the
+        // bucket re-upload, but since the bucket already has the bytes,
+        // those calls are no-ops.
+        if (binaryMime(relPath)) {
+          const ab = await blob.arrayBuffer();
+          await writeWorkspaceFileBuffer(ws, relPath, Buffer.from(ab));
+        } else {
+          const text = await blob.text();
+          await writeWorkspaceFile(ws, relPath, text);
+        }
+        restored++;
+      }),
     );
     return restored;
   };
