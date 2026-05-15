@@ -197,9 +197,16 @@ async function loadTypeSecurityChecklist(typeId: string): Promise<string> {
 async function buildExecutionDirective(plan: PlanType, projectSlug: string, projectTypeId: string): Promise<string> {
   const pagesPlan = plan.sitemap.map((p) => {
     const sectionsList = p.sections.map((s) => `\`${s}\``).join(', ');
+    // NOTE on `role`: this is structural metadata (a `+`-separated list of
+    // section-type tokens like "hero+wod-of-day+free-intro-cta"). It's the
+    // planner's shorthand for what the page IS, not copy to render. Prior
+    // wording was `- **Role:** ${p.role}` which the model occasionally
+    // copy-pasted verbatim into hero eyebrow text. The label below makes
+    // the intent unmistakable so the model uses it for structural decisions
+    // only and never writes it into rendered HTML.
     return `### \`${p.slug === 'index' ? 'index.html' : `${p.slug}.html`}\`
 - **Title:** ${p.title}
-- **Role:** ${p.role}
+- _Internal page-type hint (DO NOT render this token in HTML, use it only for structural decisions):_ \`${p.role}\`
 - **Sections (in order):** ${sectionsList}
 - **SEO title:** ${p.seo.title}
 - **Meta description:** ${p.seo.meta_description}
