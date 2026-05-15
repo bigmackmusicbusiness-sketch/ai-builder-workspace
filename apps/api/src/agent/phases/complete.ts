@@ -478,7 +478,10 @@ async function tryFocusedWrite(input: FocusedWriteInput): Promise<boolean> {
     messages: [...history, { role: 'system' as const, content: focusedSystem }],
     model,
     temperature: 0.3,                              // lower temp = more compliant
-    maxTokens:   4096,
+    // 8192 — parity with chatRunner + chat.ts. The completion phase writes
+    // a single full page in one tool call; 4096 was hitting truncation on
+    // pages with sections + img tags, leaving the focused write incomplete.
+    maxTokens:   8192,
     tools:       toolList,
     toolChoice:  'required' as const,              // FORCE a tool call
   };

@@ -242,9 +242,14 @@ async function runKickoffBody(row: KickoffRow, project: ProjectRow): Promise<voi
     const toolCalls: ToolCall[] = [];
     let hadError = false;
 
+    // maxTokens: 8192 — matches chatRunner + chat.ts. The earlier 4096
+    // truncated full-page write_file calls mid-arguments, leaving the
+    // tool_call JSON unparseable; the sanitizer at line ~294 stubbed
+    // the call with the truncation error, which the model then surfaced
+    // back to the user as a literal text reply. See round 16.2.
     for await (const chunk of adapter.chat({
       messages: history, model: 'MiniMax-M2.7',
-      temperature: 0.7, maxTokens: 4096,
+      temperature: 0.7, maxTokens: 8192,
       tools: toolList, toolChoice: 'auto',
     }, { signal: ctrl.signal })) {
       if (chunk.type === 'delta')      { assistantText += chunk.delta; }
@@ -283,15 +288,19 @@ async function runKickoffBody(row: KickoffRow, project: ProjectRow): Promise<voi
     }
 
     // Persist the assistant turn (with tool calls) into history.
+    // Internal-status stub keys (NOT human-readable English) so the model
+    // doesn't echo them back to the user as a chat message on the next
+    // turn. See chat.ts / chatRunner.ts / tools.ts for the matching
+    // internal-retry contract.
     const sanitizedCalls = toolCalls.map((tc) => {
       let safeArgs = tc.function.arguments;
       try {
         JSON.parse(safeArgs);
         if (safeArgs.length > MAX_ARGS_BYTES) {
-          safeArgs = JSON.stringify({ error: 'arguments truncated — content was too large for history' });
+          safeArgs = JSON.stringify({ _internal_status: 'args_truncated_oversized', _retry: true });
         }
       } catch {
-        safeArgs = JSON.stringify({ error: 'arguments were not valid JSON — model should retry with smaller content' });
+        safeArgs = JSON.stringify({ _internal_status: 'args_truncated_unparseable', _retry: true });
       }
       return { ...tc, function: { ...tc.function, arguments: safeArgs } };
     });

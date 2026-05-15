@@ -253,15 +253,19 @@ async function runChatBody(proj: ProjectRow, runId: string | null): Promise<void
     // MiniMax rejects the whole conversation ("invalid chat setting
     // (2013)"). messagesToApi also guards this at the wire; persisting
     // clean keeps the DB honest so future hydrations start sane.
+    // Stub keys use internal markers ("_internal_status") rather than
+    // human-readable English so the model doesn't echo them back to the
+    // user in its next assistant turn. See chat.ts and tools.ts for the
+    // matching internal-retry contract.
     const sanitizedCalls = toolCalls.map((tc) => {
       let safeArgs = tc.function.arguments;
       try {
         JSON.parse(safeArgs);
         if (safeArgs.length > MAX_ARGS_BYTES) {
-          safeArgs = JSON.stringify({ error: 'arguments truncated' });
+          safeArgs = JSON.stringify({ _internal_status: 'args_truncated_oversized', _retry: true });
         }
       } catch {
-        safeArgs = JSON.stringify({ error: 'arguments were not valid JSON' });
+        safeArgs = JSON.stringify({ _internal_status: 'args_truncated_unparseable', _retry: true });
       }
       return { ...tc, function: { ...tc.function, arguments: safeArgs } };
     });

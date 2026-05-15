@@ -577,9 +577,18 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
         let finalUsage: { promptTokens: number; completionTokens: number } | undefined;
         let hadError = false;
 
+        // maxTokens: 8192 — matches chatRunner.ts:235. The earlier 4096 was
+        // too tight for write_file with full-page HTML content; the model
+        // would hit the ceiling mid-arguments, the JSON string would
+        // truncate, and the sanitizer at line 746 would stub the call as
+        // "arguments were not valid JSON — model should retry with smaller
+        // content." The model then echoed that exact text back to the
+        // user as its next assistant turn (visible loss bug; the user
+        // shouldn't see internal plumbing). 8192 gives full pages
+        // headroom; MiniMax M2.7 supports the higher ceiling.
         const chatReq = toolsActive
-          ? { messages: history, model, temperature: 0.7, maxTokens: 4096, tools: toolList, toolChoice: 'auto' as const }
-          : { messages: history, model, temperature: 0.7, maxTokens: 4096 };
+          ? { messages: history, model, temperature: 0.7, maxTokens: 8192, tools: toolList, toolChoice: 'auto' as const }
+          : { messages: history, model, temperature: 0.7, maxTokens: 8192 };
 
         for await (const chunk of adapter.chat(chatReq, { signal: controller.signal })) {
           if (controller.signal.aborted) break;
@@ -733,17 +742,27 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
         // Sanitize tool_call arguments before storing in history.
         // If arguments are invalid JSON or exceed 40 KB, replace with a safe
         // placeholder so the next MiniMax request doesn't get a 400 (2013).
+        //
+        // Stub keys deliberately look like internal status markers ("_internal_*")
+        // rather than human-readable English. The previous wording
+        // ("arguments were not valid JSON — model should retry with smaller
+        // content") was being read by the model on its NEXT turn and echoed
+        // back to the user as if it were a real assistant message — the user
+        // saw the literal English error text in their chat panel. The internal-
+        // looking shape combined with the tool result's explicit
+        // "[internal:retry] DO NOT mention this … to the user" guidance keeps
+        // the recovery silent.
         const MAX_ARGS_BYTES = 40_000;
         const sanitizedCalls = toolCalls.map((tc) => {
           let safeArgs = tc.function.arguments;
           try {
             JSON.parse(safeArgs);                          // validate
             if (safeArgs.length > MAX_ARGS_BYTES) {        // cap size
-              safeArgs = JSON.stringify({ error: 'arguments truncated — content was too large for history' });
+              safeArgs = JSON.stringify({ _internal_status: 'args_truncated_oversized', _retry: true });
             }
           } catch {
             // Unparseable — replace entirely so it doesn't poison the next request
-            safeArgs = JSON.stringify({ error: 'arguments were not valid JSON — model should retry with smaller content' });
+            safeArgs = JSON.stringify({ _internal_status: 'args_truncated_unparseable', _retry: true });
           }
           return { ...tc, function: { ...tc.function, arguments: safeArgs } };
         });

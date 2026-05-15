@@ -160,11 +160,16 @@ function sanitizeToolCalls(toolCalls: ToolCall[]): ToolCall[] {
       JSON.parse(args);
       return tc;                               // already valid — pass through
     } catch {
+      // Internal-status stub: see chat.ts / chatRunner.ts. Prior wording
+      // ("arguments were not valid JSON…") was a literal English error
+      // string the model read on its next turn and surfaced to the user
+      // as a chat reply. The internal-looking shape signals "retry
+      // silently" without giving the model anything echoable.
       return {
         ...tc,
         function: {
           ...tc.function,
-          arguments: '{"error":"arguments were not valid JSON (truncated upstream)"}',
+          arguments: '{"_internal_status":"args_truncated_unparseable","_retry":true}',
         },
       };
     }

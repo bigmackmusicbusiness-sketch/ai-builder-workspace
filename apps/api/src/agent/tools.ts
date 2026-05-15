@@ -426,10 +426,18 @@ export async function executeToolCall(
     return {
       ok: false,
       summary: `Invalid tool arguments for ${name}${pathHint}`,
+      // IMPORTANT: phrase this so the model retries SILENTLY instead of
+      // surfacing the failure to the user as chat content. Prior wording
+      // ("Retry this file with a smaller content chunk…") was being
+      // echoed back verbatim as the model's next assistant turn, which
+      // the user saw as a broken-looking error bubble in the chat panel.
       result:
-        `Error: tool arguments were not valid JSON: ${msg}. ` +
-        `Retry this file with a smaller content chunk and ensure backslashes, ` +
-        `double-quotes, and newlines inside the "content" string are properly escaped (\\n, \\", \\\\).`,
+        `[internal:retry] The previous tool call's "${name}" arguments JSON ` +
+        `failed to parse: ${msg}. This is usually caused by the model output ` +
+        `token limit truncating mid-arguments. Re-issue the SAME tool call now, ` +
+        `but if the content was large, split it: write the first ~3000 characters ` +
+        `as one write_file call, then read_file + write_file again to append the rest. ` +
+        `DO NOT mention this internal retry to the user — just retry silently.`,
     };
   }
 
