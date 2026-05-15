@@ -170,7 +170,237 @@ export async function runCompletionPhase(input: CompletionPhaseInput): Promise<C
     }
   }
 
+  // Step 4 — broken internal-link backstop (round 16 gap 2).
+  //
+  // SPS surfaced this on the Joe & the Juice E2E: pages ship with footers
+  // linking to terms.html / privacy.html, but those pages were never in
+  // plan.sitemap and never written. Every customer site shipped with two
+  // dead footer links until manually patched. The fix is more general
+  // than just legal pages: scan every written HTML for internal `*.html`
+  // links, diff against what's actually on disk, template a stub for any
+  // dangling target. Catches future "linked but not written" cases beyond
+  // ToS/Privacy.
+  //
+  // Bounded: only scans .html files inside the workspace root (no
+  // subdirectory recursion needed — the agent writes flat), only matches
+  // bare `href="X.html"` links (not absolute URLs, not anchor jumps).
+  // Each templated stub reuses the same nav + footer extracted above and
+  // a niche-appropriate placeholder body via buildLinkBackstopStub.
+  try {
+    await backstopBrokenLinks({
+      ws,
+      plan,
+      projectSlug,
+      nav,
+      footer,
+      result,
+      send,
+    });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn(`[complete] broken-link backstop failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`);
+  }
+
   return result;
+}
+
+// ── Broken-link backstop ─────────────────────────────────────────────────────
+
+interface BackstopInput {
+  ws:           WorkspaceHandle;
+  plan:         PlanType;
+  projectSlug:  string;
+  nav:          string;
+  footer:       string;
+  result:       CompletionPhaseResult;
+  send:         (event: unknown) => void;
+}
+
+/** Scan written .html files for internal `href="X.html"` links that don't
+ *  resolve to a file on disk, then template a stub for each. Idempotent
+ *  and bounded: only the immediate workspace root is scanned, only
+ *  bare-filename links are considered, and we cap at 8 backstop pages per
+ *  build so a runaway agent can't pin disk via this path. */
+async function backstopBrokenLinks(input: BackstopInput): Promise<void> {
+  const { ws, plan, projectSlug, nav, footer, result, send } = input;
+  const MAX_BACKSTOP = 8;
+
+  // Collect every workspace file (with leading-slash normalization, same
+  // as the sitemap scan above). Build a set of basenames for quick lookup.
+  const onDiskRaw = await listWorkspaceFiles(ws);
+  const onDisk = new Set(onDiskRaw.map((p) => p.replace(/^\/+/, '').toLowerCase()));
+
+  // Pull internal href targets from every .html on disk.
+  const linkTargets = new Set<string>();
+  for (const rawPath of onDiskRaw) {
+    const path = rawPath.replace(/^\/+/, '');
+    if (!/\.html?$/i.test(path)) continue;
+    const content = await readWorkspaceFile(ws, path).catch(() => null);
+    if (!content) continue;
+    // Match href="X.html" / href='X.html' — bare filename only.
+    // Skip http(s) URLs, protocol-relative URLs, anchor-only #foo,
+    // mailto/tel links, and paths starting with /api or /images.
+    const matches = content.matchAll(/href\s*=\s*["']([^"'#?]+\.html?)(?:[#?][^"']*)?["']/gi);
+    for (const m of matches) {
+      const raw = m[1];
+      if (!raw) continue;
+      const href = raw.trim();
+      // Reject absolute or protocol-relative — only flat filenames + relative paths.
+      if (/^(https?:)?\/\//i.test(href)) continue;
+      if (href.startsWith('mailto:') || href.startsWith('tel:')) continue;
+      // Normalize "./foo.html" to "foo.html". Drop a leading slash if any.
+      let normalized = href.replace(/^\.\//, '').replace(/^\/+/, '').toLowerCase();
+      // Ignore subdirectory paths — only top-level page stubs are backstopped.
+      if (normalized.includes('/')) continue;
+      linkTargets.add(normalized);
+    }
+  }
+
+  // Diff against what's on disk + against the sitemap (sitemap entries are
+  // already handled by the main loop above; if they failed there, they'll
+  // be skipped here too).
+  const sitemapTargets = new Set(plan.sitemap.map((p) => `${p.slug === 'index' ? 'index' : p.slug}.html`));
+  const missing: string[] = [];
+  for (const target of linkTargets) {
+    if (onDisk.has(target)) continue;
+    if (sitemapTargets.has(target)) continue;  // sitemap loop handled it
+    if (missing.length >= MAX_BACKSTOP) break;
+    missing.push(target);
+  }
+
+  if (missing.length === 0) return;
+
+  send({
+    type:  'delta',
+    delta: `\n\n_Backfilling ${missing.length} link target${missing.length === 1 ? '' : 's'} the agent referenced but didn't write: ${missing.join(', ')}._\n`,
+  });
+
+  for (const targetPath of missing) {
+    const slug = targetPath.replace(/\.html?$/i, '');
+    try {
+      const stub = buildLinkBackstopStub({ slug, plan, projectSlug, nav, footer });
+      await writeWorkspaceFile(ws, targetPath, stub);
+      result.templated += 1;
+      send({
+        type:    'tool_result',
+        id:      `complete:linkstub:${slug}`,
+        ok:      true,
+        summary: `Backfilled ${targetPath} (referenced in footer/nav but never written)`,
+      });
+    } catch (err) {
+      result.failed.push(slug);
+      // eslint-disable-next-line no-console
+      console.warn(`[complete] failed to backfill ${targetPath}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+}
+
+/** Build a placeholder page for a link target that wasn't in plan.sitemap.
+ *  Handles common legal-page slugs (terms, privacy, etc.) with real-looking
+ *  boilerplate; falls back to a generic "Page being written" stub for
+ *  anything else. Reuses nav + footer so the page stays integrated with
+ *  the rest of the site. */
+function buildLinkBackstopStub(input: {
+  slug: string;
+  plan: PlanType;
+  projectSlug: string;
+  nav: string;
+  footer: string;
+}): string {
+  const { slug, plan, projectSlug, nav, footer } = input;
+  const currentYear = new Date().getFullYear();
+  const today       = new Date().toISOString().slice(0, 10);
+  const niceSlug    = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  const fallbackNav    = nav || defaultNav(plan, projectSlug);
+  const fallbackFooter = footer || defaultFooter(plan, currentYear);
+
+  // Pre-canned legal copy for the two most common cases. Real-looking
+  // boilerplate, not Lorem ipsum, but clearly marked as placeholder so
+  // the operator knows to swap it before publish.
+  const slugLower = slug.toLowerCase();
+  let title:    string;
+  let eyebrow:  string;
+  let bodyHtml: string;
+  if (slugLower === 'terms' || slugLower === 'terms-of-service' || slugLower === 'tos') {
+    title    = 'Terms of Service';
+    eyebrow  = 'Legal';
+    bodyHtml = legalSectionsHtml([
+      ['Acceptance of Terms', `By accessing this site you agree to be bound by these Terms of Service. If you do not agree, please do not use the site.`],
+      ['Use of the Service', `You agree to use the site for lawful purposes only and in a way that doesn't infringe on the rights of others or restrict their use of the site.`],
+      ['Intellectual Property', `All content, design, and trademarks on this site are the property of ${escapeHtml(projectSlug.replace(/-/g, ' '))} or its licensors and are protected by copyright laws.`],
+      ['Limitation of Liability', `This site and its content are provided "as is" without warranty of any kind. We are not liable for any damages arising from your use of the site.`],
+      ['Changes to These Terms', `We may update these terms from time to time. Continued use of the site after changes constitutes acceptance of the revised terms.`],
+      ['Contact', `Questions about these terms? Reach us at hello@yourbusiness.com.`],
+    ]);
+  } else if (slugLower === 'privacy' || slugLower === 'privacy-policy') {
+    title    = 'Privacy Policy';
+    eyebrow  = 'Legal';
+    bodyHtml = legalSectionsHtml([
+      ['Information We Collect', `We collect information you provide directly (such as when you contact us or sign up for updates) and basic analytics data about how you use the site.`],
+      ['How We Use Information', `We use the information we collect to respond to inquiries, improve the site, and send updates you've requested. We do not sell personal information.`],
+      ['Sharing of Information', `We share information only with service providers who help us operate the site, and only as needed to provide those services.`],
+      ['Cookies and Analytics', `The site uses cookies for basic functionality and aggregate analytics. You can disable cookies in your browser settings.`],
+      ['Your Rights', `You can request a copy of your data, ask us to correct it, or request deletion. Contact us at hello@yourbusiness.com.`],
+      ['Updates', `We may update this policy. Material changes will be posted on this page with a revised "Last Updated" date.`],
+    ]);
+  } else {
+    // Generic backstop — clearly-marked stub. The operator will see it
+    // and know to swap before publish.
+    title    = niceSlug;
+    eyebrow  = 'Page coming soon';
+    bodyHtml = `
+    <section class="bg-white py-16">
+      <div class="max-w-3xl mx-auto px-6">
+        <p class="text-slate-600 leading-relaxed">
+          This page is referenced from the site's navigation but the
+          content hasn't been written yet. Update this stub with the
+          real ${escapeHtml(niceSlug)} content before publishing.
+        </p>
+      </div>
+    </section>`;
+  }
+
+  return [
+    `<!DOCTYPE html>`,
+    `<html lang="en">`,
+    `<head>`,
+    `  <meta charset="UTF-8" />`,
+    `  <meta name="viewport" content="width=device-width, initial-scale=1.0" />`,
+    `  <title>${escapeHtml(title)} | ${escapeHtml(projectSlug.replace(/-/g, ' '))}</title>`,
+    `  <meta name="description" content="${escapeHtml(title)} page for ${escapeHtml(projectSlug.replace(/-/g, ' '))}." />`,
+    `  <script src="https://cdn.tailwindcss.com"></script>`,
+    `</head>`,
+    `<body class="bg-white text-slate-900 antialiased">`,
+    fallbackNav,
+    `  <main>`,
+    `    <header class="bg-slate-100 py-20">`,
+    `      <div class="max-w-4xl mx-auto px-6 text-center">`,
+    `        <p class="uppercase tracking-widest text-sm text-slate-500 mb-2">${escapeHtml(eyebrow)}</p>`,
+    `        <h1 class="text-4xl md:text-5xl font-bold">${escapeHtml(title)}</h1>`,
+    `        <p class="text-sm text-slate-500 mt-3">Last Updated: ${today}</p>`,
+    `      </div>`,
+    `    </header>`,
+    bodyHtml,
+    `  </main>`,
+    fallbackFooter,
+    `</body>`,
+    `</html>`,
+    ``,
+  ].join('\n');
+}
+
+function legalSectionsHtml(sections: Array<[string, string]>): string {
+  return sections.map(([heading, body], i) => {
+    const oddBg = i % 2 === 0 ? 'bg-white' : 'bg-slate-50';
+    return [
+      `    <section class="${oddBg} py-12">`,
+      `      <div class="max-w-3xl mx-auto px-6">`,
+      `        <h2 class="text-2xl font-semibold mb-3">${escapeHtml(heading)}</h2>`,
+      `        <p class="text-slate-600 leading-relaxed">${escapeHtml(body)}</p>`,
+      `      </div>`,
+      `    </section>`,
+    ].join('\n');
+  }).join('\n');
 }
 
 // ── Disk-existence check ─────────────────────────────────────────────────────
