@@ -81,7 +81,15 @@ export async function runCompletionPhase(input: CompletionPhaseInput): Promise<C
   };
 
   // Walk plan.sitemap; identify which pages don't exist on disk yet.
-  const onDisk = new Set((await listWorkspaceFiles(ws)).map((p) => p.toLowerCase()));
+  // listWorkspaceFiles returns paths with a leading slash (e.g. "/index.html"),
+  // so strip it here to match the no-leading-slash candidates in pageOnDisk.
+  // Mirrors the normalization convention in chat.ts:540-605 buildIncomplete
+  // logic. Without this, every page is treated as missing and the template
+  // fallback overwrites the model's real work.
+  const onDisk = new Set(
+    (await listWorkspaceFiles(ws))
+      .map((p) => p.replace(/^\/+/, '').toLowerCase()),
+  );
   const missing: { slug: string; targetPath: string; pagePlan: PlanType['sitemap'][number] }[] = [];
   for (const pagePlan of plan.sitemap) {
     const targetPath = pagePlan.slug === 'index' ? 'index.html' : `${pagePlan.slug}.html`;
@@ -127,8 +135,14 @@ export async function runCompletionPhase(input: CompletionPhaseInput): Promise<C
     }
 
     // Step 2: re-check disk. If the focused call succeeded, count it and move on.
+    // Same leading-slash normalization as the initial scan above — paths from
+    // listWorkspaceFiles come with a leading slash that pageOnDisk's candidates
+    // don't have.
     if (wrote) {
-      const after = new Set((await listWorkspaceFiles(ws)).map((p) => p.toLowerCase()));
+      const after = new Set(
+        (await listWorkspaceFiles(ws))
+          .map((p) => p.replace(/^\/+/, '').toLowerCase()),
+      );
       if (pageOnDisk(slug, after)) {
         result.modelWrote += 1;
         continue;
