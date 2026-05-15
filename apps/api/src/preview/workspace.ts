@@ -63,7 +63,18 @@ export async function workspaceExists(ws: WorkspaceHandle): Promise<boolean> {
   }
 }
 
-/** Write a UTF-8 text file at `path` (relative to workspace root), creating parents as needed. */
+/** Write a UTF-8 text file at `path` (relative to workspace root), creating parents as needed.
+ *
+ *  Round 15.1: previously, text-file backup-to-Storage was called only from
+ *  the `write_file` agent tool in `apps/api/src/agent/tools.ts:692`. Direct
+ *  callers (the chat.ts auto-scaffold stub, planner's `_plan.json` write,
+ *  completion-phase template fallback, etc.) bypassed it — and silently
+ *  lost those files on every Coolify deploy. Now backup is part of the
+ *  write contract itself, so every text write survives container restarts
+ *  regardless of caller. The backup runs fire-and-forget with a one-shot
+ *  2-second-delayed retry on first failure (see `tryBackupTextWithRetry`).
+ *  No await: write latency stays low; transient network blips get retried;
+ *  persistent failures log loudly so they're actionable. */
 export async function writeWorkspaceFile(
   ws: WorkspaceHandle,
   relPath: string,
@@ -77,6 +88,9 @@ export async function writeWorkspaceFile(
   await writeFile(abs, content, 'utf8');
   // Notify preview subscribers so they can hot-reload the iframe.
   emitPreviewEvent(ws.tenantId, ws.projectSlug, { type: 'file-changed', path: relPath });
+  // Durable backup so the file survives Coolify rollouts. Fire-and-forget
+  // with internal retry — see tryBackupTextWithRetry.
+  tryBackupTextWithRetry(ws, relPath, content);
   return { bytes: Buffer.byteLength(content, 'utf8') };
 }
 
@@ -106,8 +120,8 @@ export async function writeWorkspaceFileBuffer(
   await mkdir(dirname(abs), { recursive: true });
   await writeFile(abs, buffer);
   emitPreviewEvent(ws.tenantId, ws.projectSlug, { type: 'file-changed', path: relPath });
-  // Fire-and-forget durable backup so the file survives container restarts.
-  backupFileBufferToStorage(ws, relPath, buffer).catch(() => { /* non-fatal */ });
+  // Durable backup with retry — see tryBackupBufferWithRetry.
+  tryBackupBufferWithRetry(ws, relPath, buffer);
   return { bytes: buffer.length };
 }
 
@@ -248,6 +262,55 @@ export async function backupFileToStorage(
   await supabase.storage.from(BACKUP_BUCKET).upload(path, Buffer.from(content, 'utf-8'), {
     contentType: 'text/plain; charset=utf-8',
     upsert:      true,
+  });
+}
+
+/** Backup wrapper for text files. Fire-and-forget from the caller's
+ *  perspective, but retries ONCE after 2 seconds if the first upload
+ *  fails (transient network blips dominate the failure modes here).
+ *  Persistent failures log loudly so they're observable — the Coolify
+ *  rollout-then-data-loss bug used to be silent, which is what makes it
+ *  hard to catch. Logs include enough detail to identify the missing
+ *  file + tenant + project for manual recovery if needed. */
+function tryBackupTextWithRetry(ws: WorkspaceHandle, relPath: string, content: string): void {
+  // Only types we actually back up — non-text extensions are no-ops in
+  // backupFileToStorage anyway, no point logging "skipped" for those.
+  if (!isTextFile(relPath)) return;
+  backupFileToStorage(ws, relPath, content).catch((firstErr: unknown) => {
+    const firstMsg = firstErr instanceof Error ? firstErr.message : String(firstErr);
+    setTimeout(() => {
+      backupFileToStorage(ws, relPath, content).catch((secondErr: unknown) => {
+        const secondMsg = secondErr instanceof Error ? secondErr.message : String(secondErr);
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[workspace] text backup FAILED twice for ${ws.tenantId}/${ws.projectSlug}${relPath}: ` +
+          `first=${firstMsg} second=${secondMsg}. File is on local FS only — at risk on next rollout.`,
+        );
+      });
+    }, 2000);
+  });
+}
+
+/** Backup wrapper for binary files. Same retry shape as
+ *  tryBackupTextWithRetry; see that function for rationale. */
+function tryBackupBufferWithRetry(ws: WorkspaceHandle, relPath: string, buffer: Buffer): void {
+  // binaryMime returns null for unknown extensions, in which case
+  // backupFileBufferToStorage skips silently. Mirror that here to avoid
+  // logging "skipped" on every JSON/log file we route through.
+  if (!binaryMime(relPath)) return;
+  backupFileBufferToStorage(ws, relPath, buffer).catch((firstErr: unknown) => {
+    const firstMsg = firstErr instanceof Error ? firstErr.message : String(firstErr);
+    setTimeout(() => {
+      backupFileBufferToStorage(ws, relPath, buffer).catch((secondErr: unknown) => {
+        const secondMsg = secondErr instanceof Error ? secondErr.message : String(secondErr);
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[workspace] binary backup FAILED twice for ${ws.tenantId}/${ws.projectSlug}${relPath} ` +
+          `(${buffer.length} bytes): first=${firstMsg} second=${secondMsg}. ` +
+          `Asset is on local FS only — at risk on next rollout.`,
+        );
+      });
+    }, 2000);
   });
 }
 

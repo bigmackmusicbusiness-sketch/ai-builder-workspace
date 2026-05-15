@@ -16,6 +16,12 @@ import { AGENT_TOOLS, executeToolCall, getAgentTools, type ToolContext } from '.
 import { runPrePhase, runPostPhase, type PhaseEvent } from '../agent/phases/runPhases';
 import { runCompletionPhase } from '../agent/phases/complete';
 import type { PlanType } from '../agent/phases/plan';
+import {
+  appendUserMessage,
+  appendAssistantMessage,
+  appendToolMessage,
+  loadProjectMessages,
+} from '../db/chatMessages';
 import type { ChatMessage, ContentPart, ToolCall } from '@abw/providers';
 import { listProjectTypes } from '@abw/project-types';
 import type { ProjectTypeId } from '@abw/project-types';
@@ -144,6 +150,54 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
   app.addHook('preHandler', authMiddleware);
 
   /**
+   * GET /api/projects/:slug/chat-history
+   *
+   * Returns every persisted chat_messages row for this project, oldest
+   * first. The SPA calls this on project open to hydrate its chat thread
+   * from the server (the DB is the source of truth — not localStorage —
+   * so a different browser / cleared cache / new device still sees the
+   * full conversation).
+   *
+   * Round 15.1 (2026-05-15): introduced alongside server-side persistence
+   * in the /api/chat handler. Caps at 500 rows per the loader; existing
+   * pre-15.1 conversations only have rows from this point forward (older
+   * IDE-side chats lived only in browser localStorage and are lost on
+   * different devices — by design, not worth a backfill).
+   */
+  app.get<{ Params: { slug: string } }>('/api/projects/:slug/chat-history', async (req, reply) => {
+    const ctx  = req.authCtx!;
+    const slug = req.params.slug;
+    if (!slug) {
+      return reply.status(400).send({ error: 'missing slug' });
+    }
+    try {
+      // Resolve project by (tenantId, slug). Timeout-bounded like the chat
+      // route's own lookup so a wedged DB pool can't hang this either.
+      const { getDb }   = await import('../db/client');
+      const { projects } = await import('@abw/db');
+      const { eq, and } = await import('drizzle-orm');
+      const [row] = await Promise.race([
+        getDb()
+          .select({ id: projects.id })
+          .from(projects)
+          .where(and(eq(projects.tenantId, ctx.tenantId), eq(projects.slug, slug)))
+          .limit(1),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('project lookup timed out')), 15_000),
+        ),
+      ]);
+      if (!row) {
+        return reply.status(404).send({ error: 'project not found' });
+      }
+      const messages = await loadProjectMessages(row.id);
+      return reply.send({ messages });
+    } catch (err) {
+      req.log.warn({ err: err instanceof Error ? err.message : String(err), slug }, 'chat-history lookup failed');
+      return reply.status(500).send({ error: 'chat-history lookup failed' });
+    }
+  });
+
+  /**
    * POST /api/chat
    * Body: { messages, provider, model, projectEnv?, projectSlug?, enableTools? }
    * Streams SSE events:
@@ -223,6 +277,10 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     // returns a validated plan, we keep a reference here so the completion
     // phase can iterate plan.sitemap and fill any missing pages on disk.
     let planForCompletion: PlanType | null = null;
+    // Hoisted so the iter loop can persist assistant + tool messages to
+    // chat_messages alongside the project_id once it's been resolved
+    // (round 15.1 — IDE-side chat persistence).
+    let resolvedProjectId: string | null = null;
 
     try {
 
@@ -237,7 +295,8 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     // Look up the project's UUID from its slug so per-project asset writes
     // (e.g., replicate_video saving into video_projects) can associate
     // outputs with the right project. Falls back to null on lookup miss.
-    let resolvedProjectId: string | null = null;
+    // resolvedProjectId is hoisted above so the iter loop's chat_messages
+    // persistence can reach it (round 15.1).
     if (toolsActive && projectSlug) {
       try {
         const { getDb } = await import('../db/client');
@@ -261,6 +320,27 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
         ]);
         if (row) resolvedProjectId = row.id;
       } catch { /* non-fatal — tools that need projectId fall back to null */ }
+    }
+
+    // Round 15.1: persist the latest user message to chat_messages so the
+    // server (not just the SPA's localStorage) is the source of truth for
+    // chat history. Fire-and-forget — DB blip can't take down the chat path,
+    // but the SPA's next project-open hydrate call will see whatever made
+    // it through. Mirrors what chatRunner.ts does on the SPS path; both
+    // paths now write to the same table via the shared helper.
+    if (resolvedProjectId) {
+      const lastUserMsg = [...parsed.data.messages].reverse().find((m) => m.role === 'user');
+      const userContent = typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : '';
+      if (userContent) {
+        // Don't await — DB writes shouldn't gate the SSE stream startup.
+        // appendUserMessage is error-tolerant (logs + returns false on fail).
+        appendUserMessage({
+          projectId:  resolvedProjectId,
+          tenantId:   ctx.tenantId,
+          content:    userContent,
+          agentRunId: null,
+        }).catch(() => { /* logged inside helper */ });
+      }
     }
 
     // Auto-scaffold a stub index.html if the workspace is genuinely empty.
@@ -678,6 +758,18 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
           tool_calls: sanitizedCalls,
         });
 
+        // Round 15.1: persist this assistant turn to chat_messages. Fire-and-
+        // forget — helper is error-tolerant so a DB blip can't kill the iter.
+        if (resolvedProjectId) {
+          appendAssistantMessage({
+            projectId:  resolvedProjectId,
+            tenantId:   ctx.tenantId,
+            content:    assistantText || null,
+            toolCalls:  sanitizedCalls,
+            agentRunId: null,
+          }).catch(() => { /* logged inside helper */ });
+        }
+
         // Execute each tool, stream tool_start + tool_result, append a tool
         // message to history for each one.
         for (const tc of toolCalls) {
@@ -694,6 +786,20 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
             tool_call_id: tc.id,
             name:         tc.function.name,
           });
+
+          // Round 15.1: persist this tool result to chat_messages alongside
+          // its tool_call_id so the SPA can reconstruct the full conversation
+          // (assistant tool_calls ↔ tool results) on hydration.
+          if (resolvedProjectId) {
+            appendToolMessage({
+              projectId:  resolvedProjectId,
+              tenantId:   ctx.tenantId,
+              content:    safeResult,
+              toolCallId: tc.id,
+              toolName:   tc.function.name,
+              agentRunId: null,
+            }).catch(() => { /* logged inside helper */ });
+          }
         }
 
         // Loop continues: model sees tool results and decides next step.

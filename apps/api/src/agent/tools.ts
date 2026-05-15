@@ -7,7 +7,6 @@ import type { ToolDefinition, ImageGenResponse } from '@abw/providers';
 import {
   writeWorkspaceFile, writeWorkspaceFileBuffer,
   readWorkspaceFile, listWorkspaceFiles, deleteWorkspaceFile,
-  backupFileToStorage,
   type WorkspaceHandle,
 } from '../preview/workspace';
 import { getDb } from '../db/client';
@@ -688,8 +687,8 @@ export async function executeToolCall(
         }
 
         const { bytes } = await writeWorkspaceFile(ws, path, safeContent);
-        // Fire-and-forget backup to Supabase Storage — survives server restarts
-        backupFileToStorage(ws, path, safeContent).catch(() => {});
+        // writeWorkspaceFile now handles durable Storage backup internally
+        // (with retry-on-failure logging) — caller no longer needs to.
         const kb = (bytes / 1024).toFixed(1);
         return {
           ok: true,

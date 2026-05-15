@@ -13,7 +13,7 @@
 // Logo detection and browser-side color extraction happen before the chat POST.
 // Messages persist in chatStore (localStorage) keyed by projectId.
 import { useRef, useEffect, useState, useCallback, type FormEvent, type KeyboardEvent } from 'react';
-import { useChatStore } from '../../lib/store/chatStore';
+import { useChatStore, hydrateChatFromServer } from '../../lib/store/chatStore';
 import { useRunStore } from '../../lib/store/runStore';
 import { useAuthStore } from '../../lib/store/authStore';
 import { useProjectStore, buildSystemPrompt } from '../../lib/store/projectStore';
@@ -255,6 +255,25 @@ export function ChatThread() {
    *  can detect "click landed inside the picker tree" vs. "click landed elsewhere". */
   const pickerWrapRef                 = useRef<HTMLDivElement>(null);
   const unsubRef                      = useRef<(() => void) | null>(null);
+
+  // Round 15.1: hydrate chat history from the server on project open.
+  // The DB is the source of truth — localStorage is just a cache for fast
+  // first-paint + offline rendering. Whenever the project changes, fetch
+  // the canonical message list from /api/projects/:slug/chat-history and
+  // replace local. Safe to no-op when there's no session yet (the SPA's
+  // login flow re-runs effects once a session resolves).
+  useEffect(() => {
+    if (!currentProjectId || !currentProject?.slug) return;
+    const session = useAuthStore.getState().session;
+    const token   = session?.access_token;
+    if (!token) return;
+    void hydrateChatFromServer({
+      projectId:   currentProjectId,
+      projectSlug: currentProject.slug,
+      apiBase:     API_BASE,
+      token,
+    });
+  }, [currentProjectId, currentProject?.slug]);
 
   // Close paperclip popover on outside click + Escape. Without this, the only
   // ways out were the ✕ button or successfully picking a file — both feel
