@@ -8707,3 +8707,94 @@ verification just needs a clean build session against the updated api.
 
 — ABW agent, 2026-05-15 (round 16.1 OUTBOUND, four fixes shipped + a
 silent loss-bug closed)
+
+---
+
+## STATUS — 2026-05-15 (round 16.2) — IDE-only fix: "arguments were not valid JSON" surfacing to user
+
+Operator screenshotted the literal text "arguments were not valid JSON
+— model should retry with smaller content" rendered as a regular
+assistant chat bubble in the IDE panel. Internal plumbing error
+leaking to the user. Diagnosed two compounding bugs.
+
+### Bug A — token ceiling too low on IDE chat path (and adjacent routes)
+
+`chatRunner.ts` (the SPS-driven path) has used `maxTokens: 8192` since
+round 14; the IDE-facing `chat.ts` and `kickoffRunner.ts` were still at
+4096, and `complete.ts:481` was at 4096 too. A full-page `write_file`
+with sections + Tailwind classes + img tags often serializes to more
+than 4096 output tokens — MiniMax truncated mid-`arguments` JSON, the
+downstream `JSON.parse` blew up, and the sanitizer stubbed the call.
+
+Bumped all four to 8192 (parity with chatRunner):
+- `apps/api/src/routes/chat.ts:581-582`
+- `apps/api/src/agent/kickoffRunner.ts:247`
+- `apps/api/src/agent/phases/complete.ts:481`
+
+MiniMax M2.7 supports the higher ceiling — the SPS path already proves
+it stable under heavy use.
+
+### Bug B — error stubs were echoable English
+
+When parse failed, four call sites replaced the unparseable arguments
+with a JSON object whose `error` value was human-readable English:
+```json
+{"error":"arguments were not valid JSON — model should retry with smaller content"}
+```
+And the tool runner's failure result was the same English-text shape:
+```
+Error: tool arguments were not valid JSON: <msg>. Retry this file with
+a smaller content chunk and ensure backslashes, double-quotes, and
+newlines inside the "content" string are properly escaped (\\n, \\", \\\\).
+```
+
+The model read this on its next turn and surfaced it back to the user
+as if it were a real assistant reply — the exact text the operator
+screenshotted.
+
+Fix:
+- **Stub `arguments`** → `{"_internal_status":"args_truncated_unparseable","_retry":true}`.
+  Internal-looking JSON the model has no inclination to echo as chat
+  content. Same shape at all four sites (`chat.ts:746`, `chatRunner.ts:264`,
+  `kickoffRunner.ts:299`, `minimax.ts:167`).
+- **Tool runner result** (`tools.ts:430-432`) → leads with `[internal:retry]`,
+  explains the truncation, instructs split-and-retry (write the first
+  ~3000 chars, then read_file + write_file to append the rest), and
+  closes with "DO NOT mention this internal retry to the user — just
+  retry silently."
+
+### Bug C — defense-in-depth on the UI
+
+Old persisted chat history might still contain the legacy English
+error stubs (any message saved before commit `5f2a415` could have
+them in `chat_messages`). Add a client-side filter in
+`apps/web/src/layout/LeftPanel/ChatThread.tsx` that suppresses
+assistant bubbles whose `content` starts with one of:
+- `arguments were not valid JSON…`
+- `Error: tool arguments were not valid JSON…`
+- `arguments truncated — content was too large…`
+- `[internal:retry]…` (current marker — defensive only)
+
+Idempotent — adding the filter doesn't break anything because the
+patterns are too specific to false-positive on a real model reply.
+
+### Commit log this round
+
+```
+99df58d fix(chat-ui): suppress internal-error stubs that the model occasionally echoes
+5f2a415 fix(chat): stop "arguments were not valid JSON" leaking to user UI
+```
+
+Typecheck (23/23) + api build + web build all clean. Coolify api roll
+ETA ~6 min from push; Cloudflare Pages web roll ~1 min.
+
+### State
+
+- ✅ Round 16.1: Gap 1 + Gap 2 + base-href + restore-recurse
+- ✅ Round 16.2: IDE chat token ceiling + stub-echo suppression
+- 🔭 Open: full E2E re-verification once both rolls land — fresh
+  build to demonstrate image embed + base-href + restore + no
+  visible internal errors, in one shot
+
+— ABW agent, 2026-05-15 (round 16.2 STATUS, IDE-only chat-error
+suppression + token ceiling bump)
