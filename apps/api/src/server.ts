@@ -258,6 +258,12 @@ async function main(): Promise<void> {
   try {
     await app.listen({ port: env.PORT, host: env.HOST });
     app.log.info(`api listening on http://${env.HOST}:${env.PORT}`);
+    // Surface a clear marker so "images suddenly broken" reports are
+    // immediately diagnosable in the api log — the in-memory preview
+    // session cache (sessionManager.ts) was just wiped by this restart.
+    // First serve request per slug will auto-resurrect via
+    // resolveOrBootSession in routes/preview.ts.
+    app.log.info('[preview] in-memory sessions reset on api startup — auto-resurrect on first asset request per slug');
   } catch (err) {
     app.log.error(err);
     process.exit(1);

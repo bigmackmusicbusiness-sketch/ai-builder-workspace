@@ -39,6 +39,163 @@ const LogsQuerySchema = z.object({
   after:     z.coerce.number().optional(),
 });
 
+// ── Auto-resurrect preview sessions on serve cache miss ────────────────────
+// The in-memory `sessions` Map in sessionManager dies on every api restart
+// (Coolify roll, OOM, deploy push). Before this helper, every preview iframe
+// turned into 48-byte "Preview not booted" 404s for every asset request the
+// moment Coolify rolled — the user perceived this as "images are corrupting"
+// because the browser kept the cached HTML but every <img src> died.
+//
+// On any serve request where `getSessionBySlug(slug)` returns nothing, we
+// look up the project in the DB by slug (no auth needed — serve route is
+// already public per the existing `skipAuth: true` config), restore the
+// workspace from Storage if the local FS is empty, and rebuild the bundle.
+// Per-slug mutex prevents two concurrent image requests from racing two
+// resurrects against the same workspace.
+//
+// Cost: ~1-3s for the first request after a restart (DB query + workspace
+// restore + esbuild). Subsequent requests hit the in-memory cache for free.
+const inflightResurrects = new Map<string, Promise<ReturnType<typeof getSessionBySlug>>>();
+
+async function resolveOrBootSession(slug: string): Promise<ReturnType<typeof getSessionBySlug>> {
+  // Fast path: in-memory session already exists.
+  const existing = getSessionBySlug(slug);
+  if (existing) return existing;
+
+  // Per-slug dedupe so a page that fetches 12 images at once doesn't
+  // try to boot 12 sessions in parallel.
+  const inflight = inflightResurrects.get(slug);
+  if (inflight) return inflight;
+
+  const p = doResurrect(slug).finally(() => {
+    inflightResurrects.delete(slug);
+  });
+  inflightResurrects.set(slug, p);
+  return p;
+}
+
+async function doResurrect(slug: string): Promise<ReturnType<typeof getSessionBySlug>> {
+  // Re-check in case another inflight call already populated the cache
+  // between the original fast-path check and the mutex acquire.
+  const cached = getSessionBySlug(slug);
+  if (cached) return cached;
+
+  // ── 1. DB lookup: slug → project record. ──────────────────────────────
+  // Slugs are tenant-scoped (unique on (tenant_id, slug)), so the same
+  // slug COULD exist for two tenants. Pick the most-recently-created
+  // match — the auto-boot is read-only against the workspace tree, and
+  // the serve route's existing `getSessionBySlug` already ignores tenant
+  // and returns the most-recently-booted match across all tenants, so
+  // this preserves the existing security model exactly.
+  let project: { id: string; tenantId: string; type: string } | null = null;
+  try {
+    const { getDb }    = await import('../db/client');
+    const { projects } = await import('@abw/db');
+    const { eq, desc } = await import('drizzle-orm');
+    const rows = await getDb()
+      .select({ id: projects.id, tenantId: projects.tenantId, type: projects.type })
+      .from(projects)
+      .where(eq(projects.slug, slug))
+      .orderBy(desc(projects.createdAt))
+      .limit(1);
+    if (rows.length > 0 && rows[0]) {
+      project = rows[0];
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn(`[preview:resurrect] DB lookup failed for "${slug}": ${err instanceof Error ? err.message : String(err)}`);
+    return undefined;
+  }
+  if (!project) {
+    // eslint-disable-next-line no-console
+    console.warn(`[preview:resurrect] no project found for slug "${slug}" — cannot auto-boot`);
+    return undefined;
+  }
+
+  // ── 2. Workspace restore (if empty) ───────────────────────────────────
+  const ws = await getWorkspace(project.tenantId, slug);
+  if (!(await workspaceExists(ws))) {
+    // eslint-disable-next-line no-console
+    console.log(`[preview:resurrect] ${slug}: workspace empty, restoring from Storage…`);
+    await restoreWorkspaceFromStorage(ws).catch((err) => {
+      // eslint-disable-next-line no-console
+      console.warn(`[preview:resurrect] ${slug}: Storage restore failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`);
+    });
+  }
+  const hasFiles = await workspaceExists(ws);
+  if (!hasFiles) {
+    // eslint-disable-next-line no-console
+    console.warn(`[preview:resurrect] ${slug}: workspace empty after restore — cannot auto-boot`);
+    return undefined;
+  }
+
+  // ── 3. Framework detection — same logic as the boot handler. ──────────
+  let resolvedFramework: 'react-vite' | 'vanilla' | 'static' = 'static';
+  let resolvedRoot = ws.rootDir;
+  let detected: { kind: 'react-vite' | 'static'; rootDir: string } | null = null;
+
+  if (await stat(`${ws.rootDir}/src/main.tsx`).then((s) => s.isFile()).catch(() => false)) {
+    detected = { kind: 'react-vite', rootDir: ws.rootDir };
+  } else if (await stat(`${ws.rootDir}/index.html`).then((s) => s.isFile()).catch(() => false)) {
+    detected = { kind: 'static', rootDir: ws.rootDir };
+  } else {
+    const candidates = await findEntrypoints(ws.rootDir, 3);
+    if (candidates.length > 0 && candidates[0]) {
+      detected = candidates[0];
+    }
+  }
+  if (detected) {
+    resolvedFramework = detected.kind;
+    resolvedRoot      = detected.rootDir;
+  }
+  // No synthesized index.html fallback here — auto-boot is for previews
+  // that previously worked; if there's genuinely nothing to render, the
+  // user should re-trigger the build via the IDE.
+
+  // ── 4. Bundle ─────────────────────────────────────────────────────────
+  const hasCF = !!(process.env['CF_ACCOUNT_ID'] && process.env['CF_API_TOKEN'] && process.env['CF_KV_PREVIEW_NAMESPACE_ID']);
+  const serveBasePath = resolvedFramework === 'static'
+    ? (hasCF ? `/${slug}/` : `/api/preview/serve/${slug}/`)
+    : '/';
+  const bundleInput = {
+    projectId:   project.id,
+    projectSlug: slug,
+    rootDir:     resolvedRoot,
+    entryPoint:  resolvedFramework === 'react-vite' ? 'src/main.tsx' : 'index.html',
+    framework:   resolvedFramework,
+    serveBasePath,
+  };
+
+  // ── 5. Create session + store assets. ─────────────────────────────────
+  const sessionId = `auto-${slug}-${Date.now().toString(36)}`;
+  const apiBase = process.env['PUBLIC_API_URL'] ?? process.env['API_URL'] ?? `http://localhost:${process.env['PORT'] ?? 3007}`;
+  const previewUrl = hasCF
+    ? `${(process.env['WORKER_URL'] ?? 'https://abw-preview-worker.signalpoint.workers.dev').replace(/\/$/, '')}/${slug}/`
+    : `${apiBase}/api/preview/serve/${slug}`;
+  const session = createSession({
+    sessionId,
+    projectId:   project.id,
+    projectSlug: slug,
+    tenantId:    project.tenantId,
+    previewUrl,
+  });
+  storeBundleInput(sessionId, bundleInput);
+
+  try {
+    const result = await bundleProject(bundleInput);
+    storeAssets(sessionId, result.assets);
+    updateSession(sessionId, { status: 'booted' });
+    // eslint-disable-next-line no-console
+    console.log(`[preview:resurrect] ${slug}: auto-boot complete, ${result.assets.size} assets, ${result.durationMs}ms`);
+    return session;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn(`[preview:resurrect] ${slug}: bundle failed during auto-boot: ${err instanceof Error ? err.message : String(err)}`);
+    updateSession(sessionId, { status: 'error', error: err instanceof Error ? err.message : String(err) });
+    return undefined;
+  }
+}
+
 export async function previewRoutes(app: FastifyInstance): Promise<void> {
   app.addHook('preHandler', authMiddleware);
 
@@ -514,10 +671,18 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
       let assetPath = '/' + (req.params['*'] || '');
       if (assetPath === '/') assetPath = '/index.html';
 
-      // Find the most recent booted session for this slug
-      const session = getSessionBySlug(slug);
+      // Find the most recent booted session for this slug, OR auto-resurrect
+      // one if the in-memory cache is empty (typical after a Coolify roll —
+      // the iframe still has the page cached but every <img>/.css/.js was
+      // returning the 48-byte "Preview not booted" stub until the user
+      // clicked Boot in the IDE again). See resolveOrBootSession above.
+      const session = await resolveOrBootSession(slug);
       if (!session) {
-        return reply.status(404).send('Preview not booted. Click Boot in the workspace.');
+        return reply.status(404).send(
+          `Preview unavailable for "${slug}". The api may have restarted and the workspace ` +
+          `couldn't be re-bundled. Open this project in the IDE and click Refresh to force ` +
+          `a fresh boot.`,
+        );
       }
 
       let assets  = getAssets(session.sessionId);
@@ -567,8 +732,13 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
     '/api/preview/serve/:slug',
     { config: { skipAuth: true } },
     async (req, reply) => {
-      const session = getSessionBySlug(req.params.slug);
-      if (!session) return reply.status(404).send('Preview not booted.');
+      const session = await resolveOrBootSession(req.params.slug);
+      if (!session) {
+        return reply.status(404).send(
+          `Preview unavailable for "${req.params.slug}". The api may have restarted and the ` +
+          `workspace couldn't be re-bundled. Open this project in the IDE and click Refresh.`,
+        );
+      }
       let assets = getAssets(session.sessionId);
       let index  = assets?.get('/index.html');
 
