@@ -101,7 +101,31 @@ export async function runCompletionPhase(input: CompletionPhaseInput): Promise<C
     missing.push({ slug: pagePlan.slug, targetPath, pagePlan });
   }
 
+  // Try to pull the nav + footer out of index.html (if it exists) so BOTH
+  // the template fallback below AND the broken-link backstop at Step 4 can
+  // re-use them — keeps cross-page navigation working. Extracted up here
+  // before the missing-pages early-exit so Step 4 still sees it even when
+  // every sitemap page was written cleanly.
+  const indexHtml = await readWorkspaceFile(ws, 'index.html').catch(() => null);
+  const { nav, footer } = indexHtml
+    ? extractNavAndFooter(indexHtml)
+    : { nav: '', footer: '' };
+
   if (missing.length === 0) {
+    // Common success path: model wrote every sitemap page. We still need to
+    // run Step 4 (the broken-link backstop) because pages typically
+    // reference terms.html / privacy.html / etc. via the footer even when
+    // those slugs aren't in the sitemap. Without this fall-through, the
+    // backstop is unreachable for any successful build. Found by E2E on
+    // Hollow Pine Barber Co — 5 sitemap pages written cleanly, but the
+    // footer's privacy-policy.html + terms-of-service.html links 404'd
+    // because the early-return at this point bypassed Step 4.
+    try {
+      await backstopBrokenLinks({ ws, plan, projectSlug, nav, footer, result, send });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn(`[complete] backstop failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`);
+    }
     return result;
   }
 
@@ -110,13 +134,6 @@ export async function runCompletionPhase(input: CompletionPhaseInput): Promise<C
     type:  'delta',
     delta: `\n\n_Finishing build — writing ${missing.length} missing page${missing.length === 1 ? '' : 's'}: ${missing.map((m) => m.targetPath).join(', ')}._\n`,
   });
-
-  // Try to pull the nav + footer out of index.html (if it exists) so the
-  // template fallback can re-use them — keeps cross-page navigation working.
-  const indexHtml = await readWorkspaceFile(ws, 'index.html').catch(() => null);
-  const { nav, footer } = indexHtml
-    ? extractNavAndFooter(indexHtml)
-    : { nav: '', footer: '' };
 
   for (const { slug, targetPath, pagePlan } of missing) {
     if (signal.aborted) break;
