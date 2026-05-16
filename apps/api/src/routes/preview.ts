@@ -710,13 +710,34 @@ export async function previewRoutes(app: FastifyInstance): Promise<void> {
       }
 
       if (!content) {
-        // Real miss after refresh — SPA fallback to index.html for
-        // client-side routing.
-        const index = assets?.get('/index.html');
-        if (index) {
-          return reply.type('text/html').send(injectBase(index, slug));
+        // Asset genuinely doesn't exist after re-bundle. What we serve
+        // depends on the framework:
+        //
+        //   react-vite → SPA fallback to index.html so the client-side
+        //                router can handle the route. This is the
+        //                correct behaviour for a single-page app.
+        //
+        //   static / vanilla → multi-page site. Every page is a real
+        //                file. /typo.html should return 404, not a
+        //                phantom homepage at the wrong URL. SPS flagged
+        //                this in round 17 inbound: their E2E found that
+        //                terms.html / privacy.html / nonexistent.html
+        //                were ALL byte-identical to index.html because
+        //                of an indiscriminate SPA fallback. Fix: gate
+        //                the fallback on framework so static sites get
+        //                honest 404s.
+        const fwk = getBundleInput(session.sessionId)?.framework;
+        const isSpa = fwk === 'react-vite';
+        if (isSpa) {
+          const index = assets?.get('/index.html');
+          if (index) {
+            return reply.type('text/html').send(injectBase(index, slug));
+          }
         }
-        return reply.status(404).send('Asset not found');
+        // Static multi-page site OR SPA without index.html — real 404.
+        return reply.status(404)
+          .type('text/html')
+          .send(staticNotFoundPage(slug, assetPath));
       }
 
       const mime = mimeType(assetPath);
@@ -907,6 +928,47 @@ async function synthesizeIndexHtml(rootDir: string): Promise<string> {
   <ul>
 ${items}
   </ul>
+</body>
+</html>`;
+}
+
+/** Branded 404 page for static (multi-page-website / vanilla) preview
+ *  builds. Sent when the requested URL doesn't map to a real file on
+ *  disk AND the project's framework isn't an SPA. Without this, the
+ *  preview server's old behavior was to silently serve index.html for
+ *  any missing URL — visitors hitting /typo.html got the homepage at
+ *  the wrong URL, which (a) confused users, (b) hurt SEO if indexed,
+ *  (c) hid backstop / link-discipline gaps from showing up as honest
+ *  failures. SPS round 17 inbound flagged this. */
+function staticNotFoundPage(slug: string, attempted: string): string {
+  // attempted will look like "/missing-page.html"; trim for display.
+  const display = attempted.replace(/^\/+/, '') || '(root)';
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Page not found — ${slug}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-8 font-sans antialiased">
+  <div class="max-w-md w-full text-center space-y-6">
+    <p class="text-6xl font-semibold text-slate-400">404</p>
+    <h1 class="text-2xl font-semibold">Page not found</h1>
+    <p class="text-slate-600">
+      The preview for <code class="px-1.5 py-0.5 bg-slate-200 rounded text-sm">${slug}</code>
+      doesn't have a file at <code class="px-1.5 py-0.5 bg-slate-200 rounded text-sm">${display}</code>.
+    </p>
+    <p class="text-sm text-slate-500">
+      If this page should exist, open the project in the IDE and ask the
+      builder to create it. Static sites don't fall back to homepage on
+      missing files — every URL must be a real file on disk.
+    </p>
+    <a href="/api/preview/serve/${slug}/" class="inline-block px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-700 transition">
+      Back to homepage
+    </a>
+  </div>
 </body>
 </html>`;
 }
