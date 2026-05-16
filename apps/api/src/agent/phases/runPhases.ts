@@ -191,6 +191,123 @@ async function loadTypeSecurityChecklist(typeId: string): Promise<string> {
   return '';
 }
 
+/** Project types that produce an interactive web app (not a static
+ *  marketing site). For these types, the EXECUTION directive injects a
+ *  hard "interactivity mandate" — every button must have a working
+ *  onclick, every form must submit + persist + update visible state,
+ *  state lives in localStorage. The mandate exists because the planner
+ *  output (sitemap + assets) is the same shape for all types, and
+ *  without explicit interactivity guidance the model defaults to the
+ *  Website pattern: static HTML with non-functional decorative buttons.
+ *
+ *  WHY VANILLA HTML + INLINE JS instead of React/Vite:
+ *  - The preview pipeline (bundler.ts collectStaticFiles) reliably
+ *    serves static HTML byte-for-byte. React/Vite needs deps installed
+ *    in the monorepo's node_modules which the scaffold doesn't ship;
+ *    the bundler's degrade-to-static fallback then produces SOME page
+ *    but loses every onClick handler.
+ *  - Vanilla HTML + Tailwind CDN + inline <script> + localStorage is a
+ *    fully self-contained pattern: no build step, no dependency on
+ *    framework loading, every button works on first render.
+ *  - This was the pattern that produced the proven-working Reverb Tasks
+ *    E2E earlier in round 16 (4 pages, working form, localStorage
+ *    persistence, dashboard auto-updates).
+ *
+ *  Explicitly NOT included: full-stack-app + api-service. Those types
+ *  need a real build pipeline (Node/Fastify) and aren't served as
+ *  interactive previews.
+ */
+const INTERACTIVE_PROJECT_TYPES = new Set<string>([
+  'saas-app',
+  'saas_app',           // both casings — project_types use kebab, DB uses snake
+  'dashboard',
+  'internal-tool',
+  'internal_tool',
+  'onboarding-flow',
+  'onboarding_flow',
+  'automation-panel',
+  'automation_panel',
+]);
+
+function isInteractiveProjectType(id: string): boolean {
+  return INTERACTIVE_PROJECT_TYPES.has(id);
+}
+
+/** Hard mandate for interactive project types. Inserted into the
+ *  execution directive AFTER the page list and BEFORE the EXECUTION
+ *  ORDER section. The model has been observed building decorative
+ *  buttons (no onclick) when this isn't explicitly required. */
+function buildInteractivityMandate(plan: PlanType, projectSlug: string): string {
+  // Compute a sensible localStorage key prefix from the slug — used in
+  // the examples below so the model copies the same pattern across pages.
+  const storageKey = `${projectSlug.replace(/-/g, '_')}_state`;
+
+  // First-non-index page is usually the primary "list/manage" surface —
+  // mention by name so the model anchors the example to the actual sitemap.
+  const examplePage = plan.sitemap.find((p) => p.slug !== 'index')?.slug ?? 'items';
+
+  return [
+    `## INTERACTIVITY MANDATE — this is a webapp, not a marketing site`,
+    ``,
+    `This project type is an **interactive web application**. Every page must work — buttons click, forms submit, state persists across navigation. A "looks-right but does-nothing" page is a hard failure: the user has explicitly flagged that webapps and dashboards where "the buttons inside them never work" are the #1 blocker on shipping.`,
+    ``,
+    `### Required tech stack (do NOT use React/Vite/Next for this build)`,
+    ``,
+    `- **Vanilla HTML per page** — multi-page site, real \`<a href="other-page.html">\` links between pages (NOT a router).`,
+    `- **Tailwind via CDN:** \`<script src="https://cdn.tailwindcss.com"></script>\` in \`<head>\` of every page.`,
+    `- **Inline \`<script>\` at the end of \`<body>\`** for state + handlers. ES2020+ syntax (arrow functions, optional chaining, template literals).`,
+    `- **\`localStorage\`** as the only persistence layer. Key pattern: \`"${storageKey}"\` holding a JSON-stringified object/array. Read on every page load, mutate on every interaction.`,
+    ``,
+    `React, Vue, Vite, npm packages, framework routers, JSX — **do not use any of these**. The preview pipeline does not install third-party node modules; a React build will degrade to non-interactive static HTML. Vanilla + Tailwind CDN renders correctly every time.`,
+    ``,
+    `### Required interactivity per page`,
+    ``,
+    `Every interactive element MUST do something visible. The contract:`,
+    ``,
+    `- **Every \`<button>\`** must have either (a) \`onclick="…"\` with real behavior (state mutation + re-render of the affected DOM region) OR (b) \`type="submit"\` inside a \`<form onsubmit="…">\` that calls \`event.preventDefault()\` then persists + navigates / re-renders. A button that only changes styling on hover is **not** interactive.`,
+    `- **Every \`<form>\`** must \`event.preventDefault()\`, collect form data via \`new FormData(form)\` (or per-field \`document.getElementById\`), validate (at minimum: non-empty required fields), persist to localStorage, and either redirect (\`window.location.href = "dashboard.html"\`) or re-render visible UI.`,
+    `- **Every list/table** must render from localStorage state, not from hard-coded HTML. Use \`document.getElementById('list-root').innerHTML = ...\` (NOT React) or \`createElement\` loops.`,
+    `- **Delete/edit actions** must mutate the localStorage array and immediately re-render the list.`,
+    ``,
+    `### State management pattern (use this exactly)`,
+    ``,
+    `\`\`\`html`,
+    `<script>`,
+    `  // Read state (returns a fresh array, never mutate the parsed value directly without writeState)`,
+    `  function readState() {`,
+    `    try { return JSON.parse(localStorage.getItem('${storageKey}') || '{}'); }`,
+    `    catch { return {}; }`,
+    `  }`,
+    `  function writeState(next) {`,
+    `    localStorage.setItem('${storageKey}', JSON.stringify(next));`,
+    `  }`,
+    `  // Seed example data on first ever page load, so the UI has something to show.`,
+    `  // Without seeding the dashboard renders an empty state and the user thinks it's broken.`,
+    `  (function seedIfEmpty() {`,
+    `    const s = readState();`,
+    `    if (!s.${examplePage} || s.${examplePage}.length === 0) {`,
+    `      s.${examplePage} = [/* 3-5 realistic sample objects appropriate for this app */];`,
+    `      writeState(s);`,
+    `    }`,
+    `  })();`,
+    `</script>`,
+    `\`\`\``,
+    ``,
+    `### Forbidden patterns (will be flagged as broken)`,
+    ``,
+    `- Buttons styled like buttons but missing an event handler.`,
+    `- Forms that submit but don't persist anywhere (the next page load shows zero new data).`,
+    `- Lists of items hard-coded in HTML when they should re-render from state.`,
+    `- "Coming soon" placeholders on what should be a working feature.`,
+    `- Decorative \`<select>\` / \`<input type="checkbox">\` with no change handlers.`,
+    ``,
+    `### Sanity check before each \`write_file\``,
+    ``,
+    `Before writing a page, ask: "Can a real user click every visible interactive element and see something change?" If any answer is no, add the handler before writing.`,
+    ``,
+  ].join('\n');
+}
+
 /** Build a focused execution directive from the plan. The legacy iteration
  *  loop sees this as a system message before its first turn — it tells the
  *  model exactly what files to write and what each should contain. */
@@ -253,6 +370,11 @@ ${pageImagesBlock}`;
   const today = new Date().toISOString().slice(0, 10);
   const currentYear = today.slice(0, 4);
 
+  const interactive = isInteractiveProjectType(projectTypeId);
+  const interactivityBlock = interactive
+    ? buildInteractivityMandate(plan, projectSlug)
+    : '';
+
   return [
     `## Today: ${today}`,
     ``,
@@ -263,11 +385,13 @@ ${pageImagesBlock}`;
     `### Detected niche: \`${plan.niche}\``,
     `### Voice: ${plan.voice}`,
     `### Palette: \`${plan.palette}\``,
+    `### Project type: \`${projectTypeId}\`${interactive ? '  ← **INTERACTIVE WEBAPP** — see Interactivity Mandate below' : ''}`,
     ``,
     `### Pages to write (write each via write_file):`,
     ``,
     pagesPlan,
     ``,
+    ...(interactive ? [interactivityBlock] : []),
     `### Shared images`,
     `Each \`<img src>\` path below is **deterministic and stable** — the file shows up at that path after \`gen_image\` runs. **Reference these paths directly when you write each page**; do NOT wait until images are generated and then rewrite pages to add \`<img>\` tags (that requires a full file re-emit, which is the path most likely to fail with truncated tool args).`,
     ``,

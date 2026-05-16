@@ -1,116 +1,138 @@
 # SaaS app type SOP — runtime rules for executor + polish
 
-This SOP applies to projects of type `saas-app`. Full-stack: marketing landing,
-auth flow, product dashboard, billing, all wired to Supabase.
+This SOP applies to projects of type `saas-app`. A FUNCTIONAL multi-page
+web app — dashboard, list/manage screens, create-record form, settings.
+Buttons click, forms submit, state persists across navigation, navigating
+between pages re-renders from the same persisted state.
 
-## File layout
+## Tech stack — vanilla, NOT React/Vite
+
+**Use vanilla HTML pages + Tailwind via CDN + inline `<script>` blocks
++ `localStorage`.** Do NOT use React, Vue, Vite, npm packages, JSX, or
+framework routers. The preview pipeline does not install third-party
+node modules; a React build degrades to non-interactive static HTML and
+every onClick handler vanishes.
+
+This pattern is what produces a working webapp on first generate. The
+Interactivity Mandate in the executor directive is the law — it
+overrides any guidance below that suggests otherwise.
+
+## File layout (flat — one .html per route, all at workspace root)
 
 ```
-apps/
-  web/                       # marketing + product (Vite + React)
-    src/
-      pages/marketing/       # uses landing-page patterns
-        Index.tsx
-        Pricing.tsx
-        About.tsx
-      pages/auth/
-        Login.tsx
-        Signup.tsx
-        ForgotPassword.tsx
-      pages/app/             # uses dashboard patterns, behind auth
-        Overview.tsx
-        Settings.tsx
-        Billing.tsx
-      lib/
-        supabase.ts          # client init from import.meta.env.VITE_SUPABASE_*
-        auth.ts
-        api.ts
-  api/                       # optional Fastify backend for webhooks/cron
-    src/server.ts
-supabase/
-  migrations/                # SQL migrations, timestamped
-  seed.sql
-.env.example                 # placeholder values, never real secrets
+index.html               # dashboard / overview (default entry)
+<entity>.html            # list view (e.g. tasks.html, users.html, projects.html)
+new-<entity>.html        # create-record form
+<entity>-detail.html     # optional single-record view if planner asks
+settings.html
 ```
 
-## Auth flow
-
-Use Supabase Auth. Standard flows:
-
-- Email + password signup → email confirmation → first-login onboarding
-- Magic link sign-in
-- OAuth (Google, GitHub) when planner config requests it
-
-Routes:
-
-- `/` `/pricing` `/about` — public marketing
-- `/login` `/signup` `/forgot-password` — public auth
-- `/app/*` — wrapped in `<RequireAuth>`
-
-## Database — Row Level Security
-
-Every table that touches user data has RLS enabled. Policies follow this shape:
-
-```sql
-alter table public.projects enable row level security;
-
-create policy "users read own projects"
-  on public.projects for select
-  using (auth.uid() = owner_id);
-
-create policy "users insert own projects"
-  on public.projects for insert
-  with check (auth.uid() = owner_id);
+Plus optional shared assets:
+```
+images/<asset-id>.jpg    # generated via gen_image
 ```
 
-Never write a table with RLS disabled. Service-role queries only happen in the
-Fastify backend, never in the browser.
+No `src/`, no `apps/web/`, no `apps/api/`, no `package.json`, no
+`vite.config.ts`. The agent should NOT scaffold a monorepo.
 
-## Billing
+## Required pattern on every page
 
-If billing is in scope:
+Every page is a complete self-contained HTML document with:
 
-- Stripe Checkout for paid plans (no card collection in our UI)
-- Stripe customer portal for plan management
-- Webhook receiver in `apps/api` validates signature with `STRIPE_WEBHOOK_SECRET`
-- `subscriptions` table mirrors Stripe state, updated via webhook only
+1. `<head>` containing:
+   - Tailwind CDN: `<script src="https://cdn.tailwindcss.com"></script>`
+   - Title + meta description
+   - Optional: Schema.org JSON-LD if planner requested
+2. `<body>` containing the page UI
+3. Inline `<script>` at the end of `<body>` with:
+   - `readState()` / `writeState()` helpers reading from
+     `localStorage['<slug>_state']` (the slug is in the project context)
+   - `seedIfEmpty()` IIFE that populates example data on first ever
+     page load so the UI is never blank
+   - Event handlers for every interactive element on this page
 
-## Marketing site
+## State management contract
 
-Follow `landing-page.md` patterns inside `pages/marketing/`. Hero CTA points to
-`/signup`. Pricing CTAs point to Stripe Checkout (or `/signup` if free tier).
+A single localStorage key holds a JSON-serialized object for the whole
+app. Shape is up to the planner / niche, but typically:
 
-## Product dashboard
+```js
+{
+  tasks:    [{ id, title, status, priority, dueDate, createdAt }, …],
+  settings: { theme: "dark", notifications: true },
+  user:     { name: "Demo User", email: "user@example.com" }
+}
+```
 
-Follow `dashboard.md` patterns inside `pages/app/`. Sidebar nav, KPI overview,
-entity pages, settings.
+Read on every page load. Mutate via writeState() on every interaction.
+NEVER hard-code lists in HTML when they should be reading from state.
 
-## Security rules (hard, enforced)
+## Per-page interactivity expectations
 
-- NEVER ship `SUPABASE_SERVICE_ROLE_KEY` to the browser bundle
-- Browser uses anon key only; service role lives in `apps/api` env
-- Every user-data table has RLS enabled with explicit policies
-- All Stripe webhook handlers verify signatures before reading body
-- `.env` files are gitignored; only `.env.example` is committed
-- Password reset and email change flows use Supabase's built-in tokens, never roll your own
-- CORS on `apps/api` allowlists only the marketing/app origins
+### Dashboard (index.html)
 
-## SEO rules (marketing pages)
+- Reads state, renders KPI counts (e.g. "12 tasks total, 4 in-progress, 1 high-priority")
+- Lists 5-10 recent items as cards or rows
+- Each row has a working "Complete" or status-toggle button that mutates
+  state and re-renders the list in place
+- Top-right "+ New <entity>" button links to `new-<entity>.html`
 
-- Per `landing-page.md`: title ≤ 60, description ≤ 160, one h1, OG tags, JSON-LD
-- Sitemap.xml generated at build for marketing routes only
-- `/app/*` routes carry `<meta name="robots" content="noindex">`
+### List page (<entity>.html)
 
-## Quality rules
+- Renders ALL items from state as a table or grid
+- Working filter / search input that filters the rendered list (re-render on `input` event)
+- Per-row delete + edit (delete mutates state and re-renders; edit can navigate to detail or open a modal — modal is fine without a library, use a hidden `<div>` toggled by `classList.add('hidden')`)
+- "+ New" button → `new-<entity>.html`
 
-- TypeScript strict
-- All API calls go through `lib/api.ts` or supabase client
-- Public pages SSR-friendly (or pre-rendered) when planner requests
-- Loading + empty + error states everywhere
+### New-record form (new-<entity>.html)
+
+- `<form onsubmit="…">` with required fields per the entity schema
+- `event.preventDefault()` in the handler
+- Validate required fields (non-empty)
+- Push new record to the state array via `writeState`
+- Redirect to dashboard or list: `window.location.href = "index.html"`
+
+### Settings (settings.html)
+
+- Renders current settings from state
+- Inputs (theme select, notification checkbox, profile name, etc.) with
+  `onchange` handlers that immediately persist to state
+- Optional "Save" button if grouped saves are more natural — must still
+  persist on click
+
+## Auth — do NOT implement real auth
+
+A localStorage-backed SaaS demo cannot have real authentication. Skip
+Supabase, OAuth, password forms entirely. If the planner sitemap
+includes `login.html` or `signup.html`, those pages can be a polished
+mock that "signs in" by setting `state.user = { name: input.value }` and
+redirecting to index.html. Don't display a real password input on a
+client-side demo.
+
+## Visual / voice rules
+
+- Voice + palette from the planner — use those exactly
+- Dark themes work well for productivity apps; light themes for
+  consumer-facing
+- Use Tailwind utility classes for everything; no inline `style=` attrs
+- Mobile responsive — Tailwind's `sm:`/`md:` prefixes
+- Loading / empty / error states for every dynamic surface
+
+## Forbidden patterns
+
+- Buttons with no onclick / type="submit"
+- Forms that submit without persisting
+- Hard-coded lists when state should drive them
+- `<a>` tags styled as buttons but linking to nowhere
+- "Coming soon" placeholders on what should be a working feature
+- React / Vue / JSX / npm imports
+- `<select>` or `<input type="checkbox">` with no change handler
+- Calling out to external APIs (no fetch to Stripe, Auth0, etc.) — this
+  is a static demo, network calls fail in the preview
 
 ## Tool surface
 
-Phase B (executor): `read_file`, `write_file`, `list_files`, `run_command`,
-`gen_image`, `supabase_migration` (writes a SQL file, doesn't apply)
-Phase B' (humanizer): `humanize_doc` for marketing copy
-Phase C (polish): `read_file`, `write_file`, `lint`, `typecheck`, `secret_scan`
+Phase B (executor): `read_file`, `write_file`, `list_files`,
+`delete_file`, `gen_image`
+Phase B' (humanizer): `humanize_doc` for marketing-style copy
+Phase C (polish): inline regex audit (no extra tool calls)

@@ -1,119 +1,107 @@
-# Automation panel type SOP — runtime rules for executor + polish
+# Automation-panel type SOP — runtime rules for executor + polish
 
-This SOP applies to projects of type `automation-panel`. UI for triggering,
-queuing, and observing background tasks/workflows. Includes webhook receivers.
+This SOP applies to projects of type `automation-panel`. A UI for
+triggering, queuing, and observing background jobs / workflows. Demo /
+mock implementation: clicking "Run" pushes a job into a localStorage
+queue, the queue auto-advances on a timer, status updates in place.
+
+## Tech stack — vanilla, NOT React/Vite
+
+**Use vanilla HTML pages + Tailwind via CDN + inline `<script>` +
+`localStorage`.** Do NOT use React, Vue, Vite, npm dependencies, or
+real background workers. The preview pipeline does not install third-
+party node modules; React builds degrade to non-interactive static
+HTML and every onClick handler vanishes.
+
+The Interactivity Mandate in the executor directive is the law.
 
 ## File layout
 
 ```
-apps/web/                       # control panel (React + Vite)
-  src/
-    pages/
-      Workflows.tsx             # list + create
-      WorkflowDetail.tsx        # config + recent runs
-      Runs.tsx                  # global run history with filters
-      RunDetail.tsx             # logs, inputs, outputs, retry
-      Triggers.tsx              # cron + webhook config
-    components/
-      QueueDepth.tsx            # live count by status
-      StatusDot.tsx             # green / amber / red / grey
-      RunRow.tsx
-      RetryButton.tsx
-      LogViewer.tsx             # tails logs from API
-    lib/
-      api.ts
-      ws.ts                     # websocket / SSE client for live updates
-apps/api/                       # task runner + webhook receiver (Fastify)
-  src/
-    server.ts
-    queue.ts                    # BullMQ or pg-boss wrapper
-    workflows/<id>.ts           # one file per workflow definition
-    webhooks/<source>.ts        # one route per webhook source
-    routes/runs.ts
-    routes/triggers.ts
+index.html               # active jobs queue + trigger button
+history.html             # completed jobs log
+new-job.html             # configure + trigger a new job
+settings.html            # webhook URLs, schedules, etc.
 ```
 
-## Status model
+Flat HTML files at workspace root. No `src/`, no `apps/`, no
+`package.json`.
 
-A run is always in one of: `queued`, `running`, `succeeded`, `failed`,
-`cancelled`, `retrying`. The `StatusDot` colors are:
+## State management
 
-- `queued` — grey
-- `running` — blue (animated pulse)
-- `succeeded` — green
-- `failed` — red
-- `cancelled` — amber
-- `retrying` — amber (animated)
+Single localStorage key: `<slug>_state` holding:
 
-## Retry logic
-
-Default policy: exponential backoff, max 5 attempts, jitter ±20%. Each retry
-is a new run row linked to the parent. The user can:
-
-- Manually retry a failed run (creates a new run referencing the original input)
-- Cancel a queued or running run
-- Replay a run with edited inputs (creates a fresh run; original preserved)
-
-Idempotency keys are required on side-effecting steps. The runner stores
-`(workflow, idempotency_key) → run_id` to dedupe.
-
-## Triggers
-
-Three trigger kinds:
-
-- **Manual** — button in UI, optional input form
-- **Cron** — UTC cron expression validated server-side
-- **Webhook** — `POST /webhooks/<source>` with HMAC signature verification
-
-Webhook handler template:
-
-```ts
-app.post('/webhooks/stripe', async (req, reply) => {
-  const sig = req.headers['stripe-signature'];
-  const event = verifyStripeSignature(req.rawBody, sig, env.STRIPE_WEBHOOK_SECRET);
-  await queue.add('stripe.event', event, { jobId: event.id }); // idempotent
-  return reply.code(202).send({ received: true });
-});
+```js
+{
+  jobs:    [
+    { id, name, type, status: "queued"|"running"|"succeeded"|"failed",
+      createdAt, startedAt: null|iso, completedAt: null|iso,
+      params: {…}, result: null|string }
+  ],
+  schedules: [
+    { id, cronExpr: "0 */4 * * *", jobType, lastRun, nextRun }
+  ],
+  webhooks: [
+    { id, url, eventType, secret, lastFired }
+  ]
+}
 ```
 
-Always: verify signature → enqueue with idempotent jobId → 2xx fast. Never
-process synchronously inside the webhook handler.
+The seed-if-empty IIFE populates 5-15 sample jobs covering all four
+statuses so the dashboard / history pages render rich content on
+first load.
 
-## Live updates
+## Required interactivity per page
 
-The Runs and RunDetail pages subscribe to a websocket or SSE stream for status
-changes. Fall back to polling every 5s if the connection drops.
+### Active queue (index.html)
 
-## Logs
+- Renders ALL jobs from state with status badges
+- "Run job" button on each queued job → flips status to "running",
+  then a `setTimeout(2000-5000ms)` flips to "succeeded" with mock result
+  text. UI must re-render at each transition.
+- "Cancel" button on running jobs → flip to "failed" with result "Cancelled by user"
+- "Retry" button on failed jobs → flip to "queued" with cleared timestamps
+- "+ Trigger new job" button → `new-job.html`
+- KPI strip at top: `<N> queued, <M> running, <K> succeeded today`
+  computed from state on render
 
-Logs are streamed line-by-line and chunked by run. The `LogViewer` shows:
+### Trigger form (new-job.html)
 
-- Auto-scroll on (toggleable)
-- Filter by level (info / warn / error)
-- Download as `.log`
+- `<form onsubmit="…">` with job-type select + per-type param fields
+- `event.preventDefault()` + validate
+- Push a new job (id = `Date.now().toString(36)`, status = "queued") to state
+- Redirect to index
 
-Sensitive values (api keys, tokens) are redacted server-side before streaming.
+### History (history.html)
 
-## Security rules (hard, enforced)
+- Filterable table of completed jobs (succeeded + failed + cancelled)
+- Search + status filter, click row to expand result text
+- "Clear history" button (with confirm) wipes the completed entries
 
-- Webhook handlers MUST verify signatures before reading the body for app logic
-- Webhook secrets live in env vars only, never hardcoded
-- Run inputs displayed in UI must redact known secret patterns
-- Workflow definitions cannot execute arbitrary user-supplied code (no `eval`,
-  no `new Function`); they call typed task handlers by name
-- Manual triggers require auth + role check on the API
-- Replay-with-edited-inputs is logged in the audit trail
-- Rate limit webhook endpoints per source (default: 100 req/min/IP)
+### Settings (settings.html)
 
-## Quality rules
+- Webhook URL management: add/remove
+- Schedule management: add cron-style schedules
+- All inputs persist on `change` / `submit`
 
-- Every run row links to a detail page with full context
-- Failed runs surface the error message + line, not just "Failed"
-- Queue depth banner appears when depth > threshold (default 100)
-- Empty states explain how to create the first workflow / connect a webhook
+## Visual rules
+
+- Dense, ops-flavored — closer to internal-tool than to landing-page
+- Status badges colored: queued=slate, running=amber pulse, succeeded=green, failed=rose
+- Voice + palette per planner
+- Tailwind utility classes; no inline `style=`
+
+## Forbidden patterns
+
+- "Trigger" buttons that don't actually create a job entry
+- Status badges that never transition
+- Real webhook POSTs (no `fetch` to external URLs — this is a static demo)
+- React / Vue / JSX / npm imports
+- Hard-coded job lists when state should drive them
 
 ## Tool surface
 
-Phase B (executor): `read_file`, `write_file`, `list_files`, `run_command`
-Phase B' (humanizer): not applicable
-Phase C (polish): `read_file`, `write_file`, `lint`, `typecheck`, `secret_scan`
+Phase B (executor): `read_file`, `write_file`, `list_files`,
+`delete_file`, `gen_image`
+Phase B' (humanizer): not typically applicable
+Phase C (polish): inline regex audit

@@ -1,113 +1,106 @@
-# Internal tool type SOP — runtime rules for executor + polish
+# Internal-tool type SOP — runtime rules for executor + polish
 
-This SOP applies to projects of type `internal-tool`. CRUD-shaped admin app
-behind an auth gate, with role-based UI and an audit log.
+This SOP applies to projects of type `internal-tool`. An ops / admin
+panel for an internal team — table-view of a primary entity, detail
+panel, edit/create form, mock auth. Functionality first: buttons click,
+forms submit, state persists.
+
+## Tech stack — vanilla, NOT React/Vite
+
+**Use vanilla HTML pages + Tailwind via CDN + inline `<script>` +
+`localStorage`.** Do NOT use React, Vue, Vite, react-router, or any
+npm dependency. The preview pipeline does not install third-party
+node modules; React builds degrade to non-interactive static HTML and
+every onClick handler vanishes.
+
+The Interactivity Mandate in the executor directive is the law — it
+overrides anything below that suggests otherwise.
 
 ## File layout
 
 ```
-package.json
-vite.config.ts
-src/
-  main.tsx
-  App.tsx
-  routes.tsx
-  lib/
-    api.ts
-    auth.ts                # session + role helpers
-    audit.ts               # logAuditEvent(actor, action, target)
-  components/
-    DataTable.tsx
-    Drawer.tsx             # right-side detail panel
-    FormField.tsx
-    RoleGate.tsx           # <RoleGate roles={['admin']}>
-    ConfirmDialog.tsx
-  pages/
-    Login.tsx
-    <entity>/
-      List.tsx             # filterable, paginated table
-      Detail.tsx           # read-only header + tabs
-      Edit.tsx             # form, validates client-side
-    AuditLog.tsx           # read-only feed
-    Settings.tsx
+index.html               # table view of the primary entity (records list)
+new-<entity>.html        # create form
+<entity>-detail.html     # optional detail/edit view if planner asks
+settings.html
+login.html               # mock auth, optional
 ```
 
-Stack: React 18 + Vite + TypeScript + Tailwind + react-hook-form + Zod for
-validation.
+Flat HTML files at workspace root. No `src/`, no `apps/`, no
+`package.json`.
 
-## List → Detail → Form pattern
+## State management
 
-The default flow for any resource:
+Single localStorage key: `<slug>_state` holding a JSON-stringified
+object keyed by entity name. The seed-if-empty IIFE populates 10-30
+realistic records on first load so the table isn't empty.
 
-1. **List** — filterable, paginated table with row click → detail
-2. **Detail** — read-only summary in a drawer or sub-route
-3. **Edit** — opens from detail; submits via API; on success, returns to list
-   with a success toast
-
-Avoid in-place row editing. It's error-prone for internal users.
-
-## Role-based UI
-
-Roles come from the auth claim (e.g. `admin`, `editor`, `viewer`). Wrap
-privileged controls:
-
-```tsx
-<RoleGate roles={['admin']}>
-  <button onClick={onDelete}>Delete</button>
-</RoleGate>
+```js
+{
+  records: [
+    { id, name, status, owner, createdAt, lastEditedAt, … },
+    …
+  ],
+  user: { name: "Demo Admin", role: "admin" }
+}
 ```
 
-Server enforcement is mandatory regardless of UI gating. The UI gate is
-ergonomic, not security.
+## Required per-page interactivity
 
-## Audit log
+### Table view (index.html)
 
-Every mutating action calls `logAuditEvent`:
+- All records rendered from state
+- Sticky header with sortable columns (click header to sort)
+- Search input filters rows live (`input` event)
+- Optional facet filters (status dropdown, owner select) with `change` handlers
+- Bulk-select checkboxes → top toolbar shows bulk-delete / bulk-status-change
+- Per-row actions: delete (mutates state + re-renders), open (navigate
+  to detail or open modal)
+- "+ New" button → `new-<entity>.html`
 
-```ts
-await logAuditEvent({
-  actor: session.user.id,
-  action: 'project.delete',
-  target: projectId,
-  metadata: { name: project.name },
-});
-```
+### Create form (new-<entity>.html)
 
-The `audit_log` table is append-only (no update/delete policies). Surface it at
-`/audit-log` with filters by actor, action, and date range.
+- `<form onsubmit="…">` with required fields per the entity
+- `event.preventDefault()` + validate
+- Push to state via `writeState`
+- Redirect to index
 
-## Confirm before destructive actions
+### Detail / edit view (<entity>-detail.html)
 
-Delete, archive, role-change, and bulk operations route through `<ConfirmDialog>`.
-The dialog requires the user to type the resource name for irreversible deletes.
+- Reads `id` from query string: `new URLSearchParams(location.search).get('id')`
+- Renders the record's fields as inputs (read-only for derived fields,
+  editable for the rest)
+- "Save" button persists to state
+- "Delete" button confirms then removes from state + redirects to index
 
-## Forms
+### Settings
 
-- All forms use react-hook-form + Zod resolver
-- Inline field errors next to each input
-- Disabled submit until form is valid
-- Optimistic UI only when the server response is fast and reversible
+- Profile, preferences. `onchange` persists immediately.
 
-## Security rules (hard, enforced)
+## Mock auth
 
-- Auth gate wraps every route except `/login`
-- Role checks live on the server too — never trust the client gate alone
-- All mutating endpoints require CSRF token or same-origin policy
-- Audit log table is INSERT-only via RLS / DB grants
-- NEVER expose service-role keys in the bundle (`VITE_` prefix only for safe vars)
-- Soft-delete preferred over hard-delete; hard-delete is admin-only and audited
-- Bulk actions cap at a configured row limit (default 500) to avoid runaway updates
+If planner includes `login.html`, accept any name+email, persist to
+`state.user`, redirect to index. Other pages can check
+`if (!readState().user)` and redirect. NOT real auth.
 
-## Quality rules
+## Visual rules
 
-- TypeScript strict
-- Loading / empty / error states on every async surface
-- Tables persist filter + sort state in URL query params (sharable links)
-- Keyboard shortcuts: `j`/`k` row nav, `e` edit, `?` help
-- Toast notifications use a queue; never stack more than 3 visible
+- Compact, dense — internal tools optimize for information density
+- Tailwind utility classes; no inline `style=`
+- Voice + palette per planner
+- Mobile responsive but desktop-first (this is an ops tool)
+
+## Forbidden patterns
+
+- Decorative buttons / inputs with no handlers
+- Hard-coded table rows (state must drive the render)
+- React / Vue / JSX / npm imports
+- Real API calls to internal services (this is a static demo)
+- "Coming soon" placeholders on what should be a working feature
 
 ## Tool surface
 
-Phase B (executor): `read_file`, `write_file`, `list_files`, `run_command`
-Phase B' (humanizer): not applicable
-Phase C (polish): `read_file`, `write_file`, `lint`, `typecheck`, `secret_scan`
+Phase B (executor): `read_file`, `write_file`, `list_files`,
+`delete_file`, `gen_image`
+Phase B' (humanizer): not typically applicable
+Phase C (polish): inline regex audit
