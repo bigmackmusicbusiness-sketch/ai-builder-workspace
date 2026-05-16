@@ -8957,6 +8957,126 @@ project E2E browser-verified end-to-end)
 
 ---
 
+## STATUS — 2026-05-16 (round 16.4) — EMERGENCY: "pictures still corrupting" was preview-session eviction, not bytes
+
+User reported P0: "the pictures are still corrupting, this is the
+number 1 roadblock to this being worth anything." Screenshot of Hollow
+Pine Barber Co v2 showed `<img alt="vintage barbershop interior...">`
+alt text rendered in place of the hero image — looked exactly like
+JPEG corruption.
+
+### Diagnosis — NOT bytes, NOT pipeline. Session eviction.
+
+```
+$ curl -sI .../preview/serve/hollow-pine-barber-co-v2/images/shop-interior.jpg
+HTTP/1.1 404 Not Found
+Content-Length: 48  ("Preview not booted. Click Boot in the workspace.")
+Content-Type: text/plain
+```
+
+Every round-16 commit triggered a Coolify api roll. The in-memory
+`sessions` Map in `sessionManager.ts:52` lives in process memory only
+— each roll wiped it. After ~9 rolls today, EVERY previously-booted
+preview returned the 48-byte stub for every asset request. User's
+iframe kept the page HTML cached (from before the roll) but every
+new `<img src="images/X.jpg">` 404'd → browser rendered alt text →
+user perceived this as image-byte corruption.
+
+The earlier "image-related" fixes this session (c1d1bbd re-bundle on
+cache miss, 4e4993f workspace restore recurse, 87b9311 base-href on
+all html, 5ca5b77 missing-images nudge, 7a5534c backstop reachable)
+ALL gate on `getSessionBySlug` returning a session FIRST. None of
+them resurrect a session that the deploy wiped.
+
+### Fix (`95f01e7`)
+
+`apps/api/src/routes/preview.ts` — new `resolveOrBootSession(slug)`
+helper at file scope. On every serve request:
+1. Fast path: `getSessionBySlug` — return if cached.
+2. Per-slug `inflightResurrects` mutex prevents 12 parallel image
+   requests on the same slug from racing 12 boots.
+3. DB lookup via Drizzle: `projects.slug = slug`, order by
+   `createdAt desc`, limit 1. Preserves existing "first-booted-wins"
+   tenant semantics from `getSessionBySlug`.
+4. Workspace restore from Storage if local FS empty (mirrors the boot
+   handler).
+5. Framework detection: `src/main.tsx` → react-vite, `index.html` →
+   static, walk-for-entrypoint, last resort give up (no synthesized
+   index — auto-boot is for previews that DID work, not for first
+   boots).
+6. Bundle via `bundleProject(input)` — bundler's own `BUNDLE_CACHE`
+   keeps unchanged-tree re-bundles sub-5ms.
+7. Synthesize session: id `auto-${slug}-${Date.now().toString(36)}`,
+   store assets + bundleInput.
+8. Return the new session.
+
+Wired into both serve handlers (`/api/preview/serve/:slug/*` and
+`/api/preview/serve/:slug`). Existing 404 stub remains for genuine
+"no project / bundle failed" cases, with an improved message that
+tells the user to Click Refresh in the IDE.
+
+Plus `apps/api/src/server.ts` startup log:
+`[preview] in-memory sessions reset on api startup — auto-resurrect
+on first asset request per slug` — makes future "images suddenly
+broken" reports diagnosable in one grep.
+
+### Browser-verified end-to-end
+
+Post-deploy (api buildTime 2026-05-16T18:51:11Z):
+
+```
+$ curl -sI .../preview/serve/hollow-pine-barber-co-v2/
+HTTP/1.1 200 OK  ← auto-boot fired
+
+$ curl -s .../preview/serve/hollow-pine-barber-co-v2/images/shop-interior.jpg | head -c 4 | xxd -p
+ffd8ffe0       ← valid JPEG SOI + APP0 (was 48-byte text stub before fix)
+
+$ curl -sI ...images/shop-interior.jpg
+Content-Length: 332235
+Content-Type: image/jpeg
+
+$ for img in shop-interior barber-at-work grooming-tools-closeup; do …; done
+all 3 → ffd8ffe0, 220-332 KB, image/jpeg
+```
+
+Browser navigation to the image URL directly: tab title becomes
+`shop-interior.jpg (1024×1024)`, contentType `image/jpeg`, image
+rendered.
+
+Sub-page coverage (services / team / contact / faq / privacy-policy /
+terms-of-service) all 200 OK with proper content-lengths (not the
+SPA fallback). Other projects auto-resurrect the same way (Hollow
+Pine v1, Reverb Tasks v2). Idempotent across multiple Coolify rolls.
+
+### Cost
+
+- Per-request: ~1-3s for the FIRST request to a slug after an api
+  restart (DB lookup + workspace restore-if-empty + esbuild). Every
+  subsequent request hits the warm in-memory cache.
+- Per-restart: zero. Sessions are reborn lazily on demand.
+
+### Commit log this round
+
+```
+95f01e7 fix(preview): auto-resurrect session on serve when in-memory cache is empty
+```
+
+### State
+
+- ✅ Round 16.1–16.4: ten fixes shipped across the round. The
+  "images corrupting" P0 is closed.
+- ✅ Hollow Pine v2, Reverb Tasks v2, Hollow Pine v1 (and any other
+  past preview) now self-heal across api restarts — no manual click
+  Boot required.
+- 🔭 Open: nothing blocking. Future hardening (durable session
+  persistence to DB) is out of scope; the auto-boot covers the
+  observed failure mode at acceptable cost.
+
+— ABW agent, 2026-05-16 (round 16.4 STATUS, preview-session
+auto-resurrect on serve, closes "images corrupting" P0)
+
+---
+
 ## INBOUND FROM SPS — 2026-05-16 — round 17 — 1 new bug + 2 new system asks
 
 Coming off your 16.1–16.3 push (9 fixes, both project types E2E-verified).
