@@ -272,6 +272,13 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     let toolCtx!: ToolContext;
     let history: ChatMessage[] = [];
     let plannedPageSlugs: string[] = [];
+    // Hoisted alongside plannedPageSlugs so the build-incomplete nudge can
+    // detect "agent wrote all pages but never called gen_image" — same class
+    // of premature exit as missing pages, just for binary assets. The model
+    // sometimes embeds <img src="/images/X.jpg"> in pages but then declares
+    // the build done without ever generating the bytes. We catch that here
+    // and nudge before the loop exits. Filtered to kind === 'image' below.
+    let plannedImageAssets: Array<{ id: string; prompt: string }> = [];
     let toolList: ReturnType<typeof getAgentTools> = [];
     // Hoisted for the post-loop completion phase: when the planner subagent
     // returns a validated plan, we keep a reference here so the completion
@@ -520,6 +527,12 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
             // Capture the sitemap slugs so the nudge logic can detect
             // partial completion (agent emits done after writing 1 of N pages).
             plannedPageSlugs = (preResult.plan.sitemap ?? []).map((p) => p.slug);
+            // Capture the planned image assets too, so the nudge logic can
+            // detect "wrote pages but never generated images" — same class
+            // of premature exit as missing pages.
+            plannedImageAssets = (preResult.plan.shared_assets ?? [])
+              .filter((a) => a.kind === 'image')
+              .map((a) => ({ id: a.id, prompt: a.prompt }));
             // Keep the full plan for the post-loop completion phase.
             planForCompletion = preResult.plan;
           }
@@ -633,6 +646,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
           // the model can't claim "I'm done" plausibly.
           let buildIncomplete = false;
           let missingPagesMsg = '';
+          let missingImagesMsg = '';
           if (!lastWasRefusal && toolsActive && iter < MAX_ITERATIONS - 1) {
             // Collect the basenames of every path the agent passed to
             // write_file across the whole conversation.
@@ -700,6 +714,39 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
                 missingPagesMsg = missing.map((s) => `${s}.html`).join(', ');
               }
             }
+
+            // (c) missing planned images: pages reference <img src="/images/X.jpg">
+            // (the embed-discipline directive embeds them on first write) but the
+            // model declared done without ever calling gen_image. Without this
+            // check the build "completes" with broken-image placeholders on
+            // every page that needed a generated asset. Compare planned asset IDs
+            // against actual files on disk — the dispatch is by file existence,
+            // not by tool_call count, so a successful generation always satisfies
+            // the check regardless of how the call was wrapped.
+            if (everWrote && plannedImageAssets.length > 0 && ws && !missingPagesMsg) {
+              try {
+                const onDisk = new Set(
+                  (await listWorkspaceFiles(ws))
+                    .map((p) => p.replace(/^\/+/, '').toLowerCase()),
+                );
+                const missingImages = plannedImageAssets.filter((a) => {
+                  const candidates = [
+                    `images/${a.id}.jpg`,
+                    `images/${a.id}.jpeg`,
+                    `images/${a.id}.png`,
+                    `images/${a.id}.webp`,
+                  ].map((c) => c.toLowerCase());
+                  return !candidates.some((c) => onDisk.has(c));
+                });
+                if (missingImages.length > 0) {
+                  buildIncomplete = true;
+                  missingImagesMsg = missingImages
+                    .slice(0, 8)  // cap the nudge so it doesn't bloat the prompt
+                    .map((a) => `${a.id}.jpg (prompt: "${a.prompt.slice(0, 120)}")`)
+                    .join('; ');
+                }
+              } catch { /* fs read failed — skip the image check */ }
+            }
           }
 
           if ((lastWasRefusal || buildIncomplete) && iter < MAX_ITERATIONS - 1) {
@@ -724,6 +771,18 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
                 `already produced. No reading existing files unnecessarily, no ` +
                 `re-planning, no narration — call write_file for ${(missingPagesMsg.split(',')[0] ?? '').trim() || 'the next missing page'} ` +
                 `as your very next action, then continue through the rest.`;
+            } else if (missingImagesMsg) {
+              nudgeContent =
+                `STOP. The pages reference \`<img src="/images/...">\` tags but the ` +
+                `image files were NEVER GENERATED. Your pages will render with ` +
+                `broken-image placeholders. ` +
+                `MISSING IMAGES: ${missingImagesMsg}. ` +
+                `Call \`gen_image\` for each missing asset — ONE gen_image per response, ` +
+                `not batched. Save each one to \`/images/<id>.jpg\` using the EXACT id ` +
+                `that appears before \`.jpg\` in the missing list above (the \`<img src>\` ` +
+                `tags in the pages already point at these filenames — do NOT rename). ` +
+                `No narration, no re-planning, no asking for confirmation — call ` +
+                `\`gen_image\` for the FIRST missing image as your very next action.`;
             } else {
               nudgeContent =
                 'STOP. You have not yet written any pages. The BUILD PLAN above ' +
