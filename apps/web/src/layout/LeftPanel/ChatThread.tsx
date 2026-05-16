@@ -684,8 +684,27 @@ export function ChatThread() {
             <div>Describe what you want to build.</div>
           </div>
         )}
-        {messages.map((msg, idx) => {
-          const isLastAssistant = msg.role === 'assistant' && idx === messages.length - 1 && isRunning;
+        {messages.filter((msg) => {
+          // Suppress internal sanitizer errors the model occasionally echoes
+          // back as a chat reply (the user saw "arguments were not valid JSON
+          // — model should retry with smaller content" in their panel; that
+          // string lived in the model's tool_call args after a truncation
+          // event and the model parroted it on its next turn). Server-side
+          // fixes in round 16.2 stop new errors from looking like English
+          // text, but old persisted messages can still contain the legacy
+          // phrasing — this filter masks them at render time.
+          if (msg.role !== 'assistant') return true;
+          const c = (msg.content ?? '').trim();
+          if (!c) return true;
+          const STUB_ERROR_PATTERNS: RegExp[] = [
+            /^arguments were not valid JSON/i,
+            /^Error:?\s*tool arguments were not valid JSON/i,
+            /^arguments truncated\s*[—-]\s*content was too large/i,
+            /^\[internal:retry\]/i,
+          ];
+          return !STUB_ERROR_PATTERNS.some((p) => p.test(c));
+        }).map((msg, idx, visibleArr) => {
+          const isLastAssistant = msg.role === 'assistant' && idx === visibleArr.length - 1 && isRunning;
           return (
             <div key={msg.id} className={`abw-chat__msg abw-chat__msg--${msg.role}`}>
               <div className="abw-chat__bubble">
